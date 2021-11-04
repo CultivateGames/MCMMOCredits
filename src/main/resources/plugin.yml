@@ -1,0 +1,4 @@
+name: MCMMOCredits
+version: '${project.version}'
+main: games.cultivate.mcmmocredits.MCMMOCredits
+api-version: 1.17
