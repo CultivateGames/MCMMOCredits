@@ -106,10 +106,7 @@ public final class ConfigHandler {
     public static void loadFile(String fileType) {
         File file = createFile(fileType);
         Path path = Paths.get(file.getPath());
-        HoconConfigurationLoader loader = HoconConfigurationLoader.builder()
-                .prettyPrinting(true)
-                .path(path)
-                .build();
+        HoconConfigurationLoader loader = HoconConfigurationLoader.builder().prettyPrinting(true).path(path).build();
         CommentedConfigurationNode node;
         if (fileType.equalsIgnoreCase("settings")) {
             CreditsSettings config;

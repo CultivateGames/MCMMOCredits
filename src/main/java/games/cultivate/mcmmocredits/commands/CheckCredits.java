@@ -46,7 +46,7 @@ public class CheckCredits {
     @CommandMethod("credits")
     @CommandPermission("mcmmocredits.check.self")
     private void checkCredits(CommandSender sender) {
-        if(!(sender instanceof Player)) {
+        if (!(sender instanceof Player)) {
             Bukkit.getLogger().log(Level.WARNING, "You must supply a username! /credits <player>");
             return;
         }
@@ -73,7 +73,7 @@ public class CheckCredits {
             ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("credits-check-other")));
             return;
         }
-        if(sender instanceof Player) {
+        if (sender instanceof Player) {
             ConfigHandler.sendMessage(sender, ConfigHandler.parse((Player) sender, ConfigHandler.message("player-does-not-exist")));
         } else {
             ConfigHandler.sendMessage(sender, ConfigHandler.message("player-does-not-exist"));
