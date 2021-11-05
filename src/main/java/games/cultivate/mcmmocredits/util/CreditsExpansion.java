@@ -11,6 +11,7 @@ public class CreditsExpansion extends PlaceholderExpansion {
     public CreditsExpansion(MCMMOCredits instance) {
         this.instance = instance;
     }
+
     @Override
     public @NotNull String getAuthor() {
         return "Cultivate Games";
@@ -33,7 +34,7 @@ public class CreditsExpansion extends PlaceholderExpansion {
 
     @Override
     public String onRequest(OfflinePlayer player, String identifier) {
-        if(identifier.equalsIgnoreCase("credits")){
+        if (identifier.equalsIgnoreCase("credits")) {
             return Database.getCredits(player.getUniqueId()) + "";
         }
 

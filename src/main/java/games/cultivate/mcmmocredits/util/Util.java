@@ -21,7 +21,7 @@ public class Util {
      */
     public static boolean processPlayer(String username) {
         if (getOfflineUser(username) == null) {
-           return false;
+            return false;
         }
         return Database.doesPlayerExist(getOfflineUser(username).getUniqueId());
     }

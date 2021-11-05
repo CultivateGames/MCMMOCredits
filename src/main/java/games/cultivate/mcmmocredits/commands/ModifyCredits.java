@@ -63,10 +63,7 @@ public class ModifyCredits {
     @CommandDescription("MCMMO Credits Modification - Add")
     @CommandMethod("modifycredits add <amount> <player>")
     @CommandPermission("mcmmocredits.modify.add")
-    private void addCredits(CommandSender sender,
-                            @Completions("add, set, take") String add,
-                            @Argument("amount") @Range(min = "0", max = "2147483647") int amount,
-                            @Argument("player") String username) {
+    private void addCredits(CommandSender sender, @Completions("add, set, take") String add, @Argument("amount") @Range(min = "0", max = "2147483647") int amount, @Argument("player") String username) {
         if (!Util.processPlayer(username)) {
             ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("player-does-not-exist")));
             return;
@@ -81,7 +78,7 @@ public class ModifyCredits {
      * except we are setting the balance instead of adding to it.</p>
      *
      * @param sender   The {@link CommandSender} that executed the command.
-     * @param set  String which represents how to modify MCMMO Credit balance.
+     * @param set      String which represents how to modify MCMMO Credit balance.
      * @param amount   Amount by which to modify MCMMO Credit Balance
      * @param username String which represents an {@link OfflinePlayer}'s username.
      * @see Database#update(UUID, int)
@@ -90,10 +87,7 @@ public class ModifyCredits {
     @CommandDescription("MCMMO Credits Modification - Set")
     @CommandMethod("modifycredits set <amount> <player>")
     @CommandPermission("mcmmocredits.modify.set")
-    private void setCredits(CommandSender sender,
-                            @Completions("add, set, take") String set,
-                            @Argument("amount") @Range(min = "0", max = "2147483647") int amount,
-                            @Argument("player") String username) {
+    private void setCredits(CommandSender sender, @Completions("add, set, take") String set, @Argument("amount") @Range(min = "0", max = "2147483647") int amount, @Argument("player") String username) {
         if (!Util.processPlayer(username)) {
             ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("player-does-not-exist")));
             return;
@@ -108,7 +102,7 @@ public class ModifyCredits {
      * except we are subtracting from the balance instead of adding to it.</p>
      *
      * @param sender   The {@link CommandSender} that executed the command.
-     * @param take  String which represents how to modify MCMMO Credit balance.
+     * @param take     String which represents how to modify MCMMO Credit balance.
      * @param amount   Amount by which to modify MCMMO Credit Balance
      * @param username String which represents an {@link OfflinePlayer}'s username.
      * @see Database#update(UUID, int)
@@ -117,10 +111,7 @@ public class ModifyCredits {
     @CommandDescription("MCMMO Credits Modification - Add")
     @CommandMethod("modifycredits take <amount> <player>")
     @CommandPermission("mcmmocredits.modify.take")
-    private void takeCredits(CommandSender sender,
-                             @Completions("add, set, take") String take,
-                             @Argument("amount") @Range(min = "0", max = "2147483647") int amount,
-                             @Argument("player") String username) {
+    private void takeCredits(CommandSender sender, @Completions("add, set, take") String take, @Argument("amount") @Range(min = "0", max = "2147483647") int amount, @Argument("player") String username) {
         if (!Util.processPlayer(username)) {
             ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("player-does-not-exist")));
             return;

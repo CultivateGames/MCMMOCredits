@@ -114,10 +114,7 @@ public class Redeem {
     @CommandDescription("Redeem MCMMO Credits to increase the level of a Skill of someone else.")
     @CommandMethod("redeem|rmc|redeemcredits <skill> <amount> <player>")
     @CommandPermission("mcmmocredits.redeem.other")
-    private void redeemCreditsOther(CommandSender sender,
-                                    @Argument("skill") PrimarySkillType skill,
-                                    @Argument("amount") @Range(min = "1", max = "2147483647") int amount,
-                                    @Argument("player") String username) {
+    private void redeemCreditsOther(CommandSender sender, @Argument("skill") PrimarySkillType skill, @Argument("amount") @Range(min = "1", max = "2147483647") int amount, @Argument("player") String username) {
         if (sender instanceof ConsoleCommandSender) {
             Bukkit.getLogger().log(Level.WARNING, "You must supply a username! /redeem <skill> <amount> <player>");
             return;
@@ -129,8 +126,8 @@ public class Redeem {
         String skillName = skill.name();
         int cap = st.getLevelCap(skill);
         DatabaseAPI db = new DatabaseAPI();
-        if(!db.doesPlayerExistInDB(uuid)) {
-            if(sender instanceof Player) {
+        if (!db.doesPlayerExistInDB(uuid)) {
+            if (sender instanceof Player) {
                 ConfigHandler.sendMessage(sender, ConfigHandler.parse((Player) sender, ConfigHandler.message("player-does-not-exist")));
             } else {
                 ConfigHandler.sendMessage(sender, ConfigHandler.message("player-does-not-exist"));

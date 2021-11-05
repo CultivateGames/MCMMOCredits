@@ -98,7 +98,7 @@ public final class MCMMOCredits extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new Listeners(), this);
 
         // Small check to make sure that PlaceholderAPI is installed
-        if(Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new CreditsExpansion(this).register();
         }
     }

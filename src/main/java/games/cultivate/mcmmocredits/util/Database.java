@@ -4,17 +4,13 @@ import games.cultivate.mcmmocredits.MCMMOCredits;
 import org.bukkit.Bukkit;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * TODO: MySQL support - The transactions use a very similar syntax, would not be difficult to do.
- * TODO: Async operations
+ * TODO: More Async operations
  * <p>This class is responsible for all Database management. We currently only support SQLite.</p>
  *
  * @see Database#getConnection(String)
@@ -200,16 +196,16 @@ public class Database {
      */
     public static int getCredits(UUID uuid) {
         CompletableFuture<Integer> result = new CompletableFuture<>();
-            try {
-                Connection connection = getConnection(MCMMOCredits.getDBURL());
-                PreparedStatement ps = connection.prepareStatement("SELECT * FROM `mcmmoCredits` WHERE UUID= ?;");
-                ps.setObject(1, uuid);
-                ResultSet rows = ps.executeQuery();
-                result.complete(rows.getInt(3));
-                connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+        try {
+            Connection connection = getConnection(MCMMOCredits.getDBURL());
+            PreparedStatement ps = connection.prepareStatement("SELECT * FROM `mcmmoCredits` WHERE UUID= ?;");
+            ps.setObject(1, uuid);
+            ResultSet rows = ps.executeQuery();
+            result.complete(rows.getInt(3));
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return result.join();
     }
 }
