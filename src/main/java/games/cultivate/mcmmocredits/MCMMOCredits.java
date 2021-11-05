@@ -33,8 +33,20 @@ import java.util.logging.Level;
  * @see MCMMOCredits#loadCommands()
  */
 public final class MCMMOCredits extends JavaPlugin {
+    /**
+     * <p>An Instance of the plugin.</p>
+     * @see MCMMOCredits#getInstance()
+     */
     private static JavaPlugin instance;
+    /**
+     * <p>String which represents the Database URL</p>
+     * @see MCMMOCredits#getDBURL()
+     */
     private static String url;
+    /**
+     * An instance of MiniMessage.
+     * @see MCMMOCredits#getMM()
+     */
     private static MiniMessage mm;
 
     /**

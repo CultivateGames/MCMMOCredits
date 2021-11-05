@@ -159,7 +159,9 @@ public class Redeem {
     /**
      * <p>This method is used to create a Suggestions Provider for this set of commands.</p>
      *
-     * @return {@link List <String>} of {@link Player} usernames.
+     * @param context Context of the command sender.
+     * @param input Command input from this command.
+     * @return {@link List} of {@link Player} usernames.
      * @see cloud.commandframework.context.CommandContext
      * @see cloud.commandframework.annotations.suggestions.Suggestions
      * @see cloud.commandframework.arguments.CommandArgument.Builder
@@ -177,8 +179,9 @@ public class Redeem {
     /**
      * <p>This method is used to create an {@link ArgumentParser} for this set of commands.</p>
      *
+     * @param sender The command sender for this command.
+     * @param inputQueue Command input from the command sender.
      * @return user input when parsing command arguments?
-     * @see cloud.commandframework.context.CommandContext
      * @see cloud.commandframework.annotations.parsers.Parser
      */
     @Parser(suggestions = "player")
