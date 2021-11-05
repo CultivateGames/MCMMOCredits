@@ -39,9 +39,19 @@ import java.util.regex.Pattern;
  * @see CreditsSettings
  */
 public final class ConfigHandler {
+
+    /**
+     * <p>Pattern used for placeholder parsing.</p>
+     */
     static final Pattern pattern = Pattern.compile("%(.*?)%");
+    /**
+     * <p>Public instance of the messages.conf file.</p>
+     */
     public static CommentedConfigurationNode messages_instance;
-    public static CommentedConfigurationNode config_instance;
+    /**
+     * <p>Public instance of the settings.conf file.</p>
+     */
+    public static CommentedConfigurationNode settings_instance;
 
     /**
      * <p>This method is provided to easily access values in settings.conf
@@ -51,7 +61,7 @@ public final class ConfigHandler {
      * @return {@link Object} which represents the provided key.
      */
     public static Object value(String key) {
-        return config_instance.node(key).raw();
+        return settings_instance.node(key).raw();
     }
 
     /**
@@ -115,7 +125,7 @@ public final class ConfigHandler {
                 config = node.get(CreditsSettings.class);
                 Objects.requireNonNull(node).set(CreditsSettings.class, config);
                 loader.save(node);
-                config_instance = node;
+                settings_instance = node;
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -145,7 +155,6 @@ public final class ConfigHandler {
      * <br>
      * {@link PlaceholderAPI}: We will parse PAPI messages in all places.
      * <br>
-     *
      * @param offlinePlayer {@link OfflinePlayer} instance to parse placeholders for
      * @param text          {@link String} object to parse placeholders within.
      * @return {@link String} with parsed, local and external placeholders.
@@ -187,6 +196,7 @@ public final class ConfigHandler {
      *
      * @param offlinePlayer {@link OfflinePlayer} instance to parse placeholders for
      * @param text          {@link String} object to parse placeholders within.
+     * @param amount amount of MCMMO Credits being modified within this operation.
      * @return {@link String} with parsed, local and external placeholders.
      * @see ConfigHandler#parse(OfflinePlayer, String)
      * @see ConfigHandler#parse(OfflinePlayer, String, String, int, int)
@@ -230,7 +240,10 @@ public final class ConfigHandler {
      * <br>
      *
      * @param offlinePlayer {@link OfflinePlayer} instance to parse placeholders for
-     * @param text          {@link String} object to parse placeholders within.
+     * @param text {@link String} object to parse placeholders within.
+     * @param skill Name of relevant MCMMO Skill.
+     * @param cap Level cap of previously referenced MCMMO skill.
+     * @param amount amount of MCMMO Credits being modified within this operation.
      * @return {@link String} with parsed, local and external placeholders.
      * @see ConfigHandler#parse(OfflinePlayer, String, int)
      * @see ConfigHandler#parse(OfflinePlayer, String, String, int, int)
@@ -277,52 +290,96 @@ public final class ConfigHandler {
      */
     @ConfigSerializable
     static class CreditsMessages {
+        /**
+         * <p>Prefix for all plugin messages.</p>
+         */
         @Comment("Prefix for all plugin messages.")
         private final String prefix = "<gold><bold>CREDITS</bold> ";
 
+        /**
+         * <p>Shown to user when invalid arguments are used in a command.</p>
+         */
         @Comment("Shown to user when invalid arguments are used in a command.")
         private final String invalid_args = "<red>Invalid args!";
 
+        /**
+         * <p>Shown to user when they use an invalid number.</p>
+         */
         @Comment("Shown to user when they use an invalid number.")
         private final String must_be_number = "<red>You need to specify a valid number.";
 
+        /**
+         * <p>Shown to user when they do not have permission to execute a command!</p>
+         */
         @Comment("Shown to user when they do not have permission to execute a command!")
         private final String no_perms = "<red>You do not have permission to do this!";
 
+        /**
+         * <p>Shown to user when they check their own MCMMO Credits amount with /credits.</p>
+         */
         @Comment("Shown to user when they check their own MCMMO Credits amount with /credits.")
         private final String credits_check_self = "<green>You have %credits% MCMMO Credits!";
 
+        /**
+         * <p>Shown to user when they check the MCMMO Credit balance of another user with /credits.</p>
+         */
         @Comment("Shown to user when they check the MCMMO Credit balance of another user with /credits.")
         private final String credits_check_other = "<green>%player% has %credits% MCMMO Credits!";
 
+        /**
+         * <p>Shown to user when they use the command system and populate it with a player that does not exist.</p>
+         */
         @Comment("Shown to user when they use the command system and populate it with a player that does not exist.")
         private final String player_does_not_exist = "<red>This player does not exist in our database!";
 
+        /**
+         * <p>Shown to user when they successfully reload the Plugin.</p>
+         */
         @Comment("Shown to user when they successfully reload the Plugin.")
         private final String reload_successful = "<green>All configuration files have been reloaded!";
 
+        /**
+         * <p>Shown to user when they try to redeem MCMMO Credits to go over a skill's level cap.</p>
+         */
         @Comment("Shown to user when they try to redeem MCMMO Credits to go over a skill's level cap.")
         private final String redeem_skill_cap = "<red>You cannot redeem this many MCMMO Credits into %skill%, due to the Level Cap (%cap%).";
-
+        /**
+         * <p>Shown to user when they try to redeem more MCMMO Credits than they have available.</p>
+         */
         @Comment("Shown to user when they try to redeem more MCMMO Credits than they have available.")
         private final String redeem_not_enough_credits = "<red>You do not have enough MCMMO Credits to do this!";
-
+        /**
+         * <p>Shown to user when they successfully redeem MCMMO Credits into a skill.</p>
+         */
         @Comment("Shown to user when they successfully redeem MCMMO Credits into a skill.")
         private final String redeem_successful = "<green>Redemption Successful! You have redeemed %amount% Credits into %skill%. You have %credits% Credits remaining.";
-
+        /**
+         * <p>Shown to user when they successfully redeem MCMMO Credits into a skill.</p>
+         */
         @Comment("Shown to user when they successfully redeem MCMMO Credits into a skill.")
         private final String redeem_successful_other = "<green>Redemption Successful! You have redeemed %amount% Credits into %skill% for %player%. They have %credits% Credits remaining.";
-
+        /**
+         * <p>Shown to user on login if send_login_message is set to true in settings.conf</p>
+         */
         @Comment("Shown to user on login if send_login_message is set to true in settings.conf")
         private final String login_message = "<hover:show_text:'<green>You have %credits% MCMMO Credits!'><yellow>Hover here to see how many MCMMO Credits you have!";
-
-        @Comment("Shown to user when they successfully redeem MCMMO Credits into a skill. %credits% placeholder will show previous balance since we are updating credit balances asynchronously.")
+        /**
+         * <p>Shown to user when a user adds MCMMO Credits to another user.
+         * %credits% placeholder will show previous balance since we are updating credit balances asynchronously.</p>
+         */
+        @Comment("Shown to user when a user adds MCMMO Credits to another user. %credits% placeholder will show previous balance since we are updating credit balances asynchronously.")
         private final String modify_credits_add = "<green>You have given %amount% Credits to %player%";
-
-        @Comment("Shown to user when they successfully redeem MCMMO Credits into a skill. %credits% placeholder will show previous balance since we are updating credit balances asynchronously.")
+        /**
+         * <p>Shown to user when a user sets another user's balance to an amount.
+         * %credits% placeholder will show previous balance since we are updating credit balances asynchronously.</p>
+         */
+        @Comment("Shown to user when a user sets another user's balance to an amount. %credits% placeholder will show previous balance since we are updating credit balances asynchronously.")
         private final String modify_credits_set = "<yellow>You have set %player%'s Credits to %amount%!";
-
-        @Comment("Shown to user when they successfully redeem MCMMO Credits into a skill. %credits% placeholder will show previous balance since we are updating credit balances asynchronously.")
+        /**
+         * <p>Shown to user when a user takes MCMMO Credits from another user.
+         * %credits% placeholder will show previous balance since we are updating credit balances asynchronously.</p>
+         */
+        @Comment("Shown to user when a user takes MCMMO Credits from another user. %credits% placeholder will show previous balance since we are updating credit balances asynchronously.")
         private final String modify_credits_take = "<red>You have taken %amount% Credits from %player%";
     }
 
@@ -336,15 +393,24 @@ public final class ConfigHandler {
      */
     @ConfigSerializable
     static class CreditsSettings {
+        /**
+         * <p>Perform offline player lookups with usercache. PAPER ONLY. Disable if you are having problems.</p>
+         */
         @Comment("Perform offline player lookups with usercache. PAPER ONLY. Disable if you are having problems.")
         private final boolean use_usercache_lookup = false;
-
+        /**
+         * <p>Toggles tab completion for Player based arguments. Useful if you have other plugins which hide staff.</p>
+         */
         @Comment("Toggles tab completion for Player based arguments. Useful if you have other plugins which hide staff.")
         private final boolean player_tab_completion = true;
-
+        /**
+         * <p>Toggles sending a login message to the user indicating how many MCMMO Credits they have. Message can be configured in messages.conf.</p>
+         */
         @Comment("Toggles sending a login message to the user indicating how many MCMMO Credits they have. Message can be configured in messages.conf.")
         private final boolean send_login_message = true;
-
+        /**
+         * <p>Toggles console message when a user is added to the MCMMO Credits database</p>
+         */
         @Comment("Toggles console message when a user is added to the MCMMO Credits database")
         private final boolean database_add_message = true;
     }

@@ -27,7 +27,7 @@ import java.util.logging.Level;
  * <p>There are two commands created here:</p>
  * 1. /credits: Shows your own MCMMO Credit Balance
  * <br>
- * 2. /credits <username>: Shows the MCMMO Credit Balance of a specified user.
+ * 2. /credits [username]: Shows the MCMMO Credit Balance of a specified user.
  *
  * @see CheckCredits#checkCredits(CommandSender)
  * @see CheckCredits#checkCreditsOther(CommandSender, String)
@@ -83,6 +83,8 @@ public class CheckCredits {
     /**
      * <p>This method is used to create a Suggestions Provider for this set of commands.</p>
      *
+     * @param context Context of the command sender.
+     * @param input Command input from this command.
      * @return {@link List<String>} of {@link Player} usernames.
      * @see cloud.commandframework.context.CommandContext
      * @see cloud.commandframework.annotations.suggestions.Suggestions
@@ -98,11 +100,13 @@ public class CheckCredits {
         return list;
     }
 
+
     /**
      * <p>This method is used to create an {@link ArgumentParser} for this set of commands.</p>
      *
+     * @param sender The command sender for this command.
+     * @param inputQueue Command input from the command sender.
      * @return user input when parsing command arguments?
-     * @see cloud.commandframework.context.CommandContext
      * @see cloud.commandframework.annotations.parsers.Parser
      */
     @Parser(suggestions = "player")
