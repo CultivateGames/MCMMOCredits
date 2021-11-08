@@ -5,7 +5,6 @@ import cloud.commandframework.bukkit.CloudBukkitCapabilities;
 import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.paper.PaperCommandManager;
-import com.gmail.nossr50.mcMMO;
 import games.cultivate.mcmmocredits.commands.CheckCredits;
 import games.cultivate.mcmmocredits.commands.ModifyCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
@@ -109,7 +108,6 @@ public final class MCMMOCredits extends JavaPlugin {
         this.loadCommands();
         Bukkit.getPluginManager().registerEvents(new Listeners(), this);
 
-        // Small check to make sure that PlaceholderAPI is installed
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new CreditsExpansion(this).register();
         }
@@ -125,7 +123,7 @@ public final class MCMMOCredits extends JavaPlugin {
     }
 
     /**
-     * <p>This method is here to check if {@link mcMMO} is enabled.
+     * <p>This method is here to check if MCMMO is enabled.
      * If it is not, then we also disable our Plugin.</p>
      */
     public void dependCheck() {
