@@ -4,7 +4,11 @@ import games.cultivate.mcmmocredits.MCMMOCredits;
 import org.bukkit.Bukkit;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 

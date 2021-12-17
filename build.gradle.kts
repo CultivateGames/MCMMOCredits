@@ -31,11 +31,11 @@ repositories {
 }
 
 dependencies {
-    implementation("cloud.commandframework:cloud-annotations:1.5.0")
-    implementation("cloud.commandframework:cloud-paper:1.5.0")
+    implementation("cloud.commandframework:cloud-annotations:1.6.0")
+    implementation("cloud.commandframework:cloud-paper:1.6.0")
     implementation("org.spongepowered:configurate-hocon:4.2.0-20210903.044723-5")
     implementation("net.kyori:adventure-text-minimessage:4.2.0-SNAPSHOT")
-    compileOnly("io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.18.1-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.10.10")
     compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.202")
 }
@@ -43,7 +43,7 @@ dependencies {
 group = "games.cultivate"
 version = "0.0.1-SNAPSHOT"
 description = "MCMMOCredits"
-java.sourceCompatibility = JavaVersion.VERSION_16
+java.sourceCompatibility = JavaVersion.VERSION_17
 
 tasks{
     shadowJar {

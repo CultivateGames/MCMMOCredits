@@ -99,7 +99,7 @@ target/
 javadocs/
 
 #Gradle
-/.gradle/
+.gradle/
 build/
 
 # Common working directory

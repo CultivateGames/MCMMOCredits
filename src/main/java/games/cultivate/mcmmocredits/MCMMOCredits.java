@@ -22,7 +22,6 @@ import java.util.function.Function;
 import java.util.logging.Level;
 
 /**
- * TODO: For the whole plugin, fix Static Abuse?
  * <p>This is the main class of the plugin. This is minimally used, except to handle processes which need to occur
  * during plugin enable and disable.</p>
  *
