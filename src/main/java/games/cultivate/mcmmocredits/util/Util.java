@@ -58,9 +58,10 @@ public class Util {
      */
     @SuppressWarnings("deprecation")
     public static OfflinePlayer getOfflineUser(String username) {
-        if (Bukkit.getOfflinePlayerIfCached(username) == null || !isPaper() || !(boolean) ConfigHandler.value("use-usercache-lookup")) {
-            return Bukkit.getOfflinePlayer(username);
+        boolean usercacheLookup = (boolean) ConfigHandler.value("use-usercache-lookup");
+        if(usercacheLookup && isPaper() && Bukkit.getOfflinePlayerIfCached(username) != null) {
+            return Bukkit.getOfflinePlayerIfCached(username);
         }
-        return (boolean) ConfigHandler.value("use-usercache-lookup") && isPaper() ? Bukkit.getOfflinePlayerIfCached(username) : Bukkit.getOfflinePlayer(username);
+        return Bukkit.getOfflinePlayer(username);
     }
 }
