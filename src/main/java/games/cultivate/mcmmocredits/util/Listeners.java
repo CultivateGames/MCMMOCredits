@@ -32,12 +32,12 @@ public class Listeners implements Listener {
      * to the I/O operation required to add a user.</p>
      *
      * @param e This is the {@link AsyncPlayerPreLoginEvent} that is being fired by the server.
-     * @see Database#add(UUID, int)
+     * @see Database#addPlayer(UUID, int)
      */
     @EventHandler
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
         if (!Database.doesPlayerExist(e.getPlayerProfile().getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
-            Database.add(e.getPlayerProfile().getId(), 0);
+            Database.addPlayer(e.getPlayerProfile().getId(), 0);
             if ((boolean) ConfigHandler.value("database-add-message")) {
                 Bukkit.getLogger().log(Level.INFO, e.getPlayerProfile().getName() + " has been added to the MCMMO Credits Database!");
             }

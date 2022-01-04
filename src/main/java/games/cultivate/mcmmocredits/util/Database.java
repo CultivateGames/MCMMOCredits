@@ -20,8 +20,8 @@ import java.util.concurrent.CompletableFuture;
  * @see Database#getConnection(String)
  * @see Database#initDB()
  * @see Database#shutdownDB(Connection)
- * @see Database#add(UUID, int)
- * @see Database#update(UUID, int)
+ * @see Database#addPlayer(UUID, int)
+ * @see Database#setCredits(UUID, int) 
  * @see Database#doesPlayerExist(UUID)
  * @see Database#getCredits(UUID)
  */
@@ -97,7 +97,7 @@ public class Database {
      * @param credits The amount of MCMMO Credits to give the user upon entry creation. Currently, this is always 0.
      * @see Listeners#onPlayerPreLogin(AsyncPlayerPreLoginEvent)
      */
-    public static void add(UUID uuid, int credits) {
+    public static void addPlayer(UUID uuid, int credits) {
         Bukkit.getScheduler().runTaskAsynchronously(MCMMOCredits.getInstance(), () -> {
             try {
                 Connection connection = getConnection(MCMMOCredits.getDBURL());
@@ -129,7 +129,7 @@ public class Database {
      * @see games.cultivate.mcmmocredits.commands.ModifyCredits
      * @see games.cultivate.mcmmocredits.commands.Redeem
      */
-    public static void update(UUID uuid, int credits) {
+    public static void setCredits(UUID uuid, int credits) {
         Bukkit.getScheduler().runTaskAsynchronously(MCMMOCredits.getInstance(), () -> {
             try {
                 Connection connection = getConnection(MCMMOCredits.getDBURL());
