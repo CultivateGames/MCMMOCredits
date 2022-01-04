@@ -4,9 +4,8 @@ The most essential and basic MCMMO Credits plugin.
 ## Requirements
 This plugin currently requires a Minecraft server with the following installed:
 1. Java 17
-2. 1.18.1
-3. Paper or any of it's forks (Pufferfish).
-4. MCMMO
+2. 1.18.1 Paper or any of it's forks (Pufferfish).
+3. MCMMO
 
 #### Why is there no Spigot support or x.xx version support?
 This plugin is developed for (mostly) personal use. I do not have the bandwidth to support Spigot and a plethora of versions. It also has a small bit of API usage that is Paper exclusive.
@@ -50,3 +49,18 @@ Mod: mcmmocredits.check.*, mcmmocredits.redeem.*
 Admin: mcmmocredits.modify.*, mcmmocredits.admin.reload.*
 ```
 At this point, setup is complete. Users are able to check their own balance and redeem their credits, mods are able to check other people's credit balance and help them redeem credits, and admins are able to manage the plugin with ease.
+
+## Hocon Configuration
+This plugin uses Hocon for configuration, because of the ability to include comments more seamlessly within the configuration.
+Some basics about configuring within Hocon can be found here: https://docs.spongepowered.org/stable/en/server/getting-started/configuration/hocon.html
+
+For plugin specific information, default configurations can be found at the following locations:
+
+Messages: https://github.com/CultivateGames/MCMMOCredits/blob/master/src/main/resources/messages.conf
+
+Settings: https://github.com/CultivateGames/MCMMOCredits/blob/master/src/main/resources/settings.conf
+
+#### Message Customization
+This plugin uses MiniMessage to parse messages. This means all messages within the plugin can support some enhanced functionalities, which can be found here: https://docs.adventure.kyori.net/minimessage#the-components
+
+You can also preview any Mini Message configuration by going here: https://webui.adventure.kyori.net/
