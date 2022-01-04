@@ -333,10 +333,10 @@ public final class ConfigHandler {
         private final String player_does_not_exist = "<red>This player does not exist in our database!";
 
         /**
-         * <p>Shown to user when they successfully reload the Plugin.</p>
+         * <p>Shown to user when they successfully reload any of the plugin's files.</p>
          */
         @Comment("Shown to user when they successfully reload the Plugin.")
-        private final String reload_successful = "<green>All configuration files have been reloaded!";
+        private final String reload_successful = "<green>The relevant configuration fileshave been reloaded!";
 
         /**
          * <p>Shown to user when they try to redeem MCMMO Credits to go over a skill's level cap.</p>
