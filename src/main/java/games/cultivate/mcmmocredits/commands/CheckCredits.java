@@ -32,6 +32,7 @@ import java.util.logging.Level;
  * @see CheckCredits#checkCredits(CommandSender)
  * @see CheckCredits#checkCreditsOther(CommandSender, String)
  */
+@CommandMethod("credits")
 public class CheckCredits {
     /**
      * <p>Command that is used for player to check their own MCMMO Credit balance.
@@ -43,7 +44,7 @@ public class CheckCredits {
      * @param sender The {@link CommandSender} that executed the command.
      */
     @CommandDescription("Check your own MCMMO Credits!")
-    @CommandMethod("credits")
+    @CommandMethod("")
     @CommandPermission("mcmmocredits.check.self")
     private void checkCredits(CommandSender sender) {
         if (!(sender instanceof Player)) {
@@ -66,7 +67,7 @@ public class CheckCredits {
      * @see CheckCredits#checkCredits(CommandSender)
      */
     @CommandDescription("Check the MCMMO Credits of another user!")
-    @CommandMethod("credits <player>")
+    @CommandMethod("<player>")
     @CommandPermission("mcmmocredits.check.other")
     private void checkCreditsOther(CommandSender sender, @Argument("player") String username) {
         if (Util.processPlayer(username)) {

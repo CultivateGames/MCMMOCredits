@@ -36,10 +36,11 @@ import java.util.UUID;
  * 3. /modifycredits set [number] [username]: Sets a user's MCMMO Credit balance to the provided balance.
  * <br>
  *
- * @see ModifyCredits#addCredits(CommandSender, String, int, String)
- * @see ModifyCredits#setCredits(CommandSender, String, int, String)
- * @see ModifyCredits#takeCredits(CommandSender, String, int, String)
+ * @see ModifyCredits#addCredits(CommandSender,  int, String)
+ * @see ModifyCredits#setCredits(CommandSender,  int, String)
+ * @see ModifyCredits#takeCredits(CommandSender,  int, String)
  */
+@CommandMethod("modifycredits")
 public class ModifyCredits {
     /**
      * <p>Command that is used to modify MCMMO Credit balance of any user on the server.
@@ -55,69 +56,66 @@ public class ModifyCredits {
      * so users will not be able to invert the usage of take/add modifiers.</p>
      *
      * @param sender   The {@link CommandSender} that executed the command.
-     * @param add      String which represents how to modify MCMMO Credit balance.
      * @param amount   Amount by which to modify MCMMO Credit Balance
      * @param username String which represents an {@link OfflinePlayer}'s username.
-     * @see Database#update(UUID, int)
+     * @see Database#setCredits(UUID, int) (UUID, int)
      */
     @CommandDescription("MCMMO Credits Modification - Add")
-    @CommandMethod("modifycredits add <amount> <player>")
+    @CommandMethod("add <amount> <player>")
     @CommandPermission("mcmmocredits.modify.add")
-    private void addCredits(CommandSender sender, @Completions("add, set, take") String add, @Argument("amount") @Range(min = "0", max = "2147483647") int amount, @Argument("player") String username) {
+    private void addCredits(CommandSender sender, @Argument("amount") @Range(min = "0", max = "2147483647") int amount, @Argument("player") String username) {
         if (!Util.processPlayer(username)) {
             ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("player-does-not-exist")));
             return;
         }
         UUID uuid = Util.getOfflineUser(username).getUniqueId();
-        Database.update(uuid, Database.getCredits(uuid) + amount);
+        Database.setCredits(uuid, Database.getCredits(uuid) + amount);
         ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("modify-credits-add"), amount));
     }
 
     /**
-     * <p>Procedure is the same as {@link ModifyCredits#addCredits(CommandSender, String, int, String)},
+     * <p>Procedure is the same as {@link ModifyCredits#addCredits(CommandSender, int, String)},
      * except we are setting the balance instead of adding to it.</p>
      *
      * @param sender   The {@link CommandSender} that executed the command.
-     * @param set      String which represents how to modify MCMMO Credit balance.
      * @param amount   Amount by which to modify MCMMO Credit Balance
      * @param username String which represents an {@link OfflinePlayer}'s username.
-     * @see Database#update(UUID, int)
-     * @see ModifyCredits#addCredits(CommandSender, String, int, String)
+     * @see Database#setCredits(UUID, int) (UUID, int)
+     * @see ModifyCredits#addCredits(CommandSender, int, String)
      */
     @CommandDescription("MCMMO Credits Modification - Set")
-    @CommandMethod("modifycredits set <amount> <player>")
+    @CommandMethod("set <amount> <player>")
     @CommandPermission("mcmmocredits.modify.set")
-    private void setCredits(CommandSender sender, @Completions("add, set, take") String set, @Argument("amount") @Range(min = "0", max = "2147483647") int amount, @Argument("player") String username) {
+    private void setCredits(CommandSender sender, @Argument("amount") @Range(min = "0", max = "2147483647") int amount, @Argument("player") String username) {
         if (!Util.processPlayer(username)) {
             ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("player-does-not-exist")));
             return;
         }
         UUID uuid = Util.getOfflineUser(username).getUniqueId();
-        Database.update(uuid, amount);
+        Database.setCredits(uuid, amount);
         ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("modify-credits-set"), amount));
     }
 
     /**
-     * <p>Procedure is the same as {@link ModifyCredits#addCredits(CommandSender, String, int, String)},
+     * <p>Procedure is the same as {@link ModifyCredits#addCredits(CommandSender, int, String)},
      * except we are subtracting from the balance instead of adding to it.</p>
      *
      * @param sender   The {@link CommandSender} that executed the command.
-     * @param take     String which represents how to modify MCMMO Credit balance.
      * @param amount   Amount by which to modify MCMMO Credit Balance
      * @param username String which represents an {@link OfflinePlayer}'s username.
-     * @see Database#update(UUID, int)
-     * @see ModifyCredits#addCredits(CommandSender, String, int, String)
+     * @see Database#setCredits(UUID, int) (UUID, int)
+     * @see ModifyCredits#addCredits(CommandSender, int, String)
      */
-    @CommandDescription("MCMMO Credits Modification - Add")
-    @CommandMethod("modifycredits take <amount> <player>")
+    @CommandDescription("MCMMO Credits Modification - Take")
+    @CommandMethod("take <amount> <player>")
     @CommandPermission("mcmmocredits.modify.take")
-    private void takeCredits(CommandSender sender, @Completions("add, set, take") String take, @Argument("amount") @Range(min = "0", max = "2147483647") int amount, @Argument("player") String username) {
+    private void takeCredits(CommandSender sender, @Argument("amount") @Range(min = "0", max = "2147483647") int amount, @Argument("player") String username) {
         if (!Util.processPlayer(username)) {
             ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("player-does-not-exist")));
             return;
         }
         UUID uuid = Util.getOfflineUser(username).getUniqueId();
-        Database.update(uuid, Database.getCredits(uuid) - amount);
+        Database.setCredits(uuid, Database.getCredits(uuid) - amount);
         ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("modify-credits-take"), amount));
     }
 

@@ -92,7 +92,7 @@ public class Redeem {
                 return;
             }
             int newAmount = credits - amount;
-            Database.update(player.getUniqueId(), newAmount);
+            Database.setCredits(player.getUniqueId(), newAmount);
             ExperienceAPI.addLevel(player, skill.name(), amount);
             ConfigHandler.sendMessage(sender, ConfigHandler.parse(offlinePlayer, ConfigHandler.message("redeem-successful-other"), skillName, cap, amount));
         } catch (InvalidSkillException ignored) {
@@ -148,7 +148,7 @@ public class Redeem {
                 return;
             }
             int newAmount = credits - amount;
-            Database.update(uuid, newAmount);
+            Database.setCredits(uuid, newAmount);
             ExperienceAPI.addLevelOffline(uuid, skillName, amount);
             ConfigHandler.sendMessage(sender, ConfigHandler.parse(offlinePlayer, ConfigHandler.message("redeem-successful-other"), skillName, cap, amount));
         } catch (InvalidSkillException ignored) {
