@@ -243,7 +243,6 @@ public final class ConfigHandler {
      */
     @ConfigSerializable
     static class CreditsSettings {
-
         @Comment("Perform offline player lookups with usercache. PAPER ONLY. Disable if you are having problems.")
         private final boolean use_usercache_lookup = false;
 
