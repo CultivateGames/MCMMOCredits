@@ -79,7 +79,7 @@ public class Redeem {
                 }
                 //Specifically check for this key so that we are not parsing placeholders for a non-existent player.
                 if (result.equals(ConfigHandler.message("player-does-not-exist"))) {
-                    ConfigHandler.sendMessage(sender, ConfigHandler.parse(offlinePlayer, result));
+                    ConfigHandler.sendMessage(sender, ConfigHandler.message("player-does-not-exist"));
                 } else {
                     ConfigHandler.sendMessage(sender, ConfigHandler.parse(offlinePlayer, result, skillName, cap, amount));
                 }
