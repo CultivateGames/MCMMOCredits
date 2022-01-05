@@ -5,18 +5,14 @@ import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.parsers.Parser;
-import cloud.commandframework.annotations.specifier.Completions;
 import cloud.commandframework.annotations.specifier.Range;
 import cloud.commandframework.annotations.suggestions.Suggestions;
-import cloud.commandframework.arguments.parser.ArgumentParser;
 import cloud.commandframework.context.CommandContext;
 import games.cultivate.mcmmocredits.util.ConfigHandler;
 import games.cultivate.mcmmocredits.util.Database;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,110 +20,55 @@ import java.util.Queue;
 import java.util.UUID;
 
 /**
- * <p>This class is responsible for letting users execute commands which allow them to modify the MCMMO Credit balance of
- * any eligible user on the server.</p>
- *
- * <p>There are three commands created here:</p>
- * <br>
- * 1. /modifycredits add [number] [username]: Adds the specified amount of Credits to a user's MCMMO Credit balance.
- * <br>
- * 2. /modifycredits take [number] [username]: Takes the specified amount of Credits to a user's MCMMO Credit balance.
- * <br>
- * 3. /modifycredits set [number] [username]: Sets a user's MCMMO Credit balance to the provided balance.
- * <br>
- *
- * @see ModifyCredits#addCredits(CommandSender,  int, String)
- * @see ModifyCredits#setCredits(CommandSender,  int, String)
- * @see ModifyCredits#takeCredits(CommandSender,  int, String)
+ * This class is responsible for handling of the /modifycredits command.
  */
 @CommandMethod("modifycredits")
 public class ModifyCredits {
-    /**
-     * <p>Command that is used to modify MCMMO Credit balance of any user on the server.
-     * First, we check if the player should be processed, then perform actions based on the result. If we believe they
-     * should not be processed, then send a message and end execution.</p>
-     *
-     * <p>Next, we perform actual modification of Credit balance, based on the "modify" parameter, and then send a message
-     * with confirmation of the operation. If we get an invalid value here we will throw an {@link IllegalStateException}.</p>
-     *
-     * <p>Completions for this command are handled largely by the {@link Completions} annotation since they are static.</p>
-     *
-     * <p>We also do not allow negative integers through the {@link Range} annotation,
-     * so users will not be able to invert the usage of take/add modifiers.</p>
-     *
-     * @param sender   The {@link CommandSender} that executed the command.
-     * @param amount   Amount by which to modify MCMMO Credit Balance
-     * @param username String which represents an {@link OfflinePlayer}'s username.
-     * @see Database#setCredits(UUID, int) (UUID, int)
-     */
-    @CommandDescription("MCMMO Credits Modification - Add")
+    @CommandDescription("Add MCMMO Credits to a user's balance.")
     @CommandMethod("add <amount> <player>")
     @CommandPermission("mcmmocredits.modify.add")
-    private void addCredits(CommandSender sender, @Argument("amount") @Range(min = "0", max = "2147483647") int amount, @Argument("player") String username) {
-        if (!Util.processPlayer(username)) {
-            ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("player-does-not-exist")));
-            return;
+    private void addCredits(CommandSender sender, @Argument("amount") @Range(min = "1", max = "2147483647") int amount, @Argument("player") String username) {
+        if (shouldProcess(sender, username)) {
+            UUID uuid = Util.getOfflineUser(username).getUniqueId();
+            Database.setCredits(uuid, Database.getCredits(uuid) + amount);
+            ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("modify-credits-add"), amount));
         }
-        UUID uuid = Util.getOfflineUser(username).getUniqueId();
-        Database.setCredits(uuid, Database.getCredits(uuid) + amount);
-        ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("modify-credits-add"), amount));
     }
 
-    /**
-     * <p>Procedure is the same as {@link ModifyCredits#addCredits(CommandSender, int, String)},
-     * except we are setting the balance instead of adding to it.</p>
-     *
-     * @param sender   The {@link CommandSender} that executed the command.
-     * @param amount   Amount by which to modify MCMMO Credit Balance
-     * @param username String which represents an {@link OfflinePlayer}'s username.
-     * @see Database#setCredits(UUID, int) (UUID, int)
-     * @see ModifyCredits#addCredits(CommandSender, int, String)
-     */
-    @CommandDescription("MCMMO Credits Modification - Set")
+    @CommandDescription("Set a user's MCMMO Credit balance to the specified amount.")
     @CommandMethod("set <amount> <player>")
     @CommandPermission("mcmmocredits.modify.set")
     private void setCredits(CommandSender sender, @Argument("amount") @Range(min = "0", max = "2147483647") int amount, @Argument("player") String username) {
-        if (!Util.processPlayer(username)) {
-            ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("player-does-not-exist")));
-            return;
+        if (shouldProcess(sender, username)) {
+            UUID uuid = Util.getOfflineUser(username).getUniqueId();
+            Database.setCredits(uuid, amount);
+            ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("modify-credits-set"), amount));
         }
-        UUID uuid = Util.getOfflineUser(username).getUniqueId();
-        Database.setCredits(uuid, amount);
-        ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("modify-credits-set"), amount));
     }
 
-    /**
-     * <p>Procedure is the same as {@link ModifyCredits#addCredits(CommandSender, int, String)},
-     * except we are subtracting from the balance instead of adding to it.</p>
-     *
-     * @param sender   The {@link CommandSender} that executed the command.
-     * @param amount   Amount by which to modify MCMMO Credit Balance
-     * @param username String which represents an {@link OfflinePlayer}'s username.
-     * @see Database#setCredits(UUID, int) (UUID, int)
-     * @see ModifyCredits#addCredits(CommandSender, int, String)
-     */
-    @CommandDescription("MCMMO Credits Modification - Take")
+    @CommandDescription("Take MCMMO Credits away from a user's balance")
     @CommandMethod("take <amount> <player>")
     @CommandPermission("mcmmocredits.modify.take")
-    private void takeCredits(CommandSender sender, @Argument("amount") @Range(min = "0", max = "2147483647") int amount, @Argument("player") String username) {
+    private void takeCredits(CommandSender sender, @Argument("amount") @Range(min = "1", max = "2147483647") int amount, @Argument("player") String username) {
+        if (shouldProcess(sender, username)) {
+            UUID uuid = Util.getOfflineUser(username).getUniqueId();
+            Database.setCredits(uuid, Database.getCredits(uuid) - amount);
+            ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("modify-credits-take"), amount));
+        }
+    }
+
+    private boolean shouldProcess(CommandSender sender, String username) {
         if (!Util.processPlayer(username)) {
             ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("player-does-not-exist")));
-            return;
+            return false;
         }
-        UUID uuid = Util.getOfflineUser(username).getUniqueId();
-        Database.setCredits(uuid, Database.getCredits(uuid) - amount);
-        ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("modify-credits-take"), amount));
+        return true;
     }
 
     /**
-     * <p>This method is used to create a Suggestions Provider for this set of commands.</p>
+     * This is responsible for creating a Suggestions provider for these commands.
      *
-     * @param context Context of the command sender.
-     * @param input Command input from this command.
-     * @return {@link List<String>} of {@link Player} usernames.
-     * @see cloud.commandframework.context.CommandContext
-     * @see cloud.commandframework.annotations.suggestions.Suggestions
-     * @see cloud.commandframework.arguments.CommandArgument.Builder
+     * TODO: Figure out if this needs to be duplicated per class.
      */
     @Suggestions("player")
     public List<String> playerSuggestions(CommandContext<CommandSender> context, String input) {
@@ -140,12 +81,9 @@ public class ModifyCredits {
     }
 
     /**
-     * <p>This method is used to create an {@link ArgumentParser} for this set of commands.</p>
+     * This is responsible for creating an Argument Parser for these commands.
      *
-     * @param sender The command sender for this command.
-     * @param inputQueue Command input from the command sender.
-     * @return user input when parsing command arguments?
-     * @see cloud.commandframework.annotations.parsers.Parser
+     * TODO: Figure out if this needs to be duplicated per class.
      */
     @Parser(suggestions = "player")
     public String playerParser(CommandContext<CommandSender> sender, Queue<String> inputQueue) {

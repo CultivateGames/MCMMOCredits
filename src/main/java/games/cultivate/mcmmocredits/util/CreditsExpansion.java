@@ -6,22 +6,12 @@ import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * <p>This is a class used to provide compatability with PlaceholderAPI.
- * There is currently only one placeholder:</p>
- * <br>
- * 1. %mcmmocredits_credits%: Returns the amount of MCMMO Credits a user has.
+ * This is responsible for handling our registration with PlaceholderAPI.
+ * TODO: Fix compiler warning
  */
 public class CreditsExpansion extends PlaceholderExpansion {
-    /**
-     * <p>Instance of the plugin needed for PlaceholderAPI</p>
-     */
     private final MCMMOCredits instance;
 
-    /**
-     * This is part of the PlaceholderAPI integration
-     * @param instance Instance of the plugin providing Placeholder data.
-     * @see <a href="https://github.com/PlaceholderAPI/PlaceholderAPI" target="_top">PlaceholderAPI documentation.</a>
-     */
     public CreditsExpansion(MCMMOCredits instance) {
         this.instance = (MCMMOCredits) MCMMOCredits.getInstance();
     }
@@ -51,7 +41,6 @@ public class CreditsExpansion extends PlaceholderExpansion {
         if (identifier.equalsIgnoreCase("credits")) {
             return Database.getCredits(player.getUniqueId()) + "";
         }
-
         return null;
     }
 }
