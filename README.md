@@ -25,6 +25,9 @@ This plugin is developed for (mostly) personal use. I do not have the bandwidth 
 | ```/creditsreload messages``` | mcmmocredits.admin.reload.messages | /creload | Reloads the messages.conf file. |
 | ```/creditsreload all``` | mcmmocredits.admin.reload.all | /creload | Reloads all configuration files. |
 
+## Placeholders
+%mcmmocredits_credits%: Returns the amount of MCMMO Credits a user currently has.
+
 ## Quick Setup
 If you want to quickly setup this plugin, go through the following steps (assumes you know how plugins work, and that you are using LuckPerms + LP groups):
 1. Install MCMMO. The plugin will not enable if MCMMO is not detected.
