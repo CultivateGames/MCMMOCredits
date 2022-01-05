@@ -6,12 +6,10 @@ import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.parsers.Parser;
 import cloud.commandframework.annotations.suggestions.Suggestions;
-import cloud.commandframework.arguments.parser.ArgumentParser;
 import cloud.commandframework.context.CommandContext;
 import games.cultivate.mcmmocredits.util.ConfigHandler;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -21,29 +19,11 @@ import java.util.Queue;
 import java.util.logging.Level;
 
 /**
- * <p>This class is responsible for letting users execute commands which allow them to see their own
- * or another user's MCMMO Credit Balance.</p>
- *
- * <p>There are two commands created here:</p>
- * 1. /credits: Shows your own MCMMO Credit Balance
- * <br>
- * 2. /credits [username]: Shows the MCMMO Credit Balance of a specified user.
- *
- * @see CheckCredits#checkCredits(CommandSender)
- * @see CheckCredits#checkCreditsOther(CommandSender, String)
+ * This class is responsible for handling of the /credits command.
  */
 @CommandMethod("credits")
 public class CheckCredits {
-    /**
-     * <p>Command that is used for player to check their own MCMMO Credit balance.
-     * If the sender is not a Player, we send a warning and stop processing.</p>
-     *
-     * <p>If we know they are a player, checks are not necessary since they will be checking their own balance.
-     * We can safely process them since they are in the database as long as the Event Listeners work properly</p>
-     *
-     * @param sender The {@link CommandSender} that executed the command.
-     */
-    @CommandDescription("Check your own MCMMO Credits!")
+    @CommandDescription("Check your own MCMMO Credit balance.")
     @CommandMethod("")
     @CommandPermission("mcmmocredits.check.self")
     private void checkCredits(CommandSender sender) {
@@ -54,19 +34,7 @@ public class CheckCredits {
         ConfigHandler.sendMessage(sender, ConfigHandler.parse((Player) sender, ConfigHandler.message("credits-check-self")));
     }
 
-    /**
-     * <p>This command processes MCMMO Credit balance check in the same way,
-     * but passes another user instead of self-checking. The only difference is error handling in case this command
-     * is selected by accident by Cloud. This should be rare/non-existent.</p>
-     *
-     * <p>If the player should not be processed, we are just going to parse external placeholders for the message viewer
-     * If the message viewer is not a Player, skip parsing placeholders as we have no one to parse for.</p>
-     *
-     * @param sender   The {@link CommandSender} that executed the command.
-     * @param username String which represents an {@link OfflinePlayer}'s username.
-     * @see CheckCredits#checkCredits(CommandSender)
-     */
-    @CommandDescription("Check the MCMMO Credits of another user!")
+    @CommandDescription("Check someone else's MCMMO Credit balance.")
     @CommandMethod("<player>")
     @CommandPermission("mcmmocredits.check.other")
     private void checkCreditsOther(CommandSender sender, @Argument("player") String username) {
@@ -82,14 +50,9 @@ public class CheckCredits {
     }
 
     /**
-     * <p>This method is used to create a Suggestions Provider for this set of commands.</p>
+     * This is responsible for creating a Suggestions provider for these commands.
      *
-     * @param context Context of the command sender.
-     * @param input Command input from this command.
-     * @return {@link List<String>} of {@link Player} usernames.
-     * @see cloud.commandframework.context.CommandContext
-     * @see cloud.commandframework.annotations.suggestions.Suggestions
-     * @see cloud.commandframework.arguments.CommandArgument.Builder
+     * TODO: Figure out if this needs to be duplicated per class.
      */
     @Suggestions("player")
     public List<String> playerSuggestions(CommandContext<CommandSender> context, String input) {
@@ -101,14 +64,10 @@ public class CheckCredits {
         return list;
     }
 
-
     /**
-     * <p>This method is used to create an {@link ArgumentParser} for this set of commands.</p>
+     * This is responsible for creating an Argument Parser for these commands.
      *
-     * @param sender The command sender for this command.
-     * @param inputQueue Command input from the command sender.
-     * @return user input when parsing command arguments?
-     * @see cloud.commandframework.annotations.parsers.Parser
+     * TODO: Figure out if this needs to be duplicated per class.
      */
     @Parser(suggestions = "player")
     public String playerParser(CommandContext<CommandSender> sender, Queue<String> inputQueue) {

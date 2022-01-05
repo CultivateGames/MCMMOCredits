@@ -1,23 +1,17 @@
 package games.cultivate.mcmmocredits.util;
 
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 /**
- * <p>This is a Utility class which stores various methods which need to be widely accessed and
- * don't have a sensible location elsewhere.</p>
- *
- * @see Util#processPlayer(String)
- * @see Util#isPaper()
- * @see Util#getOfflineUser(String)
+ * This class is responsible for holding various methods which need to be accessible and have no sensible location elsewhere.
  */
 public class Util {
     /**
-     * <p>This method checks if the plugin should do processing by seeing if the user exists in our Database.
-     * If the user does not exist in our Database, we should NOT do any processing of the user.</p>
-     *
-     * @param username String representing a {@link OfflinePlayer}'s username.
-     * @return if the user exists in the MCMMO Credits Database based on their UUID.
+     * This is responsible for checking if the plugin should process the user that is passed through.
+     * <p>
+     * If the player does not exist in our Database, we will skip any further processing.
      */
     public static boolean processPlayer(String username) {
         if (getOfflineUser(username) == null) {
@@ -27,39 +21,18 @@ public class Util {
     }
 
     /**
-     * <p>This method checks if the server is running Paper by checking for a Paper-specific class.
-     * This saves us from uselessly packaging PaperLib. This Library is not needed for this type of Plugin.</p>
-     *
-     * @return if the Minecraft server is running Paper or a fork of Paper.
-     * @see <a href="https://papermc.io/" target="_top">Seriously, use Paper.</a>
-     */
-    public static boolean isPaper() {
-        boolean isPaper = false;
-        try {
-            Class.forName("com.destroystokyo.paper.MaterialSetTag");
-            isPaper = true;
-        } catch (Exception ignored) {
-        }
-        return isPaper;
-    }
-
-    /**
+     * This will choose between possible ways to access an OfflinePlayer instance.
+     * <p>
+     * This selection is based on configuration options, and we are inside a Spigot or Paper environment.
+     * <p>
+     * If the "use_usercache_lookup" setting is "false" and the server is running Spigot, this could be problematic.
+     * Looking up uncached Offline Players is risky. Users are advised to use Paper + the usercache.
      * TODO: Improve lookup to avoid using {@link Bukkit#getOfflinePlayer(String)}
-     *
-     * <p>This method chooses between ways to access a {@link OfflinePlayer} instance, based on configuration options and
-     * if the server is running Spigot or Paper.</p>
-     *
-     * <p>If the use_usercache_lookup setting is "false" and the server is running Spigot this could be problematic.
-     * Looking up uncached Offline Players is risky. Users should REALLY use Paper + the usercache.</p>
-     *
-     * @param username String representing a {@link OfflinePlayer}'s username.
-     * @return OfflinePlayer obtained by respecting plugin settings and server type.
-     * @see <a href="https://papermc.io/" target="_top">Seriously, use Paper.</a>
      */
     @SuppressWarnings("deprecation")
     public static OfflinePlayer getOfflineUser(String username) {
         boolean usercacheLookup = (boolean) ConfigHandler.value("use-usercache-lookup");
-        if(usercacheLookup && isPaper() && Bukkit.getOfflinePlayerIfCached(username) != null) {
+        if(usercacheLookup && MCMMOCredits.isPaper() && Bukkit.getOfflinePlayerIfCached(username) != null) {
             return Bukkit.getOfflinePlayerIfCached(username);
         }
         return Bukkit.getOfflinePlayer(username);

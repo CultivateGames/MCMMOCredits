@@ -1,38 +1,23 @@
 package games.cultivate.mcmmocredits.util;
 
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-
-import java.util.UUID;
 import java.util.logging.Level;
 
 /**
- * <p>This class is responsible for creating {@link org.bukkit.event.Event} Listeners
- * used for processing data and sending messages to {@link org.bukkit.entity.Player} entities.</p>
- *
- * @see Listeners#onPlayerPreLogin(AsyncPlayerPreLoginEvent)
- * @see Listeners#onPlayerJoin(PlayerJoinEvent)
+ * This class is responsible for any necessary Event Listeners that we may need.
  */
 public class Listeners implements Listener {
     /**
+     * This is responsible for adding users to the MCMMO Credits database.
+     * <p>
+     * We will only attempt to add users if they are able to login, and they do not exist already.
+     * This is to filter any odd login activity.
      * TODO: See if this should be moved to {@link PlayerJoinEvent}.
-     * <p>This method is responsible for adding {@link org.bukkit.entity.Player} entities to the MCMMO Credits database.</p>
-     *
-     * <p>We will only attempt to add users if they are allowed to login, and if they do not exist in our Database.
-     * This should be sufficient filtering for users who fail to login or are invalid in some other way.</p>
-     *
-     * <p>After that, we check our settings to see if we should print a log to console about this addition.</p>
-     *
-     * <p>We elected to use this event instead of a regular {@link PlayerJoinEvent} due
-     * to the I/O operation required to add a user.</p>
-     *
-     * @param e This is the {@link AsyncPlayerPreLoginEvent} that is being fired by the server.
-     * @see Database#addPlayer(UUID, int)
      */
     @EventHandler
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
@@ -45,13 +30,8 @@ public class Listeners implements Listener {
     }
 
     /**
-     * <p>This method is responsible for determining if we want to send the user a
-     * message on login about the status of their MCMMO Credits.</p>
-     *
-     * <p>We check if this feature is enabled, and then if it is,
-     * we send a parsed {@link Component} to the user.</p>
-     *
-     * @param e The {@link PlayerJoinEvent} that is being fired by the server.
+     * This is responsible for sending users a message on login about the status of their
+     * MCMMO Credits, if that is enabled.
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {

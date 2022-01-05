@@ -22,126 +22,89 @@ import java.util.function.Function;
 import java.util.logging.Level;
 
 /**
- * <p>This is the main class of the plugin. This is minimally used, except to handle processes which need to occur
- * during plugin enable and disable.</p>
- *
- * @see MCMMOCredits#onEnable()
- * @see MCMMOCredits#onDisable()
- * @see MCMMOCredits#dependCheck()
- * @see MCMMOCredits#loadCommands()
+ * This class is responsible for startup/shutdown logic, and command loading.
  */
 public final class MCMMOCredits extends JavaPlugin {
-    /**
-     * <p>An Instance of the plugin.</p>
-     * @see MCMMOCredits#getInstance()
-     */
     private static JavaPlugin instance;
-    /**
-     * <p>String which represents the Database URL</p>
-     * @see MCMMOCredits#getDBURL()
-     */
-    private static String url;
-    /**
-     * An instance of MiniMessage.
-     * @see MCMMOCredits#getMM()
-     */
     private static MiniMessage mm;
+    private static boolean isPaper = false;
 
     /**
-     * <p>This method is here to provide an instance of the plugin.</p>
-     *
-     * @return An instance of the {@link JavaPlugin}
+     * This provides a usable instance of the plugin.
      */
     public static JavaPlugin getInstance() {
         return instance;
     }
 
     /**
-     * <p>This method is here to provide the {@link Database} class a copy of the DB URL.</p>
-     *
-     * @return A string which represents the Database Connection URL.
-     */
-    public static String getDBURL() {
-        return url;
-    }
-
-    /**
-     * <p>This method is here to provide an instance of MiniMessage to send out.</p>
-     * {@link net.kyori.adventure.text.Component} objects when necessary.
-     *
-     * @return An instance of {@link MiniMessage}.
-     * @see <a href="https://docs.adventure.kyori.net/minimessage" target="_top">This plugin uses Mini Message!</a>
+     * This provides an instance of Kyori + MiniDigger's MiniMessage for message parsing.
      */
     public static MiniMessage getMM() {
         return mm;
     }
 
     /**
-     * TODO: Database - Is there a better way to to do the URL?
-     * <p>This method is called when the plugin is being enabled. Here, we handle the following tasks:</p>
-     * 1. Instances of the plugin and MiniMessage.
-     * <br>
-     * 2. mcMMO Dependency Check.
-     * <br>
-     * 3. Load/Create Configuration files (settings.conf/messages.conf).
-     * <br>
-     * 4. SQLite Database initialization.
-     * <br>
-     * 5. Command Loading and Registering.
-     * <br>
-     * 6. Registering Event Listeners.
+     * This will tell us if we are in a Paper-based environment.
+     * <p>
+     * Moved from the Util class so that we are only checking once.
+     */
+    public static boolean isPaper() {
+        return isPaper;
+    }
+
+    /**
+     * This handles all startup logic.
+     * <p>
+     * This includes creating any necessary instances and dependency checks.
+     * <p>
+     * This is also responsible for loading configurations,
+     * audiences, and registering our event listeners/commands.
+     * TODO: Possibly rethink order of events.
      */
     @Override
     public void onEnable() {
         instance = this;
         mm = MiniMessage.miniMessage();
 
-        this.dependCheck();
-
         ConfigHandler.loadFile("settings");
         ConfigHandler.loadFile("messages");
 
-        url = "jdbc:sqlite:" + getDataFolder().getAbsolutePath() + "\\database.db";
         Database.initDB();
 
         this.loadCommands();
+        this.dependCheck();
+
         Bukkit.getPluginManager().registerEvents(new Listeners(), this);
+    }
+
+    /**
+     * This handles all shutdown logic.
+     * <p>
+     * This includes shutting down the Database connection, and disabling our Adventure audience.
+     */
+    @Override
+    public void onDisable() {
+        Database.shutdownDB();
+    }
+
+    private void dependCheck() {
+        try {
+            Class.forName("com.destroystokyo.paper.MaterialSetTag");
+            isPaper = true;
+        } catch (Exception ignored) {
+        }
+
+        if (Bukkit.getPluginManager().getPlugin("mcMMO") != null) {
+            this.getLogger().log(Level.SEVERE, "MCMMO is not found, disabling plugin...");
+            this.setEnabled(false);
+            return;
+        }
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new CreditsExpansion(this).register();
         }
     }
 
-    /**
-     * <p>This method is called when the plugin is being disabled. Here, we handle the following tasks:</p>
-     * 1. Shutdown Database connection.
-     */
-    @Override
-    public void onDisable() {
-        Database.shutdownDB(Database.getConnection(url));
-    }
-
-    /**
-     * <p>This method is here to check if MCMMO is enabled.
-     * If it is not, then we also disable our Plugin.</p>
-     */
-    public void dependCheck() {
-        if (!Bukkit.getServer().getPluginManager().isPluginEnabled("mcMMO")) {
-            this.getLogger().log(Level.SEVERE, "MCMMO is not found, disabling plugin...");
-            this.setEnabled(false);
-        }
-    }
-
-    /**
-     * <p>This method is here to handle the loading and registering of Commands. Here, we handle the following tasks:</p>
-     * 1. Instantiating a {@link PaperCommandManager}.
-     * <br>
-     * 2. Registering capabilities if they can be used on the particular server.
-     * <br>
-     * 3. Creating the {@link AnnotationParser} and registering our commands.
-     *
-     * @see <a href="https://github.com/Incendo/cloud" target="_top">Incendo's Cloud Command Framework!</a>
-     */
     private void loadCommands() {
         PaperCommandManager<CommandSender> commandManager;
         try {

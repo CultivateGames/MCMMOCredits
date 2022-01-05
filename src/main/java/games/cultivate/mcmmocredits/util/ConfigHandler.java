@@ -2,16 +2,13 @@ package games.cultivate.mcmmocredits.util;
 
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import me.clip.placeholderapi.PlaceholderAPI;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.serialize.TypeSerializer;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,63 +21,31 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * <p>This class is responsible for configuration management for the messages.conf and settings.conf file.
- * This class is also responsible for local placeholder parsing, and message sending.</p>
- *
- * @see ConfigHandler#createFile(String)
- * @see ConfigHandler#loadFile(String)
- * @see ConfigHandler#value(String)
- * @see ConfigHandler#message(String)
- * @see ConfigHandler#parse(OfflinePlayer, String)
- * @see ConfigHandler#parse(OfflinePlayer, String, int)
- * @see ConfigHandler#parse(OfflinePlayer, String, String, int, int)
- * @see ConfigHandler#sendMessage(CommandSender, String)
- * @see CreditsMessages
- * @see CreditsSettings
+ * This class is responsible for all configuration management, and message parsing/sending.
  */
 public final class ConfigHandler {
+    private static final Pattern pattern = Pattern.compile("%(.*?)%");
+    private static CommentedConfigurationNode messages_instance;
+    private static CommentedConfigurationNode settings_instance;
 
     /**
-     * <p>Pattern used for placeholder parsing.</p>
-     */
-    static final Pattern pattern = Pattern.compile("%(.*?)%");
-    /**
-     * <p>Public instance of the messages.conf file.</p>
-     */
-    public static CommentedConfigurationNode messages_instance;
-    /**
-     * <p>Public instance of the settings.conf file.</p>
-     */
-    public static CommentedConfigurationNode settings_instance;
-
-    /**
-     * <p>This method is provided to easily access values in settings.conf
-     * We are providing an {@link Object} so that we can access different types of value in the file in the future.</p>
-     *
-     * @param key String which represents what key we should access in settings.conf
-     * @return {@link Object} which represents the provided key.
+     * This is used to access values from settings.conf as an Object.
+     * TODO: Enumerate config settings.
      */
     public static Object value(String key) {
         return settings_instance.node(key).raw();
     }
 
     /**
-     * <p>This method is provided to easily access values in messages.conf</p>
-     *
-     * @param messageKey String which represents what key we should access in messages.conf
-     * @return {@link String} which represents the provided key.
+     * This is used to access values from messages.conf as a String.
+     * TODO: Enumerate messages.
      */
     public static String message(String messageKey) {
         return messages_instance.node(messageKey).getString();
     }
 
     /**
-     * <p>This method is responsible for creating or skipping creation of our config files.</p>
-     * <p>We create a File instance, then check if we need to make directories or create the file if it's missing.
-     * Then, we send feedback based on the result of that check.</p>
-     *
-     * @param fileName String representing which file we are creating.
-     * @return {@link File} object for the file we just created.
+     * This is responsible for creating configuration files if we believe they do not exist.
      */
     public static File createFile(String fileName) {
         File file = new File(MCMMOCredits.getInstance().getDataFolder().getAbsolutePath() + "\\" + fileName + ".conf");
@@ -97,21 +62,8 @@ public final class ConfigHandler {
     }
 
     /**
-     * <p>This method is responsible for attempting to load our config files, and set an accessible instance of the file.</p>
-     * <p>
-     * We are doing the following here:
-     * <br>
-     * 1. Create a {@link File} and {@link Path} object.
-     * <br>
-     * 2. Build a {@link HoconConfigurationLoader} to build our HOCON configurations.
-     * <br>
-     * 3. Create a {@link CommentedConfigurationNode} to interact with our loader.
-     * <br>
-     * 4. Load the file, and set it's contents using the appropriate {@link TypeSerializer}.
-     * <br>
-     * 5. Save the file and set the instance.
-     *
-     * @param fileType String representing which file we are trying to load.
+     * This is responsible for attempting to load configuration files, and then creating an instance of the result.
+     * TODO: de-duplicate
      */
     public static void loadFile(String fileType) {
         File file = createFile(fileType);
@@ -146,20 +98,9 @@ public final class ConfigHandler {
     }
 
     /**
-     * <p>This method is responsible for parsing universal local, and external placeholders. This is compatible with every message
-     * in the plugin. We separate out this parsing to avoid processing when possible.</p>
-     * <p>Messages can be parsed for the following placeholders here:</p>
-     * %credits%: MCMMO Credit balance for the provided {@link Player}
-     * <br>
-     * %player%: Username of the provided {@link Player}
-     * <br>
-     * {@link PlaceholderAPI}: We will parse PAPI messages in all places.
-     * <br>
-     * @param offlinePlayer {@link OfflinePlayer} instance to parse placeholders for
-     * @param text          {@link String} object to parse placeholders within.
-     * @return {@link String} with parsed, local and external placeholders.
-     * @see ConfigHandler#parse(OfflinePlayer, String, int)
-     * @see ConfigHandler#parse(OfflinePlayer, String, String, int, int)
+     * This is responsible for parsing out placeholders within our messages.
+     * <p>
+     * This is the basic placeholder parser, which will only parse information we will always have.
      */
     public static String parse(OfflinePlayer offlinePlayer, String text) {
         Matcher matcher = pattern.matcher(text);
@@ -182,24 +123,10 @@ public final class ConfigHandler {
     }
 
     /**
-     * <p>This method is responsible for parsing all placeholders in
-     * {@link ConfigHandler#parse(OfflinePlayer, String)} along with amount values where relevant.</p>
-     * <p>Messages can be parsed for the following placeholders here:</p>
-     * %credits%: MCMMO Credit balance for the provided {@link Player}
-     * <br>
-     * %player%: Username of the provided {@link Player}
-     * <br>
-     * %amount%: Amount of MCMMO Credits being passed.
-     * <br>
-     * {@link PlaceholderAPI}: We will parse PAPI messages in all places.
-     * <br>
-     *
-     * @param offlinePlayer {@link OfflinePlayer} instance to parse placeholders for
-     * @param text          {@link String} object to parse placeholders within.
-     * @param amount amount of MCMMO Credits being modified within this operation.
-     * @return {@link String} with parsed, local and external placeholders.
-     * @see ConfigHandler#parse(OfflinePlayer, String)
-     * @see ConfigHandler#parse(OfflinePlayer, String, String, int, int)
+     * This is responsible for parsing out placeholders within our messages.
+     * <p>
+     * This is a contextual placeholder parser, which will only work if we are
+     * within a transaction which modifies Credit balance.
      */
     public static String parse(OfflinePlayer offlinePlayer, String text, int amount) {
         Matcher matcher = pattern.matcher(text);
@@ -222,31 +149,10 @@ public final class ConfigHandler {
     }
 
     /**
-     * <p>This method is responsible for parsing all placeholders available.
-     * This is compatible only in instances where all arguments can be passed.
-     * We separate out this parsing to avoid processing when possible.</p>
-     * <p>Messages can be parsed for the following placeholders here:</p>
-     * %credits%: MCMMO Credit balance for the provided {@link Player}
-     * <br>
-     * %player%: Username of the provided {@link Player}
-     * <br>
-     * %amount%: Amount of MCMMO Credits being passed.
-     * <br>
-     * %skill%: Name of relevant MCMMO Skill
-     * <br>
-     * %cap%: Level Cap of previously reference MCMMO Skill.
-     * <br>
-     * {@link PlaceholderAPI}: We will parse PAPI messages in all places.
-     * <br>
-     *
-     * @param offlinePlayer {@link OfflinePlayer} instance to parse placeholders for
-     * @param text {@link String} object to parse placeholders within.
-     * @param skill Name of relevant MCMMO Skill.
-     * @param cap Level cap of previously referenced MCMMO skill.
-     * @param amount amount of MCMMO Credits being modified within this operation.
-     * @return {@link String} with parsed, local and external placeholders.
-     * @see ConfigHandler#parse(OfflinePlayer, String, int)
-     * @see ConfigHandler#parse(OfflinePlayer, String, String, int, int)
+     * This is responsible for parsing out placeholders within our messages.
+     * <p>
+     * This is a contextual placeholder parser, which will only work if we are
+     * within a transaction which is part of redeeming MCMMO Credits into a skill.
      */
     public static String parse(OfflinePlayer offlinePlayer, String text, String skill, int cap, int amount) {
         Matcher matcher = pattern.matcher(text);
@@ -271,146 +177,82 @@ public final class ConfigHandler {
     }
 
     /**
-     * <p>This method is responsible for sending messages to users.</p>
-     *
-     * @param commandSender {@link CommandSender} to send a message to.
-     * @param text          {@link String} that is being converted to {@link Component} and sent to the user.
+     * This is responsible for actually sending the message to a user. All messages sent out are prepended with a prefix.
+     * TODO: Enumerate all config values.
      */
     public static void sendMessage(CommandSender commandSender, String text) {
         commandSender.sendMessage(MCMMOCredits.getMM().parse(message("prefix") + text));
     }
 
     /**
-     * <p>This class is used to help generate the messages.conf file. The values in this class are defaults for the plugin.</p>
-     *
-     * <p>YAML doesn't support comments in Configurate 4.2.0-SNAPSHOT because of SnakeYAML.
-     * Until then, we will use HOCON. We can use Transformations to go back to YAML in a future version if required</p>
-     *
-     * @see <a href="https://github.com/SpongePowered/Configurate/pull/175" target="_top">Refer to this PR for more info.</a>
+     * This class is responsible for generating the default messages.conf file. All values here represent defaults.
      */
     @ConfigSerializable
     static class CreditsMessages {
-        /**
-         * <p>Prefix for all plugin messages.</p>
-         */
         @Comment("Prefix for all plugin messages.")
         private final String prefix = "<gold><bold>CREDITS</bold> ";
 
-        /**
-         * <p>Shown to user when invalid arguments are used in a command.</p>
-         */
         @Comment("Shown to user when invalid arguments are used in a command.")
         private final String invalid_args = "<red>Invalid args!";
 
-        /**
-         * <p>Shown to user when they use an invalid number.</p>
-         */
         @Comment("Shown to user when they use an invalid number.")
         private final String must_be_number = "<red>You need to specify a valid number.";
 
-        /**
-         * <p>Shown to user when they do not have permission to execute a command!</p>
-         */
         @Comment("Shown to user when they do not have permission to execute a command!")
         private final String no_perms = "<red>You do not have permission to do this!";
 
-        /**
-         * <p>Shown to user when they check their own MCMMO Credits amount with /credits.</p>
-         */
         @Comment("Shown to user when they check their own MCMMO Credits amount with /credits.")
         private final String credits_check_self = "<green>You have %credits% MCMMO Credits!";
 
-        /**
-         * <p>Shown to user when they check the MCMMO Credit balance of another user with /credits.</p>
-         */
         @Comment("Shown to user when they check the MCMMO Credit balance of another user with /credits.")
         private final String credits_check_other = "<green>%player% has %credits% MCMMO Credits!";
 
-        /**
-         * <p>Shown to user when they use the command system and populate it with a player that does not exist.</p>
-         */
         @Comment("Shown to user when they use the command system and populate it with a player that does not exist.")
         private final String player_does_not_exist = "<red>This player does not exist in our database!";
 
-        /**
-         * <p>Shown to user when they successfully reload any of the plugin's files.</p>
-         */
         @Comment("Shown to user when they successfully reload the Plugin.")
-        private final String reload_successful = "<green>The relevant configuration fileshave been reloaded!";
+        private final String reload_successful = "<green>The relevant configuration files have been reloaded!";
 
-        /**
-         * <p>Shown to user when they try to redeem MCMMO Credits to go over a skill's level cap.</p>
-         */
         @Comment("Shown to user when they try to redeem MCMMO Credits to go over a skill's level cap.")
         private final String redeem_skill_cap = "<red>You cannot redeem this many MCMMO Credits into %skill%, due to the Level Cap (%cap%).";
-        /**
-         * <p>Shown to user when they try to redeem more MCMMO Credits than they have available.</p>
-         */
+
         @Comment("Shown to user when they try to redeem more MCMMO Credits than they have available.")
         private final String redeem_not_enough_credits = "<red>You do not have enough MCMMO Credits to do this!";
-        /**
-         * <p>Shown to user when they successfully redeem MCMMO Credits into a skill.</p>
-         */
+
         @Comment("Shown to user when they successfully redeem MCMMO Credits into a skill.")
         private final String redeem_successful = "<green>Redemption Successful! You have redeemed %amount% Credits into %skill%. You have %credits% Credits remaining.";
-        /**
-         * <p>Shown to user when they successfully redeem MCMMO Credits into a skill.</p>
-         */
+
         @Comment("Shown to user when they successfully redeem MCMMO Credits into a skill.")
         private final String redeem_successful_other = "<green>Redemption Successful! You have redeemed %amount% Credits into %skill% for %player%. They have %credits% Credits remaining.";
-        /**
-         * <p>Shown to user on login if send_login_message is set to true in settings.conf</p>
-         */
+
         @Comment("Shown to user on login if send_login_message is set to true in settings.conf")
         private final String login_message = "<hover:show_text:'<green>You have %credits% MCMMO Credits!'><yellow>Hover here to see how many MCMMO Credits you have!";
-        /**
-         * <p>Shown to user when a user adds MCMMO Credits to another user.
-         * %credits% placeholder will show previous balance since we are updating credit balances asynchronously.</p>
-         */
+
         @Comment("Shown to user when a user adds MCMMO Credits to another user. %credits% placeholder will show previous balance since we are updating credit balances asynchronously.")
         private final String modify_credits_add = "<green>You have given %amount% Credits to %player%";
-        /**
-         * <p>Shown to user when a user sets another user's balance to an amount.
-         * %credits% placeholder will show previous balance since we are updating credit balances asynchronously.</p>
-         */
+
         @Comment("Shown to user when a user sets another user's balance to an amount. %credits% placeholder will show previous balance since we are updating credit balances asynchronously.")
         private final String modify_credits_set = "<yellow>You have set %player%'s Credits to %amount%!";
-        /**
-         * <p>Shown to user when a user takes MCMMO Credits from another user.
-         * %credits% placeholder will show previous balance since we are updating credit balances asynchronously.</p>
-         */
+
         @Comment("Shown to user when a user takes MCMMO Credits from another user. %credits% placeholder will show previous balance since we are updating credit balances asynchronously.")
         private final String modify_credits_take = "<red>You have taken %amount% Credits from %player%";
     }
 
     /**
-     * <p>This class is used to help generate the settings.conf file. The values in this class are defaults for the plugin.</p>
-     *
-     * <p>YAML doesn't support comments in Configurate 4.2.0-SNAPSHOT because of SnakeYAML. Until then, we will use HOCON.
-     * We can use Transformations to go back to YAML in a future version if required.</p>
-     *
-     * @see <a href="https://github.com/SpongePowered/Configurate/pull/175" target="_top">Refer to this PR for more info.</a>
+     * This class is responsible for generating the default settings.conf file. All values here represent defaults.
      */
     @ConfigSerializable
     static class CreditsSettings {
-        /**
-         * <p>Perform offline player lookups with usercache. PAPER ONLY. Disable if you are having problems.</p>
-         */
+
         @Comment("Perform offline player lookups with usercache. PAPER ONLY. Disable if you are having problems.")
         private final boolean use_usercache_lookup = false;
-        /**
-         * <p>Toggles tab completion for Player based arguments. Useful if you have other plugins which hide staff.</p>
-         */
+
         @Comment("Toggles tab completion for Player based arguments. Useful if you have other plugins which hide staff.")
         private final boolean player_tab_completion = true;
-        /**
-         * <p>Toggles sending a login message to the user indicating how many MCMMO Credits they have. Message can be configured in messages.conf.</p>
-         */
+
         @Comment("Toggles sending a login message to the user indicating how many MCMMO Credits they have. Message can be configured in messages.conf.")
         private final boolean send_login_message = true;
-        /**
-         * <p>Toggles console message when a user is added to the MCMMO Credits database</p>
-         */
+
         @Comment("Toggles console message when a user is added to the MCMMO Credits database")
         private final boolean database_add_message = true;
     }
