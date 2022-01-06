@@ -14,7 +14,9 @@ import com.gmail.nossr50.api.exceptions.InvalidSkillException;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.util.skills.SkillTools;
-import games.cultivate.mcmmocredits.util.ConfigHandler;
+import games.cultivate.mcmmocredits.config.ConfigHandler;
+import games.cultivate.mcmmocredits.config.Messages;
+import games.cultivate.mcmmocredits.config.Settings;
 import games.cultivate.mcmmocredits.util.Database;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
@@ -47,14 +49,14 @@ public class Redeem {
         String skillName = skill.name();
         int cap = st.getLevelCap(skill);
         UUID uuid = player.getUniqueId();
-        String result = this.conditionCheck(uuid, skill, amount);
+        Messages result = this.conditionCheck(uuid, skill, amount);
         try {
             if (result == null) {
                 Database.setCredits(uuid, Database.getCredits(uuid) - amount);
                 ExperienceAPI.addLevel(player, skillName, amount);
-                ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(sender.getName()), ConfigHandler.message("redeem-successful"), skillName, cap, amount));
+                ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(sender.getName()), Messages.REDEEM_SUCCESSFUL, skillName, cap, amount));
             } else {
-                ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(sender.getName()), result, skillName, cap, amount));
+                ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(sender.getName()), result, skillName, cap, amount));
             }
         } catch (InvalidSkillException ignored) {
         }
@@ -69,37 +71,37 @@ public class Redeem {
             int cap = st.getLevelCap(skill);
             OfflinePlayer offlinePlayer = Util.getOfflineUser(username);
             UUID uuid = offlinePlayer.getUniqueId();
-            String result = this.conditionCheck(uuid, skill, amount);
+            Messages result = this.conditionCheck(uuid, skill, amount);
             try {
                 if (result == null) {
                     Database.setCredits(uuid, Database.getCredits(uuid) - amount);
                     ExperienceAPI.addLevelOffline(uuid, skillName, amount);
-                    ConfigHandler.sendMessage(sender, ConfigHandler.parse(offlinePlayer, ConfigHandler.message("redeem-successful-other"), skillName, cap, amount));
+                    ConfigHandler.sendMessage(sender, Util.parse(offlinePlayer, Messages.REDEEM_SUCCESSFUL_OTHER, skillName, cap, amount));
                     return;
                 }
                 //Specifically check for this key so that we are not parsing placeholders for a non-existent player.
-                if (result.equals(ConfigHandler.message("player-does-not-exist"))) {
-                    ConfigHandler.sendMessage(sender, ConfigHandler.message("player-does-not-exist"));
+                if (result.equals(Messages.PLAYER_DOES_NOT_EXIST)) {
+                    ConfigHandler.sendMessage(sender, Messages.PLAYER_DOES_NOT_EXIST.message());
                 } else {
-                    ConfigHandler.sendMessage(sender, ConfigHandler.parse(offlinePlayer, result, skillName, cap, amount));
+                    ConfigHandler.sendMessage(sender, Util.parse(offlinePlayer, result, skillName, cap, amount));
                 }
             } catch (InvalidSkillException ignored) {
             }
         }
     }
 
-    protected String conditionCheck(UUID uuid, PrimarySkillType skill, int amount) {
+    protected Messages conditionCheck(UUID uuid, PrimarySkillType skill, int amount) {
         if (!st.getNonChildSkills().contains(skill)) {
-            return ConfigHandler.message("invalid-args");
+            return Messages.INVALID_ARGUMENTS;
         }
         if (!Database.doesPlayerExist(uuid) || !db.doesPlayerExistInDB(uuid)) {
-            return ConfigHandler.message("player-does-not-exist");
+            return Messages.PLAYER_DOES_NOT_EXIST;
         }
         if (Database.getCredits(uuid) > amount) {
-            return ConfigHandler.message("redeem-not-enough-credits");
+            return Messages.REDEEM_NOT_ENOUGH_CREDITS;
         }
         if (ExperienceAPI.getLevelOffline(uuid, skill.name()) + amount > st.getLevelCap(skill)) {
-            return ConfigHandler.message("redeem-skill-cap");
+            return Messages.REDEEM_SKILL_CAP;
         }
         return null;
     }
@@ -112,7 +114,7 @@ public class Redeem {
     @Suggestions("player")
     public List<String> playerSuggestions(CommandContext<CommandSender> context, String input) {
         List<String> list = new ArrayList<>();
-        if ((boolean) ConfigHandler.value("player-tab-completion")) {
+        if ((boolean) Settings.PLAYER_TAB_COMPLETION.value()) {
             Bukkit.getOnlinePlayers().forEach(p -> list.add(p.getName()));
             return list;
         }

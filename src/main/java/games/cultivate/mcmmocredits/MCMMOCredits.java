@@ -5,11 +5,10 @@ import cloud.commandframework.bukkit.CloudBukkitCapabilities;
 import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.paper.PaperCommandManager;
-import games.cultivate.mcmmocredits.commands.CheckCredits;
+import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.ModifyCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
-import games.cultivate.mcmmocredits.commands.Reload;
-import games.cultivate.mcmmocredits.util.ConfigHandler;
+import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.util.CreditsExpansion;
 import games.cultivate.mcmmocredits.util.Database;
 import games.cultivate.mcmmocredits.util.Listeners;
@@ -121,8 +120,7 @@ public final class MCMMOCredits extends JavaPlugin {
         }
         AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(commandManager, CommandSender.class, parameters -> SimpleCommandMeta.empty());
         annotationParser.parse(new ModifyCredits());
-        annotationParser.parse(new CheckCredits());
-        annotationParser.parse(new Reload());
+        annotationParser.parse(new Credits());
         annotationParser.parse(new Redeem());
     }
 }
