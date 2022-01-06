@@ -11,6 +11,9 @@ public class MessageConfig {
     @Comment("Prefix for all plugin messages.")
     private final String prefix = "<gold><bold>CREDITS</bold> ";
 
+    @Comment("Shown to user when invalid arguments are used in a command.")
+    private final String invalid_arguments = "<red>Invalid arguments!";
+
     @Comment("Shown to user when they use an invalid number.")
     private final String must_be_number = "<red>You need to specify a valid number.";
 
