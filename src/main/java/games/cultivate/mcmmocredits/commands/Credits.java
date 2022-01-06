@@ -7,7 +7,9 @@ import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.parsers.Parser;
 import cloud.commandframework.annotations.suggestions.Suggestions;
 import cloud.commandframework.context.CommandContext;
-import games.cultivate.mcmmocredits.util.ConfigHandler;
+import games.cultivate.mcmmocredits.config.ConfigHandler;
+import games.cultivate.mcmmocredits.config.Messages;
+import games.cultivate.mcmmocredits.config.Settings;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -22,7 +24,7 @@ import java.util.logging.Level;
  * This class is responsible for handling of the /credits command.
  */
 @CommandMethod("credits")
-public class CheckCredits {
+public class Credits {
     @CommandDescription("Check your own MCMMO Credit balance.")
     @CommandMethod("")
     @CommandPermission("mcmmocredits.check.self")
@@ -31,7 +33,7 @@ public class CheckCredits {
             Bukkit.getLogger().log(Level.WARNING, "You must supply a username! /credits <player>");
             return;
         }
-        ConfigHandler.sendMessage(sender, ConfigHandler.parse((Player) sender, ConfigHandler.message("credits-check-self")));
+        ConfigHandler.sendMessage(sender, Util.parse((Player) sender, Messages.CREDITS_CHECK_SELF));
     }
 
     @CommandDescription("Check someone else's MCMMO Credit balance.")
@@ -39,13 +41,46 @@ public class CheckCredits {
     @CommandPermission("mcmmocredits.check.other")
     private void checkCreditsOther(CommandSender sender, @Argument("player") String username) {
         if (Util.processPlayer(username)) {
-            ConfigHandler.sendMessage(sender, ConfigHandler.parse(Util.getOfflineUser(username), ConfigHandler.message("credits-check-other")));
+            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Messages.CREDITS_CHECK_OTHER));
             return;
         }
         if (sender instanceof Player) {
-            ConfigHandler.sendMessage(sender, ConfigHandler.parse((Player) sender, ConfigHandler.message("player-does-not-exist")));
+            ConfigHandler.sendMessage(sender, Util.parse((Player) sender, Messages.PLAYER_DOES_NOT_EXIST));
         } else {
-            ConfigHandler.sendMessage(sender, ConfigHandler.message("player-does-not-exist"));
+            ConfigHandler.sendMessage(sender, Messages.PLAYER_DOES_NOT_EXIST.message());
+        }
+    }
+
+    @CommandDescription("Reload the settings.conf configuration file.")
+    @CommandMethod("reload settings")
+    @CommandPermission("mcmmocredits.admin.reload")
+    private void reloadSettings(CommandSender sender) {
+        ConfigHandler.loadFile("settings");
+        this.sendReloadMessage(sender);
+    }
+
+    @CommandDescription("Reload the messages.conf configuration file.")
+    @CommandMethod("reload messages")
+    @CommandPermission("mcmmocredits.admin.reload")
+    private void reloadMessages(CommandSender sender) {
+        ConfigHandler.loadFile("messages");
+        this.sendReloadMessage(sender);
+    }
+
+    @CommandDescription("Reload all configuration files provided by the plugin.")
+    @CommandMethod("reload all")
+    @CommandPermission("mcmmocredits.admin.reload")
+    private void reloadAll(CommandSender sender) {
+        ConfigHandler.loadFile("settings");
+        ConfigHandler.loadFile("messages");
+        this.sendReloadMessage(sender);
+    }
+
+    private void sendReloadMessage(CommandSender sender) {
+        if (sender instanceof Player) {
+            ConfigHandler.sendMessage(sender, Util.parse((Player) sender, Messages.RELOAD_SUCCESSFUL));
+        } else {
+            ConfigHandler.sendMessage(sender, Messages.RELOAD_SUCCESSFUL.message());
         }
     }
 
@@ -57,7 +92,7 @@ public class CheckCredits {
     @Suggestions("player")
     public List<String> playerSuggestions(CommandContext<CommandSender> context, String input) {
         List<String> list = new ArrayList<>();
-        if ((boolean) ConfigHandler.value("player-tab-completion")) {
+        if ((boolean) Settings.PLAYER_TAB_COMPLETION.value()) {
             Bukkit.getOnlinePlayers().forEach(p -> list.add(p.getName()));
             return list;
         }
