@@ -51,12 +51,15 @@ tasks{
         options.encoding = Charsets.UTF_8.name()
         options.release.set(17)
     }
+
     javadoc {
         options.encoding = Charsets.UTF_8.name()
     }
+
     processResources {
         filteringCharset = Charsets.UTF_8.name()
     }
+
     shadowJar {
         minimize()
         //Cloud
@@ -68,7 +71,7 @@ tasks{
         relocate("com.typesafe", "games.cultivate.mcmmocredits.relocate.com.typesafe")
 
         //MiniMessage
-        relocate("net.kyori", "games.cultivate.mcmmocredits.relocate.net.kyori")
+        relocate("net.kyori.adventure.text", "games.cultivate.mcmmocredits.relocate.net.kyori.adventure.text")
 
         manifest {
             attributes(Pair("Main-Class", "games.cultivate.mcmmocredits.MCMMOCredits"))
