@@ -8,10 +8,9 @@ import cloud.commandframework.annotations.parsers.Parser;
 import cloud.commandframework.annotations.specifier.Range;
 import cloud.commandframework.annotations.suggestions.Suggestions;
 import cloud.commandframework.context.CommandContext;
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
-import games.cultivate.mcmmocredits.config.Messages;
-import games.cultivate.mcmmocredits.config.Settings;
-import games.cultivate.mcmmocredits.util.Database;
+import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -33,7 +32,7 @@ public class ModifyCredits {
         if (shouldProcess(sender, username)) {
             UUID uuid = Util.getOfflineUser(username).getUniqueId();
             Database.setCredits(uuid, Database.getCredits(uuid) + amount);
-            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Messages.MODIFY_CREDITS_ADD, amount));
+            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), MCMMOCredits.messages().getModifyCreditsAdd(), amount));
         }
     }
 
@@ -44,7 +43,7 @@ public class ModifyCredits {
         if (shouldProcess(sender, username)) {
             UUID uuid = Util.getOfflineUser(username).getUniqueId();
             Database.setCredits(uuid, amount);
-            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Messages.MODIFY_CREDITS_SET, amount));
+            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), MCMMOCredits.messages().getModifyCreditsSet(), amount));
         }
     }
 
@@ -55,13 +54,13 @@ public class ModifyCredits {
         if (shouldProcess(sender, username)) {
             UUID uuid = Util.getOfflineUser(username).getUniqueId();
             Database.setCredits(uuid, Database.getCredits(uuid) - amount);
-            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Messages.MODIFY_CREDITS_TAKE, amount));
+            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), MCMMOCredits.messages().getModifyCreditsTake(), amount));
         }
     }
 
     private boolean shouldProcess(CommandSender sender, String username) {
         if (!Util.processPlayer(username)) {
-            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Messages.PLAYER_DOES_NOT_EXIST));
+            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), MCMMOCredits.messages().getPlayerDoesNotExist()));
             return false;
         }
         return true;
@@ -75,7 +74,7 @@ public class ModifyCredits {
     @Suggestions("player")
     public List<String> playerSuggestions(CommandContext<CommandSender> context, String input) {
         List<String> list = new ArrayList<>();
-        if ((boolean) Settings.PLAYER_TAB_COMPLETION.value()) {
+        if (MCMMOCredits.settings().getPlayerTabCompletion()) {
             Bukkit.getOnlinePlayers().forEach(p -> list.add(p.getName()));
             return list;
         }

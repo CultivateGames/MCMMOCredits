@@ -1,44 +1,123 @@
 package games.cultivate.mcmmocredits.config;
 
-//TODO: Documentation + use parse placeholders boolean
-public enum Messages {
-    CREDITS_CHECK_OTHER("credits-check-other", true),
-    CREDITS_CHECK_SELF("credits-check-self", true),
-    INVALID_ARGUMENTS("invalid-arguments", false),
-    LOGIN_MESSAGE("login-message", true),
-    MODIFY_CREDITS_ADD("modify-credits-add", true),
-    MODIFY_CREDITS_SET("modify-credits-set", true),
-    MODIFY_CREDITS_TAKE("modify-credits-take", true),
-    MUST_BE_NUMBER("must-be-number", false),
-    NO_PERMS("no-perms", false),
-    PLAYER_DOES_NOT_EXIST("player-does-not-exist", false),
-    PREFIX("prefix", true),
-    RELOAD_SUCCESSFUL("reload-successful", true),
-    REDEEM_NOT_ENOUGH_CREDITS("redeem-not-enough-credits", true),
-    REDEEM_SKILL_CAP("redeem-skill-cap", true),
-    REDEEM_SUCCESSFUL("redeem-successful", true),
-    REDEEM_SUCCESSFUL_OTHER("redeem-successful-other", true);
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.meta.Comment;
 
-    private final String key;
-    private final boolean parsePlaceholders;
+/**
+ * This class is responsible for generating the default messages.conf file. All values here represent defaults.
+ */
+@ConfigSerializable
+public class Messages {
+    @Comment("Prefix for all plugin messages.")
+    private final String prefix = "<gold><bold>CREDITS</bold> ";
 
-    Messages(String key, boolean parsePlaceholders) {
-            this.key = key;
-            this.parsePlaceholders = parsePlaceholders;
+    @Comment("Shown to user when invalid arguments are used in a command.")
+    private final String invalid_arguments = "<red>Invalid arguments!";
+
+    @Comment("Shown to user when they use an invalid number.")
+    private final String must_be_number = "<red>You need to specify a valid number.";
+
+    @Comment("Shown to user when they do not have permission to execute a command!")
+    private final String no_perms = "<red>You do not have permission to do this!";
+
+    @Comment("Shown to user when they check their own MCMMO Credits amount with /credits.")
+    private final String credits_check_self = "<green>You have %credits% MCMMO Credits!";
+
+    @Comment("Shown to user when they check the MCMMO Credit balance of another user with /credits.")
+    private final String credits_check_other = "<green>%player% has %credits% MCMMO Credits!";
+
+    @Comment("Shown to user when they use the command system and populate it with a player that does not exist.")
+    private final String player_does_not_exist = "<red>This player does not exist in our database!";
+
+    @Comment("Shown to user when they successfully reload the Plugin.")
+    private final String reload_successful = "<green>The relevant configuration files have been reloaded!";
+
+    @Comment("Shown to user when they try to redeem MCMMO Credits to go over a skill's level cap.")
+    private final String redeem_skill_cap = "<red>You cannot redeem this many MCMMO Credits into %skill%, due to the Level Cap (%cap%).";
+
+    @Comment("Shown to user when they try to redeem more MCMMO Credits than they have available.")
+    private final String redeem_not_enough_credits = "<red>You do not have enough MCMMO Credits to do this!";
+
+    @Comment("Shown to user when they successfully redeem MCMMO Credits into a skill.")
+    private final String redeem_successful = "<green>Redemption Successful! You have redeemed %amount% Credits into %skill%. You have %credits% Credits remaining.";
+
+    @Comment("Shown to user when they successfully redeem MCMMO Credits into a skill.")
+    private final String redeem_successful_other = "<green>Redemption Successful! You have redeemed %amount% Credits into %skill% for %player%. They have %credits% Credits remaining.";
+
+    @Comment("Shown to user on login if send_login_message is set to true in settings.conf")
+    private final String login_message = "<hover:show_text:'<green>You have %credits% MCMMO Credits!'><yellow>Hover here to see how many MCMMO Credits you have!";
+
+    @Comment("Shown to user when a user adds MCMMO Credits to another user. %credits% placeholder will show previous balance since we are updating credit balances asynchronously.")
+    private final String modify_credits_add = "<green>You have given %amount% Credits to %player%";
+
+    @Comment("Shown to user when a user sets another user's balance to an amount. %credits% placeholder will show previous balance since we are updating credit balances asynchronously.")
+    private final String modify_credits_set = "<yellow>You have set %player%'s Credits to %amount%!";
+
+    @Comment("Shown to user when a user takes MCMMO Credits from another user. %credits% placeholder will show previous balance since we are updating credit balances asynchronously.")
+    private final String modify_credits_take = "<red>You have taken %amount% Credits from %player%";
+
+
+    public String getPrefix() {
+        return prefix;
     }
-    /**
-     * This is used to access values from messages.conf as a String.
-     */
-    public String message() {
-        return ConfigHandler.messageNode().node(key).getString();
+
+    public String getInvalidArguments() {
+        return invalid_arguments;
     }
 
-    public String key() {
-        return key;
+    public String getMustBeNumber() {
+        return must_be_number;
     }
 
-    public boolean parsePlaceholders() {
-        return parsePlaceholders;
+    public String getNoPerms() {
+        return no_perms;
+    }
+
+    public String getCreditsCheckSelf() {
+        return credits_check_self;
+    }
+
+    public String getCreditsCheckOther() {
+        return credits_check_other;
+    }
+
+    public String getPlayerDoesNotExist() {
+        return player_does_not_exist;
+    }
+
+    public String getReloadSuccessful() {
+        return reload_successful;
+    }
+
+    public String getRedeemSkillCap() {
+        return redeem_skill_cap;
+    }
+
+    public String getRedeemNotEnoughCredits() {
+        return redeem_not_enough_credits;
+    }
+
+    public String getRedeemSuccessful() {
+        return redeem_successful;
+    }
+
+    public String getRedeemSuccessfulOther() {
+        return redeem_successful_other;
+    }
+
+    public String getLoginMessage() {
+        return login_message;
+    }
+
+    public String getModifyCreditsAdd() {
+        return modify_credits_add;
+    }
+
+    public String getModifyCreditsSet() {
+        return modify_credits_set;
+    }
+
+    public String getModifyCreditsTake() {
+        return modify_credits_take;
     }
 }
-

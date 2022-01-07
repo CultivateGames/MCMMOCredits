@@ -1,6 +1,8 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.MCMMOCredits;
+import games.cultivate.mcmmocredits.database.ConnectionSerializer;
+import games.cultivate.mcmmocredits.database.Connection;
 import net.kyori.adventure.audience.Audience;
 import org.bukkit.Bukkit;
 import org.spongepowered.configurate.CommentedConfigurationNode;
@@ -17,16 +19,6 @@ import java.util.logging.Level;
  * This class is responsible for all configuration management, and message parsing/sending.
  */
 public final class ConfigHandler {
-    public static CommentedConfigurationNode messages;
-    public static CommentedConfigurationNode settings;
-
-    public static CommentedConfigurationNode messageNode() {
-        return messages;
-    }
-
-    public static CommentedConfigurationNode settingsNode() {
-        return settings;
-    }
 
     /**
      * This is responsible for creating configuration files if we believe they do not exist.
@@ -55,30 +47,50 @@ public final class ConfigHandler {
         HoconConfigurationLoader loader = HoconConfigurationLoader.builder().prettyPrinting(true).path(path).build();
         CommentedConfigurationNode node;
         if (fileType.equalsIgnoreCase("settings")) {
-            SettingsConfig config;
+            Settings config;
             try {
                 node = loader.load();
-                config = node.get(SettingsConfig.class);
-                Objects.requireNonNull(node).set(SettingsConfig.class, config);
+                config = node.get(Settings.class);
+                Objects.requireNonNull(node).set(Settings.class, config);
                 loader.save(node);
-                settings = node;
             } catch (Exception e) {
                 e.printStackTrace();
             }
             return;
         }
         if (fileType.equalsIgnoreCase("messages")) {
-            MessageConfig config;
+            Messages config;
             try {
                 node = loader.load();
-                config = node.get(MessageConfig.class);
-                Objects.requireNonNull(node).set(MessageConfig.class, config);
+                config = node.get(Messages.class);
+                Objects.requireNonNull(node).set(Messages.class, config);
                 loader.save(node);
-                messages = node;
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * POC for Configurate Type Serializer
+     */
+    public static void alternativeFileLoad(String fileType) {
+        HoconConfigurationLoader loader = HoconConfigurationLoader.builder()
+                .defaultOptions(opts -> opts.serializers(build -> build.register(Connection.class, ConnectionSerializer.connection)))
+                .prettyPrinting(true)
+                .path(Paths.get(createFile("settings").getPath()))
+                .build();
+
+        CommentedConfigurationNode node;
+        Settings config;
+            try {
+                node = loader.load();
+                config = node.get(Settings.class);
+                Objects.requireNonNull(node).set(Settings.class, config);
+                loader.save(node);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
     }
 
 
@@ -86,6 +98,6 @@ public final class ConfigHandler {
      * This is responsible for actually sending the message to a user. All messages sent out are prepended with a prefix.
      */
     public static void sendMessage(Audience audience, String text) {
-        audience.sendMessage(MCMMOCredits.getMM().parse(Messages.PREFIX.message() + text));
+        audience.sendMessage(MCMMOCredits.getMM().parse(MCMMOCredits.messages().getPrefix() + text));
     }
 }

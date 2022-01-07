@@ -9,8 +9,10 @@ import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.ModifyCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
+import games.cultivate.mcmmocredits.config.Messages;
+import games.cultivate.mcmmocredits.config.Settings;
 import games.cultivate.mcmmocredits.util.CreditsExpansion;
-import games.cultivate.mcmmocredits.util.Database;
+import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.Listeners;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -27,6 +29,18 @@ public final class MCMMOCredits extends JavaPlugin {
     private static JavaPlugin instance;
     private static MiniMessage mm;
     private static boolean isPaper = false;
+
+    //TODO fix
+    public static Settings settings;
+    public static Messages messages;
+
+    public static Settings settings() {
+        return settings;
+    }
+
+    public static Messages messages() {
+        return messages;
+    }
 
     /**
      * This provides a usable instance of the plugin.

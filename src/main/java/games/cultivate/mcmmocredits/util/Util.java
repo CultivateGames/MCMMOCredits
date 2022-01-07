@@ -1,8 +1,7 @@
 package games.cultivate.mcmmocredits.util;
 
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.Messages;
-import games.cultivate.mcmmocredits.config.Settings;
+import games.cultivate.mcmmocredits.database.Database;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -40,8 +39,7 @@ public class Util {
      */
     @SuppressWarnings("deprecation")
     public static OfflinePlayer getOfflineUser(String username) {
-        boolean usercacheLookup = (boolean) Settings.USE_USERCACHE_LOOKUP.value();
-        if(usercacheLookup && MCMMOCredits.isPaper() && Bukkit.getOfflinePlayerIfCached(username) != null) {
+        if(MCMMOCredits.settings().getUsercacheLookup() && MCMMOCredits.isPaper() && Bukkit.getOfflinePlayerIfCached(username) != null) {
             return Bukkit.getOfflinePlayerIfCached(username);
         }
         return Bukkit.getOfflinePlayer(username);
@@ -52,11 +50,7 @@ public class Util {
      * <p>
      * This is the basic placeholder parser, which will only parse information we will always have.
      */
-    public static String parse(OfflinePlayer offlinePlayer, Messages message) {
-        String text = message.message();
-        if(!message.parsePlaceholders()) {
-            return text;
-        }
+    public static String parse(OfflinePlayer offlinePlayer, String text) {
         Matcher matcher = pattern.matcher(text);
         StringBuilder sb = new StringBuilder();
         String replacement = null;
@@ -82,11 +76,7 @@ public class Util {
      * This is a contextual placeholder parser, which will only work if we are
      * within a transaction which modifies Credit balance.
      */
-    public static String parse(OfflinePlayer offlinePlayer, Messages message, int amount) {
-        String text = message.message();
-        if(!message.parsePlaceholders()) {
-            return text;
-        }
+    public static String parse(OfflinePlayer offlinePlayer, String text, int amount) {
         Matcher matcher = pattern.matcher(text);
         StringBuilder sb = new StringBuilder();
         String replacement = null;
@@ -112,11 +102,7 @@ public class Util {
      * This is a contextual placeholder parser, which will only work if we are
      * within a transaction which is part of redeeming MCMMO Credits into a skill.
      */
-    public static String parse(OfflinePlayer offlinePlayer, Messages message, String skill, int cap, int amount) {
-        String text = message.message();
-        if(!message.parsePlaceholders()) {
-            return text;
-        }
+    public static String parse(OfflinePlayer offlinePlayer, String text, String skill, int cap, int amount) {
         Matcher matcher = pattern.matcher(text);
         StringBuilder sb = new StringBuilder();
         String replacement = null;
