@@ -1,4 +1,4 @@
-package games.cultivate.mcmmocredits.util;
+package games.cultivate.mcmmocredits.database;
 
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import org.bukkit.Bukkit;

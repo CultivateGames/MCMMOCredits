@@ -7,9 +7,8 @@ import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.parsers.Parser;
 import cloud.commandframework.annotations.suggestions.Suggestions;
 import cloud.commandframework.context.CommandContext;
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
-import games.cultivate.mcmmocredits.config.Messages;
-import games.cultivate.mcmmocredits.config.Settings;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -33,7 +32,7 @@ public class Credits {
             Bukkit.getLogger().log(Level.WARNING, "You must supply a username! /credits <player>");
             return;
         }
-        ConfigHandler.sendMessage(sender, Util.parse((Player) sender, Messages.CREDITS_CHECK_SELF));
+        ConfigHandler.sendMessage(sender, Util.parse((Player) sender, MCMMOCredits.messages().getCreditsCheckSelf()));
     }
 
     @CommandDescription("Check someone else's MCMMO Credit balance.")
@@ -41,13 +40,13 @@ public class Credits {
     @CommandPermission("mcmmocredits.check.other")
     private void checkCreditsOther(CommandSender sender, @Argument("player") String username) {
         if (Util.processPlayer(username)) {
-            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Messages.CREDITS_CHECK_OTHER));
+            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), MCMMOCredits.messages().getCreditsCheckOther()));
             return;
         }
         if (sender instanceof Player) {
-            ConfigHandler.sendMessage(sender, Util.parse((Player) sender, Messages.PLAYER_DOES_NOT_EXIST));
+            ConfigHandler.sendMessage(sender, Util.parse((Player) sender, MCMMOCredits.messages().getPlayerDoesNotExist()));
         } else {
-            ConfigHandler.sendMessage(sender, Messages.PLAYER_DOES_NOT_EXIST.message());
+            ConfigHandler.sendMessage(sender, MCMMOCredits.messages().getPlayerDoesNotExist());
         }
     }
 
@@ -76,11 +75,27 @@ public class Credits {
         this.sendReloadMessage(sender);
     }
 
+    @CommandDescription("Change settings in game and have changes take effect immediately.")
+    @CommandMethod("setting <parameter> <result>")
+    @CommandPermission("mcmmocredits.admin.settings")
+    private void changeSettings(CommandSender sender) {
+        //TODO
+        this.sendReloadMessage(sender);
+    }
+
+    @CommandDescription("Change settings in game and have changes take effect immediately.")
+    @CommandMethod("message <parameter> <result>")
+    @CommandPermission("mcmmocredits.admin.messages")
+    private void changeMessages(CommandSender sender) {
+        //TODO
+        this.sendReloadMessage(sender);
+    }
+
     private void sendReloadMessage(CommandSender sender) {
         if (sender instanceof Player) {
-            ConfigHandler.sendMessage(sender, Util.parse((Player) sender, Messages.RELOAD_SUCCESSFUL));
+            ConfigHandler.sendMessage(sender, Util.parse((Player) sender, MCMMOCredits.messages().getReloadSuccessful()));
         } else {
-            ConfigHandler.sendMessage(sender, Messages.RELOAD_SUCCESSFUL.message());
+            ConfigHandler.sendMessage(sender, MCMMOCredits.messages().getReloadSuccessful());
         }
     }
 
@@ -92,7 +107,7 @@ public class Credits {
     @Suggestions("player")
     public List<String> playerSuggestions(CommandContext<CommandSender> context, String input) {
         List<String> list = new ArrayList<>();
-        if ((boolean) Settings.PLAYER_TAB_COMPLETION.value()) {
+        if (MCMMOCredits.settings().getPlayerTabCompletion()) {
             Bukkit.getOnlinePlayers().forEach(p -> list.add(p.getName()));
             return list;
         }

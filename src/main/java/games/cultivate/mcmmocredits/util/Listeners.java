@@ -1,8 +1,8 @@
 package games.cultivate.mcmmocredits.util;
 
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
-import games.cultivate.mcmmocredits.config.Messages;
-import games.cultivate.mcmmocredits.config.Settings;
+import games.cultivate.mcmmocredits.database.Database;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -26,7 +26,7 @@ public class Listeners implements Listener {
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
         if (!Database.doesPlayerExist(e.getPlayerProfile().getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
             Database.addPlayer(e.getPlayerProfile().getId(), 0);
-            if ((boolean) Settings.DATABASE_ADD_MESSAGE.value()) {
+            if (MCMMOCredits.settings().getDatabaseAddMessage()) {
                 //TODO add customization to config
                 Bukkit.getLogger().log(Level.INFO, e.getPlayerProfile().getName() + " has been added to the MCMMO Credits Database!");
             }
@@ -39,9 +39,9 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
-        if ((boolean) Settings.SEND_LOGIN_MESSAGE.value()) {
+        if (MCMMOCredits.settings().getSendLoginMessage()) {
             Player player = e.getPlayer();
-            ConfigHandler.sendMessage(player, Util.parse(player, Messages.LOGIN_MESSAGE));
+            ConfigHandler.sendMessage(player, Util.parse(player, MCMMOCredits.messages().getLoginMessage()));
         }
     }
 }
