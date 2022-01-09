@@ -1,7 +1,10 @@
 package games.cultivate.mcmmocredits;
 
 import cloud.commandframework.annotations.AnnotationParser;
+import cloud.commandframework.annotations.parsers.Parser;
+import cloud.commandframework.annotations.suggestions.Suggestions;
 import cloud.commandframework.bukkit.CloudBukkitCapabilities;
+import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.paper.PaperCommandManager;
@@ -9,16 +12,18 @@ import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.ModifyCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
-import games.cultivate.mcmmocredits.config.Messages;
-import games.cultivate.mcmmocredits.config.Settings;
-import games.cultivate.mcmmocredits.util.CreditsExpansion;
+import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.util.CreditsExpansion;
 import games.cultivate.mcmmocredits.util.Listeners;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
 import java.util.function.Function;
 import java.util.logging.Level;
 
@@ -29,18 +34,6 @@ public final class MCMMOCredits extends JavaPlugin {
     private static JavaPlugin instance;
     private static MiniMessage mm;
     private static boolean isPaper = false;
-
-    //TODO fix
-    public static Settings settings;
-    public static Messages messages;
-
-    public static Settings settings() {
-        return settings;
-    }
-
-    public static Messages messages() {
-        return messages;
-    }
 
     /**
      * This provides a usable instance of the plugin.
@@ -72,21 +65,17 @@ public final class MCMMOCredits extends JavaPlugin {
      * <p>
      * This is also responsible for loading configurations,
      * audiences, and registering our event listeners/commands.
-     * TODO: Possibly rethink order of events.
      */
     @Override
     public void onEnable() {
         instance = this;
-        mm = MiniMessage.miniMessage();
-
-        ConfigHandler.loadFile("settings");
-        ConfigHandler.loadFile("messages");
-
-        Database.initDB();
-
-        this.loadCommands();
         this.dependCheck();
 
+        mm = MiniMessage.miniMessage();
+        ConfigHandler.loadAllConfigs();
+
+        Database.initDB();
+        this.loadCommands();
         Bukkit.getPluginManager().registerEvents(new Listeners(), this);
     }
 
@@ -98,6 +87,7 @@ public final class MCMMOCredits extends JavaPlugin {
     @Override
     public void onDisable() {
         Database.shutdownDB();
+        ConfigHandler.unloadAllConfigs();
     }
 
     private void dependCheck() {
@@ -108,6 +98,8 @@ public final class MCMMOCredits extends JavaPlugin {
         }
 
         if (Bukkit.getPluginManager().getPlugin("mcMMO") != null) {
+            this.getLogger().log(Level.INFO, "MCMMO has been found! Continuing to load...");
+        } else {
             this.getLogger().log(Level.SEVERE, "MCMMO is not found, disabling plugin...");
             this.setEnabled(false);
             return;
@@ -126,6 +118,7 @@ public final class MCMMOCredits extends JavaPlugin {
             e.printStackTrace();
             return;
         }
+
         if (commandManager.queryCapability(CloudBukkitCapabilities.BRIGADIER)) {
             commandManager.registerBrigadier();
         }
@@ -136,5 +129,32 @@ public final class MCMMOCredits extends JavaPlugin {
         annotationParser.parse(new ModifyCredits());
         annotationParser.parse(new Credits());
         annotationParser.parse(new Redeem());
+    }
+
+    /**
+     * This is responsible for creating a Suggestions provider for Commands.
+     * <p>
+     * TODO Figure out if I can just leave this here.
+     */
+    @Suggestions("player")
+    public List<String> playerSuggestions(CommandContext<CommandSender> context, String input) {
+        List<String> list = new ArrayList<>();
+        if (Keys.PLAYER_TAB_COMPLETION.getBoolean()) {
+            Bukkit.getOnlinePlayers().forEach(p -> list.add(p.getName()));
+            return list;
+        }
+        return list;
+    }
+
+    /**
+     * This is responsible for creating an Argument Parser for Commands.
+     * <p>
+     * TODO Figure out if I can just leave this here.
+     */
+    @Parser(suggestions = "player")
+    public String playerParser(CommandContext<CommandSender> sender, Queue<String> inputQueue) {
+        final String input = inputQueue.peek();
+        inputQueue.poll();
+        return input;
     }
 }
