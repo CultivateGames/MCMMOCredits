@@ -4,20 +4,12 @@ import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
-import cloud.commandframework.annotations.parsers.Parser;
 import cloud.commandframework.annotations.specifier.Range;
-import cloud.commandframework.annotations.suggestions.Suggestions;
-import cloud.commandframework.context.CommandContext;
-import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
+import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.Util;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
 import java.util.UUID;
 
 /**
@@ -32,7 +24,7 @@ public class ModifyCredits {
         if (shouldProcess(sender, username)) {
             UUID uuid = Util.getOfflineUser(username).getUniqueId();
             Database.setCredits(uuid, Database.getCredits(uuid) + amount);
-            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), MCMMOCredits.messages().getModifyCreditsAdd(), amount));
+            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Keys.MODIFY_CREDITS_ADD, amount));
         }
     }
 
@@ -43,7 +35,7 @@ public class ModifyCredits {
         if (shouldProcess(sender, username)) {
             UUID uuid = Util.getOfflineUser(username).getUniqueId();
             Database.setCredits(uuid, amount);
-            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), MCMMOCredits.messages().getModifyCreditsSet(), amount));
+            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Keys.MODIFY_CREDITS_SET, amount));
         }
     }
 
@@ -54,42 +46,15 @@ public class ModifyCredits {
         if (shouldProcess(sender, username)) {
             UUID uuid = Util.getOfflineUser(username).getUniqueId();
             Database.setCredits(uuid, Database.getCredits(uuid) - amount);
-            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), MCMMOCredits.messages().getModifyCreditsTake(), amount));
+            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Keys.MODIFY_CREDITS_TAKE, amount));
         }
     }
 
     private boolean shouldProcess(CommandSender sender, String username) {
         if (!Util.processPlayer(username)) {
-            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), MCMMOCredits.messages().getPlayerDoesNotExist()));
+            ConfigHandler.sendMessage(sender, Keys.PLAYER_DOES_NOT_EXIST.getString());
             return false;
         }
         return true;
-    }
-
-    /**
-     * This is responsible for creating a Suggestions provider for these commands.
-     *
-     * TODO: Figure out if this needs to be duplicated per class.
-     */
-    @Suggestions("player")
-    public List<String> playerSuggestions(CommandContext<CommandSender> context, String input) {
-        List<String> list = new ArrayList<>();
-        if (MCMMOCredits.settings().getPlayerTabCompletion()) {
-            Bukkit.getOnlinePlayers().forEach(p -> list.add(p.getName()));
-            return list;
-        }
-        return list;
-    }
-
-    /**
-     * This is responsible for creating an Argument Parser for these commands.
-     *
-     * TODO: Figure out if this needs to be duplicated per class.
-     */
-    @Parser(suggestions = "player")
-    public String playerParser(CommandContext<CommandSender> sender, Queue<String> inputQueue) {
-        final String input = inputQueue.peek();
-        inputQueue.poll();
-        return input;
     }
 }

@@ -7,7 +7,7 @@ import org.spongepowered.configurate.objectmapping.meta.Comment;
  * This class is responsible for generating the default messages.conf file. All values here represent defaults.
  */
 @ConfigSerializable
-public class Messages {
+public class MessageConfig {
     @Comment("Prefix for all plugin messages.")
     private final String prefix = "<gold><bold>CREDITS</bold> ";
 
@@ -56,68 +56,6 @@ public class Messages {
     @Comment("Shown to user when a user takes MCMMO Credits from another user. %credits% placeholder will show previous balance since we are updating credit balances asynchronously.")
     private final String modify_credits_take = "<red>You have taken %amount% Credits from %player%";
 
-
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public String getInvalidArguments() {
-        return invalid_arguments;
-    }
-
-    public String getMustBeNumber() {
-        return must_be_number;
-    }
-
-    public String getNoPerms() {
-        return no_perms;
-    }
-
-    public String getCreditsCheckSelf() {
-        return credits_check_self;
-    }
-
-    public String getCreditsCheckOther() {
-        return credits_check_other;
-    }
-
-    public String getPlayerDoesNotExist() {
-        return player_does_not_exist;
-    }
-
-    public String getReloadSuccessful() {
-        return reload_successful;
-    }
-
-    public String getRedeemSkillCap() {
-        return redeem_skill_cap;
-    }
-
-    public String getRedeemNotEnoughCredits() {
-        return redeem_not_enough_credits;
-    }
-
-    public String getRedeemSuccessful() {
-        return redeem_successful;
-    }
-
-    public String getRedeemSuccessfulOther() {
-        return redeem_successful_other;
-    }
-
-    public String getLoginMessage() {
-        return login_message;
-    }
-
-    public String getModifyCreditsAdd() {
-        return modify_credits_add;
-    }
-
-    public String getModifyCreditsSet() {
-        return modify_credits_set;
-    }
-
-    public String getModifyCreditsTake() {
-        return modify_credits_take;
-    }
+    @Comment("Message printed to console when a new user is added to the MCMMO Credits database")
+    private final String database_console_message = "<white>%player% has been added to the database!";
 }

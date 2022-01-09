@@ -40,6 +40,7 @@ dependencies {
         exclude(module = "worldguard-legacy")
     }
 }
+
 /**
  * Adds UTF-8 everywhere that we can, sets release version to Java 17.
  *
@@ -61,7 +62,6 @@ tasks{
     }
 
     shadowJar {
-        minimize()
         //Cloud
         relocate("cloud.commandframework", "games.cultivate.mcmmocredits.relocate.cloud.commandframework")
         relocate("io.leangen", "games.cultivate.mcmmocredits.relocate.io.leangen")
@@ -71,7 +71,8 @@ tasks{
         relocate("com.typesafe", "games.cultivate.mcmmocredits.relocate.com.typesafe")
 
         //MiniMessage
-        relocate("net.kyori.adventure.text", "games.cultivate.mcmmocredits.relocate.net.kyori.adventure.text")
+        //TODO Fix this part of the build script
+        relocate("net.kyori.adventure.text.minimessage", "games.cultivate.mcmmocredits.relocate.net.kyori.adventure.text.minimessage")
 
         manifest {
             attributes(Pair("Main-Class", "games.cultivate.mcmmocredits.MCMMOCredits"))

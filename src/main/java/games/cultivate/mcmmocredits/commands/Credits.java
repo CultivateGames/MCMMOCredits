@@ -4,19 +4,14 @@ import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
-import cloud.commandframework.annotations.parsers.Parser;
-import cloud.commandframework.annotations.suggestions.Suggestions;
-import cloud.commandframework.context.CommandContext;
-import games.cultivate.mcmmocredits.MCMMOCredits;
+import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
+import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
 import java.util.logging.Level;
 
 /**
@@ -24,15 +19,16 @@ import java.util.logging.Level;
  */
 @CommandMethod("credits")
 public class Credits {
+
     @CommandDescription("Check your own MCMMO Credit balance.")
     @CommandMethod("")
     @CommandPermission("mcmmocredits.check.self")
     private void checkCredits(CommandSender sender) {
-        if (!(sender instanceof Player)) {
+        if (!(sender instanceof Player player)) {
             Bukkit.getLogger().log(Level.WARNING, "You must supply a username! /credits <player>");
             return;
         }
-        ConfigHandler.sendMessage(sender, Util.parse((Player) sender, MCMMOCredits.messages().getCreditsCheckSelf()));
+        ConfigHandler.sendMessage(player, Util.parse(player, Keys.CREDITS_CHECK_SELF));
     }
 
     @CommandDescription("Check someone else's MCMMO Credit balance.")
@@ -40,13 +36,13 @@ public class Credits {
     @CommandPermission("mcmmocredits.check.other")
     private void checkCreditsOther(CommandSender sender, @Argument("player") String username) {
         if (Util.processPlayer(username)) {
-            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), MCMMOCredits.messages().getCreditsCheckOther()));
+            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Keys.CREDITS_CHECK_OTHER));
             return;
         }
-        if (sender instanceof Player) {
-            ConfigHandler.sendMessage(sender, Util.parse((Player) sender, MCMMOCredits.messages().getPlayerDoesNotExist()));
+        if (sender instanceof Player player) {
+            ConfigHandler.sendMessage(player, Util.parse(player, Keys.PLAYER_DOES_NOT_EXIST));
         } else {
-            ConfigHandler.sendMessage(sender, MCMMOCredits.messages().getPlayerDoesNotExist());
+            ConfigHandler.sendMessage(sender, Keys.PLAYER_DOES_NOT_EXIST.getString());
         }
     }
 
@@ -54,7 +50,7 @@ public class Credits {
     @CommandMethod("reload settings")
     @CommandPermission("mcmmocredits.admin.reload")
     private void reloadSettings(CommandSender sender) {
-        ConfigHandler.loadFile("settings");
+        ConfigHandler.loadConfig(Config.SETTINGS);
         this.sendReloadMessage(sender);
     }
 
@@ -62,7 +58,7 @@ public class Credits {
     @CommandMethod("reload messages")
     @CommandPermission("mcmmocredits.admin.reload")
     private void reloadMessages(CommandSender sender) {
-        ConfigHandler.loadFile("messages");
+        ConfigHandler.loadConfig(Config.MESSAGES);
         this.sendReloadMessage(sender);
     }
 
@@ -70,59 +66,31 @@ public class Credits {
     @CommandMethod("reload all")
     @CommandPermission("mcmmocredits.admin.reload")
     private void reloadAll(CommandSender sender) {
-        ConfigHandler.loadFile("settings");
-        ConfigHandler.loadFile("messages");
+        ConfigHandler.loadAllConfigs();
         this.sendReloadMessage(sender);
     }
 
     @CommandDescription("Change settings in game and have changes take effect immediately.")
-    @CommandMethod("setting <parameter> <result>")
+    @CommandMethod("setting <setting> <result>")
     @CommandPermission("mcmmocredits.admin.settings")
-    private void changeSettings(CommandSender sender) {
+    private void changeSettings(CommandSender sender, @Argument("setting") String setting, @Argument("result") String result) {
         //TODO
         this.sendReloadMessage(sender);
     }
 
     @CommandDescription("Change settings in game and have changes take effect immediately.")
-    @CommandMethod("message <parameter> <result>")
+    @CommandMethod("message <message> <result>")
     @CommandPermission("mcmmocredits.admin.messages")
-    private void changeMessages(CommandSender sender) {
+    private void changeMessages(CommandSender sender, @Argument("message") String message, @Argument("result") String result) {
         //TODO
         this.sendReloadMessage(sender);
     }
 
     private void sendReloadMessage(CommandSender sender) {
         if (sender instanceof Player) {
-            ConfigHandler.sendMessage(sender, Util.parse((Player) sender, MCMMOCredits.messages().getReloadSuccessful()));
+            ConfigHandler.sendMessage(sender, Util.parse((Player) sender, Keys.RELOAD_SUCCESSFUL));
         } else {
-            ConfigHandler.sendMessage(sender, MCMMOCredits.messages().getReloadSuccessful());
+            ConfigHandler.sendMessage(sender, Keys.RELOAD_SUCCESSFUL.getString());
         }
-    }
-
-    /**
-     * This is responsible for creating a Suggestions provider for these commands.
-     *
-     * TODO: Figure out if this needs to be duplicated per class.
-     */
-    @Suggestions("player")
-    public List<String> playerSuggestions(CommandContext<CommandSender> context, String input) {
-        List<String> list = new ArrayList<>();
-        if (MCMMOCredits.settings().getPlayerTabCompletion()) {
-            Bukkit.getOnlinePlayers().forEach(p -> list.add(p.getName()));
-            return list;
-        }
-        return list;
-    }
-
-    /**
-     * This is responsible for creating an Argument Parser for these commands.
-     *
-     * TODO: Figure out if this needs to be duplicated per class.
-     */
-    @Parser(suggestions = "player")
-    public String playerParser(CommandContext<CommandSender> sender, Queue<String> inputQueue) {
-        final String input = inputQueue.peek();
-        inputQueue.poll();
-        return input;
     }
 }

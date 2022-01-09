@@ -1,7 +1,7 @@
 package games.cultivate.mcmmocredits.util;
 
-import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
+import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+
 import java.util.logging.Level;
 
 /**
@@ -26,9 +27,8 @@ public class Listeners implements Listener {
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
         if (!Database.doesPlayerExist(e.getPlayerProfile().getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
             Database.addPlayer(e.getPlayerProfile().getId(), 0);
-            if (MCMMOCredits.settings().getDatabaseAddMessage()) {
-                //TODO add customization to config
-                Bukkit.getLogger().log(Level.INFO, e.getPlayerProfile().getName() + " has been added to the MCMMO Credits Database!");
+            if (Keys.DATABASE_ADD_MESSAGE.getBoolean()) {
+                Bukkit.getLogger().log(Level.INFO, Util.parse(Util.getOfflineUser(e.getPlayerProfile().getName()), Keys.DATABASE_CONSOLE_MESSAGE));
             }
         }
     }
@@ -39,9 +39,9 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
-        if (MCMMOCredits.settings().getSendLoginMessage()) {
+        if (Keys.SEND_LOGIN_MESSAGE.getBoolean()) {
             Player player = e.getPlayer();
-            ConfigHandler.sendMessage(player, Util.parse(player, MCMMOCredits.messages().getLoginMessage()));
+            ConfigHandler.sendMessage(player, Util.parse(player, Keys.LOGIN_MESSAGE));
         }
     }
 }
