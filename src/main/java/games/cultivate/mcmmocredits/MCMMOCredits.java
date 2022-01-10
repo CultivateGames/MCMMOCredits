@@ -8,15 +8,19 @@ import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.paper.PaperCommandManager;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.ModifyCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
+import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.CreditsExpansion;
+import games.cultivate.mcmmocredits.injection.CreditsModule;
 import games.cultivate.mcmmocredits.util.Listeners;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -30,24 +34,16 @@ import java.util.logging.Level;
 /**
  * This class is responsible for startup/shutdown logic, and command loading.
  */
+@Singleton
 public final class MCMMOCredits extends JavaPlugin {
-    private static JavaPlugin instance;
-    private static MiniMessage mm;
     private static boolean isPaper = false;
 
-    /**
-     * This provides a usable instance of the plugin.
-     */
-    public static JavaPlugin getInstance() {
-        return instance;
-    }
+    //TODO wtf is this
+    public static String path;
 
-    /**
-     * This provides an instance of Kyori + MiniDigger's MiniMessage for message parsing.
-     */
-    public static MiniMessage getMM() {
-        return mm;
-    }
+    //Guice
+    private final Database database = new Database(this);
+    @Inject private Listeners listener;
 
     /**
      * This will tell us if we are in a Paper-based environment.
@@ -56,6 +52,10 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     public static boolean isPaper() {
         return isPaper;
+    }
+
+    public static String path(){
+        return path;
     }
 
     /**
@@ -68,15 +68,18 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onEnable() {
-        instance = this;
-        this.dependCheck();
+        //Dependency Injection (Guice)
+        CreditsModule module = new CreditsModule(this, database);
+        Injector injector = module.createInjector();
+        injector.injectMembers(this);
 
-        mm = MiniMessage.miniMessage();
+        this.dependCheck();
+        path = getDataFolder().getAbsolutePath();
         ConfigHandler.loadAllConfigs();
 
-        Database.initDB();
+        database.initDB();
         this.loadCommands();
-        Bukkit.getPluginManager().registerEvents(new Listeners(), this);
+        Bukkit.getPluginManager().registerEvents(this.listener, this);
     }
 
     /**
@@ -87,7 +90,9 @@ public final class MCMMOCredits extends JavaPlugin {
     @Override
     public void onDisable() {
         Database.shutdownDB();
-        ConfigHandler.unloadAllConfigs();
+        for (Config config : Config.values()) {
+            ConfigHandler.saveConfig(config);
+        }
     }
 
     private void dependCheck() {
@@ -126,9 +131,9 @@ public final class MCMMOCredits extends JavaPlugin {
             commandManager.registerAsynchronousCompletions();
         }
         AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(commandManager, CommandSender.class, parameters -> SimpleCommandMeta.empty());
-        annotationParser.parse(new ModifyCredits());
-        annotationParser.parse(new Credits());
-        annotationParser.parse(new Redeem());
+        annotationParser.parse(new ModifyCredits(database));
+        annotationParser.parse(new Credits(database));
+        annotationParser.parse(new Redeem(database));
     }
 
     /**

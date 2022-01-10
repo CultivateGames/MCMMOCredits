@@ -1,5 +1,7 @@
 package games.cultivate.mcmmocredits.util;
 
+import com.google.inject.Inject;
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
@@ -16,6 +18,14 @@ import java.util.logging.Level;
  * This class is responsible for any necessary Event Listeners that we may need.
  */
 public class Listeners implements Listener {
+    private MCMMOCredits plugin;
+    @Inject private Database database;
+
+    @Inject
+    public Listeners(MCMMOCredits plugin) {
+        this.plugin = plugin;
+    }
+
     /**
      * This is responsible for adding users to the MCMMO Credits database.
      * <p>
@@ -25,8 +35,8 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
-        if (!Database.doesPlayerExist(e.getPlayerProfile().getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
-            Database.addPlayer(e.getPlayerProfile().getId(), 0);
+        if (!database.doesPlayerExist(e.getPlayerProfile().getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
+            database.addPlayer(e.getPlayerProfile().getId(), 0);
             if (Keys.DATABASE_ADD_MESSAGE.getBoolean()) {
                 Bukkit.getLogger().log(Level.INFO, Util.parse(Util.getOfflineUser(e.getPlayerProfile().getName()), Keys.DATABASE_CONSOLE_MESSAGE));
             }

@@ -66,17 +66,4 @@ public enum Config {
     public abstract void save(CommentedConfigurationNode root);
 
     public abstract CommentedConfigurationNode root();
-
-    public File createFile() {
-        String fileName = this.toString().toLowerCase() + ".conf";
-        File file = new File(MCMMOCredits.getInstance().getDataFolder().getAbsolutePath() + "\\" + fileName);
-        try {
-            if (file.getParentFile().mkdirs() && file.createNewFile()) {
-                Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created " + fileName + " file!");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return file;
-    }
 }

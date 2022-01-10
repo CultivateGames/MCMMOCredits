@@ -19,8 +19,9 @@ java {
 }
 
 repositories {
-    //Paper
+    //Maven Central
     mavenCentral()
+    //Paper
     maven("https://papermc.io/repo/repository/maven-public/")
     //Configurate
     maven("https://oss.sonatype.org/content/repositories/snapshots/")
@@ -32,6 +33,9 @@ repositories {
 }
 
 dependencies {
+    //Guice
+    implementation("com.google.inject:guice:5.0.1")
+
     //Paper NMS
     paperDevBundle("1.18.1-R0.1-SNAPSHOT")
     //Cloud Command Framework
