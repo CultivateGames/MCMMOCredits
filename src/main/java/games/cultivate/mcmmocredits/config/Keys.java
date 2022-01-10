@@ -10,7 +10,7 @@ public enum Keys {
     PLAYER_TAB_COMPLETION(Config.SETTINGS, "player-tab-completion"),
     SEND_LOGIN_MESSAGE(Config.SETTINGS, "send-login-message"),
     DATABASE_ADD_MESSAGE(Config.SETTINGS, "database-add-message"),
-    USE_SQLITE(Config.SETTINGS, "use-sqlite"),
+    DATABASE_ADAPTER(Config.SETTINGS, "database-adapter"),
     PREFIX(Config.MESSAGES, "prefix"),
     INVALID_ARGUMENTS(Config.MESSAGES, "invalid-arguments"),
     MUST_BE_NUMBER(Config.MESSAGES, "must-be-number"),

@@ -19,24 +19,32 @@ java {
 }
 
 repositories {
+    //Paper
     mavenCentral()
     maven("https://papermc.io/repo/repository/maven-public/")
+    //Configurate
     maven("https://oss.sonatype.org/content/repositories/snapshots/")
+    //Placeholder API
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    //mcMMO TODO Fix exclusion
     maven("https://nexus.neetgames.com/repository/maven-releases/")
-    //Required for MCMMO to be included, for some reason. TODO: This needs to be fixed.
     maven("https://maven.enginehub.org/repo/")
 }
 
 dependencies {
+    //Paper NMS
     paperDevBundle("1.18.1-R0.1-SNAPSHOT")
+    //Cloud Command Framework
     implementation("cloud.commandframework:cloud-annotations:1.6.1")
     implementation("cloud.commandframework:cloud-paper:1.6.1")
+    //Configurate
     implementation("org.spongepowered:configurate-hocon:4.2.0-SNAPSHOT")
+    //MiniMessage
     implementation("net.kyori:adventure-text-minimessage:4.10.0-SNAPSHOT")
+    //PlaceholderAPI
     compileOnly("me.clip:placeholderapi:2.10.10")
+    //mcMMO TODO Fix exclusion
     compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.207") {
-        //Required for MCMMO to be included, for some reason. TODO: This needs to be fixed.
         exclude(module = "worldguard-legacy")
     }
 }
@@ -44,8 +52,7 @@ dependencies {
 /**
  * Adds UTF-8 everywhere that we can, sets release version to Java 17.
  *
- * We are including only the classes we need to run, and relocating to
- * eliminate conflicts with other plugins who may use these libraries.
+ * We are relocating to eliminate conflicts with other plugins who may use these libraries.
  */
 tasks{
     compileJava {

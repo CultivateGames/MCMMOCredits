@@ -89,7 +89,7 @@ public class Redeem {
         if (!Database.doesPlayerExist(uuid) || !db.doesPlayerExistInDB(uuid)) {
             return Keys.PLAYER_DOES_NOT_EXIST;
         }
-        if (Database.getCredits(uuid) > amount) {
+        if (Database.getCredits(uuid) < amount) {
             return Keys.REDEEM_NOT_ENOUGH_CREDITS;
         }
         if (ExperienceAPI.getLevelOffline(uuid, skill.name()) + amount > st.getLevelCap(skill)) {
