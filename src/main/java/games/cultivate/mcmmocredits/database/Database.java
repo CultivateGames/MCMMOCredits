@@ -1,5 +1,7 @@
 package games.cultivate.mcmmocredits.database;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import org.bukkit.Bukkit;
 
@@ -17,8 +19,15 @@ import java.util.concurrent.CompletableFuture;
  * TODO: MySQL support - The transactions use a very similar syntax, would not be difficult to do.
  * TODO: More Async operations
  */
+@Singleton
 public class Database {
     private static String url;
+    private final MCMMOCredits plugin;
+
+    @Inject
+    public Database(MCMMOCredits plugin) {
+        this.plugin = plugin;
+    }
 
     private static Connection getConnection() {
         Connection conn = null;
@@ -33,8 +42,8 @@ public class Database {
     /**
      * This is responsible for all Database startup logic.
      */
-    public static void initDB() {
-        url = "jdbc:sqlite:" + MCMMOCredits.getInstance().getDataFolder().getAbsolutePath() + "\\database.db";
+    public void initDB() {
+        url = "jdbc:sqlite:" + this.plugin.getDataFolder().getAbsolutePath() + "\\database.db";
         Connection connection = getConnection();
         PreparedStatement ps;
         try {
@@ -63,8 +72,8 @@ public class Database {
     /**
      * This is responsible for adding users to the MCMMO Credits Database.
      */
-    public static void addPlayer(UUID uuid, int credits) {
-        Bukkit.getScheduler().runTaskAsynchronously(MCMMOCredits.getInstance(), () -> {
+    public void addPlayer(UUID uuid, int credits) {
+        Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
             try {
                 Connection connection = getConnection();
                 PreparedStatement ps = connection.prepareStatement("INSERT INTO `mcmmoCredits`(UUID, credits) VALUES(?,?);");
@@ -81,8 +90,8 @@ public class Database {
     /**
      * This is responsible for updating a user's MCMMO Credit balance.
      */
-    public static void setCredits(UUID uuid, int credits) {
-        Bukkit.getScheduler().runTaskAsynchronously(MCMMOCredits.getInstance(), () -> {
+    public void setCredits(UUID uuid, int credits) {
+        Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
             try {
                 Connection connection = getConnection();
                 PreparedStatement ps = connection.prepareStatement("UPDATE `mcmmoCredits` SET credits = ? WHERE UUID= ?;");
@@ -101,9 +110,9 @@ public class Database {
      *
      * TODO: Remove usage of .join()
      */
-    public static boolean doesPlayerExist(UUID uuid) {
+    public boolean doesPlayerExist(UUID uuid) {
         CompletableFuture<Boolean> result = new CompletableFuture<>();
-        Bukkit.getScheduler().runTaskAsynchronously(MCMMOCredits.getInstance(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
             try {
                 Connection connection = getConnection();
                 PreparedStatement ps = connection.prepareStatement("SELECT 1 FROM `mcmmoCredits` WHERE UUID= ?;");

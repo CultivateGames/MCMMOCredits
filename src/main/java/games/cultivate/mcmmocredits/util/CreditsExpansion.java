@@ -1,5 +1,6 @@
 package games.cultivate.mcmmocredits.util;
 
+import com.google.inject.Inject;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.database.Database;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -11,10 +12,11 @@ import org.jetbrains.annotations.NotNull;
  * TODO: Fix compiler warning
  */
 public class CreditsExpansion extends PlaceholderExpansion {
-    private final MCMMOCredits instance;
+    private MCMMOCredits plugin;
 
-    public CreditsExpansion(MCMMOCredits instance) {
-        this.instance = (MCMMOCredits) MCMMOCredits.getInstance();
+    @Inject
+    public CreditsExpansion(MCMMOCredits plugin) {
+        this.plugin = plugin;
     }
 
     @Override

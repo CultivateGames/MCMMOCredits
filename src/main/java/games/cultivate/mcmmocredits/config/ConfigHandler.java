@@ -2,11 +2,16 @@ package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
 import org.spongepowered.configurate.loader.HeaderMode;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.logging.Level;
 
 /**
  * This class is responsible for all configuration management, and message parsing/sending.
@@ -19,7 +24,7 @@ public final class ConfigHandler {
     //Creating a loader based on the file. We can use this to load multiple files if need be.
     //We cannot cache here because we want to be able to create loaders for multiple files.
     public static HoconConfigurationLoader createHoconLoader(Config config) {
-        return HoconConfigurationLoader.builder().path(Paths.get(config.createFile().getPath())).emitComments(true).headerMode(HeaderMode.PRESERVE).build();
+        return HoconConfigurationLoader.builder().path(Paths.get(createFile(config).getPath())).emitComments(true).headerMode(HeaderMode.PRESERVE).build();
     }
 
 
@@ -51,16 +56,23 @@ public final class ConfigHandler {
         }
     }
 
-    public static void unloadAllConfigs() {
-        for (Config config : Config.values()) {
-            saveConfig(config);
+    public static File createFile(Config config) {
+        String fileName = config.toString().toLowerCase() + ".conf";
+        File file = new File(MCMMOCredits.path() + "\\" + fileName);
+        try {
+            if (file.getParentFile().mkdirs() && file.createNewFile()) {
+                Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created " + fileName + " file!");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        return file;
     }
 
     /**
      * This is responsible for actually sending the message to a user. All messages sent out are prepended with a prefix.
      */
     public static void sendMessage(Audience audience, String text) {
-        audience.sendMessage(MCMMOCredits.getMM().parse(Keys.PREFIX.getString() + text));
+        audience.sendMessage(MiniMessage.miniMessage().parse(Keys.PREFIX.getString() + text));
     }
 }

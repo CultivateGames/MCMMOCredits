@@ -1,5 +1,6 @@
 package games.cultivate.mcmmocredits.util;
 
+import com.google.inject.Inject;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
@@ -16,17 +17,22 @@ import java.util.regex.Pattern;
  */
 public class Util {
     private static final Pattern pattern = Pattern.compile("%(.*?)%");
+    @Inject private final Database database;
+
+    public Util(Database database) {
+        this.database = database;
+    }
 
     /**
      * This is responsible for checking if the plugin should process the user that is passed through.
      * <p>
      * If the player does not exist in our Database, we will skip any further processing.
      */
-    public static boolean processPlayer(String username) {
+    public boolean processPlayer(String username) {
         if (getOfflineUser(username) == null) {
             return false;
         }
-        return Database.doesPlayerExist(getOfflineUser(username).getUniqueId());
+        return database.doesPlayerExist(getOfflineUser(username).getUniqueId());
     }
 
     /**

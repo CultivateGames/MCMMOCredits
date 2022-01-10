@@ -5,6 +5,7 @@ import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.specifier.Range;
+import com.google.inject.Inject;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
@@ -17,13 +18,19 @@ import java.util.UUID;
  */
 @CommandMethod("modifycredits")
 public class ModifyCredits {
+    @Inject private final Database database;
+
+    public ModifyCredits(Database database) {
+        this.database = database;
+    }
+
     @CommandDescription("Add MCMMO Credits to a user's balance.")
     @CommandMethod("add <amount> <player>")
     @CommandPermission("mcmmocredits.admin.modify")
     private void addCredits(CommandSender sender, @Argument("amount") @Range(min = "1", max = "2147483647") int amount, @Argument("player") String username) {
         if (shouldProcess(sender, username)) {
             UUID uuid = Util.getOfflineUser(username).getUniqueId();
-            Database.setCredits(uuid, Database.getCredits(uuid) + amount);
+            database.setCredits(uuid, Database.getCredits(uuid) + amount);
             ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Keys.MODIFY_CREDITS_ADD, amount));
         }
     }
@@ -34,7 +41,7 @@ public class ModifyCredits {
     private void setCredits(CommandSender sender, @Argument("amount") @Range(min = "0", max = "2147483647") int amount, @Argument("player") String username) {
         if (shouldProcess(sender, username)) {
             UUID uuid = Util.getOfflineUser(username).getUniqueId();
-            Database.setCredits(uuid, amount);
+            database.setCredits(uuid, amount);
             ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Keys.MODIFY_CREDITS_SET, amount));
         }
     }
@@ -45,13 +52,13 @@ public class ModifyCredits {
     private void takeCredits(CommandSender sender, @Argument("amount") @Range(min = "1", max = "2147483647") int amount, @Argument("player") String username) {
         if (shouldProcess(sender, username)) {
             UUID uuid = Util.getOfflineUser(username).getUniqueId();
-            Database.setCredits(uuid, Database.getCredits(uuid) - amount);
+            database.setCredits(uuid, Database.getCredits(uuid) - amount);
             ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Keys.MODIFY_CREDITS_TAKE, amount));
         }
     }
 
     private boolean shouldProcess(CommandSender sender, String username) {
-        if (!Util.processPlayer(username)) {
+        if (Util.getOfflineUser(username) == null && !database.doesPlayerExist(Util.getOfflineUser(username).getUniqueId())) {
             ConfigHandler.sendMessage(sender, Keys.PLAYER_DOES_NOT_EXIST.getString());
             return false;
         }
