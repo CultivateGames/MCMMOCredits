@@ -131,6 +131,7 @@ public class Database {
      * This is responsible for checking the MCMMO Credit balance of a user.
      *
      * TODO: Remove usage of .join()
+     * TODO Do we need injection here?
      */
     public static int getCredits(UUID uuid) {
         CompletableFuture<Integer> result = new CompletableFuture<>();
