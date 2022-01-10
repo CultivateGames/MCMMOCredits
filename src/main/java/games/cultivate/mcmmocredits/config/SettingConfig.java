@@ -25,8 +25,8 @@ public final class SettingConfig {
     @Comment("Toggles console message when a user is added to the MCMMO Credits database")
     private final boolean database_add_message = true;
 
-    @Comment("Set to 'false' to use MySQL")
-    private final boolean use_sqlite = true;
+    @Comment("Options: sqlite, mysql")
+    private final String database_adapter = "sqlite";
 
     @ConfigSerializable
     protected static final class MySQL {

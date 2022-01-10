@@ -1,8 +1,6 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.database.Connection;
-import games.cultivate.mcmmocredits.database.ConnectionSerializer;
 import net.kyori.adventure.audience.Audience;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
@@ -21,9 +19,7 @@ public final class ConfigHandler {
     //Creating a loader based on the file. We can use this to load multiple files if need be.
     //We cannot cache here because we want to be able to create loaders for multiple files.
     public static HoconConfigurationLoader createHoconLoader(Config config) {
-        return HoconConfigurationLoader.builder()
-                .defaultOptions(opts -> opts.serializers(build -> build.register(Connection.class, ConnectionSerializer.connection)))
-                .path(Paths.get(config.createFile().getPath())).emitComments(true).headerMode(HeaderMode.PRESERVE).build();
+        return HoconConfigurationLoader.builder().path(Paths.get(config.createFile().getPath())).emitComments(true).headerMode(HeaderMode.PRESERVE).build();
     }
 
 
