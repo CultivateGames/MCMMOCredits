@@ -46,13 +46,13 @@ public final class ConfigHandler {
 
     //An attempt to load multiple Config within one method. Not sure why I am writing this.
     public static void loadAllConfigs() {
-        for (Config config : Config.getAllConfigs()) {
+        for (Config config : Config.values()) {
             loadConfig(config);
         }
     }
 
     public static void unloadAllConfigs() {
-        for (Config config : Config.getAllConfigs()) {
+        for (Config config : Config.values()) {
             saveConfig(config);
         }
     }

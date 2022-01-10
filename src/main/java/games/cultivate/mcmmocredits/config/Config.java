@@ -6,7 +6,6 @@ import org.spongepowered.configurate.CommentedConfigurationNode;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.EnumSet;
 import java.util.logging.Level;
 
 public enum Config {
@@ -62,12 +61,6 @@ public enum Config {
 
     };
 
-    private static final EnumSet<Config> configs = EnumSet.allOf(Config.class);
-
-    public static EnumSet<Config> getAllConfigs() {
-        return configs;
-    }
-
     public abstract void load(CommentedConfigurationNode root);
 
     public abstract void save(CommentedConfigurationNode root);
@@ -80,8 +73,6 @@ public enum Config {
         try {
             if (file.getParentFile().mkdirs() && file.createNewFile()) {
                 Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created " + fileName + " file!");
-            } else {
-                Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] " + fileName + " already exists... skipping.");
             }
         } catch (IOException e) {
             e.printStackTrace();
