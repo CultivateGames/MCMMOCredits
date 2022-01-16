@@ -1,7 +1,5 @@
 package games.cultivate.mcmmocredits.util;
 
-import com.google.inject.Inject;
-import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.database.Database;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
@@ -12,12 +10,6 @@ import org.jetbrains.annotations.NotNull;
  * TODO: Fix compiler warning
  */
 public class CreditsExpansion extends PlaceholderExpansion {
-    private MCMMOCredits plugin;
-
-    @Inject
-    public CreditsExpansion(MCMMOCredits plugin) {
-        this.plugin = plugin;
-    }
 
     @Override
     public @NotNull String getAuthor() {
@@ -31,7 +23,7 @@ public class CreditsExpansion extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getVersion() {
-        return "0.0.1";
+        return "0.0.3";
     }
 
     @Override

@@ -8,9 +8,6 @@ import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.paper.PaperCommandManager;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.ModifyCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
@@ -19,7 +16,6 @@ import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.CreditsExpansion;
-import games.cultivate.mcmmocredits.injection.CreditsModule;
 import games.cultivate.mcmmocredits.util.Listeners;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -34,16 +30,10 @@ import java.util.logging.Level;
 /**
  * This class is responsible for startup/shutdown logic, and command loading.
  */
-@Singleton
-public final class MCMMOCredits extends JavaPlugin {
+public class MCMMOCredits extends JavaPlugin {
     private static boolean isPaper = false;
 
-    //TODO wtf is this
-    public static String path;
-
-    //Guice
-    private final Database database = new Database(this);
-    @Inject private Listeners listener;
+    private static MCMMOCredits instance;
 
     /**
      * This will tell us if we are in a Paper-based environment.
@@ -54,8 +44,13 @@ public final class MCMMOCredits extends JavaPlugin {
         return isPaper;
     }
 
-    public static String path(){
-        return path;
+    /**
+     * Generates widely accessible instance of this plugin.
+     * This is bad practice, but I don't really care. Project is not large enough for Guice.
+     * @return MCMMOCredits plugin
+     */
+    public static MCMMOCredits getInstance() {
+        return instance;
     }
 
     /**
@@ -68,18 +63,13 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onEnable() {
-        //Dependency Injection (Guice)
-        CreditsModule module = new CreditsModule(this, database);
-        Injector injector = module.createInjector();
-        injector.injectMembers(this);
-
+        instance = this;
         this.dependCheck();
-        path = getDataFolder().getAbsolutePath();
         ConfigHandler.loadAllConfigs();
 
-        database.initDB();
+        Database.initDB();
         this.loadCommands();
-        Bukkit.getPluginManager().registerEvents(this.listener, this);
+        Bukkit.getPluginManager().registerEvents(new Listeners(), this);
     }
 
     /**
@@ -111,7 +101,7 @@ public final class MCMMOCredits extends JavaPlugin {
         }
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new CreditsExpansion(this).register();
+            new CreditsExpansion().register();
         }
     }
 
@@ -131,9 +121,9 @@ public final class MCMMOCredits extends JavaPlugin {
             commandManager.registerAsynchronousCompletions();
         }
         AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(commandManager, CommandSender.class, parameters -> SimpleCommandMeta.empty());
-        annotationParser.parse(new ModifyCredits(database));
-        annotationParser.parse(new Credits(database));
-        annotationParser.parse(new Redeem(database));
+        annotationParser.parse(new ModifyCredits());
+        annotationParser.parse(new Credits());
+        annotationParser.parse(new Redeem());
     }
 
     /**

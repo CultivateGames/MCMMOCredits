@@ -58,7 +58,7 @@ public final class ConfigHandler {
 
     public static File createFile(Config config) {
         String fileName = config.toString().toLowerCase() + ".conf";
-        File file = new File(MCMMOCredits.path() + "\\" + fileName);
+        File file = new File(MCMMOCredits.getInstance().getDataFolder().getAbsolutePath() + "\\" + fileName);
         try {
             if (file.getParentFile().mkdirs() && file.createNewFile()) {
                 Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created " + fileName + " file!");
@@ -73,6 +73,6 @@ public final class ConfigHandler {
      * This is responsible for actually sending the message to a user. All messages sent out are prepended with a prefix.
      */
     public static void sendMessage(Audience audience, String text) {
-        audience.sendMessage(MiniMessage.miniMessage().parse(Keys.PREFIX.getString() + text));
+        audience.sendMessage(MiniMessage.miniMessage().deserialize(Keys.PREFIX.getString() + text));
     }
 }

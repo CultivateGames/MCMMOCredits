@@ -11,7 +11,6 @@ import com.gmail.nossr50.api.exceptions.InvalidSkillException;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.util.skills.SkillTools;
-import com.google.inject.Inject;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
@@ -31,12 +30,6 @@ public class Redeem {
     private static final SkillTools st = mcMMO.p.getSkillTools();
     private static final DatabaseAPI db = new DatabaseAPI();
 
-    @Inject private final Database database;
-
-    public Redeem(Database database) {
-        this.database = database;
-    }
-
     @CommandDescription("Redeem your own MCMMO Credits into a specific skill.")
     @CommandMethod("<skill> <amount>")
     @CommandPermission("mcmmocredits.redeem.self")
@@ -51,7 +44,7 @@ public class Redeem {
         Keys result = this.conditionCheck(uuid, skill, amount);
         try {
             if (result == null) {
-                database.setCredits(uuid, Database.getCredits(uuid) - amount);
+                Database.setCredits(uuid, Database.getCredits(uuid) - amount);
                 ExperienceAPI.addLevel(player, skillName, amount);
                 ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(sender.getName()), Keys.REDEEM_SUCCESSFUL, skillName, cap, amount));
             } else {
@@ -73,7 +66,7 @@ public class Redeem {
             Keys result = this.conditionCheck(uuid, skill, amount);
             try {
                 if (result == null) {
-                    database.setCredits(uuid, Database.getCredits(uuid) - amount);
+                    Database.setCredits(uuid, Database.getCredits(uuid) - amount);
                     if (offlinePlayer.isOnline()) {
                         ExperienceAPI.addLevel(offlinePlayer.getPlayer(), skillName, amount);
                     } else {
@@ -97,7 +90,7 @@ public class Redeem {
         if (!st.getNonChildSkills().contains(skill)) {
             return Keys.INVALID_ARGUMENTS;
         }
-        if (!database.doesPlayerExist(uuid) || !db.doesPlayerExistInDB(uuid)) {
+        if (!Database.doesPlayerExist(uuid) || !db.doesPlayerExistInDB(uuid)) {
             return Keys.PLAYER_DOES_NOT_EXIST;
         }
         if (Database.getCredits(uuid) < amount) {

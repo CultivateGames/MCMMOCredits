@@ -4,7 +4,6 @@ import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
-import com.google.inject.Inject;
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
@@ -21,11 +20,6 @@ import java.util.logging.Level;
  */
 @CommandMethod("credits")
 public class Credits {
-    @Inject private final Database database;
-
-    public Credits(Database database) {
-        this.database = database;
-    }
 
     @CommandDescription("Check your own MCMMO Credit balance.")
     @CommandMethod("")
@@ -42,7 +36,7 @@ public class Credits {
     @CommandMethod("<player>")
     @CommandPermission("mcmmocredits.check.other")
     private void checkCreditsOther(CommandSender sender, @Argument("player") String username) {
-        if (Util.getOfflineUser(username) != null && database.doesPlayerExist(Util.getOfflineUser(username).getUniqueId())) {
+        if (Util.getOfflineUser(username) != null && Database.doesPlayerExist(Util.getOfflineUser(username).getUniqueId())) {
             ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Keys.CREDITS_CHECK_OTHER));
             return;
         }
