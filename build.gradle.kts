@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.0.2-SNAPSHOT"
+version = "0.0.3"
 description = "MCMMOCredits"
 
 /**
@@ -33,9 +33,6 @@ repositories {
 }
 
 dependencies {
-    //Guice
-    implementation("com.google.inject:guice:5.0.1")
-
     //Paper NMS
     paperDevBundle("1.18.1-R0.1-SNAPSHOT")
     //Cloud Command Framework
@@ -73,6 +70,7 @@ tasks{
     }
 
     shadowJar {
+        minimize()
         //Cloud
         relocate("cloud.commandframework", "games.cultivate.mcmmocredits.relocate.cloud.commandframework")
         relocate("io.leangen", "games.cultivate.mcmmocredits.relocate.io.leangen")
