@@ -45,7 +45,7 @@ dependencies {
     //PlaceholderAPI
     compileOnly("me.clip:placeholderapi:2.10.10")
     //mcMMO TODO Fix exclusion
-    compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.207") {
+    compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.209") {
         exclude(module = "worldguard-legacy")
     }
 }
@@ -70,7 +70,6 @@ tasks{
     }
 
     shadowJar {
-        minimize()
         //Cloud
         relocate("cloud.commandframework", "games.cultivate.mcmmocredits.relocate.cloud.commandframework")
         relocate("io.leangen", "games.cultivate.mcmmocredits.relocate.io.leangen")

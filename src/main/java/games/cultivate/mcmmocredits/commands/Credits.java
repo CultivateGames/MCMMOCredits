@@ -7,7 +7,6 @@ import cloud.commandframework.annotations.CommandPermission;
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
-import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -26,24 +25,19 @@ public class Credits {
     @CommandPermission("mcmmocredits.check.self")
     private void checkCredits(CommandSender sender) {
         if (!(sender instanceof Player player)) {
+            //TODO Cloud exception
             Bukkit.getLogger().log(Level.WARNING, "You must supply a username! /credits <player>");
             return;
         }
-        ConfigHandler.sendMessage(player, Util.parse(player, Keys.CREDITS_CHECK_SELF));
+        ConfigHandler.sendMessage(player, Keys.CREDITS_CHECK_SELF.getString(), Util.basicBuilder(player).build());
     }
 
     @CommandDescription("Check someone else's MCMMO Credit balance.")
     @CommandMethod("<player>")
     @CommandPermission("mcmmocredits.check.other")
-    private void checkCreditsOther(CommandSender sender, @Argument("player") String username) {
-        if (Util.getOfflineUser(username) != null && Database.doesPlayerExist(Util.getOfflineUser(username).getUniqueId())) {
-            ConfigHandler.sendMessage(sender, Util.parse(Util.getOfflineUser(username), Keys.CREDITS_CHECK_OTHER));
-            return;
-        }
-        if (sender instanceof Player player) {
-            ConfigHandler.sendMessage(player, Util.parse(player, Keys.PLAYER_DOES_NOT_EXIST));
-        } else {
-            ConfigHandler.sendMessage(sender, Keys.PLAYER_DOES_NOT_EXIST.getString());
+    private void checkCreditsOther(CommandSender sender, @Argument("player") Player player) {
+        if (Util.shouldProcess(sender, player)) {
+            ConfigHandler.sendMessage(sender, Keys.CREDITS_CHECK_OTHER.getString(), Util.basicBuilder(player).build());
         }
     }
 
@@ -88,11 +82,7 @@ public class Credits {
     }
 
     private void sendReloadMessage(CommandSender sender) {
-        if (sender instanceof Player) {
-            ConfigHandler.sendMessage(sender, Util.parse((Player) sender, Keys.RELOAD_SUCCESSFUL));
-        } else {
-            ConfigHandler.sendMessage(sender, Keys.RELOAD_SUCCESSFUL.getString());
-        }
+        ConfigHandler.sendMessage(sender, Keys.RELOAD_SUCCESSFUL.getString(), Util.quickResolver(sender));
     }
 
 

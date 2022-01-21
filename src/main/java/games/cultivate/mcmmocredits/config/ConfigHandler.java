@@ -1,9 +1,13 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.MCMMOCredits;
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
 import org.spongepowered.configurate.loader.HeaderMode;
@@ -26,7 +30,6 @@ public final class ConfigHandler {
     public static HoconConfigurationLoader createHoconLoader(Config config) {
         return HoconConfigurationLoader.builder().path(Paths.get(createFile(config).getPath())).emitComments(true).headerMode(HeaderMode.PRESERVE).build();
     }
-
 
     public static void loadConfig(Config config) {
         loader = createHoconLoader(config);
@@ -72,7 +75,16 @@ public final class ConfigHandler {
     /**
      * This is responsible for actually sending the message to a user. All messages sent out are prepended with a prefix.
      */
-    public static void sendMessage(Audience audience, String text) {
-        audience.sendMessage(MiniMessage.miniMessage().deserialize(Keys.PREFIX.getString() + text));
+    public static void sendMessage(Audience audience, String text, @Nullable PlaceholderResolver resolver) {
+        String send = Keys.PREFIX.getString() + text;
+        if (resolver == null) {
+            audience.sendMessage(MiniMessage.miniMessage().deserialize(send));
+            return;
+        }
+        if (audience instanceof Player player) {
+            audience.sendMessage(MiniMessage.miniMessage().deserialize(PlaceholderAPI.setPlaceholders(player, send), resolver));
+        } else {
+            audience.sendMessage(MiniMessage.miniMessage().deserialize(send, resolver));
+        }
     }
 }

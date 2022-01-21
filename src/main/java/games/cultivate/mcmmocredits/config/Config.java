@@ -1,12 +1,6 @@
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.MCMMOCredits;
-import org.bukkit.Bukkit;
 import org.spongepowered.configurate.CommentedConfigurationNode;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
 
 public enum Config {
     SETTINGS {
