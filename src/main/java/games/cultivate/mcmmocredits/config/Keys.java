@@ -1,33 +1,41 @@
 package games.cultivate.mcmmocredits.config;
 
 public enum Keys {
-    DATABASE_HOST(Config.SETTINGS, "mysql-credentials", "host"),
-    DATABASE_PORT(Config.SETTINGS, "mysql-credentials", "port"),
-    DATABASE_NAME(Config.SETTINGS, "mysql-credentials", "database"),
-    DATABASE_USERNAME(Config.SETTINGS,  "mysql-credentials", "username"),
-    DATABASE_PASSWORD(Config.SETTINGS, "mysql-credentials", "password"),
-    USERCACHE_LOOKUP(Config.SETTINGS,  "use-usercache-lookup"),
-    PLAYER_TAB_COMPLETION(Config.SETTINGS, "player-tab-completion"),
-    SEND_LOGIN_MESSAGE(Config.SETTINGS, "send-login-message"),
-    DATABASE_ADD_MESSAGE(Config.SETTINGS, "database-add-message"),
-    DATABASE_ADAPTER(Config.SETTINGS, "database-adapter"),
-    PREFIX(Config.MESSAGES, "prefix"),
-    INVALID_ARGUMENTS(Config.MESSAGES, "invalid-arguments"),
-    MUST_BE_NUMBER(Config.MESSAGES, "must-be-number"),
-    NO_PERMS(Config.MESSAGES, "no-perms"),
-    CREDITS_CHECK_SELF(Config.MESSAGES, "credits-check-self"),
-    CREDITS_CHECK_OTHER(Config.MESSAGES, "credits-check-other"),
-    PLAYER_DOES_NOT_EXIST(Config.MESSAGES, "player-does-not-exist"),
-    RELOAD_SUCCESSFUL(Config.MESSAGES, "reload-successful"),
-    REDEEM_SKILL_CAP(Config.MESSAGES, "redeem-skill-cap"),
-    REDEEM_NOT_ENOUGH_CREDITS(Config.MESSAGES, "redeem-not-enough-credits"),
-    REDEEM_SUCCESSFUL(Config.MESSAGES, "redeem-successful"),
-    REDEEM_SUCCESSFUL_OTHER(Config.MESSAGES, "redeem-successful-other"),
-    LOGIN_MESSAGE(Config.MESSAGES, "login-message"),
-    MODIFY_CREDITS_ADD(Config.MESSAGES, "modify-credits-add"),
-    MODIFY_CREDITS_SET(Config.MESSAGES, "modify-credits-set"),
-    MODIFY_CREDITS_TAKE(Config.MESSAGES, "modify-credits-take"),
-    DATABASE_CONSOLE_MESSAGE(Config.MESSAGES, "database-console-message");
+    DATABASE_ADD_MESSAGE(Config.SETTINGS, "database", "database-add-message"),
+    DATABASE_ADAPTER(Config.SETTINGS, "database", "database-adapter"),
+    DATABASE_HOST(Config.SETTINGS, "database", "mysql-credentials", "host"),
+    DATABASE_PORT(Config.SETTINGS, "database","mysql-credentials", "port"),
+    DATABASE_NAME(Config.SETTINGS, "database","mysql-credentials", "name"),
+    DATABASE_USERNAME(Config.SETTINGS,  "database", "mysql-credentials", "username"),
+    DATABASE_PASSWORD(Config.SETTINGS, "database", "mysql-credentials", "password"),
+
+    USERCACHE_LOOKUP(Config.SETTINGS,  "general", "usercache-lookup"),
+    PLAYER_TAB_COMPLETION(Config.SETTINGS, "general", "player-tab-completion"),
+    SEND_LOGIN_MESSAGE(Config.SETTINGS, "general", "send-login-message"),
+
+    PREFIX(Config.MESSAGES, "general", "prefix"),
+    LOGIN_MESSAGE(Config.MESSAGES,"general", "login-message"),
+    DATABASE_CONSOLE_MESSAGE(Config.MESSAGES, "general", "database-console-message"),
+
+    INVALID_ARGUMENTS(Config.MESSAGES, "exceptions", "invalid-arguments"),
+    MUST_BE_NUMBER(Config.MESSAGES, "exceptions", "must-be-number"),
+    NO_PERMS(Config.MESSAGES, "exceptions", "no-perms"),
+    PLAYER_DOES_NOT_EXIST(Config.MESSAGES, "exceptions", "player-does-not-exist"),
+
+    CREDITS_BALANCE_SELF(Config.MESSAGES, "commands", "credits", "balance-self"),
+    CREDITS_BALANCE_OTHER(Config.MESSAGES, "commands", "credits", "balance-other"),
+    CREDITS_RELOAD_SUCCESSFUL(Config.MESSAGES, "commands", "credits", "reload-successful"),
+    REDEEM_SKILL_CAP(Config.MESSAGES, "commands", "redeem", "skill-cap"),
+    REDEEM_NOT_ENOUGH_CREDITS(Config.MESSAGES, "commands", "redeem", "not-enough-credits"),
+    REDEEM_SUCCESSFUL_SELF(Config.MESSAGES, "commands", "redeem", "successful-self"),
+    REDEEM_SUCCESSFUL_SENDER(Config.MESSAGES, "commands", "redeem", "successful-sender"),
+    REDEEM_SUCCESSFUL_RECEIVER(Config.MESSAGES, "commands", "redeem", "successful-receiver"),
+    MODIFY_CREDITS_ADD_SENDER(Config.MESSAGES, "commands", "modify-credits", "add-sender"),
+    MODIFY_CREDITS_SET_SENDER(Config.MESSAGES, "commands", "modify-credits", "set-sender"),
+    MODIFY_CREDITS_TAKE_SENDER(Config.MESSAGES, "commands", "modify-credits", "take-sender"),
+    MODIFY_CREDITS_ADD_RECEIVER(Config.MESSAGES, "commands", "modify-credits", "add-receiver"),
+    MODIFY_CREDITS_SET_RECEIVER(Config.MESSAGES, "commands", "modify-credits", "set-receiver"),
+    MODIFY_CREDITS_TAKE_RECEIVER(Config.MESSAGES, "commands", "modify-credits", "take-receiver");
 
     private final Object[] path;
     private final Config location;

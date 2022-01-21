@@ -29,7 +29,7 @@ public class Credits {
             Bukkit.getLogger().log(Level.WARNING, "You must supply a username! /credits <player>");
             return;
         }
-        ConfigHandler.sendMessage(player, Keys.CREDITS_CHECK_SELF.getString(), Util.basicBuilder(player).build());
+        ConfigHandler.sendMessage(player, Keys.CREDITS_BALANCE_SELF.getString(), Util.basicBuilder(player).build());
     }
 
     @CommandDescription("Check someone else's MCMMO Credit balance.")
@@ -37,7 +37,7 @@ public class Credits {
     @CommandPermission("mcmmocredits.check.other")
     private void checkCreditsOther(CommandSender sender, @Argument("player") Player player) {
         if (Util.shouldProcess(sender, player)) {
-            ConfigHandler.sendMessage(sender, Keys.CREDITS_CHECK_OTHER.getString(), Util.basicBuilder(player).build());
+            ConfigHandler.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER.getString(), Util.basicBuilder(player).build());
         }
     }
 
@@ -82,7 +82,7 @@ public class Credits {
     }
 
     private void sendReloadMessage(CommandSender sender) {
-        ConfigHandler.sendMessage(sender, Keys.RELOAD_SUCCESSFUL.getString(), Util.quickResolver(sender));
+        ConfigHandler.sendMessage(sender, Keys.CREDITS_RELOAD_SUCCESSFUL.getString(), Util.quickResolver(sender));
     }
 
 

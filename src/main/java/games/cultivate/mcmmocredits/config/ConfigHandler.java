@@ -28,7 +28,7 @@ public final class ConfigHandler {
     //Creating a loader based on the file. We can use this to load multiple files if need be.
     //We cannot cache here because we want to be able to create loaders for multiple files.
     public static HoconConfigurationLoader createHoconLoader(Config config) {
-        return HoconConfigurationLoader.builder().path(Paths.get(createFile(config).getPath())).emitComments(true).headerMode(HeaderMode.PRESERVE).build();
+        return HoconConfigurationLoader.builder().path(Paths.get(createFile(config).getPath())).emitComments(true).prettyPrinting(true).headerMode(HeaderMode.PRESERVE).build();
     }
 
     public static void loadConfig(Config config) {

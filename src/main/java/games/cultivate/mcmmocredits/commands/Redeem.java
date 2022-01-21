@@ -17,6 +17,7 @@ import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.Util;
+import it.unimi.dsi.fastutil.Pair;
 import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.command.CommandSender;
@@ -40,12 +41,12 @@ public class Redeem {
         if (result != null) {
             ConfigHandler.sendMessage(player, result.getString(), Util.quickResolver(player));
         } else if (this.processRedemption(player, skill, amount)) {
-            ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL.getString(), Util.redeemBuilder(player, WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build());
+            ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_SELF.getString(), Util.redeemBuilder(Pair.of(null, player), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build());
         }
     }
 
     @CommandDescription("Redeem MCMMO Credits into a specific skill for someone else")
-    @CommandMethod("<skill> <amount> <player> <silent>")
+    @CommandMethod("<skill> <amount> <player>")
     @CommandPermission("mcmmocredits.redeem.other")
     private void redeemCreditsOther(CommandSender sender, @Argument("skill") PrimarySkillType skill, @Argument("amount") @Range(min = "1", max = "2147483647") int amount, @Argument("player") Player player, @Flag(value = "silent", permission = "mcmmocredits.redeem.other.silent") boolean silent) {
         Keys result = this.conditionCheck(Util.getUser(player), skill, amount);
@@ -54,10 +55,10 @@ public class Redeem {
             pr = result.equals(Keys.PLAYER_DOES_NOT_EXIST) ? null : Util.quickResolver(player);
             ConfigHandler.sendMessage(player, result.getString(), pr);
         } else if (this.processRedemption(player, skill, amount)) {
-            PlaceholderResolver successfulResolver = Util.redeemBuilder(player, WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build();
-            ConfigHandler.sendMessage(sender, Keys.REDEEM_SUCCESSFUL_OTHER.getString(), successfulResolver);
+            PlaceholderResolver successfulResolver = Util.redeemBuilder(Pair.of(sender, player), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build();
+            ConfigHandler.sendMessage(sender, Keys.REDEEM_SUCCESSFUL_SENDER.getString(), successfulResolver);
             if (!silent) {
-                ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL.getString(), successfulResolver);
+                ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_RECEIVER.getString(), successfulResolver);
             }
         }
     }

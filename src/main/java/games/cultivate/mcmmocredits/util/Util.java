@@ -4,6 +4,7 @@ import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
+import it.unimi.dsi.fastutil.Pair;
 import net.kyori.adventure.text.minimessage.placeholder.Placeholder;
 import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
 import org.bukkit.Bukkit;
@@ -49,12 +50,16 @@ public class Util {
         return PlaceholderResolver.builder().placeholders(createPlaceholders("player", player.getName(), "credits", Database.getCredits(player.getUniqueId()) + ""));
     }
 
-    public static PlaceholderResolver.Builder transactionalBuilder(Player player, int amount) {
-        return basicBuilder(player).placeholders(createPlaceholders("amount", amount + ""));
+    public static PlaceholderResolver.Builder transactionBuilder(Pair<@Nullable CommandSender, @NotNull Player> pair, int amount) {
+        PlaceholderResolver.Builder right = basicBuilder(pair.right()).placeholder(createPlaceholder("amount",amount + ""));
+        if (pair.left() != null && pair.left() instanceof Player leftPlayer) {
+            return right.placeholders(createPlaceholders("sender", leftPlayer.getName(), "sender_credits", Database.getCredits(leftPlayer.getUniqueId()) + ""));
+        }
+        return right;
     }
 
-    public static PlaceholderResolver.Builder redeemBuilder(Player player, String skill, int cap, int amount) {
-        return transactionalBuilder(player, amount).placeholders(createPlaceholders("skill", skill, "cap", cap + ""));
+    public static PlaceholderResolver.Builder redeemBuilder(Pair<@Nullable CommandSender, @NotNull Player> pair, String skill, int cap, int amount) {
+        return transactionBuilder(pair, amount).placeholders(createPlaceholders("skill", skill, "cap", cap + ""));
     }
 
     public static @Nullable PlaceholderResolver quickResolver(@NotNull CommandSender sender) {
@@ -63,9 +68,13 @@ public class Util {
 
     public static List<Placeholder<?>> createPlaceholders(String... s) {
         List<Placeholder<?>> phList = new ArrayList<>();
-        for (int i = 0; i <s.length - 2; i+=2) {
+        for (int i = 0; i < s.length - 1; i+=2) {
             phList.add(Placeholder.miniMessage(s[i], s[i+1]));
         }
         return phList;
+    }
+
+    public static Placeholder<?> createPlaceholder(String... s) {
+        return Placeholder.miniMessage(s[0], s[1]);
     }
 }
