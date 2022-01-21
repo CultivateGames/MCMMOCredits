@@ -97,11 +97,30 @@ public class Database {
     }
 
     /**
+     * Helper method to modify MCMMO Credits (add).
+     * @param uuid UUID of user to modify.
+     * @param amount amount of Credits to add to user.
+     */
+    public static void addCredits(UUID uuid, int amount) {
+        setCredits(uuid, getCredits(uuid) + amount);
+    }
+
+    /**
+     * Helper method to modify MCMMO Credits (take). Ensures that MCMMO Credits never go negative.
+     * @param uuid UUID of user to modify.
+     * @param amount amount of Credits to take away from user.
+     */
+    public static void takeCredits(UUID uuid, int amount) {
+        setCredits(uuid, Math.max(0, getCredits(uuid) - amount));
+    }
+
+    /**
      * This is responsible for checking if a user exists in our Database.
      *
      * TODO: Remove usage of .join() (this is blocking)
      */
     public static boolean doesPlayerExist(UUID uuid) {
+        if (uuid == null) return false;
         CompletableFuture<Boolean> result = new CompletableFuture<>();
         Bukkit.getScheduler().runTaskAsynchronously(MCMMOCredits.getInstance(), () -> {
             try {
