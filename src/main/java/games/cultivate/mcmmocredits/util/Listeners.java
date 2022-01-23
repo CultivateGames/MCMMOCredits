@@ -3,6 +3,8 @@ package games.cultivate.mcmmocredits.util;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
+import net.kyori.adventure.text.minimessage.placeholder.Placeholder;
+import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -24,8 +26,8 @@ public class Listeners implements Listener {
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
         if (!Database.doesPlayerExist(e.getPlayerProfile().getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
             Database.addPlayer(e.getPlayerProfile().getId(), 0);
-            if (Keys.DATABASE_ADD_MESSAGE.getBoolean()) {
-                ConfigHandler.sendMessage(Bukkit.getConsoleSender(), Keys.DATABASE_CONSOLE_MESSAGE.getString(), null);
+            if (Keys.DATABASE_ADD_NOTIFICATION.getBoolean()) {
+                ConfigHandler.sendMessage(Bukkit.getConsoleSender(), Keys.DATABASE_CONSOLE_MESSAGE, PlaceholderResolver.placeholders(Placeholder.miniMessage("player", e.getName())));
             }
         }
     }
@@ -37,7 +39,7 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
         if (Keys.SEND_LOGIN_MESSAGE.getBoolean()) {
-            ConfigHandler.sendMessage(e.getPlayer(), Keys.LOGIN_MESSAGE.getString(), Util.quickResolver(e.getPlayer()));
+            ConfigHandler.sendMessage(e.getPlayer(), Keys.LOGIN_MESSAGE, Util.basicBuilder(e.getPlayer()).build());
         }
     }
 }
