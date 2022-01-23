@@ -34,7 +34,7 @@ public final class ConfigHandler {
 
     public static boolean changeConfig(String[] path, Object change) {
         //Do not authorize database changes from in-game. Will break plugin.
-        if (path[2].equalsIgnoreCase("database") || path[2].equalsIgnoreCase("mysql-credentials")) {
+        if (path[2].equalsIgnoreCase("adapter") || path[2].equalsIgnoreCase("mysql-credentials")) {
             return false;
         }
         ConfigHandler handler = ConfigHandler.instance();
