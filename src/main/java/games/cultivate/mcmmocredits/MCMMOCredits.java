@@ -1,29 +1,29 @@
 package games.cultivate.mcmmocredits;
 
 import cloud.commandframework.annotations.AnnotationParser;
-import cloud.commandframework.annotations.parsers.Parser;
-import cloud.commandframework.annotations.suggestions.Suggestions;
 import cloud.commandframework.bukkit.CloudBukkitCapabilities;
-import cloud.commandframework.context.CommandContext;
+import cloud.commandframework.exceptions.InvalidCommandSenderException;
+import cloud.commandframework.exceptions.InvalidSyntaxException;
+import cloud.commandframework.exceptions.NoPermissionException;
 import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
+import cloud.commandframework.minecraft.extras.MinecraftExceptionHandler;
 import cloud.commandframework.paper.PaperCommandManager;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.ModifyCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
-import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.CreditsExpansion;
 import games.cultivate.mcmmocredits.util.Listeners;
+import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 import java.util.function.Function;
 import java.util.logging.Level;
 
@@ -32,7 +32,6 @@ import java.util.logging.Level;
  */
 public class MCMMOCredits extends JavaPlugin {
     private static boolean isPaper = false;
-
     private static MCMMOCredits instance;
 
     /**
@@ -65,8 +64,7 @@ public class MCMMOCredits extends JavaPlugin {
     public void onEnable() {
         instance = this;
         this.dependCheck();
-        ConfigHandler.loadAllConfigs();
-
+        new ConfigHandler().enable();
         Database.initDB();
         this.loadCommands();
         Bukkit.getPluginManager().registerEvents(new Listeners(), this);
@@ -75,14 +73,12 @@ public class MCMMOCredits extends JavaPlugin {
     /**
      * This handles all shutdown logic.
      * <p>
-     * This includes shutting down the Database connection, and disabling our Adventure audience.
+     * This includes shutting down the Database connection, and saving our Configs.
      */
     @Override
     public void onDisable() {
+        ConfigHandler.instance().saveConfig(ConfigHandler.instance().root());
         Database.shutdownDB();
-        for (Config config : Config.values()) {
-            ConfigHandler.saveConfig(config);
-        }
     }
 
     private void dependCheck() {
@@ -108,7 +104,7 @@ public class MCMMOCredits extends JavaPlugin {
     private void loadCommands() {
         PaperCommandManager<CommandSender> commandManager;
         try {
-            commandManager = new PaperCommandManager<>(this, AsynchronousCommandExecutionCoordinator.<CommandSender>newBuilder().build(), Function.identity(), Function.identity());
+            commandManager = new PaperCommandManager<>(this, AsynchronousCommandExecutionCoordinator.<CommandSender>newBuilder().withAsynchronousParsing().build(), Function.identity(), Function.identity());
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -120,36 +116,24 @@ public class MCMMOCredits extends JavaPlugin {
         if (commandManager.queryCapability(CloudBukkitCapabilities.ASYNCHRONOUS_COMPLETION)) {
             commandManager.registerAsynchronousCompletions();
         }
+        commandManager.getParserRegistry().registerSuggestionProvider("customPlayer", (context, input) ->
+                Keys.PLAYER_TAB_COMPLETION.getBoolean() ? Bukkit.getOnlinePlayers().stream().map(Player::getName).toList() : List.of());
+
         AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(commandManager, CommandSender.class, parameters -> SimpleCommandMeta.empty());
+
+        //TODO caption registry
+        new MinecraftExceptionHandler<CommandSender>()
+                .withDefaultHandlers()
+                .withHandler(MinecraftExceptionHandler.ExceptionType.NO_PERMISSION, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.NO_PERMS, Util.createPlaceholder("required_permission", ((NoPermissionException) ex).getMissingPermission())))
+                .withHandler(MinecraftExceptionHandler.ExceptionType.ARGUMENT_PARSING, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS))
+                .withHandler(MinecraftExceptionHandler.ExceptionType.COMMAND_EXECUTION, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.COMMAND_ERROR))
+                .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SYNTAX, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS, Util.createPlaceholder("correct_syntax", ((InvalidSyntaxException) ex).getCorrectSyntax())))
+                .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SENDER, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS, Util.createPlaceholder("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName())))
+                .apply(commandManager, sender -> sender);
+
         annotationParser.parse(new ModifyCredits());
         annotationParser.parse(new Credits());
         annotationParser.parse(new Redeem());
-    }
 
-    /**
-     * This is responsible for creating a Suggestions provider for Commands.
-     * <p>
-     * TODO Figure out if I can just leave this here.
-     */
-    @Suggestions("player")
-    public List<String> playerSuggestions(CommandContext<CommandSender> context, String input) {
-        List<String> list = new ArrayList<>();
-        if (Keys.PLAYER_TAB_COMPLETION.getBoolean()) {
-            Bukkit.getOnlinePlayers().forEach(p -> list.add(p.getName()));
-            return list;
-        }
-        return list;
-    }
-
-    /**
-     * This is responsible for creating an Argument Parser for Commands.
-     * <p>
-     * TODO Figure out if I can just leave this here.
-     */
-    @Parser(suggestions = "player")
-    public String playerParser(CommandContext<CommandSender> sender, Queue<String> inputQueue) {
-        final String input = inputQueue.peek();
-        inputQueue.poll();
-        return input;
     }
 }

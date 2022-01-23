@@ -1,11 +1,15 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.MCMMOCredits;
+import games.cultivate.mcmmocredits.util.Util;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.placeholder.Placeholder;
 import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
@@ -14,69 +18,59 @@ import org.spongepowered.configurate.loader.HeaderMode;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.logging.Level;
 
 /**
  * This class is responsible for all configuration management, and message parsing/sending.
  */
 public final class ConfigHandler {
+    private static ConfigHandler instance;
+    private CreditsConfig config;
+    private CommentedConfigurationNode root;
+    private HoconConfigurationLoader loader;
 
-    public static CommentedConfigurationNode root;
-    public static HoconConfigurationLoader loader;
-
-    //Creating a loader based on the file. We can use this to load multiple files if need be.
-    //We cannot cache here because we want to be able to create loaders for multiple files.
-    public static HoconConfigurationLoader createHoconLoader(Config config) {
-        return HoconConfigurationLoader.builder().path(Paths.get(createFile(config).getPath())).emitComments(true).prettyPrinting(true).headerMode(HeaderMode.PRESERVE).build();
-    }
-
-    public static void loadConfig(Config config) {
-        loader = createHoconLoader(config);
+    public static boolean changeConfig(String[] path, Object change) {
+        //Do not authorize database changes from in-game. Will break plugin.
+        if (path[2].equalsIgnoreCase("database") || path[2].equalsIgnoreCase("mysql-credentials")) {
+            return false;
+        }
+        ConfigHandler handler = ConfigHandler.instance();
         try {
-            root = loader.load();
-            config.load(root);
-            loader.save(root);
+            switch (path[0]) {
+                case "messages" -> handler.root().node(Arrays.asList(path)).set(String.class, change);
+                case "settings" -> handler.root().node(Arrays.asList(path)).raw(change);
+                default -> {
+                    return false;
+                }
+            }
+            handler.loader().save(handler.root());
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
     }
 
-    public static void saveConfig(Config config) {
-        loader = createHoconLoader(config);
-        try {
-            config.save(root);
-            loader.save(root);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    //An attempt to load multiple Config within one method. Not sure why I am writing this.
-    public static void loadAllConfigs() {
-        for (Config config : Config.values()) {
-            loadConfig(config);
-        }
-    }
-
-    public static File createFile(Config config) {
-        String fileName = config.toString().toLowerCase() + ".conf";
-        File file = new File(MCMMOCredits.getInstance().getDataFolder().getAbsolutePath() + "\\" + fileName);
+    public static Path createFilePath() {
+        File file = new File(MCMMOCredits.getInstance().getDataFolder().getAbsolutePath() + "\\" + "config.conf");
         try {
             if (file.getParentFile().mkdirs() && file.createNewFile()) {
-                Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created " + fileName + " file!");
+                Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created configuration file!");
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return file;
+        return Paths.get(file.getPath());
     }
 
     /**
      * This is responsible for actually sending the message to a user. All messages sent out are prepended with a prefix.
      */
-    public static void sendMessage(Audience audience, String text, @Nullable PlaceholderResolver resolver) {
-        String send = Keys.PREFIX.getString() + text;
+    public static void sendMessage(Audience audience, Keys key, @Nullable PlaceholderResolver resolver) {
+        String send = Keys.PREFIX.getString() + key.getString();
         if (resolver == null) {
             audience.sendMessage(MiniMessage.miniMessage().deserialize(send));
             return;
@@ -86,5 +80,75 @@ public final class ConfigHandler {
         } else {
             audience.sendMessage(MiniMessage.miniMessage().deserialize(send, resolver));
         }
+    }
+
+    public static Component exceptionMessage(CommandSender sender, Keys key, Placeholder<?>... placeholderList) {
+        PlaceholderResolver pr = placeholderList.length != 0 && sender instanceof Player player ? Util.basicBuilder(player).placeholders(placeholderList).build() : PlaceholderResolver.placeholders(Util.createPlaceholder("sender", sender.getName()));
+        return MiniMessage.miniMessage().deserialize(Keys.PREFIX.getString() + key.getString(), pr);
+    }
+
+    //Think this is bad but cannot remember why?
+    public void enable() {
+        loadConfig();
+        setInstance(this);
+    }
+
+    public HoconConfigurationLoader createHoconLoader() {
+        HoconConfigurationLoader configLoader = HoconConfigurationLoader.builder().path(createFilePath()).emitComments(true).prettyPrinting(true).headerMode(HeaderMode.PRESERVE).build();
+        this.setLoader(configLoader);
+        return this.loader();
+    }
+
+    public void loadConfig() {
+        try {
+            CommentedConfigurationNode root = loader().load();
+            CreditsConfig config = root.get(CreditsConfig.class);
+            loader().save(root);
+            this.setConfig(config);
+            this.setRoot(root);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void saveConfig(CommentedConfigurationNode root) {
+        try {
+            loader().save(root);
+            this.setRoot(root);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static ConfigHandler instance() {
+        return instance;
+    }
+
+    public CreditsConfig config() {
+        return config;
+    }
+
+    public CommentedConfigurationNode root() {
+        return root;
+    }
+
+    public HoconConfigurationLoader loader() {
+        return loader == null ? this.createHoconLoader() : loader;
+    }
+
+    public void setConfig(CreditsConfig config) {
+        this.config = config;
+    }
+
+    public void setRoot(CommentedConfigurationNode root) {
+        this.root = root;
+    }
+
+    public void setLoader(HoconConfigurationLoader loader) {
+        this.loader = loader;
+    }
+
+    public void setInstance(ConfigHandler instance) {
+        ConfigHandler.instance = instance;
     }
 }

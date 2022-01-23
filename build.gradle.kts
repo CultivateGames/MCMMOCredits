@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.0.3"
+version = "0.0.4-SNAPSHOT"
 description = "MCMMOCredits"
 
 /**
@@ -38,6 +38,7 @@ dependencies {
     //Cloud Command Framework
     implementation("cloud.commandframework:cloud-annotations:1.6.1")
     implementation("cloud.commandframework:cloud-paper:1.6.1")
+    implementation("cloud.commandframework:cloud-minecraft-extras:1.6.1")
     //Configurate
     implementation("org.spongepowered:configurate-hocon:4.2.0-SNAPSHOT")
     //MiniMessage
@@ -79,7 +80,6 @@ tasks{
         relocate("com.typesafe", "games.cultivate.mcmmocredits.relocate.com.typesafe")
 
         //MiniMessage
-        //TODO Fix this part of the build script
         relocate("net.kyori.adventure.text.minimessage", "games.cultivate.mcmmocredits.relocate.net.kyori.adventure.text.minimessage")
 
         manifest {

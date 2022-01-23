@@ -39,9 +39,9 @@ public class Redeem {
     private void redeemCreditsSelf(Player player, @Argument("skill") PrimarySkillType skill, @Argument("amount") @Range(min = "1", max = "2147483647") int amount) {
         Keys result = this.conditionCheck(Util.getUser(player), skill, amount);
         if (result != null) {
-            ConfigHandler.sendMessage(player, result.getString(), Util.quickResolver(player));
+            ConfigHandler.sendMessage(player, result, Util.quickResolver(player));
         } else if (this.processRedemption(player, skill, amount)) {
-            ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_SELF.getString(), Util.redeemBuilder(Pair.of(null, player), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build());
+            ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_SELF, Util.redeemBuilder(Pair.of(null, player), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build());
         }
     }
 
@@ -52,13 +52,13 @@ public class Redeem {
         Keys result = this.conditionCheck(Util.getUser(player), skill, amount);
         PlaceholderResolver pr;
         if (result != null) {
-            pr = result.equals(Keys.PLAYER_DOES_NOT_EXIST) ? null : Util.quickResolver(player);
-            ConfigHandler.sendMessage(player, result.getString(), pr);
+            pr = result.equals(Keys.PLAYER_DOES_NOT_EXIST) ? null : Util.basicBuilder(player).build();
+            ConfigHandler.sendMessage(player, result, pr);
         } else if (this.processRedemption(player, skill, amount)) {
             PlaceholderResolver successfulResolver = Util.redeemBuilder(Pair.of(sender, player), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build();
-            ConfigHandler.sendMessage(sender, Keys.REDEEM_SUCCESSFUL_SENDER.getString(), successfulResolver);
+            ConfigHandler.sendMessage(sender, Keys.REDEEM_SUCCESSFUL_SENDER, successfulResolver);
             if (!silent) {
-                ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_RECEIVER.getString(), successfulResolver);
+                ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_RECEIVER, successfulResolver);
             }
         }
     }
