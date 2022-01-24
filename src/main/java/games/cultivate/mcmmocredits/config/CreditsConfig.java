@@ -4,6 +4,8 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
+import java.util.List;
+
 @ConfigSerializable
 @SuppressWarnings("FieldMayBeFinal")
 public class CreditsConfig {
@@ -39,6 +41,10 @@ public class CreditsConfig {
         @Comment("General settings, all used at various times.")
         @Setting("general")
         private GeneralSettings generalSettings = new GeneralSettings();
+
+        @Comment("GUI Settings for the /credits gui command. YOU MUST CONFIGURE THE GUI BEFORE USING.")
+        @Setting("gui")
+        private GUISettings gui = new GUISettings();
     }
 
     @ConfigSerializable
@@ -54,6 +60,52 @@ public class CreditsConfig {
         @Comment("Messages sent during execution of /redeem. Placeholders: <player>, <credits>, <amount>, <sender>, <sender_credits>, <skill>, <cap>, external")
         @Setting("redeem")
         private RedeemCommandMessages redeem = new RedeemCommandMessages();
+    }
+
+    @ConfigSerializable
+    protected static final class GUISettings {
+        @Comment("Title of the GUI. Placeholders: <player>, <credits>, external")
+        private String title = "<#ff253c>MCMMO Credits Main Menu";
+
+        @Comment("Size of the GUI. Choices: 9, 18, 27, 36, 45, 54")
+        private int size = 27;
+
+        @Comment("Determines if the GUI will fill empty slots with an item.")
+        private boolean fill = false;
+
+        @Comment("Item to fill the GUI with if gui fill is enabled.")
+        @Setting("fill-item")
+        private ItemStackSettings fill_item = new ItemStackSettings();
+
+        @Comment("Shown to users in the GUI main menu for Setting Changes. If users do not have perm, this will be hidden.")
+        @Setting("setting-change")
+        private ItemStackSettings settings_item = new ItemStackSettings();
+
+        @Comment("Shown to users in the GUI main menu for Message Changes. If users do not have perm, this will be hidden.")
+        @Setting("message-change")
+        private ItemStackSettings messages_item = new ItemStackSettings();
+
+        @Comment("Shown to user in the GUI main menu for credit redemption. This will show to all users who have GUI permission.")
+        @Setting("redemption")
+        private ItemStackSettings redeem_item = new ItemStackSettings();
+    }
+
+    @ConfigSerializable
+    protected static final class ItemStackSettings {
+        @Comment("Material of the GUI button. Use all caps (ex. STONE).")
+        private String material = "STONE";
+        @Comment("quantity of the item stack. Must be a valid number for the relevant material.")
+        private int amount = 1;
+        @Comment("Durability of the item. For Skulls, set to 3.")
+        private int durability = 0;
+        @Comment("Name of the item. Placeholders: <credits>, <player>, external")
+        private String name = "GUI Item";
+        @Comment("Lore of the item. Placeholders: <credits>, <player>, external")
+        private List<String> lore = List.of("This is a test!", "I love MCMMO Credits!");
+        @Comment("Determines if the item will have an enchantment glint.")
+        private boolean glow = false;
+        @Comment("Determines slot where the item will be placed (starts at 0, cannot exceed inventory size")
+        private int inventory_slot = 27;
     }
 
     @ConfigSerializable
@@ -126,8 +178,10 @@ public class CreditsConfig {
 
     @ConfigSerializable
     protected static final class GeneralSettings {
-        @Comment("Perform offline player lookups with usercache. Disable if you are having problems.")
+        @Comment("Perform offline player lookups with usercache. Only disable if you are facing unsolvable issues.")
         private boolean usercache_lookup = true;
+        @Comment("Allow for unsafe, offline player lookups that do not utilize usercache. This is NOT recommended and may hang the server.")
+        private boolean unsafe_lookup = false;
         @Comment("Toggles tab completion for Player based arguments. Useful if you have other plugins which hide staff.")
         private boolean player_tab_completion = true;
         @Comment("Toggles sending a login message to the user indicating how many MCMMO Credits they have.")

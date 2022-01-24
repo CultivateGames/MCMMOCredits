@@ -32,11 +32,15 @@ public final class ConfigHandler {
     private CommentedConfigurationNode root;
     private HoconConfigurationLoader loader;
 
-    public static boolean changeConfig(String[] path, Object change) {
-        //Do not authorize database changes from in-game. Will break plugin.
-        if (path[2].equalsIgnoreCase("adapter") || path[2].equalsIgnoreCase("mysql-credentials")) {
-            return false;
+    public static boolean changeConfigInGame(String[] path, Object change) {
+        boolean canProceed = false;
+        for (Keys key : Keys.modifiableKeys) {
+            if (Arrays.equals(key.path(), path)) {
+                canProceed = true;
+                break;
+            }
         }
+        if (!canProceed)  return false;
         ConfigHandler handler = ConfigHandler.instance();
         try {
             switch (path[0]) {

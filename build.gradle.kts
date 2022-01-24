@@ -30,6 +30,9 @@ repositories {
     //mcMMO TODO Fix exclusion
     maven("https://nexus.neetgames.com/repository/maven-releases/")
     maven("https://maven.enginehub.org/repo/")
+
+    //Interfaces
+    maven("https://repo.incendo.org/content/repositories/snapshots/")
 }
 
 dependencies {
@@ -39,9 +42,14 @@ dependencies {
     implementation("cloud.commandframework:cloud-annotations:1.6.1")
     implementation("cloud.commandframework:cloud-paper:1.6.1")
     implementation("cloud.commandframework:cloud-minecraft-extras:1.6.1")
+    //Incendo Interfaces
+    implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
+        exclude(module = "paper-api")
+    }
     //Configurate
     implementation("org.spongepowered:configurate-hocon:4.2.0-SNAPSHOT")
-    //MiniMessage
+    //Adventure (MiniMessage and Serializers)
+    implementation("net.kyori:adventure-api:4.10.0-SNAPSHOT")
     implementation("net.kyori:adventure-text-minimessage:4.10.0-SNAPSHOT")
     //PlaceholderAPI
     compileOnly("me.clip:placeholderapi:2.10.10")

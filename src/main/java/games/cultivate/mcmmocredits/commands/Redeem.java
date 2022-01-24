@@ -20,9 +20,11 @@ import games.cultivate.mcmmocredits.util.Util;
 import it.unimi.dsi.fastutil.Pair;
 import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
 import org.apache.commons.lang.WordUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -37,10 +39,11 @@ public class Redeem {
     @CommandMethod("<skill> <amount>")
     @CommandPermission("mcmmocredits.redeem.self")
     private void redeemCreditsSelf(Player player, @Argument("skill") PrimarySkillType skill, @Argument("amount") @Range(min = "1", max = "2147483647") int amount) {
-        Keys result = this.conditionCheck(Util.getUser(player), skill, amount);
+        UUID uuid = player.getUniqueId();
+        Keys result = this.conditionCheck(uuid, skill, amount);
         if (result != null) {
             ConfigHandler.sendMessage(player, result, Util.quickResolver(player));
-        } else if (this.processRedemption(player, skill, amount)) {
+        } else if (this.processRedemption(uuid, skill, amount)) {
             ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_SELF, Util.redeemBuilder(Pair.of(null, player), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build());
         }
     }
@@ -48,19 +51,22 @@ public class Redeem {
     @CommandDescription("Redeem MCMMO Credits into a specific skill for someone else")
     @CommandMethod("<skill> <amount> <player>")
     @CommandPermission("mcmmocredits.redeem.other")
-    private void redeemCreditsOther(CommandSender sender, @Argument("skill") PrimarySkillType skill, @Argument("amount") @Range(min = "1", max = "2147483647") int amount, @Argument("player") Player player, @Flag(value = "silent", permission = "mcmmocredits.redeem.other.silent") boolean silent) {
-        Keys result = this.conditionCheck(Util.getUser(player), skill, amount);
-        PlaceholderResolver pr;
-        if (result != null) {
-            pr = result.equals(Keys.PLAYER_DOES_NOT_EXIST) ? null : Util.basicBuilder(player).build();
-            ConfigHandler.sendMessage(player, result, pr);
-        } else if (this.processRedemption(player, skill, amount)) {
-            PlaceholderResolver successfulResolver = Util.redeemBuilder(Pair.of(sender, player), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build();
-            ConfigHandler.sendMessage(sender, Keys.REDEEM_SUCCESSFUL_SENDER, successfulResolver);
-            if (!silent) {
-                ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_RECEIVER, successfulResolver);
+    private void redeemCreditsOther(CommandSender sender, @Argument("skill") PrimarySkillType skill, @Argument("amount") @Range(min = "1", max = "2147483647") int amount, @Argument(value = "player", suggestions = "customPlayer") String username, @Flag(value = "silent", permission = "mcmmocredits.redeem.other.silent") boolean silent) {
+        Util.shouldProcessUUID(sender, username).ifPresent(uuid -> {
+            if (Database.doesPlayerExist(uuid)) {
+                Player player = Bukkit.getPlayer(uuid);
+                Keys result = this.conditionCheck(uuid, skill, amount);
+                if (result != null) {
+                    ConfigHandler.sendMessage(sender, result, result.equals(Keys.PLAYER_DOES_NOT_EXIST) ? null : Util.basicBuilder(Objects.requireNonNull(player)).build());
+                } else if (this.processRedemption(uuid, skill, amount)) {
+                    PlaceholderResolver successfulResolver = Util.redeemBuilder(Pair.of(sender, Objects.requireNonNull(player)), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build();
+                    ConfigHandler.sendMessage(sender, Keys.REDEEM_SUCCESSFUL_SENDER, successfulResolver);
+                    if (!silent) {
+                        ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_RECEIVER, successfulResolver);
+                    }
+                }
             }
-        }
+        });
     }
 
     //TODO Cloud exception
@@ -68,7 +74,7 @@ public class Redeem {
         if (!st.getNonChildSkills().contains(skill)) {
             return Keys.INVALID_ARGUMENTS;
         }
-        if (!Database.doesPlayerExist(uuid) || !db.doesPlayerExistInDB(uuid)) {
+        if (!db.doesPlayerExistInDB(uuid)) {
             return Keys.PLAYER_DOES_NOT_EXIST;
         }
         if (Database.getCredits(uuid) < amount) {
@@ -81,10 +87,9 @@ public class Redeem {
     }
 
     //MCMMO API may actually be the death of me.
-    private boolean processRedemption(Player player, PrimarySkillType skill, int amount) {
-        UUID uuid = Util.getUser(player);
-        if (uuid == null) return false;
-        PlayerProfile profile = player.isOnline() ? UserManager.getPlayer(player).getProfile() : mcMMO.getDatabaseManager().loadPlayerProfile(uuid);
+    private boolean processRedemption(UUID uuid, PrimarySkillType skill, int amount) {
+        Player player = Bukkit.getPlayer(uuid);
+        PlayerProfile profile = Objects.requireNonNull(player).isOnline() ? UserManager.getPlayer(player).getProfile() : mcMMO.getDatabaseManager().loadPlayerProfile(uuid);
         if(profile.isLoaded()) {
             profile.addLevels(skill, amount);
             Database.takeCredits(uuid, amount);
