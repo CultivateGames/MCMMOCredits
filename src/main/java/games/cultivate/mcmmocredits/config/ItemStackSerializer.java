@@ -1,22 +1,60 @@
 package games.cultivate.mcmmocredits.config;
 
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.configurate.ConfigurationNode;
-import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.serialize.TypeSerializer;
 
 import java.lang.reflect.Type;
-//Stub
-public class ItemStackSerializer implements TypeSerializer<ItemStack> {
+import java.util.Objects;
 
+@SuppressWarnings({"deprecation", "unused"})
+public class ItemStackSerializer implements TypeSerializer<ItemStack> {
     @Override
-    public ItemStack deserialize(Type type, ConfigurationNode node) throws SerializationException {
-        return null;
+    public ItemStack deserialize(Type type, ConfigurationNode node) {
+        ItemStack item = new ItemStack(Material.valueOf(node.node("material").getString()));
+        item.setAmount(node.node("amount").getInt());
+        item.setDurability((short) node.node("durability").getInt());
+        item.editMeta(meta -> {
+            try {
+                meta.displayName(MiniMessage.miniMessage().deserialize(Objects.requireNonNull(node.node("name").getString())));
+                meta.lore(Objects.requireNonNull(node.node("lore").getList(String.class)).stream().map(i -> MiniMessage.miniMessage().deserialize(i)).toList());
+                if (node.node("glow").getBoolean()) {
+                    meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
+                    meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                }
+                meta.getPersistentDataContainer().set(Objects.requireNonNull(NamespacedKey.fromString("mcmmocredits")), PersistentDataType.INTEGER, node.node("inventory_slot").getInt());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        return item;
     }
 
     @Override
-    public void serialize(Type type, @Nullable ItemStack obj, ConfigurationNode node) throws SerializationException {
-
+    public void serialize(Type type, @Nullable ItemStack obj, ConfigurationNode node) {
+        if (obj != null) {
+            try {
+                node.node("material").set(obj.getType().name());
+                node.node("name").set(MiniMessage.miniMessage().serialize(obj.displayName()));
+                node.node("amount").set(obj.getAmount());
+                node.node("durability").set((int) obj.getDurability());
+                if (obj.hasItemMeta() && obj.getItemMeta() != null) {
+                    node.node("inventory_slot").set(1);
+                    node.node("glow").set(!obj.getEnchantments().isEmpty());
+                    if (obj.getItemMeta().hasLore()) {
+                        node.node("lore").set(Objects.requireNonNull(obj.lore()).stream().map(i -> MiniMessage.miniMessage().serialize(i)).toList());
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
