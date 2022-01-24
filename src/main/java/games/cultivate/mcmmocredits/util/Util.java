@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -33,25 +34,19 @@ public class Util {
         return EMPTY_ARRAY;
     }
 
-    public static @Nullable UUID getUser(Player player) {
-        if (player.isOnline()) {
-            return player.getUniqueId();
+    @SuppressWarnings("deprecation")
+    public static Optional<UUID> shouldProcessUUID(@NotNull CommandSender sender, @NotNull String playerName) {
+        if (Bukkit.getPlayer(playerName) != null) {
+            return Optional.of(Objects.requireNonNull(Bukkit.getPlayer(playerName)).getUniqueId());
         }
-
-        if (Keys.USERCACHE_LOOKUP.getBoolean() && MCMMOCredits.isPaper() && Bukkit.getOfflinePlayerIfCached(player.getName()) != null) {
-            return Objects.requireNonNull(Bukkit.getOfflinePlayerIfCached(player.getName())).getUniqueId();
+        if (Keys.USERCACHE_LOOKUP.getBoolean() && MCMMOCredits.isPaper() && Bukkit.getOfflinePlayerIfCached(playerName) != null) {
+            return Optional.of(Objects.requireNonNull(Bukkit.getOfflinePlayerIfCached(playerName)).getUniqueId());
         }
-        return null;
-    }
-
-    public static boolean shouldProcess(CommandSender sender, Player player) {
-        if (Util.getUser(player) != null && Database.doesPlayerExist(Util.getUser(player))) {
-            return true;
-        } else {
-            //Methods should only do one thing! (oh well)
-            ConfigHandler.sendMessage(sender, Keys.PLAYER_DOES_NOT_EXIST, Util.quickResolver(sender));
-            return false;
+        if (Keys.UNSAFE_LOOKUP.getBoolean() && Bukkit.getOfflinePlayer(playerName).hasPlayedBefore()) {
+            return Optional.of(Objects.requireNonNull(Bukkit.getPlayerUniqueId(playerName)));
         }
+        ConfigHandler.sendMessage(sender, Keys.PLAYER_DOES_NOT_EXIST, quickResolver(sender));
+        return Optional.empty();
     }
 
     /**
@@ -92,7 +87,7 @@ public class Util {
     }
 
     public static @NotNull PlaceholderResolver quickResolver(@NotNull CommandSender sender) {
-        return sender instanceof Player senderPlayer ? Util.basicBuilder(senderPlayer).build() : PlaceholderResolver.placeholders(Util.createPlaceholder("sender", sender.getName()));
+        return sender instanceof Player senderPlayer ? basicBuilder(senderPlayer).build() : PlaceholderResolver.placeholders(createPlaceholder("sender", sender.getName()));
     }
 
     public static List<Placeholder<?>> createPlaceholders(String... s) {

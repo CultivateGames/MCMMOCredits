@@ -10,14 +10,20 @@ import cloud.commandframework.annotations.suggestions.Suggestions;
 import cloud.commandframework.context.CommandContext;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
+import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.Util;
+import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.incendo.interfaces.core.click.ClickHandler;
+import org.incendo.interfaces.paper.PlayerViewer;
+import org.incendo.interfaces.paper.type.ChestInterface;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
-import java.util.logging.Level;
 
 /**
  * This class is responsible for handling of the /credits command.
@@ -28,22 +34,19 @@ public class Credits {
     @CommandDescription("Check your own MCMMO Credit balance.")
     @CommandMethod("")
     @CommandPermission("mcmmocredits.check.self")
-    private void checkCredits(CommandSender sender) {
-        if (!(sender instanceof Player player)) {
-            //TODO Cloud exception
-            Bukkit.getLogger().log(Level.WARNING, "You must supply a username! /credits <player>");
-            return;
-        }
+    private void checkCredits(Player player) {
         ConfigHandler.sendMessage(player, Keys.CREDITS_BALANCE_SELF, Util.basicBuilder(player).build());
     }
 
     @CommandDescription("Check someone else's MCMMO Credit balance.")
-    @CommandMethod("<player>")
+    @CommandMethod("<username>")
     @CommandPermission("mcmmocredits.check.other")
-    private void checkCreditsOther(CommandSender sender, @Argument(value = "player", suggestions = "customPlayer") Player player) {
-        if (Util.shouldProcess(sender, player)) {
-            ConfigHandler.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER, Util.basicBuilder(player).build());
-        }
+    private void checkCreditsOther(CommandSender sender, @Argument(value = "username", suggestions = "customPlayer") String username) {
+        Util.shouldProcessUUID(sender, username).ifPresent(uuid -> {
+            if (Database.doesPlayerExist(uuid)) {
+                ConfigHandler.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER, Util.basicBuilder(Objects.requireNonNull(Bukkit.getPlayer(uuid))).build());
+            }
+        });
     }
 
     @CommandDescription("Reload all configuration files provided by the plugin.")
@@ -58,11 +61,22 @@ public class Credits {
     @CommandMethod("settings <settings> <change>")
     @CommandPermission("mcmmocredits.admin.settings")
     private void changeSettings(CommandSender sender, @Argument("settings") String setting, @Argument("change") @Greedy String change) {
-        if (ConfigHandler.changeConfig(Util.getPathFromSuffix(setting), change)) {
+        if (ConfigHandler.changeConfigInGame(Util.getPathFromSuffix(setting), change)) {
             ConfigHandler.sendMessage(sender, Keys.CREDITS_SETTING_CHANGE_SUCCESSFUL, Util.settingsBuilder(sender, setting, change).build());
         } else {
             ConfigHandler.sendMessage(sender, Keys.CREDITS_SETTING_CHANGE_FAILURE, Util.quickResolver(sender));
         }
+    }
+
+    @CommandDescription("Open a GUI that can be used to interface with this plugin.")
+    @CommandMethod("gui")
+    @CommandPermission("mcmmocredits.admin.gui")
+    private void openGUI(Player player) {
+        //Stub
+        ChestInterface cb = ChestInterface.builder()
+                .title(MiniMessage.miniMessage().deserialize(PlaceholderAPI.setPlaceholders(player, Keys.GUI_TITLE.getString()), Util.quickResolver(player)))
+                .updates(true, 10).clickHandler(ClickHandler.cancel()).build();
+            cb.open((PlayerViewer) player);
     }
 
     @Suggestions("settings")
