@@ -100,8 +100,8 @@ public class CreditsConfig {
         private int durability = 0;
         @Comment("Name of the item. Placeholders: <credits>, <player>, external")
         private String name = "GUI Item";
-        @Comment("Lore of the item. Placeholders: <credits>, <player>, external")
-        private List<String> lore = List.of("This is a test!", "I love MCMMO Credits!");
+        @Comment("Lore of the item. Placeholders: <credits>, <player>, external. If you do not want italics here, use the <!italic> tag")
+        private List<String> lore = List.of("<!italic>This is a test!", "<!italic>I love MCMMO Credits!");
         @Comment("Determines if the item will have an enchantment glint.")
         private boolean glow = false;
         @Comment("Determines slot where the item will be placed (starts at 0, cannot exceed inventory size")

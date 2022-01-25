@@ -48,7 +48,6 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
                 node.node("amount").set(obj.getAmount());
                 node.node("durability").set((int) obj.getDurability());
                 if (obj.hasItemMeta() && obj.getItemMeta() != null) {
-                    node.node("inventory-slot").set(1);
                     node.node("glow").set(!obj.getEnchantments().isEmpty());
                     if (obj.getItemMeta().hasLore()) {
                         node.node("lore").set(Objects.requireNonNull(obj.lore()).stream().map(i -> MiniMessage.miniMessage().serialize(i)).toList());
