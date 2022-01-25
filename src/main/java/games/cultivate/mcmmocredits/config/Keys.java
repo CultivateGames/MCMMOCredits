@@ -1,5 +1,7 @@
 package games.cultivate.mcmmocredits.config;
 
+import org.bukkit.inventory.ItemStack;
+
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -73,6 +75,10 @@ public enum Keys {
 
     public boolean canChange() {
         return canChange;
+    }
+
+    public ItemStack getItemStack() {
+        return ItemStackSerializer.INSTANCE.deserialize(ItemStack.class, ConfigHandler.instance().root().node(Arrays.stream(this.path()).toList()));
     }
 
     @SuppressWarnings("unused")

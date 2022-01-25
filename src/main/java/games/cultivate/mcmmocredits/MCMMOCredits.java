@@ -19,11 +19,14 @@ import games.cultivate.mcmmocredits.util.CreditsExpansion;
 import games.cultivate.mcmmocredits.util.Listeners;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.incendo.interfaces.paper.PaperInterfaceListeners;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Level;
 
@@ -33,6 +36,7 @@ import java.util.logging.Level;
 public class MCMMOCredits extends JavaPlugin {
     private static boolean isPaper = false;
     private static MCMMOCredits instance;
+    public static NamespacedKey key;
 
     /**
      * This will tell us if we are in a Paper-based environment.
@@ -63,10 +67,12 @@ public class MCMMOCredits extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        key = Objects.requireNonNull(NamespacedKey.fromString("mcmmocredits"));
         this.dependCheck();
         new ConfigHandler().enable();
         Database.initDB();
         this.loadCommands();
+        PaperInterfaceListeners.install(this);
         Bukkit.getPluginManager().registerEvents(new Listeners(), this);
     }
 

@@ -12,12 +12,9 @@ import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.Util;
-import me.clip.placeholderapi.PlaceholderAPI;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.incendo.interfaces.core.click.ClickHandler;
 import org.incendo.interfaces.paper.PlayerViewer;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
@@ -72,11 +69,9 @@ public class Credits {
     @CommandMethod("gui")
     @CommandPermission("mcmmocredits.admin.gui")
     private void openGUI(Player player) {
-        //Stub
-        ChestInterface cb = ChestInterface.builder()
-                .title(MiniMessage.miniMessage().deserialize(PlaceholderAPI.setPlaceholders(player, Keys.GUI_TITLE.getString()), Util.quickResolver(player)))
-                .updates(true, 10).clickHandler(ClickHandler.cancel()).build();
-            cb.open((PlayerViewer) player);
+        ChestInterface cb = Util.mainInterface(player).build();
+        cb.open(PlayerViewer.of(player));
+        player.getInventory().setItemInMainHand(Keys.GUI_REDEMPTION.getItemStack());
     }
 
     @Suggestions("settings")
