@@ -12,11 +12,11 @@ import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.Util;
+import games.cultivate.mcmmocredits.util.UtilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.incendo.interfaces.paper.PlayerViewer;
-import org.incendo.interfaces.paper.type.ChestInterface;
 
 import java.util.List;
 import java.util.Objects;
@@ -69,9 +69,7 @@ public class Credits {
     @CommandMethod("gui")
     @CommandPermission("mcmmocredits.admin.gui")
     private void openGUI(Player player) {
-        ChestInterface cb = Util.mainInterface(player).build();
-        cb.open(PlayerViewer.of(player));
-        player.getInventory().setItemInMainHand(Keys.GUI_REDEMPTION.getItemStack());
+        UtilGUI.mainInterface(player).build().open(PlayerViewer.of(player));
     }
 
     @Suggestions("settings")

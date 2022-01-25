@@ -44,7 +44,6 @@ public enum Keys {
     CREDITS_SETTING_CHANGE_SUCCESSFUL(true, "messages", "commands", "credits", "setting-change-successful"),
     CREDITS_SETTING_CHANGE_FAILURE(true, "messages", "commands", "credits", "setting-change-failure"),
 
-
     REDEEM_SKILL_CAP(true, "messages", "commands", "redeem", "skill-cap"),
     REDEEM_NOT_ENOUGH_CREDITS(true, "messages", "commands", "redeem", "not-enough-credits"),
     REDEEM_SUCCESSFUL_SELF(true, "messages", "commands", "redeem", "successful-self"),
