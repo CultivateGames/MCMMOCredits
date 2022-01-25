@@ -1,21 +1,23 @@
 package games.cultivate.mcmmocredits.config;
 
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.serialize.TypeSerializer;
 
 import java.lang.reflect.Type;
 import java.util.Objects;
 
-@SuppressWarnings({"deprecation", "unused"})
+@SuppressWarnings("deprecation")
 public class ItemStackSerializer implements TypeSerializer<ItemStack> {
+    public static final ItemStackSerializer INSTANCE = new ItemStackSerializer();
+
     @Override
     public ItemStack deserialize(Type type, ConfigurationNode node) {
         ItemStack item = new ItemStack(Material.valueOf(node.node("material").getString()));
@@ -29,7 +31,7 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
                     meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
                     meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                 }
-                meta.getPersistentDataContainer().set(Objects.requireNonNull(NamespacedKey.fromString("mcmmocredits")), PersistentDataType.INTEGER, node.node("inventory_slot").getInt());
+                meta.getPersistentDataContainer().set(MCMMOCredits.key, PersistentDataType.INTEGER, node.node("inventory-slot").getInt());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -46,7 +48,7 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
                 node.node("amount").set(obj.getAmount());
                 node.node("durability").set((int) obj.getDurability());
                 if (obj.hasItemMeta() && obj.getItemMeta() != null) {
-                    node.node("inventory_slot").set(1);
+                    node.node("inventory-slot").set(1);
                     node.node("glow").set(!obj.getEnchantments().isEmpty());
                     if (obj.getItemMeta().hasLore()) {
                         node.node("lore").set(Objects.requireNonNull(obj.lore()).stream().map(i -> MiniMessage.miniMessage().serialize(i)).toList());

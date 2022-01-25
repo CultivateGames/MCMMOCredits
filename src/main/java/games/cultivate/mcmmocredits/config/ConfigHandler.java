@@ -11,6 +11,7 @@ import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
@@ -98,7 +99,7 @@ public final class ConfigHandler {
     }
 
     public HoconConfigurationLoader createHoconLoader() {
-        HoconConfigurationLoader configLoader = HoconConfigurationLoader.builder().path(createFilePath()).emitComments(true).prettyPrinting(true).headerMode(HeaderMode.PRESERVE).build();
+        HoconConfigurationLoader configLoader = HoconConfigurationLoader.builder().defaultOptions(opts -> opts.serializers(build -> build.register(ItemStack.class, ItemStackSerializer.INSTANCE))).path(createFilePath()).emitComments(true).prettyPrinting(true).headerMode(HeaderMode.PRESERVE).build();
         this.setLoader(configLoader);
         return this.loader();
     }
