@@ -77,7 +77,6 @@ public class UtilGUI {
         return ChestInterface.builder();
     }
 
-    //Stub
     public static ChestInterface.Builder messageInterface(Player player) {
         ChestInterface.Builder cb = interfaceTraits(player);
         for (Map.Entry<ItemStack, Vector2> item : prepareMessageItems().entrySet()) {
@@ -87,8 +86,7 @@ public class UtilGUI {
                     String pathString = Objects.requireNonNull(clickHandler.cause().getCurrentItem()).getItemMeta().getPersistentDataContainer().get(MCMMOCredits.key, PersistentDataType.STRING);
                     Listeners.chatInputPlayers.add((Player) clickHandler.cause().getWhoClicked());
                     player.sendMessage(Component.newline());
-                    assert pathString != null;
-                    player.sendMessage(Component.text("Enter a new value for: ").color(NamedTextColor.RED).append(Component.text(pathString, defaultStyle).append(Component.text(" in chat."))));
+                    player.sendMessage(Component.text("Enter a new value for: ").color(NamedTextColor.RED).append(Component.text(Objects.requireNonNull(pathString), defaultStyle).append(Component.text(" in chat."))));
                     player.sendMessage(Component.newline());
                     chatInputMessage.whenComplete((i, future) -> ConfigHandler.changeConfigInGame(StringUtils.split(pathString, "."), i));
                 }
