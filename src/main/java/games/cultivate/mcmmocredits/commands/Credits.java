@@ -4,6 +4,7 @@ import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
+import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.parsers.Parser;
 import cloud.commandframework.annotations.specifier.Greedy;
 import cloud.commandframework.annotations.suggestions.Suggestions;
@@ -17,6 +18,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.incendo.interfaces.paper.PlayerViewer;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
@@ -67,9 +69,18 @@ public class Credits {
 
     @CommandDescription("Open a GUI that can be used to interface with this plugin.")
     @CommandMethod("gui")
-    @CommandPermission("mcmmocredits.admin.gui")
-    private void openGUI(Player player) {
-        UtilGUI.mainInterface(player).build().open(PlayerViewer.of(player));
+    @CommandPermission("mcmmocredits.gui.basic")
+    private void openGUI(Player player, @Flag("location") @Nullable String string) {
+        if (string == null) {
+            UtilGUI.main(player).build().open(PlayerViewer.of(player));
+            return;
+        }
+        if (string.equalsIgnoreCase("messages")) {
+            UtilGUI.messageInterface(player).build().open(PlayerViewer.of(player));
+        }
+        if (string.equalsIgnoreCase("settings")) {
+            UtilGUI.settingInterface(player).build().open(PlayerViewer.of(player));
+        }
     }
 
     @Suggestions("settings")

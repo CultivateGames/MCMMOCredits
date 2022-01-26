@@ -1,10 +1,11 @@
 package games.cultivate.mcmmocredits.config;
 
 import org.bukkit.inventory.ItemStack;
+import org.spongepowered.configurate.CommentedConfigurationNode;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.stream.Stream;
 
 public enum Keys {
     DATABASE_ADD_NOTIFICATION(true, "settings", "database", "add-notification"),
@@ -62,6 +63,8 @@ public enum Keys {
 
     public static final EnumSet<Keys> all = EnumSet.allOf(Keys.class);
     public static final List<Keys> modifiableKeys = all.stream().filter(Keys::canChange).toList();
+    public static final List<Keys> messageKeys = Keys.all.stream().filter(i -> i.path()[0].equalsIgnoreCase("messages")).toList();
+    public static final List<Keys> settingKeys = Keys.all.stream().filter(i -> i.path()[0].equalsIgnoreCase("settings")).toList();
 
     Keys(boolean canChange, String... path) {
         this.path = path;
@@ -72,25 +75,28 @@ public enum Keys {
         return path;
     }
 
+    public CommentedConfigurationNode node() {
+        return ConfigHandler.instance().root().node(Stream.of(this.path()).toList());
+    }
+
     public boolean canChange() {
         return canChange;
     }
 
     public ItemStack getItemStack() {
-        return ItemStackSerializer.INSTANCE.deserialize(ItemStack.class, ConfigHandler.instance().root().node(Arrays.stream(this.path()).toList()));
+        return ItemStackSerializer.INSTANCE.deserialize(ItemStack.class, this.node());
     }
 
-    @SuppressWarnings("unused")
     public int getInt() {
-        return ConfigHandler.instance().root().node(Arrays.stream(this.path()).toList()).getInt();
+        return this.node().getInt();
     }
 
     public boolean getBoolean() {
-        return ConfigHandler.instance().root().node(Arrays.stream(this.path()).toList()).getBoolean();
+        return this.node().getBoolean();
     }
 
     public String getString() {
-        return ConfigHandler.instance().root().node(Arrays.stream(this.path()).toList()).getString();
+        return this.node().getString();
     }
 
 }
