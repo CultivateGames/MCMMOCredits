@@ -1,5 +1,6 @@
 package games.cultivate.mcmmocredits.config;
 
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 
@@ -87,6 +88,10 @@ public enum Keys {
         return ItemStackSerializer.INSTANCE.deserialize(ItemStack.class, this.node());
     }
 
+    public ItemStack getItemStack(Player player) {
+        return ItemStackSerializer.INSTANCE.deserializePlayer(ItemStack.class, this.node(), player);
+    }
+
     public int getInt() {
         return this.node().getInt();
     }
@@ -98,5 +103,4 @@ public enum Keys {
     public String getString() {
         return this.node().getString();
     }
-
 }

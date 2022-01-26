@@ -5,6 +5,9 @@ import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
 import it.unimi.dsi.fastutil.Pair;
+import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.placeholder.Placeholder;
 import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
 import org.bukkit.Bukkit;
@@ -18,11 +21,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * This class is responsible for holding various methods which need to be accessible and have no sensible location elsewhere.
  */
 public class Util {
+
+    public static Component parse(Component comp, Player player) {
+        Pattern pattern = PlaceholderAPI.getPlaceholderPattern();
+        comp = comp.replaceText(i -> i.match(pattern).replacement((matchResult, builder) -> Component.text(PlaceholderAPI.setPlaceholders(player, matchResult.group()))));
+        return MiniMessage.miniMessage().deserialize(MiniMessage.miniMessage().serialize(comp), Util.quickResolver(player));
+    }
+
     private static final String[] EMPTY_ARRAY = new String[0];
 
     public static String[] getPathFromSuffix(String suffix) {

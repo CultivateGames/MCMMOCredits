@@ -1,9 +1,12 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.MCMMOCredits;
+import games.cultivate.mcmmocredits.util.Util;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
@@ -18,6 +21,15 @@ import java.util.Objects;
 public class ItemStackSerializer implements TypeSerializer<ItemStack> {
     public static final ItemStackSerializer INSTANCE = new ItemStackSerializer();
 
+    public ItemStack deserializePlayer(Type type, ConfigurationNode node, Player player) {
+        ItemStack item = this.deserialize(type, node);
+        item.editMeta(meta -> {
+            meta.displayName(Util.parse(Objects.requireNonNull(meta.displayName()), player));
+            meta.lore(Objects.requireNonNull(meta.lore()).stream().map(i -> Util.parse(i, player)).toList());
+        });
+        return item;
+    }
+
     @Override
     public ItemStack deserialize(Type type, ConfigurationNode node) {
         ItemStack item = new ItemStack(Material.valueOf(node.node("material").getString()));
@@ -25,13 +37,14 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
         item.setDurability((short) node.node("durability").getInt());
         item.editMeta(meta -> {
             try {
-                meta.displayName(MiniMessage.miniMessage().deserialize(Objects.requireNonNull(node.node("name").getString())));
-                meta.lore(Objects.requireNonNull(node.node("lore").getList(String.class)).stream().map(i -> MiniMessage.miniMessage().deserialize(i)).toList());
+                meta.displayName(Component.text(node.node("name").getString("")));
+                meta.lore(Objects.requireNonNull(node.node("lore").getList(String.class)).stream().map(i -> Component.text(i).asComponent()).toList());
                 if (node.node("glow").getBoolean()) {
                     meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
                     meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                 }
-                meta.getPersistentDataContainer().set(MCMMOCredits.key, PersistentDataType.INTEGER, node.node("inventory-slot").getInt());
+                int slot = node.node("inventory-slot").virtual() ? 0 : node.node("inventory-slot").getInt();
+                meta.getPersistentDataContainer().set(MCMMOCredits.key, PersistentDataType.INTEGER, slot);
             } catch (Exception e) {
                 e.printStackTrace();
             }
