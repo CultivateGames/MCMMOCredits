@@ -9,9 +9,10 @@ import cloud.commandframework.annotations.parsers.Parser;
 import cloud.commandframework.annotations.specifier.Greedy;
 import cloud.commandframework.annotations.suggestions.Suggestions;
 import cloud.commandframework.context.CommandContext;
+import cloud.commandframework.exceptions.CommandExecutionException;
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
-import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.GUI;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
@@ -42,9 +43,13 @@ public class Credits {
     @CommandMethod("<username>")
     @CommandPermission("mcmmocredits.check.other")
     private void checkCreditsOther(CommandSender sender, @Argument(value = "username", suggestions = "customPlayer") String username) {
-        Util.shouldProcessUUID(sender, username).ifPresent(uuid -> {
-            if (Database.doesPlayerExist(uuid)) {
-                ConfigHandler.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER, Util.basicBuilder(Objects.requireNonNull(Bukkit.getPlayer(uuid))).build());
+        MCMMOCredits.getAdapter().getUUID(username).whenCompleteAsync((i, throwable) -> {
+            if (MCMMOCredits.getAdapter().doesPlayerExist(i)) {
+                ConfigHandler.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER, Util.basicBuilder(Objects.requireNonNull(Bukkit.getPlayer(i))).build());
+            } else {
+                //TODO Async is swallowing the exception.
+                sender.sendMessage(ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS));
+                throw new CommandExecutionException(throwable);
             }
         });
     }

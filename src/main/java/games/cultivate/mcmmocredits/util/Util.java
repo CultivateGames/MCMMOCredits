@@ -1,16 +1,13 @@
 package games.cultivate.mcmmocredits.util;
 
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
-import games.cultivate.mcmmocredits.database.Database;
 import it.unimi.dsi.fastutil.Pair;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.placeholder.Placeholder;
 import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -18,9 +15,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
@@ -45,28 +39,13 @@ public class Util {
         return EMPTY_ARRAY;
     }
 
-    @SuppressWarnings("deprecation")
-    public static Optional<UUID> shouldProcessUUID(@NotNull CommandSender sender, @NotNull String playerName) {
-        if (Bukkit.getPlayer(playerName) != null) {
-            return Optional.of(Objects.requireNonNull(Bukkit.getPlayer(playerName)).getUniqueId());
-        }
-        if (Keys.USERCACHE_LOOKUP.getBoolean() && MCMMOCredits.isPaper() && Bukkit.getOfflinePlayerIfCached(playerName) != null) {
-            return Optional.of(Objects.requireNonNull(Bukkit.getOfflinePlayerIfCached(playerName)).getUniqueId());
-        }
-        if (Keys.UNSAFE_LOOKUP.getBoolean() && Bukkit.getOfflinePlayer(playerName).hasPlayedBefore()) {
-            return Optional.of(Objects.requireNonNull(Bukkit.getPlayerUniqueId(playerName)));
-        }
-        ConfigHandler.sendMessage(sender, Keys.PLAYER_DOES_NOT_EXIST, quickResolver(sender));
-        return Optional.empty();
-    }
-
     /**
      * PlaceholderResolver for Config messages.
      * player = Player's username
      * credits = Player's credits
      */
     public static PlaceholderResolver.Builder basicBuilder(Player player) {
-        return PlaceholderResolver.builder().placeholders(createPlaceholders("player", player.getName(), "credits", Database.getCredits(player.getUniqueId()) + ""));
+        return PlaceholderResolver.builder().placeholders(createPlaceholders("player", player.getName(), "credits", MCMMOCredits.getAdapter().getCredits(player.getUniqueId()) + ""));
     }
 
     public static PlaceholderResolver.Builder settingsBuilder(CommandSender sender, String setting, String change) {
@@ -83,7 +62,7 @@ public class Util {
     public static PlaceholderResolver.Builder transactionBuilder(Pair<@Nullable CommandSender, @NotNull Player> pair, int amount) {
         PlaceholderResolver.Builder right = basicBuilder(pair.right()).placeholder(createPlaceholder("amount", amount + ""));
         if (pair.left() != null && pair.left() instanceof Player leftPlayer) {
-            return right.placeholders(createPlaceholders("sender", leftPlayer.getName(), "sender_credits", Database.getCredits(leftPlayer.getUniqueId()) + ""));
+            return right.placeholders(createPlaceholders("sender", leftPlayer.getName(), "sender_credits", MCMMOCredits.getAdapter().getCredits(leftPlayer.getUniqueId()) + ""));
         }
         return right;
     }

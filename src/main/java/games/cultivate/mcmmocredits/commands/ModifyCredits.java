@@ -6,9 +6,10 @@ import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.specifier.Range;
+import cloud.commandframework.exceptions.CommandExecutionException;
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
-import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.Util;
 import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.Bukkit;
@@ -25,38 +26,42 @@ public class ModifyCredits {
     @CommandDescription("Add MCMMO Credits to a user's balance.")
     @CommandMethod("add <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
-    private void addCredits(CommandSender sender, @Argument("amount") @Range(min = "1", max = "2147483647") int amount, @Argument(value = "username", suggestions = "customPlayer") String username, @Flag("silent") boolean silent) {
-        Util.shouldProcessUUID(sender, username).ifPresent(uuid -> this.modifyCredits(sender, amount, uuid, Operation.ADD, silent));
+    private void addCredits(CommandSender sender, @Argument("amount") @Range(min = "1") int amount, @Argument(value = "username", suggestions = "customPlayer") String username, @Flag("silent") boolean silent) {
+        MCMMOCredits.getAdapter().getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.ADD, throwable, silent));
     }
 
     @CommandDescription("Set a user's MCMMO Credit balance to the specified amount.")
     @CommandMethod("set <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
-    private void setCredits(CommandSender sender, @Argument("amount") @Range(min = "0", max = "2147483647") int amount, @Argument(value = "username", suggestions = "customPlayer") String username, @Flag("silent") boolean silent) {
-        Util.shouldProcessUUID(sender, username).ifPresent(uuid -> this.modifyCredits(sender, amount, uuid, Operation.SET, silent));
+    private void setCredits(CommandSender sender, @Argument("amount") @Range(min = "0") int amount, @Argument(value = "username", suggestions = "customPlayer") String username, @Flag("silent") boolean silent) {
+        MCMMOCredits.getAdapter().getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.SET, throwable, silent));
     }
 
     @CommandDescription("Take MCMMO Credits away from a user's balance")
     @CommandMethod("take <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
-    private void takeCredits(CommandSender sender, @Argument("amount") @Range(min = "1", max = "2147483647") int amount, @Argument(value = "username", suggestions = "customPlayer") String username, @Flag("silent") boolean silent) {
-        Util.shouldProcessUUID(sender, username).ifPresent(uuid -> this.modifyCredits(sender, amount, uuid, Operation.TAKE, silent));
+    private void takeCredits(CommandSender sender, @Argument("amount") @Range(min = "1") int amount, @Argument(value = "username", suggestions = "customPlayer") String username, @Flag("silent") boolean silent) {
+        MCMMOCredits.getAdapter().getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.TAKE, throwable, silent));
     }
 
-    private enum Operation { ADD,SET,TAKE }
-
-    private void modifyCredits(CommandSender sender, int amount, UUID uuid, Operation op, boolean silent) {
-        if (Database.doesPlayerExist(uuid)) {
+    private void modifyCredits(CommandSender sender, int amount, UUID uuid, Operation op, Throwable throwable, boolean silent) {
+        if (MCMMOCredits.getAdapter().doesPlayerExist(uuid)) {
             switch (op) {
-                case ADD -> Database.addCredits(uuid, amount);
-                case TAKE -> Database.takeCredits(uuid, amount);
-                case SET -> Database.setCredits(uuid, amount);
+                case ADD -> MCMMOCredits.getAdapter().addCredits(uuid, amount);
+                case TAKE -> MCMMOCredits.getAdapter().takeCredits(uuid, amount);
+                case SET -> MCMMOCredits.getAdapter().setCredits(uuid, amount);
             }
             Pair<CommandSender, Player> transactionPair = Pair.of(sender, Bukkit.getPlayer(uuid));
             ConfigHandler.sendMessage(sender, Keys.valueOf("MODIFY_CREDITS_" + op.name() + "_SENDER"), Util.transactionBuilder(transactionPair, amount).build());
             if (sender != transactionPair.right() && !silent) {
                 ConfigHandler.sendMessage(transactionPair.right(), Keys.valueOf("MODIFY_CREDITS_" + op.name() + "_RECEIVER"), Util.transactionBuilder(transactionPair, amount).build());
             }
+        } else {
+            //TODO Async is swallowing the exception.
+            sender.sendMessage(ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS));
+            throw new CommandExecutionException(throwable);
         }
     }
+
+    private enum Operation {ADD, SET, TAKE}
 }
