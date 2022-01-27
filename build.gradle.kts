@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.0.4-SNAPSHOT"
+version = "0.0.4"
 description = "MCMMOCredits"
 
 /**
@@ -27,7 +27,7 @@ repositories {
     maven("https://oss.sonatype.org/content/repositories/snapshots/")
     //Placeholder API
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
-    //mcMMO TODO Fix exclusion
+    //mcMMO
     maven("https://nexus.neetgames.com/repository/maven-releases/")
     maven("https://maven.enginehub.org/repo/")
 
@@ -53,7 +53,7 @@ dependencies {
     implementation("net.kyori:adventure-text-minimessage:4.10.0-SNAPSHOT")
     //PlaceholderAPI
     compileOnly("me.clip:placeholderapi:2.10.10")
-    //mcMMO TODO Fix exclusion
+    //mcMMO
     compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.209") {
         exclude(module = "worldguard-legacy")
     }
@@ -79,8 +79,9 @@ tasks{
     }
 
     shadowJar {
-        //Cloud
+        //Incendo (Cloud / Interfaces)
         relocate("cloud.commandframework", "games.cultivate.mcmmocredits.relocate.cloud.commandframework")
+        relocate("org.incendo.interfaces", "games.cultivate.mcmmocredits.relocate.org.incendo.interfaces")
         relocate("io.leangen", "games.cultivate.mcmmocredits.relocate.io.leangen")
 
         //Configurate

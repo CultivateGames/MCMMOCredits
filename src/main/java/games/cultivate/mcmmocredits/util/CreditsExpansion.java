@@ -1,6 +1,6 @@
 package games.cultivate.mcmmocredits.util;
 
-import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +34,7 @@ public class CreditsExpansion extends PlaceholderExpansion {
     @Override
     public String onRequest(OfflinePlayer player, String identifier) {
         if (identifier.equalsIgnoreCase("credits")) {
-            return Database.getCredits(player.getUniqueId()) + "";
+            return MCMMOCredits.getAdapter().getCredits(player.getUniqueId()) + "";
         }
         return null;
     }
