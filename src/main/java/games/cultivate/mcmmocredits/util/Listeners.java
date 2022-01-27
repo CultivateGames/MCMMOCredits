@@ -1,9 +1,9 @@
 package games.cultivate.mcmmocredits.util;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
-import games.cultivate.mcmmocredits.database.Database;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.placeholder.Placeholder;
@@ -29,9 +29,9 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
-        if (!Database.doesPlayerExist(e.getPlayerProfile().getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
+        if (!MCMMOCredits.getAdapter().doesPlayerExist(e.getPlayerProfile().getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
             PlayerProfile profile = e.getPlayerProfile();
-            Database.addPlayer(profile.getId(), profile.getName(), 0);
+            MCMMOCredits.getAdapter().addPlayer(profile.getId(), profile.getName(), 0);
             if (Keys.DATABASE_ADD_NOTIFICATION.getBoolean()) {
                 ConfigHandler.sendMessage(Bukkit.getConsoleSender(), Keys.DATABASE_CONSOLE_MESSAGE, PlaceholderResolver.placeholders(Placeholder.miniMessage("player", Objects.requireNonNull(profile.getName()))));
             }
@@ -44,7 +44,7 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
-        Database.setUsername(e.getPlayer().getUniqueId(), e.getPlayer().getName());
+        MCMMOCredits.getAdapter().setUsername(e.getPlayer().getUniqueId(), e.getPlayer().getName());
         if (Keys.SEND_LOGIN_MESSAGE.getBoolean()) {
             ConfigHandler.sendMessage(e.getPlayer(), Keys.LOGIN_MESSAGE, Util.basicBuilder(e.getPlayer()).build());
         }

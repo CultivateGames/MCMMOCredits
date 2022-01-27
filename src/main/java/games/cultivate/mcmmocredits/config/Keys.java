@@ -67,7 +67,7 @@ public enum Keys {
     public static final List<Keys> messageKeys = Keys.all.stream().filter(i -> i.path()[0].equalsIgnoreCase("messages")).toList();
     public static final List<Keys> settingKeys = Keys.all.stream().filter(i -> i.path()[0].equalsIgnoreCase("settings")).toList();
 
-    Keys(boolean canChange, String... path) {
+    Keys (boolean canChange, String... path) {
         this.path = path;
         this.canChange = canChange;
     }
@@ -84,6 +84,7 @@ public enum Keys {
         return canChange;
     }
 
+    @SuppressWarnings("unused")
     public ItemStack getItemStack() {
         return ItemStackSerializer.INSTANCE.deserialize(ItemStack.class, this.node());
     }

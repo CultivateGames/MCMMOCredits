@@ -35,22 +35,13 @@ public class GUI {
     public static ChestInterface.Builder main(Player player) {
         ChestInterface.Builder cb = interfaceTraits(player, Keys.GUI_SIZE.getInt() / 9);
         //Manually fill the GUI each time to ensure item updates, and proper filling order.
-        if (Keys.GUI_FILL.getBoolean()) {
-            for (int x = 0; x < 9; x++) {
-                for (int y = 0; y < cb.rows(); y++) {
-                    int posX = x;
-                    int posY = y;
-                    cb = cb.addTransform((pane, view) -> pane.element(ItemStackElement.of(Keys.GUI_FILL_ITEM.getItemStack(player)), posX, posY));
-                }
-            }
-        }
-        cb = cb.addTransform((pane, view) -> {
+        cb = cb.addTransform(1, (pane, view) -> {
             Pair<ItemStack, Vector2> itemInfo = prepareItem(Keys.GUI_REDEMPTION.getItemStack(player));
             return pane.element(ItemStackElement.of(itemInfo.left()), itemInfo.right().x(), itemInfo.right().y());
         });
 
         if (player.hasPermission("mcmmocredits.gui.admin")) {
-            cb = cb.addTransform((pane, view) -> {
+            cb = cb.addTransform(1, (pane, view) -> {
                 Pair<ItemStack, Vector2> itemInfo = prepareItem(Keys.GUI_SETTING_CHANGE.getItemStack(player));
                 return pane.element(ItemStackElement.of(itemInfo.left(), (clickHandler) -> {
                     if (clickHandler.click().leftClick()) {
@@ -61,7 +52,7 @@ public class GUI {
                 }), itemInfo.right().x(), itemInfo.right().y());
             });
 
-            cb = cb.addTransform((pane, view) -> {
+            cb = cb.addTransform(1, (pane, view) -> {
                 Pair<ItemStack, Vector2> itemInfo = prepareItem(Keys.GUI_MESSAGE_CHANGE.getItemStack(player));
                 return pane.element(ItemStackElement.of(itemInfo.left(), (clickHandler) -> {
                     if (clickHandler.click().leftClick()) {
@@ -81,23 +72,23 @@ public class GUI {
         cb = cb.rows(rows);
         cb = cb.clickHandler(ClickHandler.cancel());
         cb = cb.updates(true, 10);
-        return cb;
-    }
-
-    public static ChestInterface.Builder configInterface(Player player, Material mat, List<Keys> keys) {
-        ChestInterface.Builder cb = interfaceTraits(player, 3);
         //Manually fill the GUI each time to ensure item updates, and proper filling order.
         if (Keys.GUI_FILL.getBoolean()) {
             for (int x = 0; x < 9; x++) {
                 for (int y = 0; y < cb.rows(); y++) {
                     int posX = x;
                     int posY = y;
-                    cb = cb.addTransform((pane, view) -> pane.element(ItemStackElement.of(Keys.GUI_FILL_ITEM.getItemStack(player)), posX, posY));
+                    cb = cb.addTransform(0, (pane, view) -> pane.element(ItemStackElement.of(Keys.GUI_FILL_ITEM.getItemStack(player)), posX, posY));
                 }
             }
         }
+        return cb;
+    }
+
+    public static ChestInterface.Builder configInterface(Player player, Material mat, List<Keys> keys) {
+        ChestInterface.Builder cb = interfaceTraits(player, 3);
         for (Map.Entry<ItemStack, Vector2> item : prepareConfigItems(mat, keys).entrySet()) {
-            cb = cb.addTransform((pane, view) -> pane.element(ItemStackElement.of(item.getKey(), (clickHandler) -> {
+            cb = cb.addTransform(1, (pane, view) -> pane.element(ItemStackElement.of(item.getKey(), (clickHandler) -> {
                 if (clickHandler.click().leftClick()) {
                     view.viewer().close();
                     String pathString = Objects.requireNonNull(clickHandler.cause().getCurrentItem()).getItemMeta().getPersistentDataContainer().get(MCMMOCredits.key, PersistentDataType.STRING);

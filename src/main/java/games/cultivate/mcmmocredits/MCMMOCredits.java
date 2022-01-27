@@ -14,7 +14,9 @@ import games.cultivate.mcmmocredits.commands.ModifyCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
-import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.DatabaseAdapter;
+import games.cultivate.mcmmocredits.database.MySQLAdapter;
+import games.cultivate.mcmmocredits.database.SQLiteAdapter;
 import games.cultivate.mcmmocredits.util.CreditsExpansion;
 import games.cultivate.mcmmocredits.util.Listeners;
 import games.cultivate.mcmmocredits.util.Util;
@@ -34,18 +36,9 @@ import java.util.logging.Level;
  * This class is responsible for startup/shutdown logic, and command loading.
  */
 public class MCMMOCredits extends JavaPlugin {
-    private static boolean isPaper = false;
     private static MCMMOCredits instance;
     public static NamespacedKey key;
-
-    /**
-     * This will tell us if we are in a Paper-based environment.
-     * <p>
-     * Moved from the Util class so that we are only checking once.
-     */
-    public static boolean isPaper() {
-        return isPaper;
-    }
+    private static DatabaseAdapter adapter;
 
     /**
      * Generates widely accessible instance of this plugin.
@@ -68,11 +61,13 @@ public class MCMMOCredits extends JavaPlugin {
     public void onEnable() {
         instance = this;
         key = Objects.requireNonNull(NamespacedKey.fromString("mcmmocredits"));
-        this.dependCheck();
         new ConfigHandler().enable();
-        Database.initDB();
+
+        this.loadDatabase();
         this.loadCommands();
+
         PaperInterfaceListeners.install(this);
+        this.dependCheck();
         Bukkit.getPluginManager().registerEvents(new Listeners(), this);
     }
 
@@ -84,14 +79,15 @@ public class MCMMOCredits extends JavaPlugin {
     @Override
     public void onDisable() {
         ConfigHandler.instance().saveConfig(ConfigHandler.instance().root());
-        Database.shutdownDB();
+        getAdapter().disableAdapter();
     }
 
     private void dependCheck() {
         try {
             Class.forName("com.destroystokyo.paper.MaterialSetTag");
-            isPaper = true;
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            this.getLogger().log(Level.SEVERE, "Not running Paper, disabling plugin...");
+            this.setEnabled(false);
         }
 
         if (Bukkit.getPluginManager().getPlugin("mcMMO") != null) {
@@ -133,13 +129,31 @@ public class MCMMOCredits extends JavaPlugin {
                 .withHandler(MinecraftExceptionHandler.ExceptionType.NO_PERMISSION, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.NO_PERMS, Util.createPlaceholder("required_permission", ((NoPermissionException) ex).getMissingPermission())))
                 .withHandler(MinecraftExceptionHandler.ExceptionType.ARGUMENT_PARSING, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS))
                 .withHandler(MinecraftExceptionHandler.ExceptionType.COMMAND_EXECUTION, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.COMMAND_ERROR))
-                .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SYNTAX, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS, Util.createPlaceholder("correct_syntax", ((InvalidSyntaxException) ex).getCorrectSyntax())))
+                .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SYNTAX, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS, Util.createPlaceholder("correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax())))
                 .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SENDER, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS, Util.createPlaceholder("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName())))
                 .apply(commandManager, sender -> sender);
 
         annotationParser.parse(new ModifyCredits());
         annotationParser.parse(new Credits());
         annotationParser.parse(new Redeem());
+    }
 
+    private void loadDatabase() {
+        switch (Keys.DATABASE_ADAPTER.getString().toLowerCase()) {
+            case "sqlite" -> this.setAdapter(new SQLiteAdapter());
+            case "mysql" -> this.setAdapter(new MySQLAdapter());
+            default -> {
+                Bukkit.getLogger().log(Level.SEVERE, "INVALID DATABASE ADAPTER SET! Disabling plugin...");
+                this.setEnabled(false);
+            }
+        }
+    }
+
+    public static DatabaseAdapter getAdapter() {
+        return adapter;
+    }
+
+    public void setAdapter(DatabaseAdapter adapter) {
+        MCMMOCredits.adapter = adapter;
     }
 }
