@@ -13,9 +13,11 @@ import java.util.concurrent.CompletableFuture;
 
 public class SQLiteAdapter extends DatabaseAdapter {
     private String url;
+    private static MCMMOCredits plugin;
 
-    public SQLiteAdapter() {
-        this.url = "jdbc:sqlite:" + MCMMOCredits.getInstance().getDataFolder().getAbsolutePath() + "\\database.db";
+    public SQLiteAdapter(MCMMOCredits plugin) {
+        SQLiteAdapter.plugin = plugin;
+        this.url = "jdbc:sqlite:" + plugin.getDataFolder().getAbsolutePath() + "\\database.db";
         Connection connection = this.getConnection();
         PreparedStatement ps;
         try {
@@ -40,7 +42,7 @@ public class SQLiteAdapter extends DatabaseAdapter {
 
     @Override
     public void enableAdapter() {
-        this.url = "jdbc:sqlite:" + MCMMOCredits.getInstance().getDataFolder().getAbsolutePath() + "\\database.db";
+        this.url = "jdbc:sqlite:" + plugin.getDataFolder().getAbsolutePath() + "\\database.db";
         Connection connection = this.getConnection();
         PreparedStatement ps;
         try {
@@ -66,7 +68,7 @@ public class SQLiteAdapter extends DatabaseAdapter {
 
     @Override
     public void addPlayer(UUID uuid, String username, int credits) {
-        Bukkit.getScheduler().runTaskAsynchronously(MCMMOCredits.getInstance(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
                 Connection connection = getConnection();
                 PreparedStatement ps = connection.prepareStatement("INSERT INTO `mcmmoCredits`(UUID, last_known_name, credits) VALUES(?,?,?);");
@@ -146,7 +148,7 @@ public class SQLiteAdapter extends DatabaseAdapter {
             return false;
         }
         CompletableFuture<Boolean> result = new CompletableFuture<>();
-        Bukkit.getScheduler().runTaskAsynchronously(MCMMOCredits.getInstance(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
                 Connection connection = getConnection();
                 PreparedStatement ps = connection.prepareStatement("SELECT 1 FROM `mcmmoCredits` WHERE UUID= ?;");

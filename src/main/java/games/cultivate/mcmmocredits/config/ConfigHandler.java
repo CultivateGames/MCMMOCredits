@@ -32,6 +32,13 @@ public final class ConfigHandler {
     private CreditsConfig config;
     private CommentedConfigurationNode root;
     private HoconConfigurationLoader loader;
+    private MCMMOCredits plugin;
+
+    public ConfigHandler(MCMMOCredits plugin) {
+        this.plugin = plugin;
+        loadConfig();
+        setInstance(this);
+    }
 
     public static boolean changeConfigInGame(String[] path, Object change) {
         boolean canProceed = false;
@@ -59,8 +66,8 @@ public final class ConfigHandler {
         }
     }
 
-    public static Path createFilePath() {
-        File file = new File(MCMMOCredits.getInstance().getDataFolder().getAbsolutePath() + "\\" + "config.conf");
+    public Path createFilePath() {
+        File file = new File(this.plugin.getDataFolder().getAbsolutePath() + "\\" + "config.conf");
         try {
             if (file.getParentFile().mkdirs() && file.createNewFile()) {
                 Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created configuration file!");
@@ -92,14 +99,8 @@ public final class ConfigHandler {
         return MiniMessage.miniMessage().deserialize(Keys.PREFIX.getString() + key.getString(), pr);
     }
 
-    //Think this is bad but cannot remember why?
-    public void enable() {
-        loadConfig();
-        setInstance(this);
-    }
-
     public HoconConfigurationLoader createHoconLoader() {
-        HoconConfigurationLoader configLoader = HoconConfigurationLoader.builder().defaultOptions(opts -> opts.serializers(build -> build.register(ItemStack.class, ItemStackSerializer.INSTANCE))).path(createFilePath()).emitComments(true).prettyPrinting(true).headerMode(HeaderMode.PRESERVE).build();
+        HoconConfigurationLoader configLoader = HoconConfigurationLoader.builder().defaultOptions(opts -> opts.serializers(build -> build.register(ItemStack.class, ItemStackSerializer.INSTANCE))).path(this.createFilePath()).emitComments(true).prettyPrinting(true).headerMode(HeaderMode.PRESERVE).build();
         this.setLoader(configLoader);
         return this.loader();
     }

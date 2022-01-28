@@ -30,9 +30,10 @@ repositories {
     //mcMMO
     maven("https://nexus.neetgames.com/repository/maven-releases/")
     maven("https://maven.enginehub.org/repo/")
-
     //Interfaces
     maven("https://repo.incendo.org/content/repositories/snapshots/")
+    //SkinCreator
+    maven("https://github.com/deanveloper/SkullCreator/raw/mvn-repo/")
 }
 
 dependencies {
@@ -51,6 +52,8 @@ dependencies {
     //Adventure (MiniMessage and Serializers)
     implementation("net.kyori:adventure-api:4.10.0-SNAPSHOT")
     implementation("net.kyori:adventure-text-minimessage:4.10.0-SNAPSHOT")
+    //SkinCreator
+    implementation("dev.dbassett:skullcreator:3.0.1")
     //PlaceholderAPI
     compileOnly("me.clip:placeholderapi:2.10.10")
     //mcMMO

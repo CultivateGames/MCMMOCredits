@@ -5,6 +5,7 @@ import games.cultivate.mcmmocredits.config.Keys;
 import it.unimi.dsi.fastutil.Pair;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.placeholder.Placeholder;
 import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
@@ -24,7 +25,7 @@ public class Util {
 
     public static Component parse(Component comp, Player player) {
         Pattern pattern = PlaceholderAPI.getPlaceholderPattern();
-        comp = comp.replaceText(i -> i.match(pattern).replacement((matchResult, builder) -> Component.text(PlaceholderAPI.setPlaceholders(player, matchResult.group()))));
+        comp = comp.replaceText(i -> i.match(pattern).replacement((matchResult, builder) -> Component.empty().decoration(TextDecoration.ITALIC, false).append(Component.text(PlaceholderAPI.setPlaceholders(player, matchResult.group())))));
         return MiniMessage.miniMessage().deserialize(MiniMessage.miniMessage().serialize(comp), Util.quickResolver(player));
     }
 

@@ -13,7 +13,7 @@ import cloud.commandframework.exceptions.CommandExecutionException;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
-import games.cultivate.mcmmocredits.util.GUI;
+import games.cultivate.mcmmocredits.util.Menus;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -73,20 +73,20 @@ public class Credits {
         }
     }
 
-    @CommandDescription("Open a GUI that can be used to interface with this plugin.")
+    @CommandDescription("Open a Menu that can be used to interface with this plugin.")
     @CommandMethod("gui")
     @CommandPermission("mcmmocredits.gui.basic")
     private void openGUI(Player player, @Flag(value = "location", permission = "mcmmocredits.gui.admin") @Nullable String string) {
         PlayerViewer viewer = PlayerViewer.of(player);
         if (string == null) {
-            GUI.main(player).build().open(viewer);
+            Menus.main(player).build().open(viewer);
             return;
         }
         if (string.equalsIgnoreCase("messages")) {
-            GUI.configInterface(player, Material.WRITABLE_BOOK, Keys.messageKeys).build().open(viewer);
+            Menus.configInterface(player, Material.WRITABLE_BOOK, Keys.messageKeys).build().open(viewer);
         }
         if (string.equalsIgnoreCase("settings")) {
-            GUI.configInterface(player, Material.COMPASS, Keys.settingKeys).build().open(viewer);
+            Menus.configInterface(player, Material.COMPASS, Keys.settingKeys).build().open(viewer);
         }
     }
 

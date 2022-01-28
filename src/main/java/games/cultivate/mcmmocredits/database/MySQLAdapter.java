@@ -1,12 +1,16 @@
 package games.cultivate.mcmmocredits.database;
 
+import games.cultivate.mcmmocredits.MCMMOCredits;
+
 import java.sql.Connection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class MySQLAdapter extends DatabaseAdapter {
+    private static MCMMOCredits plugin;
 
-    public MySQLAdapter() {
+    public MySQLAdapter(MCMMOCredits plugin) {
+        MySQLAdapter.plugin = plugin;
 
     }
 
