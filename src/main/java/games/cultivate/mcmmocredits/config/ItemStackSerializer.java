@@ -35,6 +35,23 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
         return item;
     }
 
+    public ItemStack deserializeConfig(ConfigurationNode node) {
+        ItemStack item = node.node("skull").virtual() ?  new ItemStack(Material.valueOf(node.node("material").getString())) : SkullCreator.itemWithBase64(new ItemStack(Material.PLAYER_HEAD), Objects.requireNonNull(node.node("skull").getString()));
+        item.setDurability((short) node.node("durability").getInt());
+        item.editMeta(meta -> {
+            try {
+                meta.lore(node.node("lore").getList(String.class, List.of()).stream().map(i -> Component.text(i).asComponent()).toList());
+                if (node.node("glow").getBoolean()) {
+                    meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
+                    meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        return item;
+    }
+
     @Override
     public ItemStack deserialize(Type type, ConfigurationNode node) {
             ItemStack item = node.node("skull").virtual() ?  new ItemStack(Material.valueOf(node.node("material").getString())) : SkullCreator.itemWithBase64(new ItemStack(Material.PLAYER_HEAD), Objects.requireNonNull(node.node("skull").getString()));

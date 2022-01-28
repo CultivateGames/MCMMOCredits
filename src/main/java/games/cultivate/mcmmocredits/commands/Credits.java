@@ -16,7 +16,6 @@ import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.util.Menus;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.incendo.interfaces.paper.PlayerViewer;
@@ -77,16 +76,16 @@ public class Credits {
     @CommandMethod("gui")
     @CommandPermission("mcmmocredits.gui.basic")
     private void openGUI(Player player, @Flag(value = "location", permission = "mcmmocredits.gui.admin") @Nullable String string) {
-        PlayerViewer viewer = PlayerViewer.of(player);
         if (string == null) {
-            Menus.main(player).build().open(viewer);
+            Menus.mainMenu(player);
             return;
         }
         if (string.equalsIgnoreCase("messages")) {
-            Menus.configInterface(player, Material.WRITABLE_BOOK, Keys.messageKeys).build().open(viewer);
+            Menus.constructConfigInterface(player, Keys.EDIT_MESSAGES_ITEM, Keys.EDIT_MESSAGES_TITLE, Keys.EDIT_MESSAGES_SIZE).open(PlayerViewer.of(player));
+            return;
         }
         if (string.equalsIgnoreCase("settings")) {
-            Menus.configInterface(player, Material.COMPASS, Keys.settingKeys).build().open(viewer);
+            Menus.constructConfigInterface(player, Keys.EDIT_SETTINGS_ITEM, Keys.EDIT_MESSAGES_TITLE, Keys.EDIT_MESSAGES_SIZE).open(PlayerViewer.of(player));
         }
     }
 

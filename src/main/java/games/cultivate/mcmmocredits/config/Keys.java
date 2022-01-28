@@ -60,34 +60,33 @@ public enum Keys {
 
     EDIT_MESSAGES_SIZE(true, "menu-edit-messages", "inventory-size"),
     EDIT_MESSAGES_TITLE(true, "menu-edit-messages", "inventory-title"),
-    EDIT_MESSAGES_ITEM(false, "menu-edit-messages", "messages-item"),
+    EDIT_MESSAGES_ITEM(false, "menu-edit-messages", "item"),
 
     EDIT_SETTINGS_SIZE(true, "menu-edit-messages", "inventory-size"),
     EDIT_SETTINGS_TITLE(true, "menu-edit-settings", "inventory-title"),
-    EDIT_SETTINGS_ITEM(false, "menu-edit-settings", "settings-item"),
+    EDIT_SETTINGS_ITEM(false, "menu-edit-settings", "item"),
 
     REDEEM_SIZE(true, "menu-redeem", "inventory-size"),
     REDEEM_TITLE(true, "menu-redeem", "inventory-title"),
-    REDEEM_ACROBATICS(true, "menu-redeem", "redeem-acrobatics"),
-    REDEEM_ALCHEMY(true, "menu-redeem", "redeem-alchemy"),
-    REDEEM_ARCHERY(true, "menu-redeem", "redeem-archery"),
-    REDEEM_AXES(true, "menu-redeem", "redeem-axes"),
-    REDEEM_EXCAVATION(true, "menu-redeem", "redeem-excavation"),
-    REDEEM_FISHING(true, "menu-redeem", "redeem-fishing"),
-    REDEEM_HERBALISM(true, "menu-redeem", "redeem-herbalism"),
-    REDEEM_MINING(true, "menu-redeem", "redeem-mining"),
-    REDEEM_REPAIR(true, "menu-redeem", "redeem-repair"),
-    REDEEM_SWORDS(true, "menu-redeem", "redeem-swords"),
-    REDEEM_TAMING(true, "menu-redeem", "redeem-taming"),
-    REDEEM_UNARMED(true, "menu-redeem", "redeem-unarmed"),
-    REDEEM_WOODCUTTING(true, "menu-redeem", "redeem-woodcutting");
+    REDEEM_ACROBATICS(true, "menu-redeem", "item-acrobatics"),
+    REDEEM_ALCHEMY(true, "menu-redeem", "item-alchemy"),
+    REDEEM_ARCHERY(true, "menu-redeem", "item-archery"),
+    REDEEM_AXES(true, "menu-redeem", "item-axes"),
+    REDEEM_EXCAVATION(true, "menu-redeem", "item-excavation"),
+    REDEEM_FISHING(true, "menu-redeem", "item-fishing"),
+    REDEEM_HERBALISM(true, "menu-redeem", "item-herbalism"),
+    REDEEM_MINING(true, "menu-redeem", "item-mining"),
+    REDEEM_REPAIR(true, "menu-redeem", "item-repair"),
+    REDEEM_SWORDS(true, "menu-redeem", "item-swords"),
+    REDEEM_TAMING(true, "menu-redeem", "item-taming"),
+    REDEEM_UNARMED(true, "menu-redeem", "item-unarmed"),
+    REDEEM_WOODCUTTING(true, "menu-redeem", "item-woodcutting");
 
 
     private final String[] path;
     private final boolean canChange;
 
     public static final EnumSet<Keys> all = EnumSet.allOf(Keys.class);
-    public static final List<Keys> modifiableKeys = all.stream().filter(Keys::canChange).toList();
     public static final List<Keys> messageKeys = Keys.all.stream().filter(i -> i.path()[0].equalsIgnoreCase("configuration-messages")).toList();
     public static final List<Keys> settingKeys = Keys.all.stream().filter(i -> i.path()[0].equalsIgnoreCase("configuration-settings")).toList();
 
@@ -115,6 +114,10 @@ public enum Keys {
 
     public ItemStack getItemStack(Player player) {
         return ItemStackSerializer.INSTANCE.deserializePlayer(ItemStack.class, this.node(), player);
+    }
+
+    public ItemStack partialItemStack() {
+        return ItemStackSerializer.INSTANCE.deserializeConfig(this.node());
     }
 
     public int getInt() {
