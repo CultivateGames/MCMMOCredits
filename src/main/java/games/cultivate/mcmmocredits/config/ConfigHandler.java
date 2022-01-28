@@ -42,7 +42,7 @@ public final class ConfigHandler {
 
     public static boolean changeConfigInGame(String[] path, Object change) {
         boolean canProceed = false;
-        for (Keys key : Keys.modifiableKeys) {
+        for (Keys key : Keys.all.stream().filter(Keys::canChange).toList()) {
             if (Arrays.equals(key.path(), path)) {
                 canProceed = true;
                 break;

@@ -42,7 +42,7 @@ public class Redeem {
         UUID uuid = player.getUniqueId();
         Keys result = this.conditionCheck(uuid, skill, amount);
         if (result != null) {
-            ConfigHandler.sendMessage(player, result, Util.quickResolver(player));
+            ConfigHandler.sendMessage(player, result, Util.basicBuilder(player).build());
         } else if (this.processRedemption(uuid, skill, amount)) {
             ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_SELF, Util.redeemBuilder(Pair.of(null, player), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build());
         }

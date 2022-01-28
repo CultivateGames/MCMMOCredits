@@ -57,19 +57,19 @@ public class CreditsConfig {
         private String inventory_title = "<dark_gray>Redeem Your Credits...";
         @Comment("Must be at least 18")
         private int inventory_size = 45;
-        private ShortcutItem redeem_acrobatics = new ShortcutItem();
-        private ShortcutItem redeem_alchemy = new ShortcutItem();
-        private ShortcutItem redeem_archery = new ShortcutItem();
-        private ShortcutItem redeem_axes = new ShortcutItem();
-        private ShortcutItem redeem_excavation = new ShortcutItem();
-        private ShortcutItem redeem_fishing = new ShortcutItem();
-        private ShortcutItem redeem_herbalism = new ShortcutItem();
-        private ShortcutItem redeem_mining = new ShortcutItem();
-        private ShortcutItem redeem_repair = new ShortcutItem();
-        private ShortcutItem redeem_swords = new ShortcutItem();
-        private ShortcutItem redeem_taming = new ShortcutItem();
-        private ShortcutItem redeem_unarmed = new ShortcutItem();
-        private ShortcutItem redeem_woodcutting = new ShortcutItem();
+        private ShortcutItem item_acrobatics = new ShortcutItem();
+        private ShortcutItem item_alchemy = new ShortcutItem();
+        private ShortcutItem item_archery = new ShortcutItem();
+        private ShortcutItem item_axes = new ShortcutItem();
+        private ShortcutItem item_excavation = new ShortcutItem();
+        private ShortcutItem item_fishing = new ShortcutItem();
+        private ShortcutItem item_herbalism = new ShortcutItem();
+        private ShortcutItem item_mining = new ShortcutItem();
+        private ShortcutItem item_repair = new ShortcutItem();
+        private ShortcutItem item_swords = new ShortcutItem();
+        private ShortcutItem item_taming = new ShortcutItem();
+        private ShortcutItem item_unarmed = new ShortcutItem();
+        private ShortcutItem item_woodcutting = new ShortcutItem();
     }
 
     @ConfigSerializable
@@ -77,17 +77,24 @@ public class CreditsConfig {
         private String inventory_title = "<dark_gray>Edit Messages";
         @Comment("Must be at least 27")
         private int inventory_size = 45;
-        @Comment("Change item appearance. Placeholders: <value>, <comment>")
-        private ShortcutItem messages_item = new ShortcutItem();
+        @Comment("Change item appearance. Name, amount and inventory slot are not configurable.")
+        private ConfigItem item = new ConfigItem();
     }
 
     @ConfigSerializable
     protected static final class SettingsMenu {
         private String inventory_title = "<dark_gray>Edit Settings";
         private int inventory_size = 45;
-        @Comment("Change item appearance. Placeholders: <value>, <comment>")
-        private ShortcutItem settings_item = new ShortcutItem();
+        @Comment("Change item appearance. Name, amount and inventory slot are not configurable.")
+        private ConfigItem item = new ConfigItem();
+    }
 
+    @ConfigSerializable
+    protected  static final class ConfigItem {
+        private String material = "STONE";
+        private int durability = 0;
+        private List<String> lore = Arrays.asList("<gray><player>, welcome to MCMMO Credits!", "<gradient:#666666:#FFFFFF>Configure this menu in config.conf!");
+        private boolean glow = true;
     }
 
     @ConfigSerializable

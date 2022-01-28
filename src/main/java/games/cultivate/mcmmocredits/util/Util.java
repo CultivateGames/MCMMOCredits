@@ -26,7 +26,7 @@ public class Util {
     public static Component parse(Component comp, Player player) {
         Pattern pattern = PlaceholderAPI.getPlaceholderPattern();
         comp = comp.replaceText(i -> i.match(pattern).replacement((matchResult, builder) -> Component.empty().decoration(TextDecoration.ITALIC, false).append(Component.text(PlaceholderAPI.setPlaceholders(player, matchResult.group())))));
-        return MiniMessage.miniMessage().deserialize(MiniMessage.miniMessage().serialize(comp), Util.quickResolver(player));
+        return MiniMessage.miniMessage().deserialize(MiniMessage.miniMessage().serialize(comp), Util.basicBuilder(player).build());
     }
 
     private static final String[] EMPTY_ARRAY = new String[0];
