@@ -1,5 +1,7 @@
 package games.cultivate.mcmmocredits.config;
 
+import com.destroystokyo.paper.profile.ProfileProperty;
+import dev.dbassett.skullcreator.SkullCreator;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.util.Util;
 import net.kyori.adventure.text.Component;
@@ -9,12 +11,15 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.serialize.TypeSerializer;
 
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("deprecation")
@@ -32,25 +37,25 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
 
     @Override
     public ItemStack deserialize(Type type, ConfigurationNode node) {
-        ItemStack item = new ItemStack(Material.valueOf(node.node("material").getString()));
-        item.setAmount(node.node("amount").getInt());
-        item.setDurability((short) node.node("durability").getInt());
-        item.editMeta(meta -> {
-            try {
-                meta.displayName(Component.text(node.node("name").getString("")));
-                meta.lore(Objects.requireNonNull(node.node("lore").getList(String.class)).stream().map(i -> Component.text(i).asComponent()).toList());
-                if (node.node("glow").getBoolean()) {
-                    meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
-                    meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            ItemStack item = node.node("skull").virtual() ?  new ItemStack(Material.valueOf(node.node("material").getString())) : SkullCreator.itemWithBase64(new ItemStack(Material.PLAYER_HEAD), Objects.requireNonNull(node.node("skull").getString()));
+            item.setAmount(node.node("amount").getInt());
+            item.setDurability((short) node.node("durability").getInt());
+            item.editMeta(meta -> {
+                try {
+                    meta.displayName(Component.text(node.node("name").getString("")));
+                    meta.lore(node.node("lore").getList(String.class, List.of()).stream().map(i -> Component.text(i).asComponent()).toList());
+                    if (node.node("glow").getBoolean()) {
+                        meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
+                        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                    }
+                    int slot = node.node("inventory-slot").virtual() ? 0 : node.node("inventory-slot").getInt();
+                    meta.getPersistentDataContainer().set(MCMMOCredits.key, PersistentDataType.INTEGER, slot);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                int slot = node.node("inventory-slot").virtual() ? 0 : node.node("inventory-slot").getInt();
-                meta.getPersistentDataContainer().set(MCMMOCredits.key, PersistentDataType.INTEGER, slot);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        return item;
-    }
+            });
+            return item;
+        }
 
     @Override
     public void serialize(Type type, @Nullable ItemStack obj, ConfigurationNode node) {
@@ -61,9 +66,18 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
                 node.node("amount").set(obj.getAmount());
                 node.node("durability").set((int) obj.getDurability());
                 if (obj.hasItemMeta() && obj.getItemMeta() != null) {
+                    ItemMeta meta = obj.getItemMeta();
                     node.node("glow").set(!obj.getEnchantments().isEmpty());
-                    if (obj.getItemMeta().hasLore()) {
+                    if (meta.hasLore()) {
                         node.node("lore").set(Objects.requireNonNull(obj.lore()).stream().map(i -> MiniMessage.miniMessage().serialize(i)).toList());
+                    }
+                    if (meta instanceof SkullMeta skullMeta) {
+                        for (ProfileProperty property : Objects.requireNonNull(skullMeta.getPlayerProfile()).getProperties()) {
+                            if (property.getName().equalsIgnoreCase("textures")) {
+                                node.node("skull").set(property.getValue());
+                                break;
+                            }
+                        }
                     }
                 }
             } catch (Exception e) {

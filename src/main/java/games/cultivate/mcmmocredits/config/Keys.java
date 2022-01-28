@@ -9,63 +9,87 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public enum Keys {
-    DATABASE_ADD_NOTIFICATION(true, "settings", "database", "add-notification"),
-    DATABASE_ADAPTER(false, "settings", "database", "adapter"),
-    DATABASE_HOST(false, "settings", "database", "mysql-credentials", "host"),
-    DATABASE_PORT(false, "settings", "database","mysql-credentials", "port"),
-    DATABASE_NAME(false, "settings", "database","mysql-credentials", "name"),
-    DATABASE_USERNAME(false, "settings", "database", "mysql-credentials", "username"),
-    DATABASE_PASSWORD(false, "settings", "database", "mysql-credentials", "password"),
+    //Settings
+    ADD_NOTIFICATION(true, "configuration-settings", "add-notification"),
+    DATABASE_ADAPTER(false, "configuration-settings", "database", "adapter"),
+    DATABASE_HOST(false, "configuration-settings", "database", "mysql-credentials", "host"),
+    DATABASE_PORT(false, "configuration-settings", "database","mysql-credentials", "port"),
+    DATABASE_NAME(false, "configuration-settings", "database","mysql-credentials", "name"),
+    DATABASE_USERNAME(false, "configuration-settings", "database", "mysql-credentials", "username"),
+    DATABASE_PASSWORD(false, "configuration-settings", "database", "mysql-credentials", "password"),
+    DATABASE_USE_SSL(false, "configuration-settings", "database", "mysql-credentials", "use-ssl"),
+    PLAYER_TAB_COMPLETION(true,"configuration-settings", "general", "player-tab-completion"),
+    SEND_LOGIN_MESSAGE(true,"configuration-settings", "general", "send-login-message"),
 
-    USERCACHE_LOOKUP(true,"settings", "general", "usercache-lookup"),
-    UNSAFE_LOOKUP(true, "settings", "general", "unsafe-lookup"),
-    PLAYER_TAB_COMPLETION(true,"settings", "general", "player-tab-completion"),
-    SEND_LOGIN_MESSAGE(true,"settings", "general", "send-login-message"),
+    //Messages
+    PREFIX(true, "configuration-messages", "general", "prefix"),
+    LOGIN_MESSAGE(true, "configuration-messages", "general", "login-message"),
+    DATABASE_CONSOLE_MESSAGE(true, "configuration-messages", "general", "database-console-message"),
+    INVALID_ARGUMENTS(true, "configuration-messages", "exceptions", "invalid-arguments"),
+    MUST_BE_NUMBER(true, "configuration-messages", "exceptions", "must-be-number"),
+    NO_PERMS(true, "configuration-messages", "exceptions", "no-perms"),
+    PLAYER_DOES_NOT_EXIST(true, "configuration-messages", "exceptions", "player-does-not-exist"),
+    COMMAND_ERROR(true, "configuration-messages", "exceptions", "command-error"),
+    CREDITS_BALANCE_SELF(true, "configuration-messages", "commands", "credits", "balance-self"),
+    CREDITS_BALANCE_OTHER(true, "configuration-messages", "commands", "credits", "balance-other"),
+    CREDITS_RELOAD_SUCCESSFUL(true, "configuration-messages", "commands", "credits", "reload-successful"),
+    CREDITS_SETTING_CHANGE_SUCCESSFUL(true, "configuration-messages", "commands", "credits", "setting-change-successful"),
+    CREDITS_SETTING_CHANGE_FAILURE(true, "configuration-messages", "commands", "credits", "setting-change-failure"),
+    REDEEM_SKILL_CAP(true, "configuration-messages", "commands", "redeem", "skill-cap"),
+    REDEEM_NOT_ENOUGH_CREDITS(true, "configuration-messages", "commands", "redeem", "not-enough-credits"),
+    REDEEM_SUCCESSFUL_SELF(true, "configuration-messages", "commands", "redeem", "successful-self"),
+    REDEEM_SUCCESSFUL_SENDER(true, "configuration-messages", "commands", "redeem", "successful-sender"),
+    REDEEM_SUCCESSFUL_RECEIVER(true, "configuration-messages", "commands", "redeem", "successful-receiver"),
+    MODIFY_CREDITS_ADD_SENDER(true, "configuration-messages", "commands", "modify-credits", "add-sender"),
+    MODIFY_CREDITS_SET_SENDER(true, "configuration-messages", "commands", "modify-credits", "set-sender"),
+    MODIFY_CREDITS_TAKE_SENDER(true, "configuration-messages", "commands", "modify-credits", "take-sender"),
+    MODIFY_CREDITS_ADD_RECEIVER(true, "configuration-messages", "commands", "modify-credits", "add-receiver"),
+    MODIFY_CREDITS_SET_RECEIVER(true, "configuration-messages", "commands", "modify-credits", "set-receiver"),
+    MODIFY_CREDITS_TAKE_RECEIVER(true, "configuration-messages", "commands", "modify-credits", "take-receiver"),
 
-    GUI_TITLE(true, "settings", "gui", "title"),
-    GUI_SIZE(true, "settings", "gui", "size"),
-    GUI_FILL(true, "settings", "gui", "fill"),
-    GUI_FILL_ITEM(false, "settings", "gui", "fill-item"),
-    GUI_SETTING_CHANGE(false, "settings", "gui", "setting-change"),
-    GUI_MESSAGE_CHANGE(false, "settings", "gui", "message-change"),
-    GUI_REDEMPTION(false, "settings", "gui", "redemption"),
+    //Menu Settings
+    MENU_FILL(true, "menu-main", "menu-fill"),
+    MENU_FILL_ITEM(false, "menu-main", "menu-fill-item"),
+    MENU_NAVIGATION(true, "menu-main", "menu-navigation"),
+    MENU_NAVIGATION_ITEM(false, "menu-main", "menu-navigation-item"),
+    MENU_SIZE(true, "menu-main", "inventory-size"),
+    MENU_TITLE(true, "menu-main", "inventory-title"),
+    MENU_MESSAGES_ITEM(false, "menu-main", "messages-item"),
+    MENU_REDEEM_ITEM(false, "menu-main", "redeem-item"),
+    MENU_SETTINGS_ITEM(false, "menu-main", "settings-item"),
 
-    PREFIX(true, "messages", "general", "prefix"),
-    LOGIN_MESSAGE(true, "messages", "general", "login-message"),
-    DATABASE_CONSOLE_MESSAGE(true, "messages", "general", "database-console-message"),
+    EDIT_MESSAGES_SIZE(true, "menu-edit-messages", "inventory-size"),
+    EDIT_MESSAGES_TITLE(true, "menu-edit-messages", "inventory-title"),
+    EDIT_MESSAGES_ITEM(false, "menu-edit-messages", "messages-item"),
 
-    INVALID_ARGUMENTS(true, "messages", "exceptions", "invalid-arguments"),
-    MUST_BE_NUMBER(true, "messages", "exceptions", "must-be-number"),
-    NO_PERMS(true, "messages", "exceptions", "no-perms"),
-    PLAYER_DOES_NOT_EXIST(true, "messages", "exceptions", "player-does-not-exist"),
-    COMMAND_ERROR(true, "messages", "exceptions", "command-error"),
+    EDIT_SETTINGS_SIZE(true, "menu-edit-messages", "inventory-size"),
+    EDIT_SETTINGS_TITLE(true, "menu-edit-settings", "inventory-title"),
+    EDIT_SETTINGS_ITEM(false, "menu-edit-settings", "settings-item"),
 
-    CREDITS_BALANCE_SELF(true, "messages", "commands", "credits", "balance-self"),
-    CREDITS_BALANCE_OTHER(true, "messages", "commands", "credits", "balance-other"),
-    CREDITS_RELOAD_SUCCESSFUL(true, "messages", "commands", "credits", "reload-successful"),
-    CREDITS_SETTING_CHANGE_SUCCESSFUL(true, "messages", "commands", "credits", "setting-change-successful"),
-    CREDITS_SETTING_CHANGE_FAILURE(true, "messages", "commands", "credits", "setting-change-failure"),
+    REDEEM_SIZE(true, "menu-redeem", "inventory-size"),
+    REDEEM_TITLE(true, "menu-redeem", "inventory-title"),
+    REDEEM_ACROBATICS(true, "menu-redeem", "redeem-acrobatics"),
+    REDEEM_ALCHEMY(true, "menu-redeem", "redeem-alchemy"),
+    REDEEM_ARCHERY(true, "menu-redeem", "redeem-archery"),
+    REDEEM_AXES(true, "menu-redeem", "redeem-axes"),
+    REDEEM_EXCAVATION(true, "menu-redeem", "redeem-excavation"),
+    REDEEM_FISHING(true, "menu-redeem", "redeem-fishing"),
+    REDEEM_HERBALISM(true, "menu-redeem", "redeem-herbalism"),
+    REDEEM_MINING(true, "menu-redeem", "redeem-mining"),
+    REDEEM_REPAIR(true, "menu-redeem", "redeem-repair"),
+    REDEEM_SWORDS(true, "menu-redeem", "redeem-swords"),
+    REDEEM_TAMING(true, "menu-redeem", "redeem-taming"),
+    REDEEM_UNARMED(true, "menu-redeem", "redeem-unarmed"),
+    REDEEM_WOODCUTTING(true, "menu-redeem", "redeem-woodcutting");
 
-    REDEEM_SKILL_CAP(true, "messages", "commands", "redeem", "skill-cap"),
-    REDEEM_NOT_ENOUGH_CREDITS(true, "messages", "commands", "redeem", "not-enough-credits"),
-    REDEEM_SUCCESSFUL_SELF(true, "messages", "commands", "redeem", "successful-self"),
-    REDEEM_SUCCESSFUL_SENDER(true, "messages", "commands", "redeem", "successful-sender"),
-    REDEEM_SUCCESSFUL_RECEIVER(true, "messages", "commands", "redeem", "successful-receiver"),
-
-    MODIFY_CREDITS_ADD_SENDER(true, "messages", "commands", "modify-credits", "add-sender"),
-    MODIFY_CREDITS_SET_SENDER(true, "messages", "commands", "modify-credits", "set-sender"),
-    MODIFY_CREDITS_TAKE_SENDER(true, "messages", "commands", "modify-credits", "take-sender"),
-    MODIFY_CREDITS_ADD_RECEIVER(true, "messages", "commands", "modify-credits", "add-receiver"),
-    MODIFY_CREDITS_SET_RECEIVER(true, "messages", "commands", "modify-credits", "set-receiver"),
-    MODIFY_CREDITS_TAKE_RECEIVER(true, "messages", "commands", "modify-credits", "take-receiver");
 
     private final String[] path;
     private final boolean canChange;
 
     public static final EnumSet<Keys> all = EnumSet.allOf(Keys.class);
     public static final List<Keys> modifiableKeys = all.stream().filter(Keys::canChange).toList();
-    public static final List<Keys> messageKeys = Keys.all.stream().filter(i -> i.path()[0].equalsIgnoreCase("messages")).toList();
-    public static final List<Keys> settingKeys = Keys.all.stream().filter(i -> i.path()[0].equalsIgnoreCase("settings")).toList();
+    public static final List<Keys> messageKeys = Keys.all.stream().filter(i -> i.path()[0].equalsIgnoreCase("configuration-messages")).toList();
+    public static final List<Keys> settingKeys = Keys.all.stream().filter(i -> i.path()[0].equalsIgnoreCase("configuration-settings")).toList();
 
     Keys (boolean canChange, String... path) {
         this.path = path;

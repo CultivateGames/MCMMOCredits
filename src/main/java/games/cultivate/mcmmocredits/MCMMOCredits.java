@@ -37,18 +37,8 @@ import java.util.logging.Level;
  * This class is responsible for startup/shutdown logic, and command loading.
  */
 public class MCMMOCredits extends JavaPlugin {
-    private static MCMMOCredits instance;
     public static NamespacedKey key;
     private static DatabaseAdapter adapter;
-
-    /**
-     * Generates widely accessible instance of this plugin.
-     * This is bad practice, but I don't really care. Project is not large enough for Guice.
-     * @return MCMMOCredits plugin
-     */
-    public static MCMMOCredits getInstance() {
-        return instance;
-    }
 
     /**
      * This handles all startup logic.
@@ -60,9 +50,8 @@ public class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onEnable() {
-        instance = this;
         key = Objects.requireNonNull(NamespacedKey.fromString("mcmmocredits"));
-        new ConfigHandler().enable();
+        new ConfigHandler(this);
 
         this.loadDatabase();
         this.loadCommands();
@@ -141,8 +130,8 @@ public class MCMMOCredits extends JavaPlugin {
 
     private void loadDatabase() {
         switch (Keys.DATABASE_ADAPTER.getString().toLowerCase()) {
-            case "sqlite" -> this.setAdapter(new SQLiteAdapter());
-            case "mysql" -> this.setAdapter(new MySQLAdapter());
+            case "sqlite" -> this.setAdapter(new SQLiteAdapter(this));
+            case "mysql" -> this.setAdapter(new MySQLAdapter(this));
             default -> {
                 Bukkit.getLogger().log(Level.SEVERE, "INVALID DATABASE ADAPTER SET! Disabling plugin...");
                 this.setEnabled(false);

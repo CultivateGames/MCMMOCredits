@@ -32,7 +32,7 @@ public class Listeners implements Listener {
         if (!MCMMOCredits.getAdapter().doesPlayerExist(e.getPlayerProfile().getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
             PlayerProfile profile = e.getPlayerProfile();
             MCMMOCredits.getAdapter().addPlayer(profile.getId(), profile.getName(), 0);
-            if (Keys.DATABASE_ADD_NOTIFICATION.getBoolean()) {
+            if (Keys.ADD_NOTIFICATION.getBoolean()) {
                 ConfigHandler.sendMessage(Bukkit.getConsoleSender(), Keys.DATABASE_CONSOLE_MESSAGE, PlaceholderResolver.placeholders(Placeholder.miniMessage("player", Objects.requireNonNull(profile.getName()))));
             }
         }
@@ -57,8 +57,8 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerChat(AsyncChatEvent e) {
         UUID uuid = e.getPlayer().getUniqueId();
-        if (GUI.inputMap.containsKey(uuid)) {
-            GUI.inputMap.get(uuid).complete(MiniMessage.miniMessage().serialize(e.message()));
+        if (Menus.inputMap.containsKey(uuid)) {
+            Menus.inputMap.get(uuid).complete(MiniMessage.miniMessage().serialize(e.message()));
             e.setCancelled(true);
         }
     }
@@ -70,9 +70,9 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent e) {
         UUID uuid = e.getPlayer().getUniqueId();
-        if (GUI.inputMap.containsKey(uuid)) {
-            GUI.inputMap.get(uuid).complete(null);
-            GUI.inputMap.remove(uuid);
+        if (Menus.inputMap.containsKey(uuid)) {
+            Menus.inputMap.get(uuid).complete(null);
+            Menus.inputMap.remove(uuid);
         }
     }
 }
