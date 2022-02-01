@@ -9,6 +9,7 @@ import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.minecraft.extras.AudienceProvider;
 import cloud.commandframework.minecraft.extras.MinecraftExceptionHandler;
+import cloud.commandframework.minecraft.extras.MinecraftHelp;
 import cloud.commandframework.paper.PaperCommandManager;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.ModifyCredits;
@@ -108,10 +109,13 @@ public class MCMMOCredits extends JavaPlugin {
         if (commandManager.queryCapability(CloudBukkitCapabilities.ASYNCHRONOUS_COMPLETION)) {
             commandManager.registerAsynchronousCompletions();
         }
-        commandManager.getParserRegistry().registerSuggestionProvider("customPlayer", (context, input) ->
-                Keys.PLAYER_TAB_COMPLETION.getBoolean() ? Bukkit.getOnlinePlayers().stream().map(Player::getName).toList() : List.of());
+        commandManager.getParserRegistry().registerSuggestionProvider("customPlayer", (context, input) -> Keys.PLAYER_TAB_COMPLETION.getBoolean() ? Bukkit.getOnlinePlayers().stream().map(Player::getName).toList() : List.of());
 
         AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(commandManager, CommandSender.class, parameters -> SimpleCommandMeta.empty());
+        MinecraftHelp<CommandSender> minecraftHelp = new MinecraftHelp<>("/credits help", AudienceProvider.nativeAudience(), commandManager);
+        annotationParser.parse(new ModifyCredits());
+        annotationParser.parse(new Credits(minecraftHelp));
+        annotationParser.parse(new Redeem());
 
         //TODO caption registry
         new MinecraftExceptionHandler<CommandSender>()
@@ -122,10 +126,6 @@ public class MCMMOCredits extends JavaPlugin {
                 .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SYNTAX, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS, Util.createPlaceholder("correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax())))
                 .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SENDER, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS, Util.createPlaceholder("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName())))
                 .apply(commandManager, AudienceProvider.nativeAudience());
-
-        annotationParser.parse(new ModifyCredits());
-        annotationParser.parse(new Credits());
-        annotationParser.parse(new Redeem());
     }
 
     private void loadDatabase() {

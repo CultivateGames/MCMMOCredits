@@ -35,6 +35,8 @@ public enum Keys {
     CREDITS_RELOAD_SUCCESSFUL(true, "configuration-messages", "commands", "credits", "reload-successful"),
     CREDITS_SETTING_CHANGE_SUCCESSFUL(true, "configuration-messages", "commands", "credits", "setting-change-successful"),
     CREDITS_SETTING_CHANGE_FAILURE(true, "configuration-messages", "commands", "credits", "setting-change-failure"),
+    CREDITS_MENU_EDITING_PROMPT(true, "configuration-messages", "commands", "credits", "menu-editing-prompt"),
+    CREDITS_MENU_REDEEM_PROMPT(true, "configuration-messages", "commands", "credits", "menu-redeem-prompt"),
     REDEEM_SKILL_CAP(true, "configuration-messages", "commands", "redeem", "skill-cap"),
     REDEEM_NOT_ENOUGH_CREDITS(true, "configuration-messages", "commands", "redeem", "not-enough-credits"),
     REDEEM_SUCCESSFUL_SELF(true, "configuration-messages", "commands", "redeem", "successful-self"),

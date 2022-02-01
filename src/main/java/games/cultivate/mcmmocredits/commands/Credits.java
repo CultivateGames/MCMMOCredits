@@ -4,12 +4,12 @@ import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
-import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.parsers.Parser;
 import cloud.commandframework.annotations.specifier.Greedy;
 import cloud.commandframework.annotations.suggestions.Suggestions;
 import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.exceptions.CommandExecutionException;
+import cloud.commandframework.minecraft.extras.MinecraftHelp;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
@@ -18,7 +18,6 @@ import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
@@ -29,6 +28,11 @@ import java.util.Queue;
  */
 @CommandMethod("credits")
 public class Credits {
+    private final MinecraftHelp<CommandSender> minecraftHelp;
+
+    public Credits(MinecraftHelp<CommandSender> minecraftHelp) {
+        this.minecraftHelp = minecraftHelp;
+    }
 
     @CommandDescription("Check your own MCMMO Credit balance.")
     @CommandMethod("")
@@ -72,25 +76,43 @@ public class Credits {
     }
 
     @CommandDescription("Open a Menu that can be used to interface with this plugin.")
-    @CommandMethod("gui")
+    @CommandMethod("menu")
     @CommandPermission("mcmmocredits.gui.basic")
-    private void openGUI(Player player, @Flag(value = "location", permission = "mcmmocredits.gui.admin") @Nullable String string) {
-        if (string == null) {
-            Menus.openMainMenu(player);
-            return;
-        }
-        if (string.equalsIgnoreCase("messages")) {
-            Menus.openMessagesMenu(player);
-            return;
-        }
-        if (string.equalsIgnoreCase("settings")) {
-            Menus.openSettingsMenu(player);
-        }
+    private void openMenu(Player player) {
+        Menus.openMainMenu(player);
+    }
+
+    @CommandDescription("Open the Edit Messages Menu")
+    @CommandMethod("menu messages")
+    @CommandPermission("mcmmocredits.gui.admin")
+    private void openMessagesMenu(Player player) {
+        Menus.openMessagesMenu(player);
+    }
+
+    @CommandDescription("Open the Edit Settings Menu")
+    @CommandMethod("menu settings")
+    @CommandPermission("mcmmocredits.gui.admin")
+    private void openSettingsMenu(Player player) {
+        Menus.openSettingsMenu(player);
+    }
+
+    @CommandDescription("Open the Edit Messages Menu")
+    @CommandMethod("menu redeem")
+    @CommandPermission("mcmmocredits.gui.redeem")
+    private void openRedeemMenu(Player player) {
+        Menus.openRedeemMenu(player);
+    }
+
+    //TODO test
+    @CommandDescription("Help Command")
+    @CommandMethod("help [query]")
+    private void helpCommand(CommandSender sender, @Argument("query") @Greedy String query) {
+        this.minecraftHelp.queryCommands(query == null ? "" : query, sender);
     }
 
     @Suggestions("settings")
     public List<String> settingSelection(CommandContext<CommandSender> sender, String input) {
-        return Keys.all.stream().map(key -> key.path()[key.path().length - 1]).toList();
+        return Keys.all.stream().filter(Keys::canChange).map(key -> key.path()[key.path().length - 1]).toList();
     }
 
     @Parser(suggestions = "settings")

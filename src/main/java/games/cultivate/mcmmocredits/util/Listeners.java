@@ -5,6 +5,7 @@ import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.placeholder.Placeholder;
 import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
@@ -58,7 +59,14 @@ public class Listeners implements Listener {
     public void onPlayerChat(AsyncChatEvent e) {
         UUID uuid = e.getPlayer().getUniqueId();
         if (Menus.inputMap.containsKey(uuid)) {
-            Menus.inputMap.get(uuid).complete(MiniMessage.miniMessage().serialize(e.message()));
+            String completion = MiniMessage.miniMessage().serialize(e.message());
+            if (completion.equalsIgnoreCase("cancel")) {
+                Menus.inputMap.get(uuid).complete(null);
+                Menus.inputMap.remove(uuid);
+                e.getPlayer().sendMessage(Component.text("You have cancelled this modification successfully", Util.defaultStyle));
+            } else {
+                Menus.inputMap.get(uuid).complete(completion);
+            }
             e.setCancelled(true);
         }
     }

@@ -7,7 +7,6 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * This is responsible for handling our registration with PlaceholderAPI.
- * TODO: Fix compiler warning
  */
 public class CreditsExpansion extends PlaceholderExpansion {
 
