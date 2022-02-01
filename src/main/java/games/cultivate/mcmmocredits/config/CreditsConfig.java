@@ -19,13 +19,13 @@ public class CreditsConfig {
     @Comment("Main Menu configuration (/credits gui)")
     @Setting("menu-main")
     private MainMenu menu_main = new MainMenu();
-    @Comment("Edit Messages Menu configuration (/credits gui --location messages)")
+    @Comment("Edit Messages Menu configuration (/credits gui messages)")
     @Setting("menu-edit-messages")
     private MessagesMenu menu_messages = new MessagesMenu();
-    @Comment("Edit Settings Menu configuration (/credits gui --location settings)")
+    @Comment("Edit Settings Menu configuration (/credits gui settings)")
     @Setting("menu-edit-settings")
     private SettingsMenu menu_settings = new SettingsMenu();
-    @Comment("Redeem Menu configuration (/credits gui --location redeem")
+    @Comment("Redeem Menu configuration (/credits gui redeem")
     @Setting("menu-redeem")
     private RedeemMenu menu_redeem = new RedeemMenu();
 
@@ -170,6 +170,12 @@ public class CreditsConfig {
         private String setting_change_successful = "<green>You have changed <gray><setting> <green>to <gray><change>.";
         @Comment("Sender output for /credits <setting> <change> failure.")
         private String setting_change_failure = "<red>There was an error while changing settings, operation aborted.";
+        @Comment("Sender prompt for /credits menu redeem prompt.\n" + "Placeholders: <player>, <credits>, <skill>, <cap>, PAPI")
+        private String menu_redeem_prompt = "<gray>How many credits would you like to redeem into <green><skill>? You have <credits> Credits available.";
+        @Comment("Sender prompt for /credits menu settings/messages.\n" + "Placeholders: <player>, <credits>, <option>, <current_value>")
+        private String menu_editing_prompt = "<red>Enter the new value for <gray><option>:";
+        //TODO add cancellation message for prompts.
+        //TODO Add success messages for prompts.
     }
 
     @ConfigSerializable
