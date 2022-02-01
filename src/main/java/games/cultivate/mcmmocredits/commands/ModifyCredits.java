@@ -52,9 +52,11 @@ public class ModifyCredits {
                 case SET -> MCMMOCredits.getAdapter().setCredits(uuid, amount);
             }
             Pair<CommandSender, Player> transactionPair = Pair.of(sender, Bukkit.getPlayer(uuid));
-            ConfigHandler.sendMessage(sender, Keys.valueOf("MODIFY_CREDITS_" + op.name() + "_SENDER"), Util.transactionBuilder(transactionPair, amount).build());
+            Keys senderKey = Keys.valueOf("MODIFY_CREDITS_" + op.name() + "_SENDER");
+            Keys receiverKey = Keys.valueOf("MODIFY_CREDITS_" + op.name() + "_RECEIVER");
+            ConfigHandler.sendMessage(sender, senderKey, Util.transactionBuilder(transactionPair, amount).build());
             if (sender != transactionPair.right() && !silent) {
-                ConfigHandler.sendMessage(transactionPair.right(), Keys.valueOf("MODIFY_CREDITS_" + op.name() + "_RECEIVER"), Util.transactionBuilder(transactionPair, amount).build());
+                ConfigHandler.sendMessage(transactionPair.right(), receiverKey, Util.transactionBuilder(transactionPair, amount).build());
             }
         } else {
             //TODO Async is swallowing the exception.
