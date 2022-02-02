@@ -5,7 +5,6 @@ import games.cultivate.mcmmocredits.config.Keys;
 import it.unimi.dsi.fastutil.Pair;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -24,12 +23,12 @@ import java.util.regex.Pattern;
  * This class is responsible for holding various methods which need to be accessible and have no sensible location elsewhere.
  */
 public class Util {
-    public static final Style defaultStyle = Style.style().decoration(TextDecoration.ITALIC, false).colorIfAbsent(NamedTextColor.GRAY).build();
+    public static final Style defaultStyle = Style.style().decoration(TextDecoration.ITALIC, false).build();
 
     public static Component parse(Component comp, Player player) {
         Pattern pattern = PlaceholderAPI.getPlaceholderPattern();
-        comp = comp.replaceText(i -> i.match(pattern).replacement((matchResult, builder) -> (Component.text(PlaceholderAPI.setPlaceholders(player, matchResult.group()), Util.defaultStyle).color(NamedTextColor.WHITE))));
-        return MiniMessage.miniMessage().deserialize(MiniMessage.miniMessage().serialize(comp), Util.basicBuilder(player).build());
+        comp = comp.replaceText(i -> i.match(pattern).replacement((matchResult, builder) -> Component.text(PlaceholderAPI.setPlaceholders(player, matchResult.group()))));
+        return Component.empty().style(defaultStyle).append(MiniMessage.miniMessage().deserialize(MiniMessage.miniMessage().serialize(comp), Util.basicBuilder(player).build()));
     }
 
     private static final String[] EMPTY_ARRAY = new String[0];
@@ -55,6 +54,10 @@ public class Util {
     public static PlaceholderResolver.Builder settingsBuilder(CommandSender sender, String setting, String change) {
         List<Placeholder<?>> phList = createPlaceholders("setting", setting, "change", change);
         return sender instanceof Player player ? basicBuilder(player).placeholders(phList) : PlaceholderResolver.builder().placeholders(phList);
+    }
+
+    public static PlaceholderResolver redeemPromptResolver(Player player, String skill, int cap) {
+        return basicBuilder(player).placeholders(createPlaceholders("skill", skill, "cap", cap + "")).build();
     }
 
     /**

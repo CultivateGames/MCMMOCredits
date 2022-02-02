@@ -5,7 +5,6 @@ import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import io.papermc.paper.event.player.AsyncChatEvent;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.placeholder.Placeholder;
 import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
@@ -63,7 +62,7 @@ public class Listeners implements Listener {
             if (completion.equalsIgnoreCase("cancel")) {
                 Menus.inputMap.get(uuid).complete(null);
                 Menus.inputMap.remove(uuid);
-                e.getPlayer().sendMessage(Component.text("You have cancelled this modification successfully", Util.defaultStyle));
+                ConfigHandler.sendMessage(e.getPlayer(), Keys.CANCEL_PROMPT, Util.quickResolver(e.getPlayer()));
             } else {
                 Menus.inputMap.get(uuid).complete(completion);
             }

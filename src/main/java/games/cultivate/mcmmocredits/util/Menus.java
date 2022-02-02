@@ -1,15 +1,17 @@
 package games.cultivate.mcmmocredits.util;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import com.gmail.nossr50.mcMMO;
 import games.cultivate.mcmmocredits.MCMMOCredits;
+import games.cultivate.mcmmocredits.commands.Redeem;
 import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import it.unimi.dsi.fastutil.Pair;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.apache.commons.lang.WordUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
@@ -67,9 +69,12 @@ public class Menus {
                             inputMap.get(uuid).complete(null);
                             inputMap.remove(uuid);
                         }
-                        ConfigHandler.sendMessage(player, Keys.CREDITS_MENU_EDITING_PROMPT, Util.quickResolver(player));
+                        ConfigHandler.sendMessage(player, Keys.CREDITS_MENU_EDITING_PROMPT, Util.settingsBuilder(player, pathString, "").build());
                         inputMap.put(uuid, new CompletableFuture<>());
-                        Menus.inputMap.get(uuid).thenAcceptAsync((i) -> ConfigHandler.changeConfigInGame(StringUtils.split(pathString, "."), i)).whenComplete((i, throwable) -> Menus.inputMap.remove(uuid));
+                        Menus.inputMap.get(uuid).thenAcceptAsync((i) -> {
+                            ConfigHandler.changeConfigInGame(StringUtils.split(pathString, "."), i);
+                            ConfigHandler.sendMessage(player, Keys.CREDITS_SETTING_CHANGE_SUCCESSFUL, Util.settingsBuilder(player, pathString, i).build());
+                        }).whenComplete((i, throwable) -> Menus.inputMap.remove(uuid));
                     }
                 }
             }), item.getValue().x(), item.getValue().y()));
@@ -95,29 +100,31 @@ public class Menus {
                             inputMap.get(uuid).complete(null);
                             inputMap.remove(uuid);
                         }
-                        ConfigHandler.sendMessage(player, Keys.CREDITS_MENU_REDEEM_PROMPT, Util.quickResolver(player));
+                        ConfigHandler.sendMessage(player, Keys.CREDITS_MENU_REDEEM_PROMPT, Util.redeemPromptResolver(player, WordUtils.capitalizeFully(skill.name()), mcMMO.p.getSkillTools().getLevelCap(skill)));
                         inputMap.put(uuid, new CompletableFuture<>());
-                        //Bukkit API is not thread safe
-                        Menus.inputMap.get(uuid).thenAccept((i) -> Bukkit.dispatchCommand(player, "/redeem " + skill.name() + " " + i)).whenComplete((i, throwable) -> Menus.inputMap.remove(uuid));
+                        Menus.inputMap.get(uuid).thenAcceptAsync((i) -> {
+                            Redeem.creditRedemption(player, uuid, skill, Integer.parseInt(i));
+                            ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_SELF, Util.redeemBuilder(Pair.of(null, player), WordUtils.capitalizeFully(skill.name()), mcMMO.p.getSkillTools().getLevelCap(skill), Integer.parseInt(i)).build());
+                        }).whenCompleteAsync((i, throwable) -> Menus.inputMap.remove(uuid));
                     }
                 }
             }), item.getValue().x(), item.getValue().y()));
         }
         if (Keys.MENU_NAVIGATION.getBoolean()) {
-            cb = transferLeftClick(cb, constructMainMenu(player, Keys.MENU_TITLE, Keys.MENU_SIZE), prepareItem(Keys.MENU_NAVIGATION.getItemStack(player)));
+            cb = transferLeftClick(cb, constructMainMenu(player, Keys.MENU_TITLE, Keys.MENU_SIZE), prepareItem(Keys.MENU_NAVIGATION_ITEM.getItemStack(player)));
         }
         return cb.build();
     }
 
     protected static Map<ItemStack, Vector2> prepareConfigItems(Keys keys) {
         Map<ItemStack, Vector2> configItems = new HashMap<>();
-        ItemStack item = keys.partialItemStack();
         int slot = 0;
-        for (Keys key : keys.name().contains("messages") ? Keys.messageKeys : Keys.settingKeys.stream().filter(Keys::canChange).toList()) {
+        for (Keys key : keys.name().contains("MESSAGES") ? Keys.messageKeys : Keys.settingKeys.stream().filter(Keys::canChange).toList()) {
+            ItemStack item = keys.partialItemStack();
             item.setAmount(slot + 1);
             item.editMeta(meta -> {
                 String path = StringUtils.join(key.path(), ".");
-                meta.displayName(Component.text(path, Util.defaultStyle));
+                meta.displayName(Component.text(key.path()[key.path().length - 1], Util.defaultStyle));
                 meta.getPersistentDataContainer().set(MCMMOCredits.key, PersistentDataType.STRING, path);
             });
             configItems.put(item, PaperUtils.slotToGrid(slot));
@@ -132,7 +139,7 @@ public class Menus {
             Pair<ItemStack, Vector2> pair = prepareItem(key.getItemStack(player));
             pair.left().editMeta(meta -> {
                 String skillLocation = key.path()[1];
-                meta.getPersistentDataContainer().set(MCMMOCredits.key, PersistentDataType.STRING, skillLocation.substring(skillLocation.indexOf("-")));
+                meta.getPersistentDataContainer().set(MCMMOCredits.key, PersistentDataType.STRING, skillLocation.substring(skillLocation.indexOf("-") + 1).toUpperCase());
             });
             redeemItems.put(pair.left(), pair.right());
         }
@@ -156,7 +163,7 @@ public class Menus {
     }
 
     public static void openSettingsMenu(Player player) {
-        constructConfigInterface(player, Keys.EDIT_SETTINGS_ITEM, Keys.EDIT_MESSAGES_TITLE, Keys.EDIT_MESSAGES_SIZE).open(PlayerViewer.of(player));
+        constructConfigInterface(player, Keys.EDIT_SETTINGS_ITEM, Keys.EDIT_SETTINGS_TITLE, Keys.EDIT_SETTINGS_SIZE).open(PlayerViewer.of(player));
     }
 
     public static void openRedeemMenu(Player player) {

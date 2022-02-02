@@ -52,8 +52,8 @@ public final class ConfigHandler {
         ConfigHandler handler = ConfigHandler.instance();
         try {
             switch (path[0]) {
-                case "messages" -> handler.root().node(Arrays.asList(path)).set(String.class, change);
-                case "settings" -> handler.root().node(Arrays.asList(path)).raw(change);
+                case "configuration-messages" -> handler.root().node(Arrays.asList(path)).set(String.class, change);
+                case "configuration-settings" -> handler.root().node(Arrays.asList(path)).raw(change);
                 default -> {
                     return false;
                 }
