@@ -39,11 +39,7 @@ public class Redeem {
     @CommandMethod("<skill> <amount>")
     @CommandPermission("mcmmocredits.redeem.self")
     private void redeemCreditsSelf(Player player, @Argument("skill") PrimarySkillType skill, @Argument("amount") @Range(min = "1", max = "2147483647") int amount) {
-        UUID uuid = player.getUniqueId();
-        Keys result = this.conditionCheck(uuid, skill, amount);
-        if (result != null) {
-            ConfigHandler.sendMessage(player, result, Util.basicBuilder(player).build());
-        } else if (this.processRedemption(uuid, skill, amount)) {
+        if (creditRedemption(player, player.getUniqueId(), skill, amount)) {
             ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_SELF, Util.redeemBuilder(Pair.of(null, player), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build());
         }
     }
@@ -53,12 +49,9 @@ public class Redeem {
     @CommandPermission("mcmmocredits.redeem.other")
     private void redeemCreditsOther(CommandSender sender, @Argument("skill") PrimarySkillType skill, @Argument("amount") @Range(min = "1", max = "2147483647") int amount, @Argument(value = "player", suggestions = "customPlayer") String username, @Flag(value = "silent", permission = "mcmmocredits.redeem.other.silent") boolean silent) {
         MCMMOCredits.getAdapter().getUUID(username).whenCompleteAsync((i, throwable) -> {
-            Player player = Bukkit.getPlayer(i);
-            Keys result = this.conditionCheck(i, skill, amount);
-            if (result != null) {
-                ConfigHandler.sendMessage(sender, result, result.equals(Keys.PLAYER_DOES_NOT_EXIST) ? null : Util.basicBuilder(Objects.requireNonNull(player)).build());
-            } else if (this.processRedemption(i, skill, amount)) {
-                PlaceholderResolver successfulResolver = Util.redeemBuilder(Pair.of(sender, Objects.requireNonNull(player)), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build();
+            if (creditRedemption(sender, i, skill, amount)) {
+                Player player = Objects.requireNonNull(Bukkit.getPlayer(i));
+                PlaceholderResolver successfulResolver = Util.redeemBuilder(Pair.of(sender, player), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build();
                 ConfigHandler.sendMessage(sender, Keys.REDEEM_SUCCESSFUL_SENDER, successfulResolver);
                 if (!silent) {
                     ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_RECEIVER, successfulResolver);
@@ -67,32 +60,34 @@ public class Redeem {
         });
     }
 
-    //TODO Cloud exception
-    private Keys conditionCheck(UUID uuid, PrimarySkillType skill, int amount) {
+    //Combine into method to use within menu.
+    public static boolean creditRedemption(CommandSender sender, UUID uuid, PrimarySkillType skill, int amount) {
+        Keys key = null;
         if (!st.getNonChildSkills().contains(skill)) {
-            return Keys.INVALID_ARGUMENTS;
+            key = Keys.INVALID_ARGUMENTS;
         }
         if (!MCMMOCredits.getAdapter().doesPlayerExist(uuid) || !db.doesPlayerExistInDB(uuid)) {
-            return Keys.PLAYER_DOES_NOT_EXIST;
+            key = Keys.PLAYER_DOES_NOT_EXIST;
         }
         if (MCMMOCredits.getAdapter().getCredits(uuid) < amount) {
-            return Keys.REDEEM_NOT_ENOUGH_CREDITS;
+            key = Keys.REDEEM_NOT_ENOUGH_CREDITS;
         }
         if (ExperienceAPI.getLevelOffline(uuid, skill.name()) + amount > st.getLevelCap(skill)) {
-            return Keys.REDEEM_SKILL_CAP;
+            key = Keys.REDEEM_SKILL_CAP;
         }
-        return null;
-    }
-
-    //MCMMO API may actually be the death of me.
-    private boolean processRedemption(UUID uuid, PrimarySkillType skill, int amount) {
         Player player = Bukkit.getPlayer(uuid);
-        PlayerProfile profile = Objects.requireNonNull(player).isOnline() ? UserManager.getPlayer(player).getProfile() : mcMMO.getDatabaseManager().loadPlayerProfile(uuid);
-        if (profile.isLoaded()) {
-            profile.addLevels(skill, amount);
-            MCMMOCredits.getAdapter().takeCredits(uuid, amount);
-            return true;
+        if (key != null) {
+            ConfigHandler.sendMessage(sender, key, key.equals(Keys.PLAYER_DOES_NOT_EXIST) ? null : Util.basicBuilder(Objects.requireNonNull(player)).build());
+            return false;
+        } else {
+            PlayerProfile profile = Objects.requireNonNull(player).isOnline() ? UserManager.getPlayer(player).getProfile() : mcMMO.getDatabaseManager().loadPlayerProfile(uuid);
+            if (profile.isLoaded()) {
+                profile.addLevels(skill, amount);
+                MCMMOCredits.getAdapter().takeCredits(uuid, amount);
+                return true;
+            } else {
+                return false;
+            }
         }
-        return false;
     }
 }

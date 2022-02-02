@@ -40,7 +40,7 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
         item.setDurability((short) node.node("durability").getInt());
         item.editMeta(meta -> {
             try {
-                meta.lore(node.node("lore").getList(String.class, List.of()).stream().map(i -> Component.text(i).asComponent()).toList());
+                meta.lore(node.node("lore").getList(String.class, List.of()).stream().map(i -> Component.empty().style(Util.defaultStyle).append(MiniMessage.miniMessage().deserialize(i)).asComponent()).toList());
                 if (node.node("glow").getBoolean()) {
                     meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
                     meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);

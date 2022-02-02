@@ -18,10 +18,11 @@ public enum Keys {
     DATABASE_USERNAME(false, "configuration-settings", "database", "mysql-credentials", "username"),
     DATABASE_PASSWORD(false, "configuration-settings", "database", "mysql-credentials", "password"),
     DATABASE_USE_SSL(false, "configuration-settings", "database", "mysql-credentials", "use-ssl"),
-    PLAYER_TAB_COMPLETION(true,"configuration-settings", "general", "player-tab-completion"),
-    SEND_LOGIN_MESSAGE(true,"configuration-settings", "general", "send-login-message"),
+    PLAYER_TAB_COMPLETION(true,"configuration-settings", "player-tab-completion"),
+    SEND_LOGIN_MESSAGE(true,"configuration-settings", "send-login-message"),
 
     //Messages
+    CANCEL_PROMPT(true, "configuration-messages", "general", "cancel-prompt"),
     PREFIX(true, "configuration-messages", "general", "prefix"),
     LOGIN_MESSAGE(true, "configuration-messages", "general", "login-message"),
     DATABASE_CONSOLE_MESSAGE(true, "configuration-messages", "general", "database-console-message"),
@@ -64,7 +65,7 @@ public enum Keys {
     EDIT_MESSAGES_TITLE(true, "menu-edit-messages", "inventory-title"),
     EDIT_MESSAGES_ITEM(false, "menu-edit-messages", "item"),
 
-    EDIT_SETTINGS_SIZE(true, "menu-edit-messages", "inventory-size"),
+    EDIT_SETTINGS_SIZE(true, "menu-edit-settings", "inventory-size"),
     EDIT_SETTINGS_TITLE(true, "menu-edit-settings", "inventory-title"),
     EDIT_SETTINGS_ITEM(false, "menu-edit-settings", "item"),
 

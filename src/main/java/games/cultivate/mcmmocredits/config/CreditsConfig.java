@@ -143,6 +143,8 @@ public class CreditsConfig {
         private String login_message = "<hover:show_text:'<green>You have <credits> MCMMO Credits!'><yellow>Hover here to see how many MCMMO Credits you have!";
         @Comment("Output for adding new users to database.\n" + "Required database-add-message: true.")
         private String database_console_message = "<player> has been added to the database!";
+        @Comment("Sender output for cancelled prompt.")
+        private String cancel_prompt = "<red>You have cancelled the current modification.";
     }
 
     @ConfigSerializable
@@ -172,10 +174,8 @@ public class CreditsConfig {
         private String setting_change_failure = "<red>There was an error while changing settings, operation aborted.";
         @Comment("Sender prompt for /credits menu redeem prompt.\n" + "Placeholders: <player>, <credits>, <skill>, <cap>, PAPI")
         private String menu_redeem_prompt = "<gray>How many credits would you like to redeem into <green><skill>? You have <credits> Credits available.";
-        @Comment("Sender prompt for /credits menu settings/messages.\n" + "Placeholders: <player>, <credits>, <option>, <current_value>")
+        @Comment("Sender prompt for /credits menu settings/messages.\n" + "Placeholders: <player>, <credits>, <option>, <current_value>, PAPI")
         private String menu_editing_prompt = "<red>Enter the new value for <gray><option>:";
-        //TODO add cancellation message for prompts.
-        //TODO Add success messages for prompts.
     }
 
     @ConfigSerializable
