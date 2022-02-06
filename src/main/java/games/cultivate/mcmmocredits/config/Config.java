@@ -16,21 +16,21 @@ public class Config<T> {
     public static final Config<MessagesConfig> MESSAGES = new Config<>(MessagesConfig.class);
     public static final Config<MenuConfig> MENU = new Config<>(MenuConfig.class);
 
-    private final Class<T> TYPE;
+    private final Class<T> type;
     private T config;
     private CommentedConfigurationNode root;
     private String title;
     private HoconConfigurationLoader loader;
 
     public Config (Class<T> type) {
-        this.TYPE = type;
+        this.type = type;
     }
 
     public void load(String title) {
         try {
             this.title = title;
             this.root = this.configLoader().load();
-            this.config = this.root.get(this.TYPE);
+            this.config = this.root.get(this.type);
             this.configLoader().save(this.root);
         } catch (Exception e) {
             e.printStackTrace();
@@ -62,18 +62,9 @@ public class Config<T> {
         }
         return null;
     }
-
-    public <K> K key(Keys key) {
-        try {
-            return key.config().root().node(key.node()).get((Class<K>) key.type());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
     
     public Class<?> type() {
-        return TYPE;
+        return type;
     }
 
     private HoconConfigurationLoader createLoader() {

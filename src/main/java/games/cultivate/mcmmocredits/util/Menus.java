@@ -19,13 +19,17 @@ import org.incendo.interfaces.core.click.ClickHandler;
 import org.incendo.interfaces.core.util.Vector2;
 import org.incendo.interfaces.paper.PlayerViewer;
 import org.incendo.interfaces.paper.element.ItemStackElement;
+import org.incendo.interfaces.paper.pane.ChestPane;
+import org.incendo.interfaces.paper.transform.PaperTransform;
 import org.incendo.interfaces.paper.type.ChestInterface;
 import org.incendo.interfaces.paper.utils.PaperUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -34,14 +38,9 @@ public class Menus {
 
     public static ChestInterface.Builder constructInterface(Player player, String title, int slots) {
         ChestInterface.Builder cb = ChestInterface.builder().title(MiniMessage.miniMessage().deserialize(PlaceholderAPI.setPlaceholders(player, title), Util.basicBuilder(player).build())).rows(slots / 9).clickHandler(ClickHandler.cancel()).updates(true, 10);
+        ItemStackElement<ChestPane> ise = ItemStackElement.of(Keys.MENU_FILL_ITEM.getItemStack(player));
         if (Keys.MENU_FILL.get()) {
-            for (int x = 0; x < 9; x++) {
-                for (int y = 0; y < cb.rows(); y++) {
-                    int posX = x;
-                    int posY = y;
-                    cb = cb.addTransform(0, (pane, view) -> pane.element(ItemStackElement.of(Keys.MENU_FILL_ITEM.getItemStack(player)), posX, posY));
-                }
-            }
+            cb = cb.addTransform(0, PaperTransform.chestFill(ise));
         }
         return cb;
     }
@@ -59,7 +58,7 @@ public class Menus {
     public static ChestInterface constructConfigInterface(Player player, List<Keys> keyList, String title, int slots) {
         ChestInterface.Builder cb = constructInterface(player, title, slots);
         Config<?> configuration = keyList.get(0).config();
-        for (Map.Entry<ItemStack, Vector2> item : prepareConfigItems(keyList).entrySet()) {
+        for (Map.Entry<ItemStack, Vector2> item : prepareConfigItems(keyList, player).entrySet()) {
             cb = cb.addTransform(1, (pane, view) -> pane.element(ItemStackElement.of(item.getKey(), (clickHandler) -> {
                 if (clickHandler.click().leftClick()) {
                     view.viewer().close();
@@ -87,8 +86,18 @@ public class Menus {
                 }
             }), item.getValue().x(), item.getValue().y()));
         }
+        return addNavigation(player, cb);
+    }
+
+    @NotNull
+    private static ChestInterface addNavigation(Player player, ChestInterface.Builder cb) {
         if (Keys.MENU_NAVIGATION.get()) {
-            cb = transferLeftClick(cb, constructMainMenu(player, Keys.MENU_TITLE.get(), Keys.MENU_SIZE.get()), prepareItem(Keys.MENU_NAVIGATION.getItemStack(player)));
+            Pair<ItemStack, Vector2> pair = prepareItem(Keys.MENU_NAVIGATION_ITEM.getItemStack(player));
+            cb = cb.addTransform(1, (pane, view) -> pane.element(ItemStackElement.of(pair.left(), (clickHandler) -> {
+                if (clickHandler.click().leftClick()) {
+                   player.performCommand("credits menu");
+                }
+            }), pair.right().x(), pair.right().y()));
         }
         return cb.build();
     }
@@ -111,31 +120,33 @@ public class Menus {
                         Util.sendMessage(player, Keys.CREDITS_MENU_REDEEM_PROMPT.get(), Util.redeemPromptResolver(player, WordUtils.capitalizeFully(skill.name()), mcMMO.p.getSkillTools().getLevelCap(skill)));
                         inputMap.put(uuid, new CompletableFuture<>());
                         Menus.inputMap.get(uuid).thenAcceptAsync((i) -> {
-                            Redeem.creditRedemption(player, uuid, skill, Integer.parseInt(i));
-                            Util.sendMessage(player, Keys.REDEEM_SUCCESSFUL_SELF.get(), Util.redeemBuilder(Pair.of(null, player), WordUtils.capitalizeFully(skill.name()), mcMMO.p.getSkillTools().getLevelCap(skill), Integer.parseInt(i)).build());
+                            int number = Integer.parseInt(i);
+                            if (Redeem.creditRedemption(player, uuid, skill, number)) {
+                                Util.sendMessage(player, Keys.REDEEM_SUCCESSFUL_SELF.get(), Util.redeemBuilder(Pair.of(null, player), WordUtils.capitalizeFully(skill.name()), mcMMO.p.getSkillTools().getLevelCap(skill), number).build());
+                            }
                         }).whenCompleteAsync((i, throwable) -> Menus.inputMap.remove(uuid));
                     }
                 }
             }), item.getValue().x(), item.getValue().y()));
         }
-        if (Keys.MENU_NAVIGATION.get()) {
-            cb = transferLeftClick(cb, constructMainMenu(player, Keys.MENU_TITLE.get(), Keys.MENU_SIZE.get()), prepareItem(Keys.MENU_NAVIGATION_ITEM.getItemStack(player)));
-        }
-        return cb.build();
+        return addNavigation(player, cb);
     }
 
-    protected static Map<ItemStack, Vector2> prepareConfigItems(List<Keys> configType) {
+    protected static Map<ItemStack, Vector2> prepareConfigItems(List<Keys> configType, Player player) {
         Map<ItemStack, Vector2> configItems = new HashMap<>();
-        ItemStack base = configType.get(0).config().equals(Config.MESSAGES) ? Keys.EDIT_MESSAGES_ITEM.partialItemStack() : Keys.EDIT_SETTINGS_ITEM.partialItemStack();
         int slot = 0;
         for (Keys key : configType) {
+            ItemStack base = configType.get(0).config().equals(Config.MESSAGES) ? Keys.EDIT_MESSAGES_ITEM.getItemStack(player) : Keys.EDIT_SETTINGS_ITEM.getItemStack(player);
             base.setAmount(slot + 1);
             base.editMeta(meta -> {
                 String path = StringUtils.join(key.path(), ".");
                 meta.displayName(Component.text(key.path().get(key.path().size() - 1), Util.DEFAULT_STYLE));
                 meta.getPersistentDataContainer().set(MCMMOCredits.key, PersistentDataType.STRING, path);
+                if (meta.hasLore()) {
+                    meta.lore(Objects.requireNonNull(meta.lore()).stream().map(i -> Util.parse(i, player)).toList());
+                }
             });
-            configItems.put(base.clone(), PaperUtils.slotToGrid(slot));
+            configItems.put(base, PaperUtils.slotToGrid(slot));
             slot++;
         }
         return configItems;
