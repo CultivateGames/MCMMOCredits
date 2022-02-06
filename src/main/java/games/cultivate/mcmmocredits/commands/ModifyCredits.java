@@ -8,7 +8,6 @@ import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.specifier.Range;
 import cloud.commandframework.exceptions.CommandExecutionException;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.util.Util;
 import it.unimi.dsi.fastutil.Pair;
@@ -54,13 +53,13 @@ public class ModifyCredits {
             Pair<CommandSender, Player> transactionPair = Pair.of(sender, Bukkit.getPlayer(uuid));
             Keys senderKey = Keys.valueOf("MODIFY_CREDITS_" + op.name() + "_SENDER");
             Keys receiverKey = Keys.valueOf("MODIFY_CREDITS_" + op.name() + "_RECEIVER");
-            ConfigHandler.sendMessage(sender, senderKey, Util.transactionBuilder(transactionPair, amount).build());
+            Util.sendMessage(sender, senderKey.get(), Util.transactionBuilder(transactionPair, amount).build());
             if (sender != transactionPair.right() && !silent) {
-                ConfigHandler.sendMessage(transactionPair.right(), receiverKey, Util.transactionBuilder(transactionPair, amount).build());
+                Util.sendMessage(transactionPair.right(), receiverKey.get(), Util.transactionBuilder(transactionPair, amount).build());
             }
         } else {
             //TODO Async is swallowing the exception.
-            sender.sendMessage(ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS));
+            sender.sendMessage(Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get()));
             throw new CommandExecutionException(throwable);
         }
     }

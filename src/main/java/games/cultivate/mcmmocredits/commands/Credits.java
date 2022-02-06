@@ -5,13 +5,11 @@ import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.parsers.Parser;
-import cloud.commandframework.annotations.specifier.Greedy;
 import cloud.commandframework.annotations.suggestions.Suggestions;
 import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.exceptions.CommandExecutionException;
-import cloud.commandframework.minecraft.extras.MinecraftHelp;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.ConfigHandler;
+import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.util.Menus;
 import games.cultivate.mcmmocredits.util.Util;
@@ -28,17 +26,12 @@ import java.util.Queue;
  */
 @CommandMethod("credits")
 public class Credits {
-    private final MinecraftHelp<CommandSender> minecraftHelp;
-
-    public Credits(MinecraftHelp<CommandSender> minecraftHelp) {
-        this.minecraftHelp = minecraftHelp;
-    }
 
     @CommandDescription("Check your own MCMMO Credit balance.")
     @CommandMethod("")
     @CommandPermission("mcmmocredits.check.self")
     private void checkCredits(Player player) {
-        ConfigHandler.sendMessage(player, Keys.CREDITS_BALANCE_SELF, Util.basicBuilder(player).build());
+        Util.sendMessage(player, Keys.CREDITS_BALANCE_SELF.get(), Util.basicBuilder(player).build());
     }
 
     @CommandDescription("Check someone else's MCMMO Credit balance.")
@@ -47,10 +40,10 @@ public class Credits {
     private void checkCreditsOther(CommandSender sender, @Argument(value = "username", suggestions = "customPlayer") String username) {
         MCMMOCredits.getAdapter().getUUID(username).whenCompleteAsync((i, throwable) -> {
             if (MCMMOCredits.getAdapter().doesPlayerExist(i)) {
-                ConfigHandler.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER, Util.basicBuilder(Objects.requireNonNull(Bukkit.getPlayer(i))).build());
+                Util.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER.get(), Util.basicBuilder(Objects.requireNonNull(Bukkit.getPlayer(i))).build());
             } else {
                 //TODO Async is swallowing the exception.
-                sender.sendMessage(ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS));
+                sender.sendMessage(Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get()));
                 throw new CommandExecutionException(throwable);
             }
         });
@@ -60,19 +53,10 @@ public class Credits {
     @CommandMethod("reload")
     @CommandPermission("mcmmocredits.admin.reload")
     private void reloadCredits(CommandSender sender) {
-        ConfigHandler.instance().loadConfig();
-        ConfigHandler.sendMessage(sender, Keys.CREDITS_RELOAD_SUCCESSFUL, Util.quickResolver(sender));
-    }
-
-    @CommandDescription("Change settings in game and have changes take effect immediately.")
-    @CommandMethod("settings <settings> <change>")
-    @CommandPermission("mcmmocredits.admin.settings")
-    private void changeSettings(CommandSender sender, @Argument("settings") String setting, @Argument("change") @Greedy String change) {
-        if (ConfigHandler.changeConfigInGame(Util.getPathFromSuffix(setting), change)) {
-            ConfigHandler.sendMessage(sender, Keys.CREDITS_SETTING_CHANGE_SUCCESSFUL, Util.settingsBuilder(sender, setting, change).build());
-        } else {
-            ConfigHandler.sendMessage(sender, Keys.CREDITS_SETTING_CHANGE_FAILURE, Util.quickResolver(sender));
-        }
+        Config.MENU.load("menus.conf");
+        Config.MESSAGES.load("messages.conf");
+        Config.SETTINGS.load("settings.conf");
+        Util.sendMessage(sender, Keys.CREDITS_RELOAD_SUCCESSFUL.get(), Util.quickResolver(sender));
     }
 
     @CommandDescription("Open a Menu that can be used to interface with this plugin.")
@@ -103,16 +87,9 @@ public class Credits {
         Menus.openRedeemMenu(player);
     }
 
-    //TODO test
-    @CommandDescription("Help Command")
-    @CommandMethod("help [query]")
-    private void helpCommand(CommandSender sender, @Argument("query") @Greedy String query) {
-        this.minecraftHelp.queryCommands(query == null ? "" : query, sender);
-    }
-
     @Suggestions("settings")
     public List<String> settingSelection(CommandContext<CommandSender> sender, String input) {
-        return Keys.all.stream().filter(Keys::canChange).map(key -> key.path()[key.path().length - 1]).toList();
+        return Keys.CAN_CHANGE.stream().map(key -> key.path().get(key.path().size() - 1)).toList();
     }
 
     @Parser(suggestions = "settings")

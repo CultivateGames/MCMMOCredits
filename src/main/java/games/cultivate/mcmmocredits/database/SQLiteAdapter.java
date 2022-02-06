@@ -17,7 +17,7 @@ public class SQLiteAdapter extends DatabaseAdapter {
 
     public SQLiteAdapter(MCMMOCredits plugin) {
         SQLiteAdapter.plugin = plugin;
-        this.url = "jdbc:sqlite:" + plugin.getDataFolder().getAbsolutePath() + "\\database.db";
+        this.url = "jdbc:sqlite:" + MCMMOCredits.path + "database.db";
         Connection connection = this.getConnection();
         PreparedStatement ps;
         try {
@@ -38,20 +38,6 @@ public class SQLiteAdapter extends DatabaseAdapter {
             e.printStackTrace();
         }
         return conn;
-    }
-
-    @Override
-    public void enableAdapter() {
-        this.url = "jdbc:sqlite:" + plugin.getDataFolder().getAbsolutePath() + "\\database.db";
-        Connection connection = this.getConnection();
-        PreparedStatement ps;
-        try {
-            ps = connection.prepareStatement("CREATE TABLE IF NOT EXISTS mcmmoCredits(id INTEGER PRIMARY KEY AUTOINCREMENT, uuid VARCHAR NOT NULL, last_known_name VARCHAR NOT NULL, credits INT);");
-            ps.execute();
-            connection.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @Override

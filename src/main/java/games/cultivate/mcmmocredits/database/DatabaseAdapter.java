@@ -9,8 +9,6 @@ public abstract class DatabaseAdapter {
 
     protected abstract Connection getConnection();
 
-    public abstract void enableAdapter();
-
     public abstract void disableAdapter();
 
     public abstract void addPlayer(UUID uuid, String username, int credits);

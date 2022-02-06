@@ -14,7 +14,6 @@ import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.util.player.UserManager;
 import com.gmail.nossr50.util.skills.SkillTools;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.ConfigHandler;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.util.Util;
 import it.unimi.dsi.fastutil.Pair;
@@ -40,7 +39,7 @@ public class Redeem {
     @CommandPermission("mcmmocredits.redeem.self")
     private void redeemCreditsSelf(Player player, @Argument("skill") PrimarySkillType skill, @Argument("amount") @Range(min = "1", max = "2147483647") int amount) {
         if (creditRedemption(player, player.getUniqueId(), skill, amount)) {
-            ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_SELF, Util.redeemBuilder(Pair.of(null, player), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build());
+            Util.sendMessage(player, Keys.REDEEM_SUCCESSFUL_SELF.get(), Util.redeemBuilder(Pair.of(null, player), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build());
         }
     }
 
@@ -52,9 +51,9 @@ public class Redeem {
             if (creditRedemption(sender, i, skill, amount)) {
                 Player player = Objects.requireNonNull(Bukkit.getPlayer(i));
                 PlaceholderResolver successfulResolver = Util.redeemBuilder(Pair.of(sender, player), WordUtils.capitalizeFully(skill.name()), st.getLevelCap(skill), amount).build();
-                ConfigHandler.sendMessage(sender, Keys.REDEEM_SUCCESSFUL_SENDER, successfulResolver);
+                Util.sendMessage(sender, Keys.REDEEM_SUCCESSFUL_SENDER.get(), successfulResolver);
                 if (!silent) {
-                    ConfigHandler.sendMessage(player, Keys.REDEEM_SUCCESSFUL_RECEIVER, successfulResolver);
+                    Util.sendMessage(player, Keys.REDEEM_SUCCESSFUL_RECEIVER.get(), successfulResolver);
                 }
             }
         });
@@ -77,7 +76,7 @@ public class Redeem {
         }
         Player player = Bukkit.getPlayer(uuid);
         if (key != null) {
-            ConfigHandler.sendMessage(sender, key, key.equals(Keys.PLAYER_DOES_NOT_EXIST) ? null : Util.basicBuilder(Objects.requireNonNull(player)).build());
+            Util.sendMessage(sender, key.get(), key.equals(Keys.PLAYER_DOES_NOT_EXIST) ? null : Util.basicBuilder(Objects.requireNonNull(player)).build());
             return false;
         } else {
             PlayerProfile profile = Objects.requireNonNull(player).isOnline() ? UserManager.getPlayer(player).getProfile() : mcMMO.getDatabaseManager().loadPlayerProfile(uuid);

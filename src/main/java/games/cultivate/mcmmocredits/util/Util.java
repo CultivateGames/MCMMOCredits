@@ -1,9 +1,11 @@
 package games.cultivate.mcmmocredits.util;
 
 import games.cultivate.mcmmocredits.MCMMOCredits;
+import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.Keys;
 import it.unimi.dsi.fastutil.Pair;
 import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -14,6 +16,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.configurate.CommentedConfigurationNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,23 +26,33 @@ import java.util.regex.Pattern;
  * This class is responsible for holding various methods which need to be accessible and have no sensible location elsewhere.
  */
 public class Util {
-    public static final Style defaultStyle = Style.style().decoration(TextDecoration.ITALIC, false).build();
+    public static final Style DEFAULT_STYLE = Style.style().decoration(TextDecoration.ITALIC, false).build();
+
+    /**
+     * This is responsible for actually sending the message to a user. All messages sent out are prepended with a prefix.
+     */
+    public static void sendMessage(Audience audience, String string, @Nullable PlaceholderResolver resolver) {
+        String send = Keys.PREFIX.get() + string;
+        if (resolver == null) {
+            audience.sendMessage(MiniMessage.miniMessage().deserialize(send));
+            return;
+        }
+        if (audience instanceof Player player) {
+            audience.sendMessage(MiniMessage.miniMessage().deserialize(PlaceholderAPI.setPlaceholders(player, send), resolver));
+        } else {
+            audience.sendMessage(MiniMessage.miniMessage().deserialize(send, resolver));
+        }
+    }
+
+    public static Component exceptionMessage(CommandSender sender, String string, Placeholder<?>... placeholderList) {
+        PlaceholderResolver pr = placeholderList.length != 0 && sender instanceof Player player ? Util.basicBuilder(player).placeholders(placeholderList).build() : PlaceholderResolver.placeholders(Util.createPlaceholder("sender", sender.getName()));
+        return MiniMessage.miniMessage().deserialize(Keys.PREFIX.get() + string, pr);
+    }
 
     public static Component parse(Component comp, Player player) {
         Pattern pattern = PlaceholderAPI.getPlaceholderPattern();
         comp = comp.replaceText(i -> i.match(pattern).replacement((matchResult, builder) -> Component.text(PlaceholderAPI.setPlaceholders(player, matchResult.group()))));
-        return Component.empty().style(defaultStyle).append(MiniMessage.miniMessage().deserialize(MiniMessage.miniMessage().serialize(comp), Util.basicBuilder(player).build()));
-    }
-
-    private static final String[] EMPTY_ARRAY = new String[0];
-
-    public static String[] getPathFromSuffix(String suffix) {
-        for (Keys key : Keys.all) {
-            if (key.path()[key.path().length - 1].endsWith(suffix)) {
-                return key.path();
-            }
-        }
-        return EMPTY_ARRAY;
+        return Component.empty().style(DEFAULT_STYLE).append(MiniMessage.miniMessage().deserialize(MiniMessage.miniMessage().serialize(comp), Util.basicBuilder(player).build()));
     }
 
     /**
@@ -97,5 +110,30 @@ public class Util {
 
     public static Placeholder<?> createPlaceholder(String... s) {
         return Placeholder.miniMessage(s[0], s[1]);
+    }
+
+    public static boolean changeConfigInGame(Config<?> config, List<String> path, String change) {
+        boolean canProceed = false;
+        Keys compare = null;
+        if (change == null || change.equalsIgnoreCase("cancel")) {
+            return false;
+        }
+        for (Keys key : Keys.CAN_CHANGE) {
+            if (key.path().equals(path)) {
+                canProceed = true;
+                compare = key;
+                break;
+            }
+        }
+        if (!canProceed)  return false;
+        CommentedConfigurationNode root = config.root();
+        try {
+            root.node(compare.path()).set(String.class, change);
+            config.save(root);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
