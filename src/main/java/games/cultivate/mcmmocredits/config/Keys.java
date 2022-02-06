@@ -18,7 +18,7 @@ public enum Keys {
     DATABASE_NAME(Config.SETTINGS, String.class, "database","mysql-credentials", "name"),
     DATABASE_USERNAME(Config.SETTINGS, String.class, "database", "mysql-credentials", "username"),
     DATABASE_PASSWORD(Config.SETTINGS, String.class, "database", "mysql-credentials", "password"),
-    DATABASE_USE_SSL(Config.SETTINGS, Boolean.class, "database", "mysql-credentials", "ssl"),
+    DATABASE_SSL(Config.SETTINGS, Boolean.class, "database", "mysql-credentials", "ssl"),
 
     ADD_NOTIFICATION(Config.SETTINGS, Boolean.class, "general", "add-notification"),
     PLAYER_TAB_COMPLETION(Config.SETTINGS, Boolean.class, "general", "player-tab-completion"),
@@ -93,9 +93,9 @@ public enum Keys {
     UNARMED_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "unarmed"),
     WOODCUTTING_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "woodcutting");
 
-    private final Config<?> CONFIG;
-    private final Class<?> TYPE;
-    private final List<String> PATH;
+    private final Config<?> config;
+    private final Class<?> type;
+    private final List<String> path;
 
     /**
      * An Enum Set that contains all Keys.
@@ -119,42 +119,38 @@ public enum Keys {
     public static final List<Keys> MENU_KEYS = ALL.stream().filter(key -> key.config().equals(Config.MENU)).toList();
 
     Keys (Config<?> config, Class<?> type, String... path) {
-        this.CONFIG = config;
-        this.TYPE = type;
-        this.PATH = Arrays.asList(path);
+        this.config = config;
+        this.type = type;
+        this.path = Arrays.asList(path);
     }
 
     public boolean canChange() {
         String name = this.name();
-        return !name.contains("DATABASE") && !name.contains("ITEM");
+        return !name.startsWith("DATABASE_") && !name.endsWith("_ITEM");
     }
 
     public ItemStack getItemStack(Player player) {
         return ItemStackSerializer.INSTANCE.deserializePlayer(node(), player);
     }
 
-    public ItemStack partialItemStack() {
-        return ItemStackSerializer.INSTANCE.deserializeConfig(node());
-    }
-
     public CommentedConfigurationNode node() {
-        return CONFIG.root().node(PATH);
+        return config.root().node(path);
     }
 
     public List<String> path() {
-        return PATH;
+        return path;
     }
 
     public Config<?> config() {
-        return CONFIG;
+        return config;
     }
 
     public Class<?> type() {
-        return TYPE;
+        return type;
     }
 
     @SuppressWarnings("unchecked")
     public <T> T get() {
-        return (T) CONFIG.get(TYPE, PATH);
+        return (T) config.get(type, path);
     }
 }

@@ -29,7 +29,6 @@ repositories {
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     //mcMMO
     maven("https://nexus.neetgames.com/repository/maven-releases/")
-    maven("https://maven.enginehub.org/repo/")
     //Interfaces
     maven("https://repo.incendo.org/content/repositories/snapshots/")
     //SkinCreator
@@ -58,7 +57,8 @@ dependencies {
     compileOnly("me.clip:placeholderapi:2.10.10")
     //mcMMO
     compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.209") {
-        exclude(module = "worldguard-legacy")
+        exclude(group = "com.sk89q.worldguard")
+        exclude(group = "com.sk89q.worldedit")
     }
 }
 

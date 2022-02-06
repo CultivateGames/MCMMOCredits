@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class MySQLAdapter extends DatabaseAdapter {
+    @SuppressWarnings("unused")
     private static MCMMOCredits plugin;
 
     public MySQLAdapter(MCMMOCredits plugin) {
@@ -20,23 +21,15 @@ public class MySQLAdapter extends DatabaseAdapter {
     }
 
     @Override
-    public void enableAdapter() {
-
-    }
-
-    @Override
     public void disableAdapter() {
-
     }
 
     @Override
     public void addPlayer(UUID uuid, String username, int credits) {
-
     }
 
     @Override
     public void setUsername(UUID uuid, String username) {
-
     }
 
     @Override

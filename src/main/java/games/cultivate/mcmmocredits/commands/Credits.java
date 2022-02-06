@@ -4,22 +4,15 @@ import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
-import cloud.commandframework.annotations.parsers.Parser;
-import cloud.commandframework.annotations.suggestions.Suggestions;
-import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.exceptions.CommandExecutionException;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.util.Menus;
 import games.cultivate.mcmmocredits.util.Util;
-import org.bukkit.Bukkit;
+import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.Queue;
 
 /**
  * This class is responsible for handling of the /credits command.
@@ -40,7 +33,8 @@ public class Credits {
     private void checkCreditsOther(CommandSender sender, @Argument(value = "username", suggestions = "customPlayer") String username) {
         MCMMOCredits.getAdapter().getUUID(username).whenCompleteAsync((i, throwable) -> {
             if (MCMMOCredits.getAdapter().doesPlayerExist(i)) {
-                Util.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER.get(), Util.basicBuilder(Objects.requireNonNull(Bukkit.getPlayer(i))).build());
+                PlaceholderResolver pr = PlaceholderResolver.placeholders(Util.createPlaceholders("player", username, "credits", MCMMOCredits.getAdapter().getCredits(i) + ""));
+                Util.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER.get(), pr);
             } else {
                 //TODO Async is swallowing the exception.
                 sender.sendMessage(Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get()));
@@ -85,17 +79,5 @@ public class Credits {
     @CommandPermission("mcmmocredits.gui.redeem")
     private void openRedeemMenu(Player player) {
         Menus.openRedeemMenu(player);
-    }
-
-    @Suggestions("settings")
-    public List<String> settingSelection(CommandContext<CommandSender> sender, String input) {
-        return Keys.CAN_CHANGE.stream().map(key -> key.path().get(key.path().size() - 1)).toList();
-    }
-
-    @Parser(suggestions = "settings")
-    public String settingParser(CommandContext<CommandSender> sender, Queue<String> inputQueue) {
-        final String input = inputQueue.peek();
-        inputQueue.poll();
-        return input;
     }
 }
