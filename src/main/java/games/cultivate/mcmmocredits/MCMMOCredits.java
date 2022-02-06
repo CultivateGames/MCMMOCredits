@@ -9,12 +9,11 @@ import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.minecraft.extras.AudienceProvider;
 import cloud.commandframework.minecraft.extras.MinecraftExceptionHandler;
-import cloud.commandframework.minecraft.extras.MinecraftHelp;
 import cloud.commandframework.paper.PaperCommandManager;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.ModifyCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
-import games.cultivate.mcmmocredits.config.ConfigHandler;
+import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.DatabaseAdapter;
 import games.cultivate.mcmmocredits.database.MySQLAdapter;
@@ -30,7 +29,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.interfaces.paper.PaperInterfaceListeners;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Level;
 
@@ -39,6 +37,7 @@ import java.util.logging.Level;
  */
 public class MCMMOCredits extends JavaPlugin {
     public static NamespacedKey key;
+    public static String path;
     private static DatabaseAdapter adapter;
 
     /**
@@ -51,14 +50,15 @@ public class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onEnable() {
-        key = Objects.requireNonNull(NamespacedKey.fromString("mcmmocredits"));
-        new ConfigHandler(this);
-
+        key = NamespacedKey.fromString("mcmmocredits");
+        path = this.getDataFolder().getAbsolutePath() + "\\";
+        this.dependCheck();
+        Config.MESSAGES.load("messages.conf");
+        Config.SETTINGS.load("settings.conf");
+        Config.MENU.load("menus.conf");
         this.loadDatabase();
         this.loadCommands();
-
         PaperInterfaceListeners.install(this);
-        this.dependCheck();
         Bukkit.getPluginManager().registerEvents(new Listeners(), this);
     }
 
@@ -69,7 +69,9 @@ public class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        ConfigHandler.instance().saveConfig(ConfigHandler.instance().root());
+        Config.MENU.save(Config.MENU.root());
+        Config.MESSAGES.save(Config.MESSAGES.root());
+        Config.SETTINGS.save(Config.SETTINGS.root());
         getAdapter().disableAdapter();
     }
 
@@ -109,27 +111,52 @@ public class MCMMOCredits extends JavaPlugin {
         if (commandManager.queryCapability(CloudBukkitCapabilities.ASYNCHRONOUS_COMPLETION)) {
             commandManager.registerAsynchronousCompletions();
         }
-        commandManager.getParserRegistry().registerSuggestionProvider("customPlayer", (context, input) -> Keys.PLAYER_TAB_COMPLETION.getBoolean() ? Bukkit.getOnlinePlayers().stream().map(Player::getName).toList() : List.of());
+        commandManager.getParserRegistry().registerSuggestionProvider("customPlayer", (context, input) -> Keys.PLAYER_TAB_COMPLETION.get() ? Bukkit.getOnlinePlayers().stream().map(Player::getName).toList() : List.of());
 
         AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(commandManager, CommandSender.class, parameters -> SimpleCommandMeta.empty());
-        MinecraftHelp<CommandSender> minecraftHelp = new MinecraftHelp<>("/credits help", AudienceProvider.nativeAudience(), commandManager);
         annotationParser.parse(new ModifyCredits());
-        annotationParser.parse(new Credits(minecraftHelp));
+        annotationParser.parse(new Credits());
         annotationParser.parse(new Redeem());
 
         //TODO caption registry
         new MinecraftExceptionHandler<CommandSender>()
                 .withDefaultHandlers()
-                .withHandler(MinecraftExceptionHandler.ExceptionType.NO_PERMISSION, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.NO_PERMS, Util.createPlaceholder("required_permission", ((NoPermissionException) ex).getMissingPermission())))
-                .withHandler(MinecraftExceptionHandler.ExceptionType.ARGUMENT_PARSING, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS))
-                .withHandler(MinecraftExceptionHandler.ExceptionType.COMMAND_EXECUTION, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.COMMAND_ERROR))
-                .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SYNTAX, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS, Util.createPlaceholder("correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax())))
-                .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SENDER, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS, Util.createPlaceholder("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName())))
+                .withHandler(MinecraftExceptionHandler.ExceptionType.NO_PERMISSION, (sender, ex) -> {
+                    if (Keys.SETTINGS_DEBUG.get()) {
+                        ex.printStackTrace();
+                    }
+                    return Util.exceptionMessage(sender, Keys.NO_PERMS.get(), Util.createPlaceholder("required_permission", ((NoPermissionException) ex).getMissingPermission()));
+                })
+                .withHandler(MinecraftExceptionHandler.ExceptionType.ARGUMENT_PARSING, (sender, ex) -> {
+                    if (Keys.SETTINGS_DEBUG.get()) {
+                        ex.printStackTrace();
+                    }
+                    return Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get());
+                })
+                .withHandler(MinecraftExceptionHandler.ExceptionType.COMMAND_EXECUTION, (sender, ex) -> {
+                    if (Keys.SETTINGS_DEBUG.get()) {
+                        ex.printStackTrace();
+                    }
+                    return Util.exceptionMessage(sender, Keys.COMMAND_ERROR.get());
+                })
+                .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SYNTAX, (sender, ex) -> {
+                    if (Keys.SETTINGS_DEBUG.get()) {
+                        ex.printStackTrace();
+                    }
+                    return Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get(), Util.createPlaceholder("correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax()));
+                })
+                .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SENDER, (sender, ex) -> {
+                    if (Keys.SETTINGS_DEBUG.get()) {
+                        ex.printStackTrace();
+                    }
+                    return Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get(), Util.createPlaceholder("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName()));
+                })
                 .apply(commandManager, AudienceProvider.nativeAudience());
     }
 
     private void loadDatabase() {
-        switch (Keys.DATABASE_ADAPTER.getString().toLowerCase()) {
+        String str = Keys.DATABASE_ADAPTER.get();
+        switch (str.toLowerCase()) {
             case "sqlite" -> this.setAdapter(new SQLiteAdapter(this));
             case "mysql" -> this.setAdapter(new MySQLAdapter(this));
             default -> {

@@ -26,8 +26,8 @@ import java.util.Objects;
 public class ItemStackSerializer implements TypeSerializer<ItemStack> {
     public static final ItemStackSerializer INSTANCE = new ItemStackSerializer();
 
-    public ItemStack deserializePlayer(Type type, ConfigurationNode node, Player player) {
-        ItemStack item = this.deserialize(type, node);
+    public ItemStack deserializePlayer(ConfigurationNode node, Player player) {
+        ItemStack item = this.deserialize(ItemStack.class, node);
         item.editMeta(meta -> {
             meta.displayName(Util.parse(Objects.requireNonNull(meta.displayName()), player));
             meta.lore(Objects.requireNonNull(meta.lore()).stream().map(i -> Util.parse(i, player)).toList());
@@ -40,7 +40,7 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
         item.setDurability((short) node.node("durability").getInt());
         item.editMeta(meta -> {
             try {
-                meta.lore(node.node("lore").getList(String.class, List.of()).stream().map(i -> Component.empty().style(Util.defaultStyle).append(MiniMessage.miniMessage().deserialize(i)).asComponent()).toList());
+                meta.lore(node.node("lore").getList(String.class, List.of()).stream().map(i -> Component.empty().style(Util.DEFAULT_STYLE).append(MiniMessage.miniMessage().deserialize(i)).asComponent()).toList());
                 if (node.node("glow").getBoolean()) {
                     meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
                     meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
