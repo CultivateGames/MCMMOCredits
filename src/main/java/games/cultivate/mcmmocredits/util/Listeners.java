@@ -1,8 +1,8 @@
 package games.cultivate.mcmmocredits.util;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
-import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.Keys;
+import games.cultivate.mcmmocredits.database.Database;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.placeholder.Placeholder;
@@ -21,16 +21,21 @@ import java.util.UUID;
  * This class is responsible for any necessary Event Listeners that we may need.
  */
 public class Listeners implements Listener {
+    private Database database;
 
+    public Listeners(Database database) {
+        this.database = database;
+    }
+    
     /**
      * Add users to MCMMO Credits database.
      * @param e Instance of AsyncPlayerPreLoginEvent
      */
     @EventHandler
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
-        if (!MCMMOCredits.getAdapter().doesPlayerExist(e.getPlayerProfile().getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
+        if (!this.database.doesPlayerExist(e.getPlayerProfile().getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
             PlayerProfile profile = e.getPlayerProfile();
-            MCMMOCredits.getAdapter().addPlayer(profile.getId(), profile.getName(), 0);
+            this.database.addPlayer(profile.getId(), profile.getName(), 0);
             if (Keys.ADD_NOTIFICATION.get()) {
                 Util.sendMessage(Bukkit.getConsoleSender(), Keys.ADD_PLAYER_MESSAGE.get(), PlaceholderResolver.placeholders(Placeholder.miniMessage("player", Objects.requireNonNull(profile.getName()))));
             }
@@ -43,7 +48,7 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
-        MCMMOCredits.getAdapter().setUsername(e.getPlayer().getUniqueId(), e.getPlayer().getName());
+        this.database.setUsername(e.getPlayer().getUniqueId(), e.getPlayer().getName());
         if (Keys.SEND_LOGIN_MESSAGE.get()) {
             Util.sendMessage(e.getPlayer(), Keys.LOGIN_MESSAGE.get(), Util.basicBuilder(e.getPlayer()).build());
         }

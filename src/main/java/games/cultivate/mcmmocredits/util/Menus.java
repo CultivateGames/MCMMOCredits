@@ -34,9 +34,10 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class Menus {
+    public static final Menus INSTANCE = new Menus();
     public static Map<UUID, CompletableFuture<String>> inputMap = new HashMap<>();
 
-    public static ChestInterface.Builder constructInterface(Player player, String title, int slots) {
+    protected ChestInterface.Builder constructInterface(Player player, String title, int slots) {
         ChestInterface.Builder cb = ChestInterface.builder().title(MiniMessage.miniMessage().deserialize(PlaceholderAPI.setPlaceholders(player, title), Util.basicBuilder(player).build())).rows(slots / 9).clickHandler(ClickHandler.cancel()).updates(true, 10);
         ItemStackElement<ChestPane> ise = ItemStackElement.of(Keys.MENU_FILL_ITEM.getItemStack(player));
         if (Keys.MENU_FILL.get()) {
@@ -45,7 +46,7 @@ public class Menus {
         return cb;
     }
 
-    public static ChestInterface constructMainMenu(Player player, String title, int slots) {
+    protected ChestInterface constructMainMenu(Player player, String title, int slots) {
         ChestInterface.Builder cb = constructInterface(player, title, slots);
         cb = transferLeftClick(cb, constructRedeemInterface(player), prepareItem(Keys.MENU_REDEEM_ITEM.getItemStack(player)));
         if (player.hasPermission("mcmmocredits.gui.admin")) {
@@ -55,7 +56,7 @@ public class Menus {
         return cb.build();
     }
 
-    public static ChestInterface constructConfigInterface(Player player, List<Keys> keyList, String title, int slots) {
+    protected ChestInterface constructConfigInterface(Player player, List<Keys> keyList, String title, int slots) {
         ChestInterface.Builder cb = constructInterface(player, title, slots);
         Config<?> configuration = keyList.get(0).config();
         for (Map.Entry<ItemStack, Vector2> item : prepareConfigItems(keyList, player).entrySet()) {
@@ -75,7 +76,7 @@ public class Menus {
                         inputMap.put(uuid, new CompletableFuture<>());
                         Menus.inputMap.get(uuid).thenAcceptAsync((i) -> {
                             String str;
-                            if(Util.changeConfigInGame(configuration, Arrays.asList(StringUtils.split(pathString, ".")), i)) {
+                            if (Util.changeConfigInGame(configuration, Arrays.asList(StringUtils.split(pathString, ".")), i)) {
                                 str = Keys.CREDITS_SETTING_CHANGE_SUCCESSFUL.get();
                             } else {
                                 str = Keys.CREDITS_SETTING_CHANGE_FAILURE.get();
@@ -90,7 +91,7 @@ public class Menus {
     }
 
     @NotNull
-    private static ChestInterface addNavigation(Player player, ChestInterface.Builder cb) {
+    protected ChestInterface addNavigation(Player player, ChestInterface.Builder cb) {
         if (Keys.MENU_NAVIGATION.get()) {
             Pair<ItemStack, Vector2> pair = prepareItem(Keys.MENU_NAVIGATION_ITEM.getItemStack(player));
             cb = cb.addTransform(1, (pane, view) -> pane.element(ItemStackElement.of(pair.left(), (clickHandler) -> {
@@ -102,7 +103,7 @@ public class Menus {
         return cb.build();
     }
 
-    public static ChestInterface constructRedeemInterface(Player player) {
+    protected ChestInterface constructRedeemInterface(Player player) {
         ChestInterface.Builder cb = constructInterface(player, Keys.REDEEM_TITLE.get(), Keys.REDEEM_SIZE.get());
         for (Map.Entry<ItemStack, Vector2> item : prepareRedeemItems(player).entrySet()) {
             cb = cb.addTransform(1, (pane, view) -> pane.element(ItemStackElement.of(item.getKey(), (clickHandler) -> {
@@ -132,7 +133,7 @@ public class Menus {
         return addNavigation(player, cb);
     }
 
-    protected static Map<ItemStack, Vector2> prepareConfigItems(List<Keys> configType, Player player) {
+    protected Map<ItemStack, Vector2> prepareConfigItems(List<Keys> configType, Player player) {
         Map<ItemStack, Vector2> configItems = new HashMap<>();
         int slot = 0;
         for (Keys key : configType) {
@@ -152,7 +153,7 @@ public class Menus {
         return configItems;
     }
 
-    protected static Map<ItemStack, Vector2> prepareRedeemItems(Player player) {
+    protected Map<ItemStack, Vector2> prepareRedeemItems(Player player) {
         Map<ItemStack, Vector2> redeemItems = new HashMap<>();
         for (Keys key : Keys.MENU_KEYS) {
             List<String> keyPath = key.path();
@@ -165,7 +166,7 @@ public class Menus {
         return redeemItems;
     }
 
-    protected static ChestInterface.Builder transferLeftClick(ChestInterface.Builder cb, ChestInterface transfer, Pair<ItemStack, Vector2> pair) {
+    protected ChestInterface.Builder transferLeftClick(ChestInterface.Builder cb, ChestInterface transfer, Pair<ItemStack, Vector2> pair) {
         return cb.addTransform(1, (pane, view) -> pane.element(ItemStackElement.of(pair.left(), (clickHandler) -> {
             if (clickHandler.click().leftClick()) {
                 transfer.open(view.viewer());
@@ -173,27 +174,27 @@ public class Menus {
         }), pair.right().x(), pair.right().y()));
     }
 
-    public static void openMainMenu(Player player) {
+    public void openMainMenu(Player player) {
         constructMainMenu(player, Keys.MENU_TITLE.get(), Keys.MENU_SIZE.get()).open(PlayerViewer.of(player));
     }
 
-    public static void openMessagesMenu(Player player) {
+    public void openMessagesMenu(Player player) {
         constructConfigInterface(player, Keys.MESSAGE_KEYS, Keys.EDIT_MESSAGES_TITLE.get(), Keys.EDIT_MESSAGES_SIZE.get()).open(PlayerViewer.of(player));
     }
 
-    public static void openSettingsMenu(Player player) {
+    public void openSettingsMenu(Player player) {
         constructConfigInterface(player, Keys.SETTING_KEYS, Keys.EDIT_SETTINGS_TITLE.get(), Keys.EDIT_SETTINGS_SIZE.get()).open(PlayerViewer.of(player));
     }
 
-    public static void openRedeemMenu(Player player) {
+    public void openRedeemMenu(Player player) {
         constructRedeemInterface(player).open(PlayerViewer.of(player));
     }
 
-    protected static Vector2 slotToGrid(ItemStack item) {
+    protected Vector2 slotToGrid(ItemStack item) {
         return PaperUtils.slotToGrid(item.getItemMeta().getPersistentDataContainer().getOrDefault(MCMMOCredits.key, PersistentDataType.INTEGER, 0));
     }
 
-    protected static Pair<ItemStack, Vector2> prepareItem(ItemStack item) {
+    protected Pair<ItemStack, Vector2> prepareItem(ItemStack item) {
         return Pair.of(item, slotToGrid(item));
     }
 }

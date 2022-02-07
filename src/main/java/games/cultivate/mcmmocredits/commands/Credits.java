@@ -4,10 +4,9 @@ import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
-import cloud.commandframework.exceptions.CommandExecutionException;
-import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.Keys;
+import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.Menus;
 import games.cultivate.mcmmocredits.util.Util;
 import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
@@ -19,7 +18,11 @@ import org.bukkit.entity.Player;
  */
 @CommandMethod("credits")
 public class Credits {
+    private Database database;
 
+    public Credits(Database database) {
+        this.database = database;
+    }
     @CommandDescription("Check your own MCMMO Credit balance.")
     @CommandMethod("")
     @CommandPermission("mcmmocredits.check.self")
@@ -31,14 +34,13 @@ public class Credits {
     @CommandMethod("<username>")
     @CommandPermission("mcmmocredits.check.other")
     private void checkCreditsOther(CommandSender sender, @Argument(value = "username", suggestions = "customPlayer") String username) {
-        MCMMOCredits.getAdapter().getUUID(username).whenCompleteAsync((i, throwable) -> {
-            if (MCMMOCredits.getAdapter().doesPlayerExist(i)) {
-                PlaceholderResolver pr = PlaceholderResolver.placeholders(Util.createPlaceholders("player", username, "credits", MCMMOCredits.getAdapter().getCredits(i) + ""));
+        this.database.getUUID(username).whenCompleteAsync((i, throwable) -> {
+            if (this.database.doesPlayerExist(i)) {
+                PlaceholderResolver pr = PlaceholderResolver.placeholders(Util.createPlaceholders("player", username, "credits", this.database.getCredits(i) + ""));
                 Util.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER.get(), pr);
             } else {
                 //TODO Async is swallowing the exception.
-                sender.sendMessage(Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get()));
-                throw new CommandExecutionException(throwable);
+                Util.sendMessage(sender, Keys.PLAYER_DOES_NOT_EXIST.get(), Util.quickResolver(sender));
             }
         });
     }
@@ -57,27 +59,27 @@ public class Credits {
     @CommandMethod("menu")
     @CommandPermission("mcmmocredits.gui.basic")
     private void openMenu(Player player) {
-        Menus.openMainMenu(player);
+        Menus.INSTANCE.openMainMenu(player);
     }
 
     @CommandDescription("Open the Edit Messages Menu")
     @CommandMethod("menu messages")
     @CommandPermission("mcmmocredits.gui.admin")
     private void openMessagesMenu(Player player) {
-        Menus.openMessagesMenu(player);
+        Menus.INSTANCE.openMessagesMenu(player);
     }
 
     @CommandDescription("Open the Edit Settings Menu")
     @CommandMethod("menu settings")
     @CommandPermission("mcmmocredits.gui.admin")
     private void openSettingsMenu(Player player) {
-        Menus.openSettingsMenu(player);
+        Menus.INSTANCE.openSettingsMenu(player);
     }
 
     @CommandDescription("Open the Edit Messages Menu")
     @CommandMethod("menu redeem")
     @CommandPermission("mcmmocredits.gui.redeem")
     private void openRedeemMenu(Player player) {
-        Menus.openRedeemMenu(player);
+        Menus.INSTANCE.openRedeemMenu(player);
     }
 }

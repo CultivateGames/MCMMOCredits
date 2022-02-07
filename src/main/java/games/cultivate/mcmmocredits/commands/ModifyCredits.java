@@ -7,8 +7,8 @@ import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.specifier.Range;
 import cloud.commandframework.exceptions.CommandExecutionException;
-import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.Keys;
+import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.Util;
 import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.Bukkit;
@@ -22,33 +22,39 @@ import java.util.UUID;
  */
 @CommandMethod("modifycredits")
 public class ModifyCredits {
+    private Database database;
+    
+    public ModifyCredits(Database database) {
+        this.database = database;
+    }
+
     @CommandDescription("Add MCMMO Credits to a user's balance.")
     @CommandMethod("add <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
     private void addCredits(CommandSender sender, @Argument("amount") @Range(min = "1") int amount, @Argument(value = "username", suggestions = "customPlayer") String username, @Flag("silent") boolean silent) {
-        MCMMOCredits.getAdapter().getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.ADD, throwable, silent));
+        this.database.getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.ADD, throwable, silent));
     }
 
     @CommandDescription("Set a user's MCMMO Credit balance to the specified amount.")
     @CommandMethod("set <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
     private void setCredits(CommandSender sender, @Argument("amount") @Range(min = "0") int amount, @Argument(value = "username", suggestions = "customPlayer") String username, @Flag("silent") boolean silent) {
-        MCMMOCredits.getAdapter().getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.SET, throwable, silent));
+        this.database.getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.SET, throwable, silent));
     }
 
     @CommandDescription("Take MCMMO Credits away from a user's balance")
     @CommandMethod("take <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
     private void takeCredits(CommandSender sender, @Argument("amount") @Range(min = "1") int amount, @Argument(value = "username", suggestions = "customPlayer") String username, @Flag("silent") boolean silent) {
-        MCMMOCredits.getAdapter().getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.TAKE, throwable, silent));
+        this.database.getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.TAKE, throwable, silent));
     }
 
     private void modifyCredits(CommandSender sender, int amount, UUID uuid, Operation op, Throwable throwable, boolean silent) {
-        if (MCMMOCredits.getAdapter().doesPlayerExist(uuid)) {
+        if (this.database.doesPlayerExist(uuid)) {
             switch (op) {
-                case ADD -> MCMMOCredits.getAdapter().addCredits(uuid, amount);
-                case TAKE -> MCMMOCredits.getAdapter().takeCredits(uuid, amount);
-                case SET -> MCMMOCredits.getAdapter().setCredits(uuid, amount);
+                case ADD -> this.database.addCredits(uuid, amount);
+                case TAKE -> this.database.takeCredits(uuid, amount);
+                case SET -> this.database.setCredits(uuid, amount);
             }
             Pair<CommandSender, Player> transactionPair = Pair.of(sender, Bukkit.getPlayer(uuid));
             Keys senderKey = Keys.valueOf("MODIFY_CREDITS_" + op.name() + "_SENDER");
