@@ -60,6 +60,8 @@ dependencies {
         exclude(group = "com.sk89q.worldguard")
         exclude(group = "com.sk89q.worldedit")
     }
+    //HikariCP
+    implementation("com.zaxxer:HikariCP:5.0.1")
 }
 
 /**

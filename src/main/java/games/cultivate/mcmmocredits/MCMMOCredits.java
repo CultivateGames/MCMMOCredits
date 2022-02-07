@@ -15,9 +15,7 @@ import games.cultivate.mcmmocredits.commands.ModifyCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.Keys;
-import games.cultivate.mcmmocredits.database.DatabaseAdapter;
-import games.cultivate.mcmmocredits.database.MySQLAdapter;
-import games.cultivate.mcmmocredits.database.SQLiteAdapter;
+import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.CreditsExpansion;
 import games.cultivate.mcmmocredits.util.Listeners;
 import games.cultivate.mcmmocredits.util.Util;
@@ -38,7 +36,7 @@ import java.util.logging.Level;
 public class MCMMOCredits extends JavaPlugin {
     public static NamespacedKey key;
     public static String path;
-    private static DatabaseAdapter adapter;
+    private Database database;
 
     /**
      * This handles all startup logic.
@@ -56,10 +54,11 @@ public class MCMMOCredits extends JavaPlugin {
         Config.MESSAGES.load("messages.conf");
         Config.SETTINGS.load("settings.conf");
         Config.MENU.load("menus.conf");
-        this.loadDatabase();
+        database = new Database(this);
+        Util.setDatabase(database);
         this.loadCommands();
         PaperInterfaceListeners.install(this);
-        Bukkit.getPluginManager().registerEvents(new Listeners(), this);
+        Bukkit.getPluginManager().registerEvents(new Listeners(database), this);
     }
 
     /**
@@ -72,7 +71,7 @@ public class MCMMOCredits extends JavaPlugin {
         Config.MENU.save(Config.MENU.root());
         Config.MESSAGES.save(Config.MESSAGES.root());
         Config.SETTINGS.save(Config.SETTINGS.root());
-        getAdapter().disableAdapter();
+        database.disable();
     }
 
     private void dependCheck() {
@@ -92,7 +91,7 @@ public class MCMMOCredits extends JavaPlugin {
         }
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new CreditsExpansion().register();
+            new CreditsExpansion(database).register();
         }
     }
 
@@ -114,11 +113,10 @@ public class MCMMOCredits extends JavaPlugin {
         commandManager.getParserRegistry().registerSuggestionProvider("customPlayer", (context, input) -> Keys.PLAYER_TAB_COMPLETION.get() ? Bukkit.getOnlinePlayers().stream().map(Player::getName).toList() : List.of());
 
         AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(commandManager, CommandSender.class, parameters -> SimpleCommandMeta.empty());
-        annotationParser.parse(new ModifyCredits());
-        annotationParser.parse(new Credits());
-        annotationParser.parse(new Redeem());
+        annotationParser.parse(new ModifyCredits(database));
+        annotationParser.parse(new Credits(database));
+        annotationParser.parse(new Redeem(database));
 
-        //TODO caption registry
         new MinecraftExceptionHandler<CommandSender>()
                 .withDefaultHandlers()
                 .withHandler(MinecraftExceptionHandler.ExceptionType.NO_PERMISSION, (sender, ex) -> {
@@ -154,23 +152,7 @@ public class MCMMOCredits extends JavaPlugin {
                 .apply(commandManager, AudienceProvider.nativeAudience());
     }
 
-    private void loadDatabase() {
-        String str = Keys.DATABASE_ADAPTER.get();
-        switch (str.toLowerCase()) {
-            case "sqlite" -> this.setAdapter(new SQLiteAdapter(this));
-            case "mysql" -> this.setAdapter(new MySQLAdapter(this));
-            default -> {
-                Bukkit.getLogger().log(Level.SEVERE, "INVALID DATABASE ADAPTER SET! Disabling plugin...");
-                this.setEnabled(false);
-            }
-        }
-    }
-
-    public static DatabaseAdapter getAdapter() {
-        return adapter;
-    }
-
-    public void setAdapter(DatabaseAdapter adapter) {
-        MCMMOCredits.adapter = adapter;
+    public void runRedemption(Player player, String... args) {
+        Bukkit.getScheduler().runTask(this, () -> player.chat("/redeem " + args[0] + " " + args[1]));
     }
 }

@@ -1,8 +1,8 @@
 package games.cultivate.mcmmocredits.util;
 
-import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.Keys;
+import games.cultivate.mcmmocredits.database.Database;
 import it.unimi.dsi.fastutil.Pair;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.audience.Audience;
@@ -27,6 +27,12 @@ import java.util.regex.Pattern;
  */
 public class Util {
     public static final Style DEFAULT_STYLE = Style.style().decoration(TextDecoration.ITALIC, false).build();
+    private static Database database;
+
+    //Definitely a mistake
+    public static void setDatabase(Database db) {
+        database = db;
+    }
 
     /**
      * This is responsible for actually sending the message to a user. All messages sent out are prepended with a prefix.
@@ -61,7 +67,7 @@ public class Util {
      * credits = Player's credits
      */
     public static PlaceholderResolver.Builder basicBuilder(Player player) {
-        return PlaceholderResolver.builder().placeholders(createPlaceholders("player", player.getName(), "credits", MCMMOCredits.getAdapter().getCredits(player.getUniqueId()) + ""));
+        return PlaceholderResolver.builder().placeholders(createPlaceholders("player", player.getName(), "credits", database.getCredits(player.getUniqueId()) + ""));
     }
 
     public static PlaceholderResolver.Builder settingsBuilder(CommandSender sender, String setting, String change) {
@@ -82,7 +88,7 @@ public class Util {
     public static PlaceholderResolver.Builder transactionBuilder(Pair<@Nullable CommandSender, @NotNull Player> pair, int amount) {
         PlaceholderResolver.Builder right = basicBuilder(pair.right()).placeholder(createPlaceholder("amount", amount + ""));
         if (pair.left() != null && pair.left() instanceof Player leftPlayer) {
-            return right.placeholders(createPlaceholders("sender", leftPlayer.getName(), "sender_credits", MCMMOCredits.getAdapter().getCredits(leftPlayer.getUniqueId()) + ""));
+            return right.placeholders(createPlaceholders("sender", leftPlayer.getName(), "sender_credits", database.getCredits(leftPlayer.getUniqueId()) + ""));
         }
         return right;
     }
