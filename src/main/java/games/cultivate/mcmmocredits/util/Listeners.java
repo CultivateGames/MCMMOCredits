@@ -33,13 +33,17 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
-        if (!this.database.doesPlayerExist(e.getPlayerProfile().getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
-            PlayerProfile profile = e.getPlayerProfile();
-            this.database.addPlayer(profile.getId(), profile.getName(), 0);
+        PlayerProfile profile = e.getPlayerProfile();
+        UUID uuid = profile.getId();
+        String username = profile.getName();
+        if (!this.database.doesPlayerExist(profile.getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
+            this.database.addPlayer(uuid, username, 0);
             if (Keys.ADD_NOTIFICATION.get()) {
                 Util.sendMessage(Bukkit.getConsoleSender(), Keys.ADD_PLAYER_MESSAGE.get(), PlaceholderResolver.placeholders(Placeholder.miniMessage("player", Objects.requireNonNull(profile.getName()))));
             }
+            return;
         }
+        this.database.setUsername(uuid, username);
     }
 
     /**
@@ -48,7 +52,6 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
-        this.database.setUsername(e.getPlayer().getUniqueId(), e.getPlayer().getName());
         if (Keys.SEND_LOGIN_MESSAGE.get()) {
             Util.sendMessage(e.getPlayer(), Keys.LOGIN_MESSAGE.get(), Util.basicBuilder(e.getPlayer()).build());
         }

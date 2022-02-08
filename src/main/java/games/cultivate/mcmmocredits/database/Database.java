@@ -17,19 +17,20 @@ import java.util.logging.Level;
 public class Database {
     private final HikariDataSource hikari;
     private final MCMMOCredits plugin;
-    private static final String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS mcmmoCredits(id INTEGER PRIMARY KEY AUTOINCREMENT, uuid VARCHAR NOT NULL, last_known_name VARCHAR NOT NULL, credits INT);";
-    private static final String ADD_PLAYER = "INSERT INTO `mcmmoCredits`(UUID, last_known_name, credits) VALUES(?,?,?);";
-    private static final String SET_CREDITS = "UPDATE `mcmmoCredits` SET credits = ? WHERE UUID= ?;";
-    private static final String GET_CREDITS = "SELECT * FROM `mcmmoCredits` WHERE UUID= ?;";
-    private static final String SET_USERNAME = "UPDATE `mcmmoCredits` SET last_known_name = ? WHERE UUID= ?;";
-    private static final String GET_USERNAME = "SELECT * FROM `mcmmoCredits` WHERE UUID= ?;";
-    private static final String GET_UUID = "SELECT * FROM `mcmmoCredits` WHERE last_known_name= ?;";
-    private static final String DOES_PLAYER_EXIST = "SELECT 1 FROM `mcmmoCredits` WHERE UUID= ?;";
+    private static final String SQLITE_CREATE_TABLE = "CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTOINCREMENT, UUID VARCHAR NOT NULL, last_known_name VARCHAR NOT NULL, credits INT);";
+    private static final String MYSQL_CREATE_TABLE = "CREATE TABLE IF NOT EXISTS `MCMMOCredits`(`id` int PRIMARY KEY AUTO_INCREMENT,`UUID` text NOT NULL,`last_known_name` text NOT NULL,`credits` int);";
+    private static final String ADD_PLAYER = "INSERT INTO `MCMMOCredits`(UUID, last_known_name, credits) VALUES(?,?,?);";
+    private static final String SET_CREDITS = "UPDATE `MCMMOCredits` SET credits= ? WHERE `UUID`= ?;";
+    private static final String GET_CREDITS = "SELECT `credits` FROM `MCMMOCredits` WHERE `UUID`= ? LIMIT 1;";
+    private static final String SET_USERNAME = "UPDATE `MCMMOCredits` SET last_known_name= ? WHERE `UUID`= ?;";
+    private static final String GET_USERNAME = "SELECT `last_known_name` FROM `MCMMOCredits` WHERE `UUID`= ? LIMIT 1;";
+    private static final String GET_UUID = "SELECT `UUID` FROM `MCMMOCredits` WHERE `last_known_name`= ? LIMIT 1;";
+    private static final String DOES_PLAYER_EXIST = "SELECT * FROM `MCMMOCredits` WHERE `UUID`= ? LIMIT 1;";
+    private static final String adapter = Keys.DATABASE_ADAPTER.get();
 
     public Database(MCMMOCredits plugin) {
         this.plugin = plugin;
         HikariConfig config = new HikariConfig();
-        String adapter = Keys.DATABASE_ADAPTER.get();
         switch (adapter.toLowerCase()) {
             case "sqlite" -> {
                 config.setPoolName("MCMMOCredits SQLite");
@@ -61,9 +62,9 @@ public class Database {
         hikari = new HikariDataSource(config);
         Connection connection = this.getConnection();
         try {
-            connection.createStatement().execute(CREATE_TABLE);
+            connection.createStatement().execute(adapter.equalsIgnoreCase("sqlite") ? SQLITE_CREATE_TABLE : MYSQL_CREATE_TABLE);
             connection.close();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
@@ -88,13 +89,12 @@ public class Database {
             try {
                 Connection connection = getConnection();
                 PreparedStatement ps = connection.prepareStatement(ADD_PLAYER);
-                ps.setObject(1, uuid);
+                ps.setString(1, uuid.toString());
                 ps.setString(2, username);
                 ps.setInt(3, credits);
                 ps.execute();
-                ps.close();
                 connection.close();
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
         });
@@ -107,10 +107,10 @@ public class Database {
                     Connection connection = getConnection();
                     PreparedStatement ps = connection.prepareStatement(SET_USERNAME);
                     ps.setString(1, username);
-                    ps.setObject(2, uuid);
+                    ps.setString(2, uuid.toString());
                     ps.execute();
                     connection.close();
-                } catch (Exception e) {
+                } catch (SQLException e) {
                     e.printStackTrace();
                 }
             }
@@ -119,17 +119,20 @@ public class Database {
 
     public CompletableFuture<String> getUsername(UUID uuid) {
         CompletableFuture<String> result = new CompletableFuture<>();
-        try {
-            Connection connection = getConnection();
-            PreparedStatement ps = connection.prepareStatement(GET_USERNAME);
-            ps.setObject(1, uuid);
-            ResultSet rows = ps.executeQuery();
-            result.complete(rows.getString(3));
-            connection.close();
-        } catch (Exception e) {
-            result.complete(null);
-            e.printStackTrace();
-        }
+            try {
+                Connection connection = getConnection();
+                PreparedStatement ps = connection.prepareStatement(GET_USERNAME);
+                ps.setString(1, uuid.toString());
+                ResultSet rows = ps.executeQuery();
+                if (rows.next()) {
+                    result.complete(rows.getString(1));
+                } else {
+                    result.complete(null);
+                }
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         return result;
     }
 
@@ -138,11 +141,10 @@ public class Database {
             Connection connection = getConnection();
             PreparedStatement ps = connection.prepareStatement(SET_CREDITS);
             ps.setInt(1, credits);
-            ps.setObject(2, uuid);
+            ps.setString(2, uuid.toString());
             ps.execute();
-            ps.close();
             connection.close();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
@@ -156,11 +158,15 @@ public class Database {
             try {
                 Connection connection = getConnection();
                 PreparedStatement ps = connection.prepareStatement(DOES_PLAYER_EXIST);
-                ps.setObject(1, uuid);
+                ps.setString(1, uuid.toString());
                 ResultSet rows = ps.executeQuery();
-                result.complete(rows.isBeforeFirst());
+                if(rows.next()) {
+                    result.complete(true);
+                } else {
+                    result.complete(false);
+                }
                 connection.close();
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
         });
@@ -172,11 +178,15 @@ public class Database {
         try {
             Connection connection = getConnection();
             PreparedStatement ps = connection.prepareStatement(GET_CREDITS);
-            ps.setObject(1, uuid);
+            ps.setString(1, uuid.toString());
             ResultSet rows = ps.executeQuery();
-            result.complete(rows.getInt(4));
+            if(rows.next()) {
+                result.complete(rows.getInt(1));
+            } else {
+                result.complete(0);
+            }
             connection.close();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return result.join();
@@ -184,25 +194,20 @@ public class Database {
 
     public CompletableFuture<UUID> getUUID(String username) {
         return CompletableFuture.supplyAsync(() -> {
+            UUID result = new UUID(0, 0);
             try {
                 Connection connection = getConnection();
                 PreparedStatement ps = connection.prepareStatement(GET_UUID);
                 ps.setString(1, username);
                 ResultSet rows = ps.executeQuery();
-                UUID result;
-                if (rows.isClosed()) {
-                    result = new UUID(0, 0);
-                } else {
-                    result =  UUID.fromString(rows.getString(2));
+                if (rows.next()) {
+                    result = UUID.fromString(rows.getString(1));
                 }
-                rows.close();
-                ps.close();
                 connection.close();
-                return result;
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
-            return null;
+            return result;
         });
     }
 
