@@ -35,6 +35,7 @@ public class Credits {
     @CommandPermission("mcmmocredits.check.other")
     private void checkCreditsOther(CommandSender sender, @Argument(value = "username", suggestions = "customPlayer") String username) {
         this.database.getUUID(username).whenCompleteAsync((i, throwable) -> {
+            System.out.println(i.toString());
             if (this.database.doesPlayerExist(i)) {
                 PlaceholderResolver pr = PlaceholderResolver.placeholders(Util.createPlaceholders("player", username, "credits", this.database.getCredits(i) + ""));
                 Util.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER.get(), pr);

@@ -26,6 +26,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.interfaces.paper.PaperInterfaceListeners;
 
+import java.io.File;
 import java.util.List;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -49,7 +50,7 @@ public class MCMMOCredits extends JavaPlugin {
     @Override
     public void onEnable() {
         key = NamespacedKey.fromString("mcmmocredits");
-        path = this.getDataFolder().getAbsolutePath() + "\\";
+        path = this.getDataFolder().getAbsolutePath() + File.separator;
         this.dependCheck();
         Config.MESSAGES.load("messages.conf");
         Config.SETTINGS.load("settings.conf");
@@ -150,9 +151,5 @@ public class MCMMOCredits extends JavaPlugin {
                     return Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get(), Util.createPlaceholder("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName()));
                 })
                 .apply(commandManager, AudienceProvider.nativeAudience());
-    }
-
-    public void runRedemption(Player player, String... args) {
-        Bukkit.getScheduler().runTask(this, () -> player.chat("/redeem " + args[0] + " " + args[1]));
     }
 }
