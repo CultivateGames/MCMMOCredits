@@ -19,6 +19,8 @@ java {
 }
 
 repositories {
+    //MiniMessage snapshots
+    maven("https://oss.sonatype.org/content/repositories/snapshots/")
     //Maven Central
     mavenCentral()
     //Paper
@@ -31,7 +33,7 @@ repositories {
     maven("https://nexus.neetgames.com/repository/maven-releases/")
     //Interfaces
     maven("https://repo.incendo.org/content/repositories/snapshots/")
-    //SkinCreator
+    //SkullCreator
     maven("https://github.com/deanveloper/SkullCreator/raw/mvn-repo/")
 }
 
@@ -41,7 +43,9 @@ dependencies {
     //Cloud Command Framework
     implementation("cloud.commandframework:cloud-annotations:1.6.1")
     implementation("cloud.commandframework:cloud-paper:1.6.1")
-    implementation("cloud.commandframework:cloud-minecraft-extras:1.6.1")
+    implementation("cloud.commandframework:cloud-minecraft-extras:1.6.1") {
+        exclude(module = "adventure-text-minimessage")
+    }
     //Incendo Interfaces
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
         exclude(module = "paper-api")
@@ -49,7 +53,6 @@ dependencies {
     //Configurate
     implementation("org.spongepowered:configurate-hocon:4.2.0-SNAPSHOT")
     //Adventure (MiniMessage and Serializers)
-    implementation("net.kyori:adventure-api:4.10.0-SNAPSHOT")
     implementation("net.kyori:adventure-text-minimessage:4.10.0-SNAPSHOT")
     //SkinCreator
     implementation("dev.dbassett:skullcreator:3.0.1")

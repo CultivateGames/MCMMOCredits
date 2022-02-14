@@ -9,7 +9,6 @@ import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.Menus;
 import games.cultivate.mcmmocredits.util.Util;
-import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -23,11 +22,12 @@ public class Credits {
     public Credits(Database database) {
         this.database = database;
     }
+
     @CommandDescription("Check your own MCMMO Credit balance.")
     @CommandMethod("")
     @CommandPermission("mcmmocredits.check.self")
     private void checkCredits(Player player) {
-        Util.sendMessage(player, Keys.CREDITS_BALANCE_SELF.get(), Util.basicBuilder(player).build());
+        Util.sendMessage(player, Keys.CREDITS_BALANCE_SELF.get(), Util.player(player));
     }
 
     @CommandDescription("Check someone else's MCMMO Credit balance.")
@@ -35,13 +35,11 @@ public class Credits {
     @CommandPermission("mcmmocredits.check.other")
     private void checkCreditsOther(CommandSender sender, @Argument(value = "username", suggestions = "customPlayer") String username) {
         this.database.getUUID(username).whenCompleteAsync((i, throwable) -> {
-            System.out.println(i.toString());
             if (this.database.doesPlayerExist(i)) {
-                PlaceholderResolver pr = PlaceholderResolver.placeholders(Util.createPlaceholders("player", username, "credits", this.database.getCredits(i) + ""));
-                Util.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER.get(), pr);
+                Util.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER.get(), Util.resolverBuilder().tags("player", username, "credits", this.database.getCredits(i) + "").build());
             } else {
                 //TODO Async is swallowing the exception.
-                Util.sendMessage(sender, Keys.PLAYER_DOES_NOT_EXIST.get(), Util.quickResolver(sender));
+                Util.sendMessage(sender, Keys.PLAYER_DOES_NOT_EXIST.get(), Util.quick(sender));
             }
         });
     }
@@ -53,7 +51,7 @@ public class Credits {
         Config.MENU.load("menus.conf");
         Config.MESSAGES.load("messages.conf");
         Config.SETTINGS.load("settings.conf");
-        Util.sendMessage(sender, Keys.CREDITS_RELOAD_SUCCESSFUL.get(), Util.quickResolver(sender));
+        Util.sendMessage(sender, Keys.CREDITS_RELOAD_SUCCESSFUL.get(), Util.quick(sender));
     }
 
     @CommandDescription("Open a Menu that can be used to interface with this plugin.")

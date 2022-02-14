@@ -124,7 +124,7 @@ public class MCMMOCredits extends JavaPlugin {
                     if (Keys.SETTINGS_DEBUG.get()) {
                         ex.printStackTrace();
                     }
-                    return Util.exceptionMessage(sender, Keys.NO_PERMS.get(), Util.createPlaceholder("required_permission", ((NoPermissionException) ex).getMissingPermission()));
+                    return Util.exceptionMessage(sender, Keys.NO_PERMS.get(), "required_permission", ((NoPermissionException) ex).getMissingPermission());
                 })
                 .withHandler(MinecraftExceptionHandler.ExceptionType.ARGUMENT_PARSING, (sender, ex) -> {
                     if (Keys.SETTINGS_DEBUG.get()) {
@@ -142,13 +142,13 @@ public class MCMMOCredits extends JavaPlugin {
                     if (Keys.SETTINGS_DEBUG.get()) {
                         ex.printStackTrace();
                     }
-                    return Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get(), Util.createPlaceholder("correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax()));
+                    return Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get(), "correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax());
                 })
                 .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SENDER, (sender, ex) -> {
                     if (Keys.SETTINGS_DEBUG.get()) {
                         ex.printStackTrace();
                     }
-                    return Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get(), Util.createPlaceholder("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName()));
+                    return Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get(), "correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName());
                 })
                 .apply(commandManager, AudienceProvider.nativeAudience());
     }

@@ -5,8 +5,6 @@ import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.placeholder.Placeholder;
-import net.kyori.adventure.text.minimessage.placeholder.PlaceholderResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,7 +12,6 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -39,7 +36,7 @@ public class Listeners implements Listener {
         if (!this.database.doesPlayerExist(profile.getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
             this.database.addPlayer(uuid, username, 0);
             if (Keys.ADD_NOTIFICATION.get()) {
-                Util.sendMessage(Bukkit.getConsoleSender(), Keys.ADD_PLAYER_MESSAGE.get(), PlaceholderResolver.placeholders(Placeholder.miniMessage("player", Objects.requireNonNull(profile.getName()))));
+                Util.sendMessage(Bukkit.getConsoleSender(), Keys.ADD_PLAYER_MESSAGE.get(), Util.resolverBuilder().tags("player", profile.getName()).build());
             }
             return;
         }
@@ -53,7 +50,7 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
         if (Keys.SEND_LOGIN_MESSAGE.get()) {
-            Util.sendMessage(e.getPlayer(), Keys.LOGIN_MESSAGE.get(), Util.basicBuilder(e.getPlayer()).build());
+            Util.sendMessage(e.getPlayer(), Keys.LOGIN_MESSAGE.get(), Util.player(e.getPlayer()));
         }
     }
 
@@ -69,7 +66,7 @@ public class Listeners implements Listener {
             if (completion.equalsIgnoreCase("cancel")) {
                 Menus.inputMap.get(uuid).complete(null);
                 Menus.inputMap.remove(uuid);
-                Util.sendMessage(e.getPlayer(), Keys.CANCEL_PROMPT.get(), Util.quickResolver(e.getPlayer()));
+                Util.sendMessage(e.getPlayer(), Keys.CANCEL_PROMPT.get(), Util.player(e.getPlayer()));
             } else {
                 Menus.inputMap.get(uuid).complete(completion);
             }
