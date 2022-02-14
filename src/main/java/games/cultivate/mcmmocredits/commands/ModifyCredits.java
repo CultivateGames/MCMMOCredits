@@ -10,7 +10,7 @@ import cloud.commandframework.exceptions.CommandExecutionException;
 import games.cultivate.mcmmocredits.config.Keys;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.Util;
-import it.unimi.dsi.fastutil.Pair;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -56,12 +56,11 @@ public class ModifyCredits {
                 case TAKE -> this.database.takeCredits(uuid, amount);
                 case SET -> this.database.setCredits(uuid, amount);
             }
-            Pair<CommandSender, Player> transactionPair = Pair.of(sender, Bukkit.getPlayer(uuid));
-            Keys senderKey = Keys.valueOf("MODIFY_CREDITS_" + op.name() + "_SENDER");
-            Keys receiverKey = Keys.valueOf("MODIFY_CREDITS_" + op.name() + "_RECEIVER");
-            Util.sendMessage(sender, senderKey.get(), Util.transactionBuilder(transactionPair, amount).build());
-            if (sender != transactionPair.right() && !silent) {
-                Util.sendMessage(transactionPair.right(), receiverKey.get(), Util.transactionBuilder(transactionPair, amount).build());
+            Player player = Bukkit.getPlayer(uuid);
+            TagResolver tr = Util.fullTransaction(sender, Bukkit.getPlayer(uuid), amount);
+            Util.sendMessage(sender, Keys.valueOf("MODIFY_CREDITS_" + op.name() + "_SENDER").get(), tr);
+            if (sender != player && !silent) {
+                Util.sendMessage(player, Keys.valueOf("MODIFY_CREDITS_" + op.name() + "_RECEIVER").get(), tr);
             }
         } else {
             //TODO Async is swallowing the exception.

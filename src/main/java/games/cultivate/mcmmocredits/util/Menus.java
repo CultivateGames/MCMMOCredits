@@ -1,7 +1,6 @@
 package games.cultivate.mcmmocredits.util;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import com.gmail.nossr50.mcMMO;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
 import games.cultivate.mcmmocredits.config.Config;
@@ -38,7 +37,7 @@ public class Menus {
     public static Map<UUID, CompletableFuture<String>> inputMap = new HashMap<>();
 
     protected ChestInterface.Builder constructInterface(Player player, String title, int slots) {
-        ChestInterface.Builder cb = ChestInterface.builder().title(MiniMessage.miniMessage().deserialize(PlaceholderAPI.setPlaceholders(player, title), Util.basicBuilder(player).build())).rows(slots / 9).clickHandler(ClickHandler.cancel()).updates(true, 10);
+        ChestInterface.Builder cb = ChestInterface.builder().title(MiniMessage.miniMessage().deserialize(PlaceholderAPI.setPlaceholders(player, title), Util.player(player))).rows(slots / 9).clickHandler(ClickHandler.cancel()).updates(true, 10);
         ItemStackElement<ChestPane> ise = ItemStackElement.of(Keys.MENU_FILL_ITEM.getItemStack(player));
         if (Keys.MENU_FILL.get()) {
             cb = cb.addTransform(0, PaperTransform.chestFill(ise));
@@ -72,7 +71,7 @@ public class Menus {
                             inputMap.get(uuid).complete(null);
                             inputMap.remove(uuid);
                         }
-                        Util.sendMessage(player, Keys.CREDITS_MENU_EDITING_PROMPT.get(), Util.settingsBuilder(player, pathString, "").build());
+                        Util.sendMessage(player, Keys.CREDITS_MENU_EDITING_PROMPT.get(), Util.settings(player, pathString, ""));
                         inputMap.put(uuid, new CompletableFuture<>());
                         Menus.inputMap.get(uuid).thenAcceptAsync((i) -> {
                             String str;
@@ -81,7 +80,7 @@ public class Menus {
                             } else {
                                 str = Keys.CREDITS_SETTING_CHANGE_FAILURE.get();
                             }
-                            Util.sendMessage(player, str, Util.settingsBuilder(player, pathString, i).build());
+                            Util.sendMessage(player, str, Util.settings(player, pathString, i));
                         }).whenComplete((i, throwable) -> Menus.inputMap.remove(uuid));
                     }
                 }
@@ -118,12 +117,12 @@ public class Menus {
                             inputMap.get(uuid).complete(null);
                             inputMap.remove(uuid);
                         }
-                        Util.sendMessage(player, Keys.CREDITS_MENU_REDEEM_PROMPT.get(), Util.redeemPromptResolver(player, WordUtils.capitalizeFully(skill.name()), mcMMO.p.getSkillTools().getLevelCap(skill)));
+                        Util.sendMessage(player, Keys.CREDITS_MENU_REDEEM_PROMPT.get(), Util.resolverBuilder().redeem(WordUtils.capitalizeFully(skill.name()), Util.SKILL_TOOLS.getLevelCap(skill)).build());
                         inputMap.put(uuid, new CompletableFuture<>());
                         Menus.inputMap.get(uuid).thenAcceptAsync((i) -> {
-                            int number = Integer.parseInt(i);
-                            if (Redeem.creditRedemption(player, uuid, skill, number)) {
-                                Util.sendMessage(player, Keys.REDEEM_SUCCESSFUL_SELF.get(), Util.redeemBuilder(Pair.of(null, player), WordUtils.capitalizeFully(skill.name()), mcMMO.p.getSkillTools().getLevelCap(skill), number).build());
+                            int amount = Integer.parseInt(i);
+                            if (Redeem.creditRedemption(player, uuid, skill, amount)) {
+                                Util.sendMessage(player, Keys.REDEEM_SUCCESSFUL_SELF.get(), Util.fullRedeem(null, player, WordUtils.capitalizeFully(skill.name()), Util.SKILL_TOOLS.getLevelCap(skill), amount));
                             }
                         }).whenCompleteAsync((i, throwable) -> Menus.inputMap.remove(uuid));
                     }
