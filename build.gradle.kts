@@ -7,8 +7,8 @@ description = "MCMMOCredits"
  */
 plugins {
     id ("java-library")
-    id("com.github.johnrengelman.shadow") version "7.1.0"
-    id("io.papermc.paperweight.userdev") version "1.3.3"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("io.papermc.paperweight.userdev") version "1.3.5-SNAPSHOT"
 }
 
 /**
@@ -40,10 +40,11 @@ repositories {
 dependencies {
     //Paper NMS
     paperDevBundle("1.18.1-R0.1-SNAPSHOT")
+    //paperDevBundle("1.18.2-RO.1-SNAPSHOT")
     //Cloud Command Framework
-    implementation("cloud.commandframework:cloud-annotations:1.6.1")
-    implementation("cloud.commandframework:cloud-paper:1.6.1")
-    implementation("cloud.commandframework:cloud-minecraft-extras:1.6.1") {
+    implementation("cloud.commandframework:cloud-annotations:1.6.2")
+    implementation("cloud.commandframework:cloud-paper:1.6.2")
+    implementation("cloud.commandframework:cloud-minecraft-extras:1.6.2") {
         exclude(module = "adventure-text-minimessage")
     }
     //Incendo Interfaces
@@ -54,7 +55,7 @@ dependencies {
     implementation("org.spongepowered:configurate-hocon:4.2.0-SNAPSHOT")
     //Adventure (MiniMessage and Serializers)
     implementation("net.kyori:adventure-text-minimessage:4.10.0-SNAPSHOT")
-    //SkinCreator
+    //SkullCreator
     implementation("dev.dbassett:skullcreator:3.0.1")
     //PlaceholderAPI
     compileOnly("me.clip:placeholderapi:2.10.10")
