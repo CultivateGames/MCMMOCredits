@@ -25,15 +25,20 @@ public class ResolverBuilder {
         return this;
     }
 
-    //TODO send regular player placeholders if sender is player, and they are the only relevant user within context.
     public ResolverBuilder sender(CommandSender sender) {
-        if(sender == null) {
+        if (sender == null) {
             return this;
         }
         List<String> senderList = Arrays.asList("sender", sender.getName());
-        if (sender instanceof Player player) {
-            senderList.add("sender_credits");
-            senderList.add(database.getCredits(player.getUniqueId()) + "");
+        if (this.build().has("player")) {
+            if (sender instanceof Player player) {
+                senderList.add("sender_credits");
+                senderList.add(database.getCredits(player.getUniqueId()) + "");
+            }
+        } else {
+            if (sender instanceof Player player) {
+                return this.player(player);
+            }
         }
         return this.tags(senderList.toArray(new String[0]));
     }
