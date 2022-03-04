@@ -75,7 +75,7 @@ public class Credits {
         Menus.INSTANCE.openSettingsMenu(player);
     }
 
-    @CommandDescription("Open the Edit Messages Menu")
+    @CommandDescription("Open the Credit Redemption Menu")
     @CommandMethod("menu redeem")
     @CommandPermission("mcmmocredits.gui.redeem")
     private void openRedeemMenu(Player player) {
