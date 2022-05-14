@@ -4,52 +4,42 @@ import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
-import cloud.commandframework.annotations.Flag;
-import cloud.commandframework.annotations.parsers.Parser;
-import cloud.commandframework.annotations.specifier.Greedy;
-import cloud.commandframework.annotations.suggestions.Suggestions;
-import cloud.commandframework.context.CommandContext;
-import cloud.commandframework.exceptions.CommandExecutionException;
-import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.ConfigHandler;
+import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.Keys;
-import games.cultivate.mcmmocredits.util.GUI;
+import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.util.Menus;
 import games.cultivate.mcmmocredits.util.Util;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.incendo.interfaces.paper.PlayerViewer;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.Queue;
 
 /**
  * This class is responsible for handling of the /credits command.
  */
 @CommandMethod("credits")
 public class Credits {
+    private Database database;
+
+    public Credits(Database database) {
+        this.database = database;
+    }
 
     @CommandDescription("Check your own MCMMO Credit balance.")
     @CommandMethod("")
     @CommandPermission("mcmmocredits.check.self")
     private void checkCredits(Player player) {
-        ConfigHandler.sendMessage(player, Keys.CREDITS_BALANCE_SELF, Util.basicBuilder(player).build());
+        Util.sendMessage(player, Keys.CREDITS_BALANCE_SELF.get(), Util.player(player));
     }
 
     @CommandDescription("Check someone else's MCMMO Credit balance.")
     @CommandMethod("<username>")
     @CommandPermission("mcmmocredits.check.other")
     private void checkCreditsOther(CommandSender sender, @Argument(value = "username", suggestions = "customPlayer") String username) {
-        MCMMOCredits.getAdapter().getUUID(username).whenCompleteAsync((i, throwable) -> {
-            if (MCMMOCredits.getAdapter().doesPlayerExist(i)) {
-                ConfigHandler.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER, Util.basicBuilder(Objects.requireNonNull(Bukkit.getPlayer(i))).build());
+        this.database.getUUID(username).whenCompleteAsync((i, throwable) -> {
+            if (this.database.doesPlayerExist(i)) {
+                Util.sendMessage(sender, Keys.CREDITS_BALANCE_OTHER.get(), Util.resolverBuilder().tags("player", username, "credits", this.database.getCredits(i) + "").build());
             } else {
                 //TODO Async is swallowing the exception.
-                sender.sendMessage(ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS));
-                throw new CommandExecutionException(throwable);
+                Util.sendMessage(sender, Keys.PLAYER_DOES_NOT_EXIST.get(), Util.quick(sender));
             }
         });
     }
@@ -58,47 +48,37 @@ public class Credits {
     @CommandMethod("reload")
     @CommandPermission("mcmmocredits.admin.reload")
     private void reloadCredits(CommandSender sender) {
-        ConfigHandler.instance().loadConfig();
-        ConfigHandler.sendMessage(sender, Keys.CREDITS_RELOAD_SUCCESSFUL, Util.quickResolver(sender));
+        Config.MENU.load("menus.conf");
+        Config.MESSAGES.load("messages.conf");
+        Config.SETTINGS.load("settings.conf");
+        Util.sendMessage(sender, Keys.CREDITS_RELOAD_SUCCESSFUL.get(), Util.quick(sender));
     }
 
-    @CommandDescription("Change settings in game and have changes take effect immediately.")
-    @CommandMethod("settings <settings> <change>")
-    @CommandPermission("mcmmocredits.admin.settings")
-    private void changeSettings(CommandSender sender, @Argument("settings") String setting, @Argument("change") @Greedy String change) {
-        if (ConfigHandler.changeConfigInGame(Util.getPathFromSuffix(setting), change)) {
-            ConfigHandler.sendMessage(sender, Keys.CREDITS_SETTING_CHANGE_SUCCESSFUL, Util.settingsBuilder(sender, setting, change).build());
-        } else {
-            ConfigHandler.sendMessage(sender, Keys.CREDITS_SETTING_CHANGE_FAILURE, Util.quickResolver(sender));
-        }
-    }
-
-    @CommandDescription("Open a GUI that can be used to interface with this plugin.")
-    @CommandMethod("gui")
+    @CommandDescription("Open a Menu that can be used to interface with this plugin.")
+    @CommandMethod("menu")
     @CommandPermission("mcmmocredits.gui.basic")
-    private void openGUI(Player player, @Flag(value = "location", permission = "mcmmocredits.gui.admin") @Nullable String string) {
-        PlayerViewer viewer = PlayerViewer.of(player);
-        if (string == null) {
-            GUI.main(player).build().open(viewer);
-            return;
-        }
-        if (string.equalsIgnoreCase("messages")) {
-            GUI.configInterface(player, Material.WRITABLE_BOOK, Keys.messageKeys).build().open(viewer);
-        }
-        if (string.equalsIgnoreCase("settings")) {
-            GUI.configInterface(player, Material.COMPASS, Keys.settingKeys).build().open(viewer);
-        }
+    private void openMenu(Player player) {
+        Menus.INSTANCE.openMainMenu(player);
     }
 
-    @Suggestions("settings")
-    public List<String> settingSelection(CommandContext<CommandSender> sender, String input) {
-        return Keys.all.stream().map(key -> key.path()[key.path().length - 1]).toList();
+    @CommandDescription("Open the Edit Messages Menu")
+    @CommandMethod("menu messages")
+    @CommandPermission("mcmmocredits.gui.admin")
+    private void openMessagesMenu(Player player) {
+        Menus.INSTANCE.openMessagesMenu(player);
     }
 
-    @Parser(suggestions = "settings")
-    public String settingParser(CommandContext<CommandSender> sender, Queue<String> inputQueue) {
-        final String input = inputQueue.peek();
-        inputQueue.poll();
-        return input;
+    @CommandDescription("Open the Edit Settings Menu")
+    @CommandMethod("menu settings")
+    @CommandPermission("mcmmocredits.gui.admin")
+    private void openSettingsMenu(Player player) {
+        Menus.INSTANCE.openSettingsMenu(player);
+    }
+
+    @CommandDescription("Open the Credit Redemption Menu")
+    @CommandMethod("menu redeem")
+    @CommandPermission("mcmmocredits.gui.redeem")
+    private void openRedeemMenu(Player player) {
+        Menus.INSTANCE.openRedeemMenu(player);
     }
 }

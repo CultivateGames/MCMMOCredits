@@ -4,104 +4,153 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public enum Keys {
-    DATABASE_ADD_NOTIFICATION(true, "settings", "database", "add-notification"),
-    DATABASE_ADAPTER(false, "settings", "database", "adapter"),
-    DATABASE_HOST(false, "settings", "database", "mysql-credentials", "host"),
-    DATABASE_PORT(false, "settings", "database","mysql-credentials", "port"),
-    DATABASE_NAME(false, "settings", "database","mysql-credentials", "name"),
-    DATABASE_USERNAME(false, "settings", "database", "mysql-credentials", "username"),
-    DATABASE_PASSWORD(false, "settings", "database", "mysql-credentials", "password"),
+    //Settings
+    DATABASE_ADAPTER(Config.SETTINGS, String.class, "database", "adapter"),
+    DATABASE_HOST(Config.SETTINGS, String.class, "database", "mysql-credentials", "host"),
+    DATABASE_PORT(Config.SETTINGS, Integer.class, "database","mysql-credentials", "port"),
+    DATABASE_NAME(Config.SETTINGS, String.class, "database","mysql-credentials", "name"),
+    DATABASE_USERNAME(Config.SETTINGS, String.class, "database", "mysql-credentials", "username"),
+    DATABASE_PASSWORD(Config.SETTINGS, String.class, "database", "mysql-credentials", "password"),
+    DATABASE_SSL(Config.SETTINGS, Boolean.class, "database", "mysql-credentials", "ssl"),
 
-    USERCACHE_LOOKUP(true,"settings", "general", "usercache-lookup"),
-    UNSAFE_LOOKUP(true, "settings", "general", "unsafe-lookup"),
-    PLAYER_TAB_COMPLETION(true,"settings", "general", "player-tab-completion"),
-    SEND_LOGIN_MESSAGE(true,"settings", "general", "send-login-message"),
+    ADD_NOTIFICATION(Config.SETTINGS, Boolean.class, "general", "add-notification"),
+    PLAYER_TAB_COMPLETION(Config.SETTINGS, Boolean.class, "general", "player-tab-completion"),
+    SEND_LOGIN_MESSAGE(Config.SETTINGS, Boolean.class, "general", "send-login-message"),
+    SETTINGS_DEBUG(Config.SETTINGS, Boolean.class, "general", "debug"),
 
-    GUI_TITLE(true, "settings", "gui", "title"),
-    GUI_SIZE(true, "settings", "gui", "size"),
-    GUI_FILL(true, "settings", "gui", "fill"),
-    GUI_FILL_ITEM(false, "settings", "gui", "fill-item"),
-    GUI_SETTING_CHANGE(false, "settings", "gui", "setting-change"),
-    GUI_MESSAGE_CHANGE(false, "settings", "gui", "message-change"),
-    GUI_REDEMPTION(false, "settings", "gui", "redemption"),
+    //Messages
+    CANCEL_PROMPT(Config.MESSAGES, String.class, "general", "cancel-prompt"),
+    PREFIX(Config.MESSAGES, String.class, "general", "prefix"),
+    LOGIN_MESSAGE(Config.MESSAGES, String.class, "general", "login-message"),
+    ADD_PLAYER_MESSAGE(Config.MESSAGES, String.class, "general", "add-player-message"),
 
-    PREFIX(true, "messages", "general", "prefix"),
-    LOGIN_MESSAGE(true, "messages", "general", "login-message"),
-    DATABASE_CONSOLE_MESSAGE(true, "messages", "general", "database-console-message"),
+    INVALID_ARGUMENTS(Config.MESSAGES, String.class, "exceptions", "invalid-arguments"),
+    MUST_BE_NUMBER(Config.MESSAGES, String.class, "exceptions", "must-be-number"),
+    NO_PERMS(Config.MESSAGES, String.class, "exceptions", "no-perms"),
+    PLAYER_DOES_NOT_EXIST(Config.MESSAGES, String.class, "exceptions", "player-does-not-exist"),
+    COMMAND_ERROR(Config.MESSAGES, String.class, "exceptions", "command-error"),
 
-    INVALID_ARGUMENTS(true, "messages", "exceptions", "invalid-arguments"),
-    MUST_BE_NUMBER(true, "messages", "exceptions", "must-be-number"),
-    NO_PERMS(true, "messages", "exceptions", "no-perms"),
-    PLAYER_DOES_NOT_EXIST(true, "messages", "exceptions", "player-does-not-exist"),
-    COMMAND_ERROR(true, "messages", "exceptions", "command-error"),
+    CREDITS_BALANCE_SELF(Config.MESSAGES, String.class, "commands", "credits", "balance-self"),
+    CREDITS_BALANCE_OTHER(Config.MESSAGES, String.class, "commands", "credits", "balance-other"),
+    CREDITS_RELOAD_SUCCESSFUL(Config.MESSAGES, String.class, "commands", "credits", "reload-successful"),
+    CREDITS_SETTING_CHANGE_SUCCESSFUL(Config.MESSAGES, String.class, "commands", "credits", "setting-change-successful"),
+    CREDITS_SETTING_CHANGE_FAILURE(Config.MESSAGES, String.class, "commands", "credits", "setting-change-failure"),
+    CREDITS_MENU_EDITING_PROMPT(Config.MESSAGES, String.class, "commands", "credits", "menu-editing-prompt"),
+    CREDITS_MENU_REDEEM_PROMPT(Config.MESSAGES, String.class, "commands", "credits", "menu-redeem-prompt"),
 
-    CREDITS_BALANCE_SELF(true, "messages", "commands", "credits", "balance-self"),
-    CREDITS_BALANCE_OTHER(true, "messages", "commands", "credits", "balance-other"),
-    CREDITS_RELOAD_SUCCESSFUL(true, "messages", "commands", "credits", "reload-successful"),
-    CREDITS_SETTING_CHANGE_SUCCESSFUL(true, "messages", "commands", "credits", "setting-change-successful"),
-    CREDITS_SETTING_CHANGE_FAILURE(true, "messages", "commands", "credits", "setting-change-failure"),
+    REDEEM_SKILL_CAP(Config.MESSAGES, String.class, "commands", "redeem", "skill-cap"),
+    REDEEM_NOT_ENOUGH_CREDITS(Config.MESSAGES, String.class, "commands", "redeem", "not-enough-credits"),
+    REDEEM_SUCCESSFUL_SELF(Config.MESSAGES, String.class, "commands", "redeem", "successful-self"),
+    REDEEM_SUCCESSFUL_SENDER(Config.MESSAGES, String.class, "commands", "redeem", "successful-sender"),
+    REDEEM_SUCCESSFUL_RECEIVER(Config.MESSAGES, String.class, "commands", "redeem", "successful-receiver"),
 
-    REDEEM_SKILL_CAP(true, "messages", "commands", "redeem", "skill-cap"),
-    REDEEM_NOT_ENOUGH_CREDITS(true, "messages", "commands", "redeem", "not-enough-credits"),
-    REDEEM_SUCCESSFUL_SELF(true, "messages", "commands", "redeem", "successful-self"),
-    REDEEM_SUCCESSFUL_SENDER(true, "messages", "commands", "redeem", "successful-sender"),
-    REDEEM_SUCCESSFUL_RECEIVER(true, "messages", "commands", "redeem", "successful-receiver"),
+    MODIFY_CREDITS_ADD_SENDER(Config.MESSAGES, String.class, "commands", "modify-credits", "add-sender"),
+    MODIFY_CREDITS_SET_SENDER(Config.MESSAGES, String.class, "commands", "modify-credits", "set-sender"),
+    MODIFY_CREDITS_TAKE_SENDER(Config.MESSAGES, String.class, "commands", "modify-credits", "take-sender"),
+    MODIFY_CREDITS_ADD_RECEIVER(Config.MESSAGES, String.class, "commands", "modify-credits", "add-receiver"),
+    MODIFY_CREDITS_SET_RECEIVER(Config.MESSAGES, String.class, "commands", "modify-credits", "set-receiver"),
+    MODIFY_CREDITS_TAKE_RECEIVER(Config.MESSAGES, String.class, "commands", "modify-credits", "take-receiver"),
 
-    MODIFY_CREDITS_ADD_SENDER(true, "messages", "commands", "modify-credits", "add-sender"),
-    MODIFY_CREDITS_SET_SENDER(true, "messages", "commands", "modify-credits", "set-sender"),
-    MODIFY_CREDITS_TAKE_SENDER(true, "messages", "commands", "modify-credits", "take-sender"),
-    MODIFY_CREDITS_ADD_RECEIVER(true, "messages", "commands", "modify-credits", "add-receiver"),
-    MODIFY_CREDITS_SET_RECEIVER(true, "messages", "commands", "modify-credits", "set-receiver"),
-    MODIFY_CREDITS_TAKE_RECEIVER(true, "messages", "commands", "modify-credits", "take-receiver");
+    //Menu Settings
+    MENU_FILL(Config.MENU, Boolean.class, "main", "fill"),
+    MENU_FILL_ITEM(Config.MENU, ItemStack.class, "main", "fill-item"),
+    MENU_NAVIGATION(Config.MENU, Boolean.class, "main", "navigation"),
+    MENU_NAVIGATION_ITEM(Config.MENU, ItemStack.class, "main", "navigation-item"),
+    MENU_SIZE(Config.MENU, Integer.class, "main", "inventory-size"),
+    MENU_TITLE(Config.MENU, String.class, "main",  "inventory-title"),
+    MENU_MESSAGES_ITEM(Config.MENU, ItemStack.class, "main",  "messages"),
+    MENU_REDEEM_ITEM(Config.MENU, ItemStack.class, "main",  "redeem"),
+    MENU_SETTINGS_ITEM(Config.MENU, ItemStack.class, "main",  "settings"),
 
-    private final String[] path;
-    private final boolean canChange;
+    EDIT_MESSAGES_SIZE(Config.MENU, Integer.class, "editing", "messages", "inventory-size"),
+    EDIT_MESSAGES_TITLE(Config.MENU, String.class, "editing", "messages", "inventory-title"),
+    EDIT_MESSAGES_ITEM(Config.MENU, ItemStack.class, "editing", "messages", "item"),
 
-    public static final EnumSet<Keys> all = EnumSet.allOf(Keys.class);
-    public static final List<Keys> modifiableKeys = all.stream().filter(Keys::canChange).toList();
-    public static final List<Keys> messageKeys = Keys.all.stream().filter(i -> i.path()[0].equalsIgnoreCase("messages")).toList();
-    public static final List<Keys> settingKeys = Keys.all.stream().filter(i -> i.path()[0].equalsIgnoreCase("settings")).toList();
+    EDIT_SETTINGS_SIZE(Config.MENU, Integer.class, "editing", "settings", "inventory-size"),
+    EDIT_SETTINGS_TITLE(Config.MENU, String.class, "editing", "settings", "inventory-title"),
+    EDIT_SETTINGS_ITEM(Config.MENU, ItemStack.class, "editing", "settings", "item"),
 
-    Keys (boolean canChange, String... path) {
-        this.path = path;
-        this.canChange = canChange;
-    }
+    REDEEM_SIZE(Config.MENU, Integer.class, "redeem", "inventory-size"),
+    REDEEM_TITLE(Config.MENU, String.class, "redeem", "inventory-title"),
+    ACROBATICS_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "acrobatics"),
+    ALCHEMY_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "alchemy"),
+    ARCHERY_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "archery"),
+    AXES_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "axes"),
+    EXCAVATION_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "excavation"),
+    FISHING_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "fishing"),
+    HERBALISM_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "herbalism"),
+    MINING_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "mining"),
+    REPAIR_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "repair"),
+    SWORDS_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "swords"),
+    TAMING_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "taming"),
+    UNARMED_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "unarmed"),
+    WOODCUTTING_ITEM(Config.MENU, ItemStack.class, "redeem", "items", "woodcutting");
 
-    public String[] path() {
-        return path;
-    }
+    private final Config<?> config;
+    private final Class<?> type;
+    private final List<String> path;
 
-    public CommentedConfigurationNode node() {
-        return ConfigHandler.instance().root().node(Stream.of(this.path()).toList());
+    /**
+     * An Enum Set that contains all Keys.
+     */
+    public static final EnumSet<Keys> ALL = EnumSet.allOf(Keys.class);
+
+    /**
+     * A Set of Keys that can be changed via /credits settings.
+     * There is no support for changing Database settings without a restart,
+     * and there is no support for transferring data between adapters.
+     *
+     * Item settings can be changed in config, but NOT in game. This is supported with /credits reload.
+     */
+    public static final Set<Keys> CAN_CHANGE = ALL.stream().filter(Keys::canChange).collect(Collectors.toSet());
+
+    /**
+     * Lists which contain Keys for each Configuration.
+     */
+    public static final List<Keys> MESSAGE_KEYS = ALL.stream().filter(key -> key.config().equals(Config.MESSAGES)).toList();
+    public static final List<Keys> SETTING_KEYS = ALL.stream().filter(key -> key.config().equals(Config.SETTINGS)).toList();
+    public static final List<Keys> MENU_KEYS = ALL.stream().filter(key -> key.config().equals(Config.MENU)).toList();
+
+    Keys (Config<?> config, Class<?> type, String... path) {
+        this.config = config;
+        this.type = type;
+        this.path = Arrays.asList(path);
     }
 
     public boolean canChange() {
-        return canChange;
-    }
-
-    @SuppressWarnings("unused")
-    public ItemStack getItemStack() {
-        return ItemStackSerializer.INSTANCE.deserialize(ItemStack.class, this.node());
+        String name = this.name();
+        return !name.startsWith("DATABASE_") && !name.endsWith("_ITEM");
     }
 
     public ItemStack getItemStack(Player player) {
-        return ItemStackSerializer.INSTANCE.deserializePlayer(ItemStack.class, this.node(), player);
+        return ItemStackSerializer.INSTANCE.deserializePlayer(node(), player);
     }
 
-    public int getInt() {
-        return this.node().getInt();
+    public CommentedConfigurationNode node() {
+        return config.root().node(path);
     }
 
-    public boolean getBoolean() {
-        return this.node().getBoolean();
+    public List<String> path() {
+        return path;
     }
 
-    public String getString() {
-        return this.node().getString();
+    public Config<?> config() {
+        return config;
+    }
+
+    public Class<?> type() {
+        return type;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T get() {
+        return (T) config.get(type, path);
     }
 }

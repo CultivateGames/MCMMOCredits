@@ -13,11 +13,9 @@ import cloud.commandframework.paper.PaperCommandManager;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.ModifyCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
-import games.cultivate.mcmmocredits.config.ConfigHandler;
+import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.Keys;
-import games.cultivate.mcmmocredits.database.DatabaseAdapter;
-import games.cultivate.mcmmocredits.database.MySQLAdapter;
-import games.cultivate.mcmmocredits.database.SQLiteAdapter;
+import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.util.CreditsExpansion;
 import games.cultivate.mcmmocredits.util.Listeners;
 import games.cultivate.mcmmocredits.util.Util;
@@ -28,8 +26,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.interfaces.paper.PaperInterfaceListeners;
 
+import java.io.File;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Level;
 
@@ -37,18 +35,9 @@ import java.util.logging.Level;
  * This class is responsible for startup/shutdown logic, and command loading.
  */
 public class MCMMOCredits extends JavaPlugin {
-    private static MCMMOCredits instance;
     public static NamespacedKey key;
-    private static DatabaseAdapter adapter;
-
-    /**
-     * Generates widely accessible instance of this plugin.
-     * This is bad practice, but I don't really care. Project is not large enough for Guice.
-     * @return MCMMOCredits plugin
-     */
-    public static MCMMOCredits getInstance() {
-        return instance;
-    }
+    public static String path;
+    private Database database;
 
     /**
      * This handles all startup logic.
@@ -60,16 +49,17 @@ public class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onEnable() {
-        instance = this;
-        key = Objects.requireNonNull(NamespacedKey.fromString("mcmmocredits"));
-        new ConfigHandler().enable();
-
-        this.loadDatabase();
-        this.loadCommands();
-
-        PaperInterfaceListeners.install(this);
+        key = NamespacedKey.fromString("mcmmocredits");
+        path = this.getDataFolder().getAbsolutePath() + File.separator;
         this.dependCheck();
-        Bukkit.getPluginManager().registerEvents(new Listeners(), this);
+        Config.MESSAGES.load("messages.conf");
+        Config.SETTINGS.load("settings.conf");
+        Config.MENU.load("menus.conf");
+        database = new Database(this);
+        Util.setDatabase(database);
+        this.loadCommands();
+        PaperInterfaceListeners.install(this);
+        Bukkit.getPluginManager().registerEvents(new Listeners(database), this);
     }
 
     /**
@@ -79,8 +69,10 @@ public class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        ConfigHandler.instance().saveConfig(ConfigHandler.instance().root());
-        getAdapter().disableAdapter();
+        Config.MENU.save(Config.MENU.root());
+        Config.MESSAGES.save(Config.MESSAGES.root());
+        Config.SETTINGS.save(Config.SETTINGS.root());
+        database.disable();
     }
 
     private void dependCheck() {
@@ -100,7 +92,7 @@ public class MCMMOCredits extends JavaPlugin {
         }
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new CreditsExpansion().register();
+            new CreditsExpansion(database).register();
         }
     }
 
@@ -119,42 +111,45 @@ public class MCMMOCredits extends JavaPlugin {
         if (commandManager.queryCapability(CloudBukkitCapabilities.ASYNCHRONOUS_COMPLETION)) {
             commandManager.registerAsynchronousCompletions();
         }
-        commandManager.getParserRegistry().registerSuggestionProvider("customPlayer", (context, input) ->
-                Keys.PLAYER_TAB_COMPLETION.getBoolean() ? Bukkit.getOnlinePlayers().stream().map(Player::getName).toList() : List.of());
+        commandManager.getParserRegistry().registerSuggestionProvider("customPlayer", (context, input) -> Keys.PLAYER_TAB_COMPLETION.get() ? Bukkit.getOnlinePlayers().stream().map(Player::getName).toList() : List.of());
 
         AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(commandManager, CommandSender.class, parameters -> SimpleCommandMeta.empty());
+        annotationParser.parse(new ModifyCredits(database));
+        annotationParser.parse(new Credits(database));
+        annotationParser.parse(new Redeem(database));
 
-        //TODO caption registry
         new MinecraftExceptionHandler<CommandSender>()
                 .withDefaultHandlers()
-                .withHandler(MinecraftExceptionHandler.ExceptionType.NO_PERMISSION, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.NO_PERMS, Util.createPlaceholder("required_permission", ((NoPermissionException) ex).getMissingPermission())))
-                .withHandler(MinecraftExceptionHandler.ExceptionType.ARGUMENT_PARSING, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS))
-                .withHandler(MinecraftExceptionHandler.ExceptionType.COMMAND_EXECUTION, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.COMMAND_ERROR))
-                .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SYNTAX, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS, Util.createPlaceholder("correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax())))
-                .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SENDER, (sender, ex) -> ConfigHandler.exceptionMessage(sender, Keys.INVALID_ARGUMENTS, Util.createPlaceholder("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName())))
+                .withHandler(MinecraftExceptionHandler.ExceptionType.NO_PERMISSION, (sender, ex) -> {
+                    if (Keys.SETTINGS_DEBUG.get()) {
+                        ex.printStackTrace();
+                    }
+                    return Util.exceptionMessage(sender, Keys.NO_PERMS.get(), "required_permission", ((NoPermissionException) ex).getMissingPermission());
+                })
+                .withHandler(MinecraftExceptionHandler.ExceptionType.ARGUMENT_PARSING, (sender, ex) -> {
+                    if (Keys.SETTINGS_DEBUG.get()) {
+                        ex.printStackTrace();
+                    }
+                    return Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get());
+                })
+                .withHandler(MinecraftExceptionHandler.ExceptionType.COMMAND_EXECUTION, (sender, ex) -> {
+                    if (Keys.SETTINGS_DEBUG.get()) {
+                        ex.printStackTrace();
+                    }
+                    return Util.exceptionMessage(sender, Keys.COMMAND_ERROR.get());
+                })
+                .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SYNTAX, (sender, ex) -> {
+                    if (Keys.SETTINGS_DEBUG.get()) {
+                        ex.printStackTrace();
+                    }
+                    return Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get(), "correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax());
+                })
+                .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SENDER, (sender, ex) -> {
+                    if (Keys.SETTINGS_DEBUG.get()) {
+                        ex.printStackTrace();
+                    }
+                    return Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get(), "correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName());
+                })
                 .apply(commandManager, AudienceProvider.nativeAudience());
-
-        annotationParser.parse(new ModifyCredits());
-        annotationParser.parse(new Credits());
-        annotationParser.parse(new Redeem());
-    }
-
-    private void loadDatabase() {
-        switch (Keys.DATABASE_ADAPTER.getString().toLowerCase()) {
-            case "sqlite" -> this.setAdapter(new SQLiteAdapter());
-            case "mysql" -> this.setAdapter(new MySQLAdapter());
-            default -> {
-                Bukkit.getLogger().log(Level.SEVERE, "INVALID DATABASE ADAPTER SET! Disabling plugin...");
-                this.setEnabled(false);
-            }
-        }
-    }
-
-    public static DatabaseAdapter getAdapter() {
-        return adapter;
-    }
-
-    public void setAdapter(DatabaseAdapter adapter) {
-        MCMMOCredits.adapter = adapter;
     }
 }
