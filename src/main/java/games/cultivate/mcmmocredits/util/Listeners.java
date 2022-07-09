@@ -1,11 +1,17 @@
 package games.cultivate.mcmmocredits.util;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
-import games.cultivate.mcmmocredits.config.Keys;
-import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.data.Database;
+import games.cultivate.mcmmocredits.data.InputStorage;
+import games.cultivate.mcmmocredits.keys.BooleanKey;
+import games.cultivate.mcmmocredits.keys.StringKey;
+import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.text.Text;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
@@ -15,75 +21,73 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import java.util.UUID;
 
 /**
- * This class is responsible for any necessary Event Listeners that we may need.
+ * Event Handlers used to manage the database, and input storage.
  */
 public class Listeners implements Listener {
-    private Database database;
-
-    public Listeners(Database database) {
-        this.database = database;
-    }
-    
     /**
      * Add users to MCMMO Credits database.
+     *
      * @param e Instance of AsyncPlayerPreLoginEvent
      */
     @EventHandler
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
-        PlayerProfile profile = e.getPlayerProfile();
-        UUID uuid = profile.getId();
-        String username = profile.getName();
-        if (!this.database.doesPlayerExist(profile.getId()) && e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
-            this.database.addPlayer(uuid, username, 0);
-            if (Keys.ADD_NOTIFICATION.get()) {
-                Util.sendMessage(Bukkit.getConsoleSender(), Keys.ADD_PLAYER_MESSAGE.get(), Util.resolverBuilder().tags("player", profile.getName()).build());
+        if (e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
+            PlayerProfile profile = e.getPlayerProfile();
+            UUID uuid = profile.getId();
+            String username = profile.getName();
+            Database database = Database.getDatabase();
+            if (!database.doesPlayerExist(uuid)) {
+                database.addPlayer(uuid, username, 0);
+                if (BooleanKey.ADD_NOTIFICATION.get()) {
+                    TagResolver tr = Resolver.builder().player(username, uuid).build();
+                    Text.fromKey(Bukkit.getConsoleSender(), StringKey.ADD_PLAYER_MESSAGE, tr).send();
+                }
             }
-            return;
+            //Set the username on every allowed login to keep track of last known username.
+            database.setUsername(uuid, username);
         }
-        this.database.setUsername(uuid, username);
     }
 
     /**
      * Update username if necessary and send login message if it is enabled.
+     *
      * @param e Instance of the PlayerJoinEvent
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
-        if (Keys.SEND_LOGIN_MESSAGE.get()) {
-            Util.sendMessage(e.getPlayer(), Keys.LOGIN_MESSAGE.get(), Util.player(e.getPlayer()));
+        if (BooleanKey.SEND_LOGIN_MESSAGE.get()) {
+            Text.fromKey(e.getPlayer(), StringKey.LOGIN_MESSAGE).send();
         }
     }
 
     /**
      * Capture player's chat if the user is part of the Chat Input map.
+     *
      * @param e Instance of the AsyncChatEvent.
      */
     @EventHandler
     public void onPlayerChat(AsyncChatEvent e) {
-        UUID uuid = e.getPlayer().getUniqueId();
-        if (Menus.inputMap.containsKey(uuid)) {
+        Player player = e.getPlayer();
+        UUID uuid = player.getUniqueId();
+        InputStorage storage = InputStorage.getInstance();
+        if (storage.contains(uuid)) {
             String completion = MiniMessage.miniMessage().serialize(e.message());
             if (completion.equalsIgnoreCase("cancel")) {
-                Menus.inputMap.get(uuid).complete(null);
-                Menus.inputMap.remove(uuid);
-                Util.sendMessage(e.getPlayer(), Keys.CANCEL_PROMPT.get(), Util.player(e.getPlayer()));
-            } else {
-                Menus.inputMap.get(uuid).complete(completion);
+                storage.remove(uuid);
+                Text.fromKey(player, StringKey.CANCEL_PROMPT).send();
             }
+            storage.complete(uuid, completion);
             e.setCancelled(true);
         }
     }
 
     /**
      * Terminate CompletableFuture from Chat Input map and remove the player.
+     *
      * @param e Instance of the PlayerQuitEvent.
      */
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent e) {
-        UUID uuid = e.getPlayer().getUniqueId();
-        if (Menus.inputMap.containsKey(uuid)) {
-            Menus.inputMap.get(uuid).complete(null);
-            Menus.inputMap.remove(uuid);
-        }
+        InputStorage.getInstance().remove(e.getPlayer().getUniqueId());
     }
 }

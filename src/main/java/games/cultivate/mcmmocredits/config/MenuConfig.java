@@ -1,5 +1,9 @@
 package games.cultivate.mcmmocredits.config;
 
+import games.cultivate.mcmmocredits.keys.BooleanKey;
+import games.cultivate.mcmmocredits.keys.IntegerKey;
+import games.cultivate.mcmmocredits.keys.ItemStackKey;
+import games.cultivate.mcmmocredits.keys.StringKey;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
@@ -9,7 +13,7 @@ import java.util.List;
 
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
-public class MenuConfig {
+public class MenuConfig extends Config<MenuConfig> {
     @Comment("Editing Config menus: /credits menu <messages/settings>")
     @Setting("editing")
     private EditMenus editMenus = new EditMenus();
@@ -20,8 +24,31 @@ public class MenuConfig {
     @Setting("redeem")
     private RedeemMenu redeemMenu = new RedeemMenu();
 
+   MenuConfig() {
+        super(MenuConfig.class);
+    }
+
+    @Override
+    public void setupKeys() {
+        //Inventory Attributes
+        this.addKey(IntegerKey.EDIT_MESSAGES_SIZE);
+        this.addKey(IntegerKey.EDIT_SETTINGS_SIZE);
+        this.addKey(IntegerKey.MENU_SIZE);
+        this.addKey(IntegerKey.REDEEM_SIZE);
+        this.addKey(BooleanKey.MENU_FILL);
+        this.addKey(BooleanKey.MENU_NAVIGATION);
+        this.addKey(StringKey.EDIT_MESSAGES_TITLE);
+        this.addKey(StringKey.EDIT_SETTINGS_TITLE);
+        this.addKey(StringKey.MENU_TITLE);
+        this.addKey(StringKey.REDEEM_TITLE);
+        //Item Stack Keys
+        for (ItemStackKey isk : ItemStackKey.values()) {
+            this.addKey(isk);
+        }
+    }
+
     @ConfigSerializable
-    protected static final class EditMenus {
+    private static final class EditMenus {
         @Comment("Edit Messages Menu configuration")
         @Setting("messages")
         private MessagesMenu messagesMenu = new MessagesMenu();
@@ -31,57 +58,57 @@ public class MenuConfig {
     }
 
     @ConfigSerializable
-    protected static final class MessagesMenu {
-        private String inventory_title = "<dark_gray>Edit Messages";
+    private static final class MessagesMenu {
+        private String title = "<dark_gray>Edit Messages";
         @Comment("Must be at least 27")
-        private int inventory_size = 45;
+        private int size = 45;
         @Comment("Change item appearance. Name, amount and inventory slot are not configurable.")
         private ConfigItem item = new ConfigItem();
     }
 
     @ConfigSerializable
-    protected static final class SettingsMenu {
-        private String inventory_title = "<dark_gray>Edit Settings";
-        private int inventory_size = 45;
+    private static final class SettingsMenu {
+        private String title = "<dark_gray>Edit Settings";
+        private int size = 45;
         @Comment("Change item appearance. Name, amount and inventory slot are not configurable.")
         private ConfigItem item = new ConfigItem();
     }
 
     @ConfigSerializable
-    protected static final class MainMenu {
-        private String inventory_title = "<#ff253c><bold>MCMMO Credits";
-        private int inventory_size = 54;
+    private static final class MainMenu {
+        private String title = "<#ff253c><bold>MCMMO Credits";
+        private int size = 54;
         @Comment("This will apply to all menus.")
         private boolean fill = false;
         @Comment("This will apply to all menus.")
-        private ShortcutItem fill_item = new ShortcutItem();
+        private ShortcutItem fillItem = new ShortcutItem();
         @Comment("This will apply to all menus.")
         private boolean navigation = false;
         @Comment("This will apply to all menus.")
-        private ShortcutItem navigation_item = new ShortcutItem();
+        private ShortcutItem navigationItem = new ShortcutItem();
         @Comment("Appearance of Edit Messages shortcut.")
         @Setting("messages")
-        private ShortcutItem messages_item = new ShortcutItem();
+        private ShortcutItem messagesItem = new ShortcutItem();
         @Comment("Appearance of Redeem shortcut.")
         @Setting("redeem")
-        private ShortcutItem redeem_item = new ShortcutItem();
+        private ShortcutItem redeemItem = new ShortcutItem();
         @Comment("Appearance of Edit Settings shortcut.")
         @Setting("settings")
-        private ShortcutItem settings_item = new ShortcutItem();
+        private ShortcutItem settingsItem = new ShortcutItem();
     }
 
     @ConfigSerializable
-    protected static final class RedeemMenu {
-        private String inventory_title = "<dark_gray>Redeem Your Credits...";
+    private static final class RedeemMenu {
+        private String title = "<dark_gray>Redeem Your Credits...";
         @Comment("Must be at least 18")
-        private int inventory_size = 45;
+        private int size = 45;
         @Comment("Credit redemption items")
         @Setting("items")
         private Items items = new Items();
     }
 
     @ConfigSerializable
-    protected static final class Items {
+    private static final class Items {
         private ShortcutItem acrobatics = new ShortcutItem();
         private ShortcutItem alchemy = new ShortcutItem();
         private ShortcutItem archery = new ShortcutItem();
@@ -98,7 +125,7 @@ public class MenuConfig {
     }
 
     @ConfigSerializable
-    protected  static final class ConfigItem {
+    private static final class ConfigItem {
         private String material = "STONE";
         private int durability = 0;
         private List<String> lore = Arrays.asList("<gray><player>, welcome to MCMMO Credits!", "<gradient:#666666:#FFFFFF>Configure this menu in config.conf!");
@@ -106,13 +133,13 @@ public class MenuConfig {
     }
 
     @ConfigSerializable
-    protected static final class ShortcutItem {
+    private static final class ShortcutItem {
         private String material = "STONE";
         private int amount = 1;
         private int durability = 0;
         private String name = "<gray>Menu Item!";
         private List<String> lore = Arrays.asList("<gray><player>, welcome to MCMMO Credits!", "<gradient:#666666:#FFFFFF>Configure this menu in config.conf!");
         private boolean glow = true;
-        private int inventory_slot;
+        private int slot = 0;
     }
 }

@@ -1,33 +1,37 @@
 package games.cultivate.mcmmocredits;
 
 import cloud.commandframework.annotations.AnnotationParser;
-import cloud.commandframework.bukkit.CloudBukkitCapabilities;
 import cloud.commandframework.exceptions.InvalidCommandSenderException;
 import cloud.commandframework.exceptions.InvalidSyntaxException;
-import cloud.commandframework.exceptions.NoPermissionException;
 import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.minecraft.extras.AudienceProvider;
 import cloud.commandframework.minecraft.extras.MinecraftExceptionHandler;
+import cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType;
 import cloud.commandframework.paper.PaperCommandManager;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.ModifyCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
-import games.cultivate.mcmmocredits.config.Config;
-import games.cultivate.mcmmocredits.config.Keys;
-import games.cultivate.mcmmocredits.database.Database;
-import games.cultivate.mcmmocredits.util.CreditsExpansion;
+import games.cultivate.mcmmocredits.config.ConfigUtil;
+import games.cultivate.mcmmocredits.data.Database;
+import games.cultivate.mcmmocredits.inject.SingletonModule;
+import games.cultivate.mcmmocredits.keys.BooleanKey;
+import games.cultivate.mcmmocredits.keys.StringKey;
+import games.cultivate.mcmmocredits.placeholders.CreditsExpansion;
+import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.util.Listeners;
-import games.cultivate.mcmmocredits.util.Util;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.interfaces.paper.PaperInterfaceListeners;
 
-import java.io.File;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.logging.Level;
 
@@ -35,9 +39,7 @@ import java.util.logging.Level;
  * This class is responsible for startup/shutdown logic, and command loading.
  */
 public class MCMMOCredits extends JavaPlugin {
-    public static NamespacedKey key;
-    public static String path;
-    private Database database;
+    private Injector injector;
 
     /**
      * This handles all startup logic.
@@ -49,17 +51,13 @@ public class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onEnable() {
-        key = NamespacedKey.fromString("mcmmocredits");
-        path = this.getDataFolder().getAbsolutePath() + File.separator;
-        this.dependCheck();
-        Config.MESSAGES.load("messages.conf");
-        Config.SETTINGS.load("settings.conf");
-        Config.MENU.load("menus.conf");
-        database = new Database(this);
-        Util.setDatabase(database);
+        this.injector = Guice.createInjector(new SingletonModule());
+        this.checkForDependencies();
+        ConfigUtil.loadAllConfigs();
+        Database.loadFromConfig();
         this.loadCommands();
-        PaperInterfaceListeners.install(this);
-        Bukkit.getPluginManager().registerEvents(new Listeners(database), this);
+        this.loadMenus();
+        this.loadListeners();
     }
 
     /**
@@ -69,13 +67,11 @@ public class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        Config.MENU.save(Config.MENU.root());
-        Config.MESSAGES.save(Config.MESSAGES.root());
-        Config.SETTINGS.save(Config.SETTINGS.root());
-        database.disable();
+        ConfigUtil.saveAllConfigs();
+        Database.getDatabase().disable();
     }
 
-    private void dependCheck() {
+    private void checkForDependencies() {
         try {
             Class.forName("com.destroystokyo.paper.MaterialSetTag");
         } catch (Exception e) {
@@ -83,73 +79,79 @@ public class MCMMOCredits extends JavaPlugin {
             this.setEnabled(false);
         }
 
-        if (Bukkit.getPluginManager().getPlugin("mcMMO") != null) {
-            this.getLogger().log(Level.INFO, "MCMMO has been found! Continuing to load...");
-        } else {
+        if (Bukkit.getPluginManager().getPlugin("mcMMO") == null) {
             this.getLogger().log(Level.SEVERE, "MCMMO is not found, disabling plugin...");
             this.setEnabled(false);
             return;
         }
+        this.getLogger().log(Level.INFO, "MCMMO has been found! Continuing to load...");
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new CreditsExpansion(database).register();
+            new CreditsExpansion().register();
         }
     }
 
     private void loadCommands() {
         PaperCommandManager<CommandSender> commandManager;
         try {
-            commandManager = new PaperCommandManager<>(this, AsynchronousCommandExecutionCoordinator.<CommandSender>newBuilder().withAsynchronousParsing().build(), Function.identity(), Function.identity());
+            commandManager = new PaperCommandManager<>(this,
+                    AsynchronousCommandExecutionCoordinator.<CommandSender>newBuilder().withAsynchronousParsing().build(),
+                    Function.identity(),
+                    Function.identity());
         } catch (Exception e) {
             e.printStackTrace();
             return;
         }
-
-        if (commandManager.queryCapability(CloudBukkitCapabilities.BRIGADIER)) {
-            commandManager.registerBrigadier();
-        }
-        if (commandManager.queryCapability(CloudBukkitCapabilities.ASYNCHRONOUS_COMPLETION)) {
-            commandManager.registerAsynchronousCompletions();
-        }
-        commandManager.getParserRegistry().registerSuggestionProvider("customPlayer", (context, input) -> Keys.PLAYER_TAB_COMPLETION.get() ? Bukkit.getOnlinePlayers().stream().map(Player::getName).toList() : List.of());
+        commandManager.registerBrigadier();
+        commandManager.registerAsynchronousCompletions();
+        commandManager.parserRegistry().registerSuggestionProvider("players", (c, i) -> {
+            if (BooleanKey.PLAYER_TAB_COMPLETION.get()) {
+                 return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
+            }
+            return List.of();
+        });
 
         AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(commandManager, CommandSender.class, parameters -> SimpleCommandMeta.empty());
-        annotationParser.parse(new ModifyCredits(database));
-        annotationParser.parse(new Credits(database));
-        annotationParser.parse(new Redeem(database));
+        annotationParser.parse(this.injector.getInstance(Credits.class));
+        annotationParser.parse(this.injector.getInstance(ModifyCredits.class));
+        annotationParser.parse(this.injector.getInstance(Redeem.class));
 
-        new MinecraftExceptionHandler<CommandSender>()
-                .withDefaultHandlers()
-                .withHandler(MinecraftExceptionHandler.ExceptionType.NO_PERMISSION, (sender, ex) -> {
-                    if (Keys.SETTINGS_DEBUG.get()) {
-                        ex.printStackTrace();
-                    }
-                    return Util.exceptionMessage(sender, Keys.NO_PERMS.get(), "required_permission", ((NoPermissionException) ex).getMissingPermission());
-                })
-                .withHandler(MinecraftExceptionHandler.ExceptionType.ARGUMENT_PARSING, (sender, ex) -> {
-                    if (Keys.SETTINGS_DEBUG.get()) {
-                        ex.printStackTrace();
-                    }
-                    return Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get());
-                })
-                .withHandler(MinecraftExceptionHandler.ExceptionType.COMMAND_EXECUTION, (sender, ex) -> {
-                    if (Keys.SETTINGS_DEBUG.get()) {
-                        ex.printStackTrace();
-                    }
-                    return Util.exceptionMessage(sender, Keys.COMMAND_ERROR.get());
-                })
-                .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SYNTAX, (sender, ex) -> {
-                    if (Keys.SETTINGS_DEBUG.get()) {
-                        ex.printStackTrace();
-                    }
-                    return Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get(), "correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax());
-                })
-                .withHandler(MinecraftExceptionHandler.ExceptionType.INVALID_SENDER, (sender, ex) -> {
-                    if (Keys.SETTINGS_DEBUG.get()) {
-                        ex.printStackTrace();
-                    }
-                    return Util.exceptionMessage(sender, Keys.INVALID_ARGUMENTS.get(), "correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName());
-                })
-                .apply(commandManager, AudienceProvider.nativeAudience());
+        MinecraftExceptionHandler<CommandSender> handler = new MinecraftExceptionHandler<>();
+        handler.withHandler(ExceptionType.NO_PERMISSION, this.exceptionFunction(StringKey.NO_PERMS));
+        handler.withHandler(ExceptionType.ARGUMENT_PARSING, this.exceptionFunction(StringKey.INVALID_ARGUMENTS));
+        handler.withHandler(ExceptionType.COMMAND_EXECUTION, this.exceptionFunction(StringKey.COMMAND_ERROR));
+        handler.withHandler(ExceptionType.INVALID_SYNTAX, this.exceptionFunction(StringKey.INVALID_ARGUMENTS));
+        handler.withHandler(ExceptionType.INVALID_SENDER, this.exceptionFunction(StringKey.INVALID_ARGUMENTS));
+        handler.apply(commandManager, AudienceProvider.nativeAudience());
+    }
+
+    private BiFunction<CommandSender, Exception, Component> exceptionFunction(StringKey key) {
+        return (s, e) -> {
+            if (BooleanKey.SETTINGS_DEBUG.get()) {
+                e.printStackTrace();
+            }
+            Resolver.Builder rb = Resolver.builder().sender(s);
+            if (e instanceof InvalidSyntaxException ex) {
+                rb = rb.tags("correct_syntax", "/" + ex.getCorrectSyntax());
+            }
+            if (e instanceof InvalidCommandSenderException ex) {
+                rb = rb.tags("correct_sender", ex.getRequiredSender().getSimpleName());
+            }
+            return Text.fromKey(s, key, rb.build()).toComponent();
+        };
+    }
+
+    /**
+     * Loads everything required to operate menus. This may be expanded in the future.
+     */
+    private void loadMenus() {
+        PaperInterfaceListeners.install(this);
+    }
+
+    /**
+     * Loads everything required for event listeners. This may be expanded in the future.
+     */
+    private void loadListeners() {
+        Bukkit.getPluginManager().registerEvents(new Listeners(), this);
     }
 }

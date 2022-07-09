@@ -1,6 +1,6 @@
-package games.cultivate.mcmmocredits.util;
+package games.cultivate.mcmmocredits.placeholders;
 
-import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.data.Database;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
@@ -9,12 +9,6 @@ import org.jetbrains.annotations.NotNull;
  * This is responsible for handling our registration with PlaceholderAPI.
  */
 public class CreditsExpansion extends PlaceholderExpansion {
-    private Database database;
-
-    public CreditsExpansion(Database database) {
-        this.database = database;
-    }
-
     @Override
     public @NotNull String getAuthor() {
         return "Cultivate Games";
@@ -38,7 +32,7 @@ public class CreditsExpansion extends PlaceholderExpansion {
     @Override
     public String onRequest(OfflinePlayer player, String identifier) {
         if (identifier.equalsIgnoreCase("credits")) {
-            return this.database.getCredits(player.getUniqueId()) + "";
+            return Database.getDatabase().getCredits(player.getUniqueId()) + "";
         }
         return null;
     }

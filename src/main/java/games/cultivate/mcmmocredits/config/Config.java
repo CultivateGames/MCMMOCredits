@@ -1,49 +1,77 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.MCMMOCredits;
+import games.cultivate.mcmmocredits.keys.Key;
+import games.cultivate.mcmmocredits.serializers.ItemStackSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
+import org.spongepowered.configurate.serialize.SerializationException;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
-public class Config<T> {
-    public static final Config<SettingsConfig> SETTINGS = new Config<>(SettingsConfig.class);
-    public static final Config<MessagesConfig> MESSAGES = new Config<>(MessagesConfig.class);
-    public static final Config<MenuConfig> MENU = new Config<>(MenuConfig.class);
-
+public abstract class Config<T> {
     private final Class<T> type;
-    private T config;
+    private final List<Key<?>> keyCollection;
+    private T configObject;
     private CommentedConfigurationNode root;
-    private String title;
+    private String fileName;
     private HoconConfigurationLoader loader;
+    private Map<Object, CommentedConfigurationNode> configMap;
 
-    public Config (Class<T> type) {
+    protected Config(Class<T> type) {
         this.type = type;
+        this.keyCollection = new ArrayList<>();
     }
 
-    public void load(String title) {
+    public abstract void setupKeys();
+
+    public void load(String fileName) {
+        this.fileName = fileName;
         try {
-            this.title = title;
-            this.root = this.configLoader().load();
-            this.config = this.root.get(this.type);
-            this.configLoader().save(this.root);
+            if (this.loader == null) {
+                this.loader = this.createLoader();
+            }
+            this.root = this.loader.load();
+            this.configObject = this.root.get(this.type);
+            this.loader.save(this.root);
+            this.configMap = this.root.childrenMap();
+            //Testing
+            this.configMap.forEach((key, value) -> Bukkit.getLogger().info("Node Value: " + key.toString() + "Node Path: " + value.path()));
         } catch (Exception e) {
             e.printStackTrace();
         }
+        this.setupKeys();
     }
 
     public void save(CommentedConfigurationNode root) {
         try {
-            this.configLoader().save(root);
-            this.root = root;
+            this.loader.save(root);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        this.root = root;
+    }
+
+    public void save() {
+        this.save(this.root);
+    }
+
+    public void addKey(Key<?> key) {
+        this.keyCollection.add(key);
+    }
+
+    public List<Key<?>> keys() {
+        return List.copyOf(this.keyCollection);
     }
 
     public CommentedConfigurationNode root() {
@@ -51,37 +79,72 @@ public class Config<T> {
     }
 
     public T config() {
-        return this.config;
+        return this.configObject;
     }
 
-    public <K> K get(Class<K> type, Iterable<?> path) {
-        try {
-            return root.node(path).get(type);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-    
-    public Class<?> type() {
-        return type;
+    /**
+     * Returns a boolean from the underlying configuration map.
+     *
+     * @param pathPart string that the path contains. Unique enough to not worry about duplication.
+     * @param def      default value. Will log if the value is missing to let the user know to populate the value.
+     * @return boolean from the root configuration nodes children map, or the provided default value.
+     */
+    public boolean bool(String pathPart, boolean def) {
+            return valueFromMap(boolean.class, pathPart, def);
     }
 
-    private HoconConfigurationLoader createLoader() {
-        File file = new File(MCMMOCredits.path + title);
-        try {
-            if (file.getParentFile().mkdirs() && file.createNewFile()) {
-                Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created " + title + " file!");
+    /**
+     * Returns a String from the underlying configuration map.
+     *
+     * @param pathPart string that the path contains. Unique enough to not worry about duplication.
+     * @param def      default value. Will log if the value is missing to let the user know to populate the value.
+     * @return String from the root configuration nodes children map, or the provided default value.
+     */
+    public String string(String pathPart, String def) {
+        return valueFromMap(String.class, pathPart, def);
+    }
+
+    /**
+     * Returns an int from the underlying configuration map.
+     *
+     * @param pathPart string that the path contains. Unique enough to not worry about duplication.
+     * @param def      default value. Will log if the value is missing to let the user know to populate the value.
+     * @return String from the root configuration nodes children map, or the provided default value.
+     */
+    public int integer(String pathPart, int def) {
+        return valueFromMap(int.class, pathPart, def);
+    }
+
+    private <C> C valueFromMap(Class<C> type, String pathPart, C def) {
+        for (CommentedConfigurationNode node : this.configMap.values()) {
+            if (node.path().toString().contains(pathPart)) {
+                try {
+                    return node.get(type);
+                } catch (SerializationException e) {
+                    e.printStackTrace();
+                }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-        HoconConfigurationLoader hcl = HoconConfigurationLoader.builder().defaultOptions(opts -> opts.serializers(build -> build.register(ItemStack.class, ItemStackSerializer.INSTANCE))).path(Paths.get(file.getPath())).prettyPrinting(true).build();
-        this.loader = hcl;
-        return hcl;
+        this.logWarning();
+        return def;
     }
 
-    private HoconConfigurationLoader configLoader() {
-        return loader != null ? loader : createLoader();
+    /**
+     * Returns an ItemStack from the underlying configuration map.
+     */
+    public ItemStack item(ItemType itemType, Player player) {
+        return ItemStackSerializer.INSTANCE.deserializePlayer(this.root.node(itemType.path()), player);
+    }
+
+    public HoconConfigurationLoader createLoader() throws IOException {
+        Path p = JavaPlugin.getPlugin(MCMMOCredits.class).getDataFolder().toPath().resolve(this.fileName);
+        Files.createFile(p);
+        return HoconConfigurationLoader.builder()
+                .defaultOptions(opts -> opts.serializers(build -> build.register(ItemStack.class, ItemStackSerializer.INSTANCE)))
+                .path(p).prettyPrinting(true).build();
+    }
+
+    private void logWarning() {
+        Bukkit.getLogger().log(Level.WARNING, "[MCMMOCredits] Configuration was missing a value, Check your configuration!");
     }
 }
