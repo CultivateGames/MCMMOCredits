@@ -1,44 +1,54 @@
 package games.cultivate.mcmmocredits.config;
 
+import games.cultivate.mcmmocredits.keys.BooleanKey;
+import games.cultivate.mcmmocredits.keys.IntegerKey;
+import games.cultivate.mcmmocredits.keys.StringKey;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
-public class SettingsConfig {
-    @Comment("Database related settings.\n" + "Includes MySQL credential management.\n" + "These are not eligible for in-game configuration.")
-    @Setting("database")
-    private DatabaseSettings databaseSettings = new DatabaseSettings();
+public class SettingsConfig extends Config<SettingsConfig> {
+    private GeneralSettings general = new GeneralSettings();
 
-    @Comment("All other settings")
-    @Setting("general")
-    private GeneralSettings generalSettings = new GeneralSettings();
+    @Comment("Database related settings, that are not eligible for in-game configuration.")
+    private MYSQLSettings mysql = new MYSQLSettings();
+
+    SettingsConfig() {
+        super(SettingsConfig.class);
+    }
+
+    @Override
+    public void setupKeys() {
+        for (StringKey value : StringKey.values()) {
+            if (value.path().contains("database")) {
+                this.addKey(value);
+            }
+        }
+        for (BooleanKey value : BooleanKey.values()) {
+           if (!value.name().contains("MENU")) {
+               this.addKey(value);
+           }
+        }
+        this.addKey(IntegerKey.DATABASE_PORT);
+    }
 
     @ConfigSerializable
     protected static final class GeneralSettings {
         @Comment("Toggles tab completion for Player based arguments.\n" + "Useful if you have other plugins which hide staff.")
-        private boolean player_tab_completion = true;
+        private boolean playerTabCompletion = true;
         @Comment("Toggles sending a login message to the user.")
-        private boolean send_login_message = true;
+        private boolean sendLoginMessage = true;
         @Comment("Toggles console message when a user\n" + "is added to the MCMMO Credits database")
-        private boolean add_notification = true;
+        private boolean addPlayerNotification = true;
         @Comment("Enables debug")
         private boolean debug = false;
-
-    }
-
-    @ConfigSerializable
-    protected static final class DatabaseSettings {
-        @Comment("MySQL connection properties. All options will be ignored if SQLite is enabled. Use a separate MySQL user to manage this database.")
-        @Setting("mysql-credentials")
-        private SQLSettings sqlSettings = new SQLSettings();
         @Comment("Options: sqlite, mysql. Which database type should we use?\n" + "NOTE: There is not native support for changing between DB types.")
-        private String adapter = "sqlite";
+        private String databaseType = "sqlite";
     }
 
     @ConfigSerializable
-    protected static final class SQLSettings {
+    protected static final class MYSQLSettings {
         @Comment("Host address of MySQL database.")
         private String host = "127.0.0.1";
         @Comment("Port for Host address of MySQL database.")
