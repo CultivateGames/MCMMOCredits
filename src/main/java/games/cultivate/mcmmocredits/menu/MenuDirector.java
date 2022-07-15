@@ -79,7 +79,7 @@ public class MenuDirector {
     public void transferToCommand(Button button, ClickType clickType) {
         this.builder = this.builder.addTransform(1, (pane, view) -> pane.element(ItemStackElement.of(button.item(), clickHandler -> {
             if (clickHandler.cause().getClick().equals(clickType) && !button.command().isEmpty()) {
-                view.viewer().player().performCommand(button.command());
+                player.performCommand(button.command());
             }
         }), button.x(), button.y()));
     }
@@ -97,12 +97,7 @@ public class MenuDirector {
                     UUID uuid = player.getUniqueId();
                     this.storage.remove(uuid);
                     this.storage.add(uuid);
-                    this.storage.act(uuid, i -> {
-                        int amount = Integer.parseInt(i);
-                        //TODO add transaction
-                        rb.transaction(amount);
-                        Text.fromString(player, "selfRedeem", rb.build()).send();
-                    });
+                    this.storage.act(uuid, i -> player.performCommand(button.command() + Integer.parseInt(i)));
                 }
             }
         }), button.x(), button.y()));
@@ -131,17 +126,13 @@ public class MenuDirector {
     }
 
     protected Button createRedeemItem(ItemType type) {
-        new Button(this.menus.item(type, player), this.menus.itemSlot(type), "");
-        Button button = new Button(this.menus.item(type, player), 0, "");
-        button.addToPDC(PersistentDataType.STRING, type.path().get(2).toUpperCase());
-        return button;
+        return new Button(this.menus.item(type, player), this.menus.itemSlot(type), "redeem " + type.path().get(2) + " ");
     }
 
     protected List<Button> createConfigItems(Config<?> config) {
         List<Button> configItems = new ArrayList<>();
         int slot = 0;
         String type = config.config() instanceof MessagesConfig ? "MESSAGES" : "SETTINGS";
-
         for (CommentedConfigurationNode node : config.baseNode().childrenMap().values()) {
             String path = StringUtils.join(node.path().array(), ".");
             //Database and item options are not supported for in-game modification.

@@ -23,7 +23,7 @@ import java.util.UUID;
  * This class is responsible for handling of the /modifycredits command.
  */
 @CommandMethod("modifycredits")
-public class ModifyCredits {
+public final class ModifyCredits {
     private final Database database;
     private final MessagesConfig messages;
 

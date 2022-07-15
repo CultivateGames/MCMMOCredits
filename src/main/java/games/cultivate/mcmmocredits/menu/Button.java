@@ -24,7 +24,7 @@ public record Button(ItemStack item, int slot, String command) {
         return slot / 9;
     }
 
-    public Button of (Config<?> config, ItemType type, Player player) {
+    public static Button of(Config<?> config, ItemType type, Player player) {
         return new Button(config.item(type, player), config.itemSlot(type));
     }
 

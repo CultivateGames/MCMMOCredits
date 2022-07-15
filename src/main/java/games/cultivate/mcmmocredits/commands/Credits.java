@@ -19,7 +19,7 @@ import javax.inject.Inject;
  * This class is responsible for handling of the /credits command.
  */
 @CommandMethod("credits")
-public class Credits {
+public final class Credits {
     private final MessagesConfig messages;
     private final MenuConfig menus;
     private final SettingsConfig settings;
@@ -48,12 +48,12 @@ public class Credits {
             Text.Builder text = Text.builder().audience(sender);
             Resolver.Builder resolver = Resolver.builder().sender(sender);
             if (this.database.doesPlayerExist(i)) {
-                text.content(this.messages.string("otherBalance"));
-                text.resolver(resolver.player(username, i).build());
-                text.build().send();
+                text.content(this.messages.string("otherBalance"))
+                .resolver(resolver.player(username, i).build())
+                .build().send();
                 return;
             }
-            text.content(this.messages.string("playerDoesNotExist"));
+            text = text.content(this.messages.string("playerDoesNotExist"));
             text.resolver(resolver.build()).build().send();
         });
     }
