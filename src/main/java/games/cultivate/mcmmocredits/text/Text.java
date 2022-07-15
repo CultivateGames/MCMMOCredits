@@ -10,7 +10,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.regex.Pattern;
 
@@ -36,10 +35,6 @@ public class Text {
         return MiniMessage.miniMessage().deserializeOr(this.content, Component.empty());
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
-
     /**
      * Creates a Text object from an existing String.
      *
@@ -53,62 +48,20 @@ public class Text {
     }
 
     public static Text fromString(Audience audience, String content) {
-        return new Builder().audience(audience).content(content).resolver(null).build();
+        return new Text(audience, content, createResolver(audience));
     }
 
     public void send() {
         audience.sendMessage(this.toComponent());
     }
 
-    @SuppressWarnings("unused")
     public static Component parseComponent(Component comp, Player player) {
         Pattern p = PlaceholderAPI.getPlaceholderPattern();
         comp = comp.replaceText(i -> i.match(p).replacement((m, b) -> b.content(PlaceholderAPI.setPlaceholders(player, m.group()))));
-        return Component.empty().style(Text.DEFAULT_STYLE).append(MiniMessage.miniMessage().deserialize(MiniMessage.miniMessage().serialize(comp), Resolver.fromPlayer(player)));
+        return Component.empty().style(DEFAULT_STYLE).append(MiniMessage.miniMessage().deserialize(MiniMessage.miniMessage().serialize(comp), Resolver.fromPlayer(player)));
     }
 
-
-    @SuppressWarnings("unused")
-    public Builder toBuilder() {
-        return new Builder(this.audience, this.content, this.resolver);
-    }
-
-    public static class Builder {
-        private final Audience audience;
-        private final String content;
-        private TagResolver resolver;
-
-        private Builder(Audience audience, String content, @Nullable TagResolver resolver) {
-            this.audience = audience;
-            this.content = content;
-            this.resolver = resolver;
-        }
-
-        public Builder() {
-            this(Audience.empty(), null, null);
-        }
-
-        public Builder audience(Audience audience) {
-            return new Builder(audience, this.content, this.resolver);
-        }
-
-        public Builder content(String content) {
-            return new Builder(this.audience, content, this.resolver);
-        }
-
-        public Builder resolver(TagResolver resolver) {
-            return new Builder(this.audience, this.content, resolver);
-        }
-
-        private static TagResolver createResolver(Audience audience) {
-            return audience instanceof Player p ? Resolver.fromPlayer(p) : Resolver.fromSender((CommandSender) audience);
-        }
-
-        public Text build() {
-            if (this.resolver == null) {
-                this.resolver = createResolver(this.audience);
-            }
-            return new Text(this.audience, this.content, this.resolver);
-        }
+    private static TagResolver createResolver(Audience audience) {
+        return audience instanceof Player p ? Resolver.fromPlayer(p) : Resolver.fromSender((CommandSender) audience);
     }
 }

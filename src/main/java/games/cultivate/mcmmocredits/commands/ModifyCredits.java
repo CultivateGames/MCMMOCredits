@@ -37,31 +37,31 @@ public final class ModifyCredits {
     @CommandMethod("add <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
     private void addCredits(CommandSender sender, @Argument("amount") @Range(min = "1") int amount, @Argument(value = "username", suggestions = "players") String username, @Flag("silent") boolean silent) {
-        database.getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.ADD, throwable, silent));
+        this.database.getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.ADD, throwable, silent));
     }
 
     @CommandDescription("Set a user's MCMMO Credit balance to the specified amount.")
     @CommandMethod("set <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
     private void setCredits(CommandSender sender, @Argument("amount") @Range(min = "0") int amount, @Argument(value = "username", suggestions = "players") String username, @Flag("silent") boolean silent) {
-        database.getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.SET, throwable, silent));
+        this.database.getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.SET, throwable, silent));
     }
 
     @CommandDescription("Take MCMMO Credits away from a user's balance")
     @CommandMethod("take <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
     private void takeCredits(CommandSender sender, @Argument("amount") @Range(min = "1") int amount, @Argument(value = "username", suggestions = "players") String username, @Flag("silent") boolean silent) {
-        database.getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.TAKE, throwable, silent));
+        this.database.getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.TAKE, throwable, silent));
     }
 
     private void modifyCredits(CommandSender sender, int amount, UUID uuid, Operation op, Throwable throwable, boolean silent) {
-        if (!database.doesPlayerExist(uuid)) {
+        if (!this.database.doesPlayerExist(uuid)) {
             throw new CommandExecutionException(throwable);
         }
         switch (op) {
-            case ADD -> database.addCredits(uuid, amount);
-            case TAKE -> database.takeCredits(uuid, amount);
-            case SET -> database.setCredits(uuid, amount);
+            case ADD -> this.database.addCredits(uuid, amount);
+            case TAKE -> this.database.takeCredits(uuid, amount);
+            case SET -> this.database.setCredits(uuid, amount);
         }
         Player player = Bukkit.getPlayer(uuid);
         TagResolver resolver = Resolver.fromTransaction(sender, player, amount);
