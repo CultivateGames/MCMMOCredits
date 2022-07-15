@@ -8,9 +8,7 @@ import games.cultivate.mcmmocredits.config.MessagesConfig;
 import games.cultivate.mcmmocredits.data.InputStorage;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
-import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -64,8 +62,7 @@ public class MenuDirector {
     }
 
     public void title(String title) {
-        title = PlaceholderAPI.setPlaceholders(player, title);
-        this.builder = this.builder.title(MiniMessage.miniMessage().deserialize(title, Resolver.fromPlayer(player)));
+        this.builder = this.builder.title(Text.fromString(player, title).toComponent());
     }
 
     public void transferToInterface(Button button, ClickType clickType, ChestInterface chestInterface) {

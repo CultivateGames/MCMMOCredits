@@ -10,6 +10,7 @@ import games.cultivate.mcmmocredits.config.SettingsConfig;
 import games.cultivate.mcmmocredits.data.Database;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -43,18 +44,14 @@ public final class Credits {
     @CommandDescription("Check someone else's MCMMO Credit balance.")
     @CommandMethod("<username>")
     @CommandPermission("mcmmocredits.check.other")
-    private void checkCreditsOther(CommandSender sender, @Argument(value = "username", suggestions = "customPlayer") String username) {
+    private void checkCreditsOther(CommandSender sender, @Argument(value = "username", suggestions = "players") String username) {
         this.database.getUUID(username).whenCompleteAsync((i, t) -> {
-            Text.Builder text = Text.builder().audience(sender);
-            Resolver.Builder resolver = Resolver.builder().sender(sender);
             if (this.database.doesPlayerExist(i)) {
-                text.content(this.messages.string("otherBalance"))
-                .resolver(resolver.player(username, i).build())
-                .build().send();
+                TagResolver tr = Resolver.builder().sender(sender).player(username, i).build();
+                Text.fromString(sender, this.messages.string("otherBalance"), tr).send();
                 return;
             }
-            text = text.content(this.messages.string("playerDoesNotExist"));
-            text.resolver(resolver.build()).build().send();
+            Text.fromString(sender, this.messages.string("playerDoesNotExist")).send();
         });
     }
 
