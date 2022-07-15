@@ -52,7 +52,7 @@ public class Text {
     }
 
     public void send() {
-        audience.sendMessage(this.toComponent());
+        this.audience.sendMessage(this.toComponent());
     }
 
     public static Component parseComponent(Component comp, Player player) {
