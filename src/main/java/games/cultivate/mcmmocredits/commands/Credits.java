@@ -37,14 +37,14 @@ public final class Credits {
     @CommandDescription("Check your own MCMMO Credit balance.")
     @CommandMethod("")
     @CommandPermission("mcmmocredits.check.self")
-    private void checkCredits(Player player) {
+    public void checkCredits(Player player) {
         Text.fromString(player, this.messages.string("selfBalance")).send();
     }
 
     @CommandDescription("Check someone else's MCMMO Credit balance.")
     @CommandMethod("<username>")
     @CommandPermission("mcmmocredits.check.other")
-    private void checkCreditsOther(CommandSender sender, @Argument(value = "username", suggestions = "players") String username) {
+    public void checkCreditsOther(CommandSender sender, @Argument(value = "username", suggestions = "players") String username) {
         this.database.getUUID(username).whenCompleteAsync((i, t) -> {
             if (this.database.doesPlayerExist(i)) {
                 TagResolver tr = Resolver.builder().sender(sender).player(username, i).build();
@@ -58,7 +58,7 @@ public final class Credits {
     @CommandDescription("Reload all configuration files provided by the plugin.")
     @CommandMethod("reload")
     @CommandPermission("mcmmocredits.admin.reload")
-    private void reloadCredits(CommandSender sender) {
+    public void reloadCredits(CommandSender sender) {
         this.messages.load();
         this.settings.load();
         this.menus.load();
@@ -68,28 +68,28 @@ public final class Credits {
     @CommandDescription("Open a Menu that can be used to interface with this plugin.")
     @CommandMethod("menu")
     @CommandPermission("mcmmocredits.gui.basic")
-    private void openMenu(Player player) {
+    public void openMenu(Player player) {
         //open main menu
     }
 
     @CommandDescription("Open the Edit Messages Menu")
     @CommandMethod("menu messages")
     @CommandPermission("mcmmocredits.gui.admin")
-    private void openMessagesMenu(Player player) {
+    public void openMessagesMenu(Player player) {
         //open messages menu
     }
 
     @CommandDescription("Open the Edit Settings Menu")
     @CommandMethod("menu settings")
     @CommandPermission("mcmmocredits.gui.admin")
-    private void openSettingsMenu(Player player) {
+    public void openSettingsMenu(Player player) {
         //open settings menu
     }
 
     @CommandDescription("Open the Credit Redemption Menu")
     @CommandMethod("menu redeem")
     @CommandPermission("mcmmocredits.gui.redeem")
-    private void openRedeemMenu(Player player) {
+    public void openRedeemMenu(Player player) {
         //open redeem menu
     }
 }
