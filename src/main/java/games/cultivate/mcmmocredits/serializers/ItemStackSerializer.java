@@ -2,7 +2,7 @@ package games.cultivate.mcmmocredits.serializers;
 
 import com.destroystokyo.paper.profile.ProfileProperty;
 import dev.dbassett.skullcreator.SkullCreator;
-import games.cultivate.mcmmocredits.util.Util;
+import games.cultivate.mcmmocredits.text.Text;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
@@ -32,7 +32,7 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
     public ItemStack deserialize(Type type, ConfigurationNode node) {
         ItemStack item;
         if (node.node("skull").virtual()) {
-            item = new ItemStack(Material.valueOf(node.node("material").getString("")));
+            item = new ItemStack(Material.valueOf(node.node("material").getString()));
         } else {
             item = SkullCreator.itemWithBase64(new ItemStack(Material.PLAYER_HEAD), node.node("skull").getString(""));
         }
@@ -82,9 +82,9 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
     public ItemStack deserializePlayer(CommentedConfigurationNode node, Player player) {
         ItemStack item = this.deserialize(ItemStack.class, node);
         item.editMeta(meta -> {
-            meta.displayName(Util.parse(meta.displayName(), player));
+            meta.displayName(Text.parseComponent(meta.displayName(), player));
             if (meta.hasLore()) {
-                meta.lore(meta.lore().stream().map(i -> Util.parse(i, player)).toList());
+                meta.lore(meta.lore().stream().map(i -> Text.parseComponent(i, player)).toList());
             }
         });
         return item;

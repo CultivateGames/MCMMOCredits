@@ -1,6 +1,5 @@
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.keys.StringKey;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
@@ -19,17 +18,16 @@ public class MessagesConfig extends Config<MessagesConfig> {
     private GeneralMessages generalMessages = new GeneralMessages();
 
     MessagesConfig() {
-        super(MessagesConfig.class);
+        super(MessagesConfig.class, "messages.conf");
+    }
+
+    public String string(String path, boolean prefix) {
+        return prefix ? this.string("prefix") + this.string(path) : this.string(path);
     }
 
     @Override
-    public void setupKeys() {
-        for (StringKey key : StringKey.values()) {
-            String name = key.name();
-            if (!name.contains("DATABASE") && !name.contains("TITLE")) {
-                this.addKey(key);
-            }
-        }
+    public String string(String path) {
+        return this.string(path, true);
     }
 
     @ConfigSerializable
@@ -101,14 +99,14 @@ public class MessagesConfig extends Config<MessagesConfig> {
     protected static final class ModifyCreditsMessages {
         @Comment("Sender output for /modifycredits add.")
         private String addSender = "<green>You have given <amount> Credits to <player>.";
-        @Comment("Sender output for /modifycredits set.")
-        private String setSender = "<yellow>You have set <player>'s Credits to <amount>.";
+        @Comment("Sender output for /modifycredits modify.")
+        private String setSender = "<yellow>You have modify <player>'s Credits to <amount>.";
         @Comment("Sender output for /modifycredits take.")
         private String takeSender = "<red>You have taken <amount> Credits from <player>.";
         @Comment("Receiver output for /modifycredits add.\n" + "Requires --silent flag to be used.")
         private String addReceiver = "<green><amount> Credits have been added to your balance by <sender>. You now have <credits> Credits.";
-        @Comment("Receiver output for /modifycredits set.\n" + "Requires --silent flag to be used.")
-        private String setReceiver = "<yellow>Your MCMMO Credit balance has been set to <amount> by <sender>.";
+        @Comment("Receiver output for /modifycredits modify.\n" + "Requires --silent flag to be used.")
+        private String setReceiver = "<yellow>Your MCMMO Credit balance has been modify to <amount> by <sender>.";
         @Comment("Receiver output for /modifycredits take.\n" + "Requires --silent flag to be used.")
         private String takeReceiver = "<red>You had <amount> taken out of your Credit balance by <sender>. You now have <credits> Credits.";
     }

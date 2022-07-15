@@ -14,11 +14,11 @@ import com.google.inject.Injector;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.ModifyCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
-import games.cultivate.mcmmocredits.config.ConfigUtil;
+import games.cultivate.mcmmocredits.config.MenuConfig;
+import games.cultivate.mcmmocredits.config.MessagesConfig;
+import games.cultivate.mcmmocredits.config.SettingsConfig;
 import games.cultivate.mcmmocredits.data.Database;
-import games.cultivate.mcmmocredits.inject.SingletonModule;
-import games.cultivate.mcmmocredits.keys.BooleanKey;
-import games.cultivate.mcmmocredits.keys.StringKey;
+import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.placeholders.CreditsExpansion;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
@@ -40,6 +40,7 @@ import java.util.logging.Level;
  */
 public class MCMMOCredits extends JavaPlugin {
     private Injector injector;
+    private SettingsConfig settings;
 
     /**
      * This handles all startup logic.
@@ -51,13 +52,16 @@ public class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onEnable() {
-        this.injector = Guice.createInjector(new SingletonModule());
+        this.injector = Guice.createInjector(new PluginModule(this));
         this.checkForDependencies();
-        ConfigUtil.loadAllConfigs();
-        Database.loadFromConfig();
+        this.injector.getInstance(SettingsConfig.class).load();
+        this.injector.getInstance(MessagesConfig.class).load();
+        this.injector.getInstance(MenuConfig.class).load();
+        this.settings = this.injector.getInstance(SettingsConfig.class);
+        this.injector.getInstance(Database.class);
         this.loadCommands();
-        this.loadMenus();
-        this.loadListeners();
+        PaperInterfaceListeners.install(this);
+        Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
     }
 
     /**
@@ -67,8 +71,10 @@ public class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        ConfigUtil.saveAllConfigs();
-        Database.getDatabase().disable();
+        this.injector.getInstance(SettingsConfig.class).save();
+        this.injector.getInstance(MessagesConfig.class).save();
+        this.injector.getInstance(MenuConfig.class).save();
+        this.injector.getInstance(Database.class).disable();
     }
 
     private void checkForDependencies() {
@@ -80,14 +86,14 @@ public class MCMMOCredits extends JavaPlugin {
         }
 
         if (Bukkit.getPluginManager().getPlugin("mcMMO") == null) {
-            this.getLogger().log(Level.SEVERE, "MCMMO is not found, disabling plugin...");
+            this.getLogger().log(Level.SEVERE, "mcMMO is not found, disabling plugin...");
             this.setEnabled(false);
             return;
         }
-        this.getLogger().log(Level.INFO, "MCMMO has been found! Continuing to load...");
+        this.getLogger().log(Level.INFO, "mcMMO has been found! Continuing to load...");
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new CreditsExpansion().register();
+            this.injector.getInstance(CreditsExpansion.class).register();
         }
     }
 
@@ -104,9 +110,10 @@ public class MCMMOCredits extends JavaPlugin {
         }
         commandManager.registerBrigadier();
         commandManager.registerAsynchronousCompletions();
+
         commandManager.parserRegistry().registerSuggestionProvider("players", (c, i) -> {
-            if (BooleanKey.PLAYER_TAB_COMPLETION.get()) {
-                 return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
+            if (this.settings.bool("playerTabCompletion", true)) {
+                return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
             }
             return List.of();
         });
@@ -117,41 +124,28 @@ public class MCMMOCredits extends JavaPlugin {
         annotationParser.parse(this.injector.getInstance(Redeem.class));
 
         MinecraftExceptionHandler<CommandSender> handler = new MinecraftExceptionHandler<>();
-        handler.withHandler(ExceptionType.NO_PERMISSION, this.exceptionFunction(StringKey.NO_PERMS));
-        handler.withHandler(ExceptionType.ARGUMENT_PARSING, this.exceptionFunction(StringKey.INVALID_ARGUMENTS));
-        handler.withHandler(ExceptionType.COMMAND_EXECUTION, this.exceptionFunction(StringKey.COMMAND_ERROR));
-        handler.withHandler(ExceptionType.INVALID_SYNTAX, this.exceptionFunction(StringKey.INVALID_ARGUMENTS));
-        handler.withHandler(ExceptionType.INVALID_SENDER, this.exceptionFunction(StringKey.INVALID_ARGUMENTS));
+        MessagesConfig messages = this.injector.getInstance(MessagesConfig.class);
+        handler.withHandler(ExceptionType.NO_PERMISSION, this.exceptionFunction(messages.string("noPermission")));
+        handler.withHandler(ExceptionType.ARGUMENT_PARSING, this.exceptionFunction(messages.string("invalidArguments")));
+        handler.withHandler(ExceptionType.COMMAND_EXECUTION, this.exceptionFunction(messages.string("commandError")));
+        handler.withHandler(ExceptionType.INVALID_SYNTAX, this.exceptionFunction(messages.string("invalidArguments")));
+        handler.withHandler(ExceptionType.INVALID_SENDER, this.exceptionFunction(messages.string("commandError")));
         handler.apply(commandManager, AudienceProvider.nativeAudience());
     }
 
-    private BiFunction<CommandSender, Exception, Component> exceptionFunction(StringKey key) {
-        return (s, e) -> {
-            if (BooleanKey.SETTINGS_DEBUG.get()) {
-                e.printStackTrace();
+    private BiFunction<CommandSender, Exception, Component> exceptionFunction(String string) {
+        return (sender, exception) -> {
+            if (this.settings.bool("debug", false)) {
+                exception.printStackTrace();
             }
-            Resolver.Builder rb = Resolver.builder().sender(s);
-            if (e instanceof InvalidSyntaxException ex) {
+            Resolver.Builder rb = Resolver.builder().sender(sender);
+            if (exception instanceof InvalidSyntaxException ex) {
                 rb = rb.tags("correct_syntax", "/" + ex.getCorrectSyntax());
             }
-            if (e instanceof InvalidCommandSenderException ex) {
+            if (exception instanceof InvalidCommandSenderException ex) {
                 rb = rb.tags("correct_sender", ex.getRequiredSender().getSimpleName());
             }
-            return Text.fromKey(s, key, rb.build()).toComponent();
+            return Text.fromString(sender, string, rb.build()).toComponent();
         };
-    }
-
-    /**
-     * Loads everything required to operate menus. This may be expanded in the future.
-     */
-    private void loadMenus() {
-        PaperInterfaceListeners.install(this);
-    }
-
-    /**
-     * Loads everything required for event listeners. This may be expanded in the future.
-     */
-    private void loadListeners() {
-        Bukkit.getPluginManager().registerEvents(new Listeners(), this);
     }
 }

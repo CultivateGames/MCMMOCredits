@@ -1,25 +1,38 @@
 package games.cultivate.mcmmocredits.data;
 
+import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import games.cultivate.mcmmocredits.keys.BooleanKey;
-import games.cultivate.mcmmocredits.keys.IntegerKey;
-import games.cultivate.mcmmocredits.keys.StringKey;
+import games.cultivate.mcmmocredits.MCMMOCredits;
+import games.cultivate.mcmmocredits.config.SettingsConfig;
 
-final class MYSQLDatabase extends SQLDatabase {
+public final class MYSQLDatabase extends SQLDatabase {
+    private final int databasePort;
+    private final String databaseHost;
+    private final String databaseName;
+    private final String databaseUsername;
+    private final String databasePassword;
+    private final boolean databaseSSL;
 
-    MYSQLDatabase() {
-        super();
+    @Inject
+    public MYSQLDatabase(SettingsConfig settings, MCMMOCredits plugin) {
+        super(settings, plugin);
+        this.databasePort = super.settings.integer("mysql.port", 3306);
+        this.databaseHost = super.settings.string("mysql.host");
+        this.databaseName = super.settings.string("mysql.name", "database");
+        this.databaseUsername = super.settings.string("mysql.username", "username");
+        this.databasePassword = super.settings.string("mysql.password", "");
+        this.databaseSSL = super.settings.bool("mysql.ssl", true);
     }
 
     @Override
     HikariDataSource createDataSource() {
         HikariConfig config = new HikariConfig();
         config.setPoolName("MCMMOCredits MySQL");
-        config.setJdbcUrl("jdbc:mysql://" + StringKey.DATABASE_HOST.get() + ":" + IntegerKey.DATABASE_PORT.get() + "/" + StringKey.DATABASE_NAME.get());
-        config.setUsername(StringKey.DATABASE_USERNAME.get());
-        config.setPassword(StringKey.DATABASE_PASSWORD.get());
-        config.addDataSourceProperty("useSSL", BooleanKey.DATABASE_SSL.get());
+        config.setJdbcUrl("jdbc:mysql://" + this.databaseHost + ":" + this.databasePort + "/" + this.databaseName);
+        config.setUsername(this.databaseUsername);
+        config.setPassword(this.databasePassword);
+        config.addDataSourceProperty("useSSL", this.databaseSSL);
         config.addDataSourceProperty("maintainTimeStats", "false");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
         config.addDataSourceProperty("rewriteBatchedStatements", "true");

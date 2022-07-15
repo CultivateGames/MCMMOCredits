@@ -1,9 +1,5 @@
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.keys.BooleanKey;
-import games.cultivate.mcmmocredits.keys.IntegerKey;
-import games.cultivate.mcmmocredits.keys.ItemStackKey;
-import games.cultivate.mcmmocredits.keys.StringKey;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
@@ -25,26 +21,7 @@ public class MenuConfig extends Config<MenuConfig> {
     private RedeemMenu redeemMenu = new RedeemMenu();
 
    MenuConfig() {
-        super(MenuConfig.class);
-    }
-
-    @Override
-    public void setupKeys() {
-        //Inventory Attributes
-        this.addKey(IntegerKey.EDIT_MESSAGES_SIZE);
-        this.addKey(IntegerKey.EDIT_SETTINGS_SIZE);
-        this.addKey(IntegerKey.MENU_SIZE);
-        this.addKey(IntegerKey.REDEEM_SIZE);
-        this.addKey(BooleanKey.MENU_FILL);
-        this.addKey(BooleanKey.MENU_NAVIGATION);
-        this.addKey(StringKey.EDIT_MESSAGES_TITLE);
-        this.addKey(StringKey.EDIT_SETTINGS_TITLE);
-        this.addKey(StringKey.MENU_TITLE);
-        this.addKey(StringKey.REDEEM_TITLE);
-        //Item Stack Keys
-        for (ItemStackKey isk : ItemStackKey.values()) {
-            this.addKey(isk);
-        }
+        super(MenuConfig.class, "menus.conf");
     }
 
     @ConfigSerializable

@@ -1,10 +1,11 @@
 package games.cultivate.mcmmocredits.util;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
+import com.google.inject.Inject;
+import games.cultivate.mcmmocredits.config.MessagesConfig;
+import games.cultivate.mcmmocredits.config.SettingsConfig;
 import games.cultivate.mcmmocredits.data.Database;
 import games.cultivate.mcmmocredits.data.InputStorage;
-import games.cultivate.mcmmocredits.keys.BooleanKey;
-import games.cultivate.mcmmocredits.keys.StringKey;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -21,9 +22,22 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import java.util.UUID;
 
 /**
- * Event Handlers used to manage the database, and input storage.
+ * Event Handlers used to manage the database, and input this.storage.
  */
 public class Listeners implements Listener {
+    private final MessagesConfig messages;
+    private final SettingsConfig settings;
+    private final InputStorage storage;
+    private final Database database;
+
+    @Inject
+    public Listeners(MessagesConfig messages, SettingsConfig settings, InputStorage storage, Database database) {
+        this.messages = messages;
+        this.settings = settings;
+        this.storage = storage;
+        this.database = database;
+    }
+
     /**
      * Add users to MCMMO Credits database.
      *
@@ -35,16 +49,16 @@ public class Listeners implements Listener {
             PlayerProfile profile = e.getPlayerProfile();
             UUID uuid = profile.getId();
             String username = profile.getName();
-            Database database = Database.getDatabase();
-            if (!database.doesPlayerExist(uuid)) {
-                database.addPlayer(uuid, username, 0);
-                if (BooleanKey.ADD_NOTIFICATION.get()) {
-                    TagResolver tr = Resolver.builder().player(username, uuid).build();
-                    Text.fromKey(Bukkit.getConsoleSender(), StringKey.ADD_PLAYER_MESSAGE, tr).send();
+            if (!this.database.doesPlayerExist(uuid)) {
+                this.database.addPlayer(uuid, username, 0);
+                if (this.settings.bool("addNotification", true)) {
+                    TagResolver resolver = Resolver.builder().player(username, uuid).build();
+                    String content = this.messages.string("addPlayerMessage", false);
+                    Text.fromString(Bukkit.getConsoleSender(), content, resolver).send();
                 }
             }
             //Set the username on every allowed login to keep track of last known username.
-            database.setUsername(uuid, username);
+            this.database.setUsername(uuid, username);
         }
     }
 
@@ -55,8 +69,8 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
-        if (BooleanKey.SEND_LOGIN_MESSAGE.get()) {
-            Text.fromKey(e.getPlayer(), StringKey.LOGIN_MESSAGE).send();
+        if (this.settings.bool("sendLoginMessage", true)) {
+            Text.fromString(e.getPlayer(), this.messages.string("loginMessage")).send();
         }
     }
 
@@ -69,14 +83,13 @@ public class Listeners implements Listener {
     public void onPlayerChat(AsyncChatEvent e) {
         Player player = e.getPlayer();
         UUID uuid = player.getUniqueId();
-        InputStorage storage = InputStorage.getInstance();
-        if (storage.contains(uuid)) {
+        if (this.storage.contains(uuid)) {
             String completion = MiniMessage.miniMessage().serialize(e.message());
             if (completion.equalsIgnoreCase("cancel")) {
-                storage.remove(uuid);
-                Text.fromKey(player, StringKey.CANCEL_PROMPT).send();
+                this.storage.remove(uuid);
+                Text.fromString(player, this.messages.string("cancelPrompt")).send();
             }
-            storage.complete(uuid, completion);
+            this.storage.complete(uuid, completion);
             e.setCancelled(true);
         }
     }
@@ -88,6 +101,6 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent e) {
-        InputStorage.getInstance().remove(e.getPlayer().getUniqueId());
+        this.storage.remove(e.getPlayer().getUniqueId());
     }
 }

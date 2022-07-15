@@ -1,10 +1,10 @@
 package games.cultivate.mcmmocredits.data;
 
+import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.keys.StringKey;
+import games.cultivate.mcmmocredits.config.SettingsConfig;
 import org.bukkit.Bukkit;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,17 +15,18 @@ import java.util.concurrent.CompletableFuture;
 
 import static games.cultivate.mcmmocredits.data.SQLStatements.*;
 
-public abstract sealed class SQLDatabase extends Database permits MYSQLDatabase, SQLiteDatabase {
-    final JavaPlugin plugin;
-    private final HikariDataSource hikari;
+public abstract sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLiteDatabase {
     private static final UUID ZERO_UUID = new UUID(0, 0);
+    private final MCMMOCredits plugin;
+    final SettingsConfig settings;
+    private final HikariDataSource hikari;
 
-    abstract HikariDataSource createDataSource();
-
-    SQLDatabase() {
-        this.plugin = JavaPlugin.getPlugin(MCMMOCredits.class);
+    @Inject //The plugin is passed in to execute async tasks.
+    SQLDatabase(SettingsConfig settings, MCMMOCredits plugin) {
+        this.settings = settings;
+        this.plugin = plugin;
         this.hikari = this.createDataSource();
-        SQLStatements creation = StringKey.DATABASE_ADAPTER.get().equals("mysql") ? MYSQL_CREATE_TABLE : SQLITE_CREATE_TABLE;
+        SQLStatements creation = settings.string("databaseType").equals("mysql") ? MYSQL_CREATE_TABLE : SQLITE_CREATE_TABLE;
         try (Connection connection = this.connection();
              PreparedStatement ps = connection.prepareStatement(creation.toString())) {
             ps.execute();
@@ -33,6 +34,8 @@ public abstract sealed class SQLDatabase extends Database permits MYSQLDatabase,
             e.printStackTrace();
         }
     }
+
+    abstract HikariDataSource createDataSource();
 
     private Connection connection() throws SQLException {
         return this.hikari.getConnection();

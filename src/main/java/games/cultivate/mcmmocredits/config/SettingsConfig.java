@@ -1,8 +1,5 @@
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.keys.BooleanKey;
-import games.cultivate.mcmmocredits.keys.IntegerKey;
-import games.cultivate.mcmmocredits.keys.StringKey;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
 
@@ -15,22 +12,7 @@ public class SettingsConfig extends Config<SettingsConfig> {
     private MYSQLSettings mysql = new MYSQLSettings();
 
     SettingsConfig() {
-        super(SettingsConfig.class);
-    }
-
-    @Override
-    public void setupKeys() {
-        for (StringKey value : StringKey.values()) {
-            if (value.path().contains("database")) {
-                this.addKey(value);
-            }
-        }
-        for (BooleanKey value : BooleanKey.values()) {
-           if (!value.name().contains("MENU")) {
-               this.addKey(value);
-           }
-        }
-        this.addKey(IntegerKey.DATABASE_PORT);
+        super(SettingsConfig.class, "settings.conf");
     }
 
     @ConfigSerializable

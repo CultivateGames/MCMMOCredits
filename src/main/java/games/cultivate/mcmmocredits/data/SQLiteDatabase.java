@@ -2,14 +2,19 @@ package games.cultivate.mcmmocredits.data;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import games.cultivate.mcmmocredits.MCMMOCredits;
+import games.cultivate.mcmmocredits.config.SettingsConfig;
 
+import javax.inject.Inject;
 import java.io.File;
 
-final class SQLiteDatabase extends SQLDatabase {
-    private final String path = "jdbc:sqlite:" + super.plugin.getDataFolder().getAbsolutePath() + File.separator + "database.db";
+public final class SQLiteDatabase extends SQLDatabase {
+    private final String path;
 
-    SQLiteDatabase() {
-        super();
+    @Inject
+    public SQLiteDatabase(SettingsConfig settings, MCMMOCredits plugin) {
+        super(settings, plugin);
+        this.path = "jdbc:sqlite:" + plugin.getDataFolder().getAbsolutePath() + File.separator + "database.db";
     }
 
     @Override
