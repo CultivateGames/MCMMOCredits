@@ -27,12 +27,12 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.interfaces.paper.PaperInterfaceListeners;
 
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.logging.Level;
 
 /**
@@ -84,15 +84,15 @@ public class MCMMOCredits extends JavaPlugin {
             this.getLogger().log(Level.SEVERE, "Not running Paper, disabling plugin...");
             this.setEnabled(false);
         }
-
-        if (Bukkit.getPluginManager().getPlugin("mcMMO") == null) {
+        PluginManager pluginManager = Bukkit.getPluginManager();
+        if (pluginManager.getPlugin("mcMMO") == null) {
             this.getLogger().log(Level.SEVERE, "mcMMO is not found, disabling plugin...");
             this.setEnabled(false);
             return;
         }
         this.getLogger().log(Level.INFO, "mcMMO has been found! Continuing to load...");
 
-        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+        if (pluginManager.getPlugin("PlaceholderAPI") != null) {
             this.injector.getInstance(CreditsExpansion.class).register();
         }
     }
@@ -100,10 +100,7 @@ public class MCMMOCredits extends JavaPlugin {
     private void loadCommands() {
         PaperCommandManager<CommandSender> commandManager;
         try {
-            commandManager = new PaperCommandManager<>(this,
-                    AsynchronousCommandExecutionCoordinator.<CommandSender>newBuilder().withAsynchronousParsing().build(),
-                    Function.identity(),
-                    Function.identity());
+            commandManager = new PaperCommandManager<>(this, AsynchronousCommandExecutionCoordinator.<CommandSender>newBuilder().withAsynchronousParsing().build(), t -> t, t -> t);
         } catch (Exception e) {
             e.printStackTrace();
             return;
