@@ -4,7 +4,6 @@ import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
-import com.google.inject.Inject;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.config.MessagesConfig;
 import games.cultivate.mcmmocredits.config.SettingsConfig;
@@ -13,6 +12,8 @@ import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import javax.inject.Inject;
 
 /**
  * This class is responsible for handling of the /credits command.

@@ -1,7 +1,6 @@
 package games.cultivate.mcmmocredits.menu;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import com.google.inject.Inject;
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.ItemType;
 import games.cultivate.mcmmocredits.config.MenuConfig;
@@ -25,6 +24,7 @@ import org.incendo.interfaces.paper.transform.PaperTransform;
 import org.incendo.interfaces.paper.type.ChestInterface;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
