@@ -1,7 +1,6 @@
 package games.cultivate.mcmmocredits.util;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
-import com.google.inject.Inject;
 import games.cultivate.mcmmocredits.config.MessagesConfig;
 import games.cultivate.mcmmocredits.config.SettingsConfig;
 import games.cultivate.mcmmocredits.data.Database;
@@ -19,6 +18,7 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import javax.inject.Inject;
 import java.util.UUID;
 
 /**

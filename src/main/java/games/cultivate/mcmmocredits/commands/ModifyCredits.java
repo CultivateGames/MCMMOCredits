@@ -7,7 +7,6 @@ import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.specifier.Range;
 import cloud.commandframework.exceptions.CommandExecutionException;
-import com.google.inject.Inject;
 import games.cultivate.mcmmocredits.config.MessagesConfig;
 import games.cultivate.mcmmocredits.data.Database;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
@@ -17,6 +16,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import javax.inject.Inject;
 import java.util.UUID;
 
 /**

@@ -1,10 +1,11 @@
 package games.cultivate.mcmmocredits.data;
 
-import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.SettingsConfig;
+
+import javax.inject.Inject;
 
 public final class MYSQLDatabase extends SQLDatabase {
     private final int databasePort;

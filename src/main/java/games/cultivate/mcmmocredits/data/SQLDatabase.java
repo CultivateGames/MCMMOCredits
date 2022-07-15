@@ -1,11 +1,11 @@
 package games.cultivate.mcmmocredits.data;
 
-import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.SettingsConfig;
 import org.bukkit.Bukkit;
 
+import javax.inject.Inject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,7 +21,8 @@ public abstract sealed class SQLDatabase implements Database permits MYSQLDataba
     final SettingsConfig settings;
     private final HikariDataSource hikari;
 
-    @Inject //The plugin is passed in to execute async tasks.
+    @Inject
+        //The plugin is passed in to execute async tasks.
     SQLDatabase(SettingsConfig settings, MCMMOCredits plugin) {
         this.settings = settings;
         this.plugin = plugin;
