@@ -41,7 +41,7 @@ public class ModifyCredits {
     }
 
     @CommandDescription("Set a user's MCMMO Credit balance to the specified amount.")
-    @CommandMethod("modify <amount> <username>")
+    @CommandMethod("set <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
     private void setCredits(CommandSender sender, @Argument("amount") @Range(min = "0") int amount, @Argument(value = "username", suggestions = "players") String username, @Flag("silent") boolean silent) {
         database.getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.SET, throwable, silent));
