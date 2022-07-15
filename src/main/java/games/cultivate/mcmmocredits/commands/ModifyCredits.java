@@ -36,21 +36,21 @@ public final class ModifyCredits {
     @CommandDescription("Add MCMMO Credits to a user's balance.")
     @CommandMethod("add <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
-    private void addCredits(CommandSender sender, @Argument("amount") @Range(min = "1") int amount, @Argument(value = "username", suggestions = "players") String username, @Flag("silent") boolean silent) {
+    public void addCredits(CommandSender sender, @Argument("amount") @Range(min = "1") int amount, @Argument(value = "username", suggestions = "players") String username, @Flag("silent") boolean silent) {
         this.database.getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.ADD, throwable, silent));
     }
 
     @CommandDescription("Set a user's MCMMO Credit balance to the specified amount.")
     @CommandMethod("set <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
-    private void setCredits(CommandSender sender, @Argument("amount") @Range(min = "0") int amount, @Argument(value = "username", suggestions = "players") String username, @Flag("silent") boolean silent) {
+    public void setCredits(CommandSender sender, @Argument("amount") @Range(min = "0") int amount, @Argument(value = "username", suggestions = "players") String username, @Flag("silent") boolean silent) {
         this.database.getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.SET, throwable, silent));
     }
 
     @CommandDescription("Take MCMMO Credits away from a user's balance")
     @CommandMethod("take <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
-    private void takeCredits(CommandSender sender, @Argument("amount") @Range(min = "1") int amount, @Argument(value = "username", suggestions = "players") String username, @Flag("silent") boolean silent) {
+    public void takeCredits(CommandSender sender, @Argument("amount") @Range(min = "1") int amount, @Argument(value = "username", suggestions = "players") String username, @Flag("silent") boolean silent) {
         this.database.getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.TAKE, throwable, silent));
     }
 

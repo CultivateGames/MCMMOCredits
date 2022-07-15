@@ -30,7 +30,7 @@ repositories {
 
 dependencies {
     paperDevBundle("1.19-R0.1-SNAPSHOT")
-
+    annotationProcessor("cloud.commandframework:cloud-annotations:1.7.0")
     implementation("cloud.commandframework:cloud-annotations:1.7.0")
     implementation("cloud.commandframework:cloud-paper:1.7.0")
     implementation("cloud.commandframework:cloud-minecraft-extras:1.7.0")
