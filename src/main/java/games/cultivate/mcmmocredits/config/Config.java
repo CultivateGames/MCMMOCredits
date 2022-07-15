@@ -146,8 +146,8 @@ public abstract class Config<T> {
 
     /**
      * Sets a value to config. Returns true if successful.
-     * @param path path of value
-     * @param value value to modify path to.
+     * @param path config path where we want to change value.
+     * @param value value used for modification of config.
      * @return if the change was successful.
      */
     public boolean modify(String path, String value) {
@@ -168,8 +168,8 @@ public abstract class Config<T> {
     public Button button(ItemType itemType, Player player) {
         CommentedConfigurationNode node = this.root.node(itemType.path());
         ItemStack item = ItemStackSerializer.INSTANCE.deserializePlayer(node, player);
-        int slot = node.node("inventory-slot").getInt(0);
-        return new Button(item, slot, "");
+        int slot = node.node("slot").getInt(0);
+        return new Button(item, slot);
     }
 
     public HoconConfigurationLoader createLoader() throws IOException {

@@ -27,7 +27,7 @@ import java.util.UUID;
  * This class is responsible for handling of the /redeem command.
  */
 @CommandMethod("redeem|rmc|redeemcredits")
-public class Redeem {
+public final class Redeem {
     private final MessagesConfig messages;
     private final Database database;
 
@@ -41,7 +41,7 @@ public class Redeem {
     @CommandMethod("<skill> <amount>")
     @CommandPermission("mcmmocredits.redeem.self")
     private void selfRedeem(Player player, @Argument("skill") PrimarySkillType skill, @Argument("amount") @Range(min = "1") int amount) {
-        TagResolver resolver = Resolver.fromRedemption(null, player, skill, amount);
+        TagResolver resolver = Resolver.fromRedemption(player, player, skill, amount);
         Optional<String> opt = this.performTransaction(player.getUniqueId(), skill, amount);
         String content = opt.isEmpty() ? "selfRedeem" : opt.get();
         Text.fromString(player, this.messages.string(content), resolver).send();
