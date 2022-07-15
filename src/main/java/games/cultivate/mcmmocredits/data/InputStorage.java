@@ -7,18 +7,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class InputStorage {
+    private final Map<UUID, CompletableFuture<String>> map;
 
-    private static InputStorage queue = null;
-    private final Map<UUID, CompletableFuture<String>> map = new ConcurrentHashMap<>();
-
-    private InputStorage() {
-    }
-
-    public static InputStorage getInstance() {
-        if (queue == null) {
-            queue = new InputStorage();
-        }
-        return queue;
+    public InputStorage() {
+        this.map = new ConcurrentHashMap<>();
     }
 
     public void remove(UUID uuid) {

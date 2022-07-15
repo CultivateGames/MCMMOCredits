@@ -1,10 +1,14 @@
 package games.cultivate.mcmmocredits.config;
 
+import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Arrays;
+import java.util.List;
 
 public enum ItemType {
     MENU_FILL_ITEM("main.fill-item"),
-    MENU_NAVIGATION_ITEM("main.navigation-item"),
+    MENU_NAVIGATION_ITEM("main.navigationItem"),
     MENU_MESSAGES_ITEM("main.messages"),
     MENU_REDEEM_ITEM("main.redeem"),
     MENU_SETTINGS_ITEM("main.settings"),
@@ -26,13 +30,22 @@ public enum ItemType {
     UNARMED_ITEM("redeem.items.unarmed"),
     WOODCUTTING_ITEM("redeem.items.woodcutting");
 
-    private final String path;
+    private final List<String> path;
 
     ItemType(String path) {
-        this.path = path;
+        this.path = Arrays.asList(path.split("\\."));
     }
 
-    public @NotNull String path() {
+    public @NotNull List<String> path() {
         return path;
+    }
+
+    public ItemType fromSkill(PrimarySkillType skill) {
+        for (ItemType it : ItemType.values()) {
+            if (it.path().contains(skill.name().toLowerCase())) {
+                return it;
+            }
+        }
+        return null;
     }
 }

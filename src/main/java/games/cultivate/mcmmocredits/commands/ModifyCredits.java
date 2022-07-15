@@ -7,8 +7,9 @@ import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.specifier.Range;
 import cloud.commandframework.exceptions.CommandExecutionException;
+import com.google.inject.Inject;
+import games.cultivate.mcmmocredits.config.MessagesConfig;
 import games.cultivate.mcmmocredits.data.Database;
-import games.cultivate.mcmmocredits.keys.StringKey;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -23,7 +24,14 @@ import java.util.UUID;
  */
 @CommandMethod("modifycredits")
 public class ModifyCredits {
-    private static final Database database = Database.getDatabase();
+    private final Database database;
+    private final MessagesConfig messages;
+
+    @Inject
+    public ModifyCredits(MessagesConfig messages, Database database) {
+        this.messages = messages;
+        this.database = database;
+    }
 
     @CommandDescription("Add MCMMO Credits to a user's balance.")
     @CommandMethod("add <amount> <username>")
@@ -33,7 +41,7 @@ public class ModifyCredits {
     }
 
     @CommandDescription("Set a user's MCMMO Credit balance to the specified amount.")
-    @CommandMethod("set <amount> <username>")
+    @CommandMethod("modify <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
     private void setCredits(CommandSender sender, @Argument("amount") @Range(min = "0") int amount, @Argument(value = "username", suggestions = "players") String username, @Flag("silent") boolean silent) {
         database.getUUID(username).whenCompleteAsync((i, throwable) -> this.modifyCredits(sender, amount, i, Operation.SET, throwable, silent));
@@ -57,13 +65,11 @@ public class ModifyCredits {
         }
         Player player = Bukkit.getPlayer(uuid);
         TagResolver resolver = Resolver.fromTransaction(sender, player, amount);
-        String keyOp = "MODIFY_CREDITS" + op.name();
-        Text text = Text.fromKey(sender, StringKey.valueOf(keyOp + "_SENDER"), resolver);
-        text.send();
+        Text.fromString(sender, this.messages.string(op.name().toLowerCase() + "Sender"), resolver).send();
         if (sender != player && !silent) {
-            text.toBuilder().audience(player).key(StringKey.valueOf(keyOp + "_RECEIVER")).build().send();
+            Text.fromString(player, this.messages.string(op.name().toLowerCase() + "Receiver"), resolver).send();
         }
     }
 
-    private enum Operation {ADD, SET, TAKE}
+    enum Operation {ADD, SET, TAKE}
 }
