@@ -41,7 +41,7 @@ public class SettingsConfig extends Config<SettingsConfig> {
         private String username = "root";
         @Comment("MySQL Account Password.")
         private String password = "passw0rd+";
-        @Comment("UseSSL. Should the connection use SSL?")
+        @Comment("UseSSL connection property. Should the connection use SSL?")
         private boolean ssl = true;
     }
 }

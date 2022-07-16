@@ -98,24 +98,24 @@ public class MCMMOCredits extends JavaPlugin {
     }
 
     private void loadCommands() {
-        PaperCommandManager<CommandSender> commandManager;
+        PaperCommandManager<CommandSender> manager;
         try {
-            commandManager = new PaperCommandManager<>(this, AsynchronousCommandExecutionCoordinator.<CommandSender>newBuilder().withAsynchronousParsing().build(), t -> t, t -> t);
+            manager = new PaperCommandManager<>(this, AsynchronousCommandExecutionCoordinator.<CommandSender>newBuilder().withAsynchronousParsing().build(), t -> t, t -> t);
         } catch (Exception e) {
             e.printStackTrace();
             return;
         }
-        commandManager.registerBrigadier();
-        commandManager.registerAsynchronousCompletions();
+        manager.registerBrigadier();
+        manager.registerAsynchronousCompletions();
 
-        commandManager.parserRegistry().registerSuggestionProvider("players", (c, i) -> {
+        manager.parserRegistry().registerSuggestionProvider("user", (c, i) -> {
             if (this.settings.bool("playerTabCompletion", true)) {
                 return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
             }
             return List.of();
         });
 
-        AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(commandManager, CommandSender.class, parameters -> SimpleCommandMeta.empty());
+        AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(manager, CommandSender.class, parameters -> SimpleCommandMeta.empty());
         annotationParser.parse(this.injector.getInstance(Credits.class));
         annotationParser.parse(this.injector.getInstance(ModifyCredits.class));
         annotationParser.parse(this.injector.getInstance(Redeem.class));
@@ -127,7 +127,7 @@ public class MCMMOCredits extends JavaPlugin {
         handler.withHandler(ExceptionType.COMMAND_EXECUTION, this.exceptionFunction(messages.string("commandError")));
         handler.withHandler(ExceptionType.INVALID_SYNTAX, this.exceptionFunction(messages.string("invalidArguments")));
         handler.withHandler(ExceptionType.INVALID_SENDER, this.exceptionFunction(messages.string("commandError")));
-        handler.apply(commandManager, AudienceProvider.nativeAudience());
+        handler.apply(manager, AudienceProvider.nativeAudience());
     }
 
     private BiFunction<CommandSender, Exception, Component> exceptionFunction(String string) {
