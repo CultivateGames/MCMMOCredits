@@ -3,6 +3,8 @@ package games.cultivate.mcmmocredits.data;
 enum SQLStatements {
     ADD_PLAYER("INSERT INTO `MCMMOCredits`(UUID, last_known_name, credits) VALUES(?,?,?);"),
     SET_CREDITS("UPDATE `MCMMOCredits` SET credits= ? WHERE `UUID`= ?;"),
+    ADD_CREDITS("UPDATE `MCMMOCredits` SET credits = credits + ? WHERE `UUID`= ?;"),
+    TAKE_CREDITS("UPDATE `MCMMOCredits` SET credits = credits - ? WHERE `UUID`= ?;"),
     GET_CREDITS("SELECT `credits` FROM `MCMMOCredits` WHERE `UUID`= ? LIMIT 1;"),
     SET_USERNAME("UPDATE `MCMMOCredits` SET last_known_name= ? WHERE `UUID`= ?;"),
     GET_USERNAME("SELECT `last_known_name` FROM `MCMMOCredits` WHERE `UUID`= ? LIMIT 1;"),

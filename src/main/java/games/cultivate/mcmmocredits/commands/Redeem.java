@@ -40,7 +40,7 @@ public final class Redeem {
     @CommandDescription("Redeem your own MCMMO Credits into a specific skill.")
     @CommandMethod("<skill> <amount>")
     @CommandPermission("mcmmocredits.redeem.self")
-    public void selfRedeem(Player player, @Argument("skill") PrimarySkillType skill, @Argument("amount") @Range(min = "1") int amount) {
+    public void selfRedeem(Player player, @Argument PrimarySkillType skill, @Argument @Range(min = "1") int amount) {
         TagResolver resolver = Resolver.fromRedemption(player, player, skill, amount);
         Optional<String> opt = this.performTransaction(player.getUniqueId(), skill, amount);
         String content = opt.isEmpty() ? "selfRedeem" : opt.get();
@@ -50,7 +50,7 @@ public final class Redeem {
     @CommandDescription("Redeem MCMMO Credits into a specific skill for someone else")
     @CommandMethod("<skill> <amount> <player>")
     @CommandPermission("mcmmocredits.redeem.other")
-    public void adminRedeem(CommandSender sender, @Argument("skill") PrimarySkillType skill, @Argument("amount") @Range(min = "1") int amount, @Argument(value = "player", suggestions = "players") String username, @Flag(value = "silent", permission = "mcmmocredits.redeem.other.silent") boolean silent) {
+    public void adminRedeem(CommandSender sender, @Argument PrimarySkillType skill, @Argument @Range(min = "1") int amount, @Argument(suggestions = "players") String username, @Flag("s") boolean s) {
         database.getUUID(username).whenCompleteAsync((uuid, throwable) -> {
             Optional<String> opt = this.performTransaction(uuid, skill, amount);
             if (opt.isPresent()) {
@@ -59,7 +59,7 @@ public final class Redeem {
                 Player player = Bukkit.getPlayer(uuid);
                 TagResolver tr = Resolver.fromRedemption(sender, player, skill, amount);
                 Text.fromString(sender, "otherRedeemSender", tr).send();
-                if (!silent) {
+                if (!s) {
                     Text.fromString(player, "otherRedeemReceiver", tr).send();
                 }
             }
