@@ -42,7 +42,7 @@ public abstract sealed class SQLDatabase implements Database permits MYSQLDataba
 
     @Override
     public void addPlayer(UUID uuid, String username, int credits) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> this.jdbi.useHandle(x -> x.execute(ADD_PLAYER.toString(), uuid.toString(), username, credits)));
+        this.update(ADD_PLAYER, uuid.toString(), username, credits);
     }
 
     @Override
