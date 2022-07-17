@@ -41,6 +41,9 @@ dependencies {
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
         exclude(module = "paper-api")
     }
+    implementation("org.jdbi:jdbi3-core:3.31.0")
+    implementation("org.jdbi:jdbi3-sqlobject:3.31.0")
+    implementation("org.jdbi:jdbi3-sqlite:3.31.0")
 
     compileOnly("me.clip:placeholderapi:2.11.1")
     compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.214") {

@@ -4,6 +4,8 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.SettingsConfig;
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.sqlite3.SQLitePlugin;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -15,6 +17,12 @@ public final class SQLiteDatabase extends SQLDatabase {
     public SQLiteDatabase(SettingsConfig settings, MCMMOCredits plugin) {
         super(settings, plugin);
         this.path = "jdbc:sqlite:" + plugin.getDataFolder().getAbsolutePath() + File.separator + "database.db";
+    }
+
+
+    @Override
+    Jdbi createJDBI() {
+        return Jdbi.create(super.hikari).installPlugin(new SQLitePlugin());
     }
 
     @Override
