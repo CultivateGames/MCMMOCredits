@@ -22,7 +22,7 @@ import javax.inject.Inject;
 import java.util.UUID;
 
 /**
- * Event Handlers used to manage the database, and input this.storage.
+ * Event Handlers used to manage the database, and input storage.
  */
 public class Listeners implements Listener {
     private final MessagesConfig messages;

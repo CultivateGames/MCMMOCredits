@@ -15,6 +15,10 @@ public class SettingsConfig extends Config<SettingsConfig> {
         super(SettingsConfig.class, "settings.conf");
     }
 
+    public boolean isMYSQL() {
+        return this.string("databaseType").equals("mysql");
+    }
+
     @ConfigSerializable
     protected static final class GeneralSettings {
         @Comment("Toggles tab completion for Player based arguments.\n" + "Useful if you have other plugins which hide staff.")

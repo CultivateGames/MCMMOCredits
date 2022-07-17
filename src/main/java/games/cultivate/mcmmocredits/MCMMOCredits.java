@@ -115,13 +115,13 @@ public class MCMMOCredits extends JavaPlugin {
             return List.of();
         });
 
-        AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(manager, CommandSender.class, parameters -> SimpleCommandMeta.empty());
-        annotationParser.parse(this.injector.getInstance(Credits.class));
-        annotationParser.parse(this.injector.getInstance(ModifyCredits.class));
-        annotationParser.parse(this.injector.getInstance(Redeem.class));
+        AnnotationParser<CommandSender> parser = new AnnotationParser<>(manager, CommandSender.class, parameters -> SimpleCommandMeta.empty());
+        parser.parse(this.injector.getInstance(Credits.class));
+        parser.parse(this.injector.getInstance(ModifyCredits.class));
+        parser.parse(this.injector.getInstance(Redeem.class));
 
-        MinecraftExceptionHandler<CommandSender> handler = new MinecraftExceptionHandler<>();
         MessagesConfig messages = this.injector.getInstance(MessagesConfig.class);
+        MinecraftExceptionHandler<CommandSender> handler = new MinecraftExceptionHandler<>();
         handler.withHandler(ExceptionType.NO_PERMISSION, this.exceptionFunction(messages.string("noPermission")));
         handler.withHandler(ExceptionType.ARGUMENT_PARSING, this.exceptionFunction(messages.string("invalidArguments")));
         handler.withHandler(ExceptionType.COMMAND_EXECUTION, this.exceptionFunction(messages.string("commandError")));

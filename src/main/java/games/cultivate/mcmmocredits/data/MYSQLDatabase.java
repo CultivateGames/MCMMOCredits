@@ -4,6 +4,8 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.SettingsConfig;
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import javax.inject.Inject;
 
@@ -24,6 +26,11 @@ public final class MYSQLDatabase extends SQLDatabase {
         this.databaseUsername = super.settings.string("mysql.username", "username");
         this.databasePassword = super.settings.string("mysql.password", "");
         this.databaseSSL = super.settings.bool("mysql.ssl", true);
+    }
+
+    @Override
+    Jdbi createJDBI() {
+        return Jdbi.create(super.hikari).installPlugin(new SqlObjectPlugin());
     }
 
     @Override
