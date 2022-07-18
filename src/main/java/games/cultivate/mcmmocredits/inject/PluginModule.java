@@ -36,7 +36,7 @@ public final class PluginModule extends AbstractModule {
     @Provides
     public @NonNull Database provideDatabase(SettingsConfig settings, MCMMOCredits plugin) {
         if (this.database == null) {
-            this.database = settings.string("databaseType").equals("mysql") ? new MYSQLDatabase(settings, plugin) : new SQLiteDatabase(settings, plugin);
+            this.database = settings.isMYSQL() ? new MYSQLDatabase(settings, plugin) : new SQLiteDatabase(settings, plugin);
         }
         return this.database;
     }

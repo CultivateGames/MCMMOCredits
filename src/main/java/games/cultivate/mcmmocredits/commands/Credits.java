@@ -44,7 +44,7 @@ public final class Credits {
     @CommandDescription("Check someone else's MCMMO Credit balance.")
     @CommandMethod("<username>")
     @CommandPermission("mcmmocredits.check.other")
-    public void checkCreditsOther(CommandSender sender, @Argument(suggestions = "players") String username) {
+    public void checkCreditsOther(CommandSender sender, @Argument(suggestions = "user") String username) {
         this.database.getUUID(username).whenCompleteAsync((i, t) -> {
             if (this.database.doesPlayerExist(i)) {
                 TagResolver tr = Resolver.builder().sender(sender).player(username, i).build();

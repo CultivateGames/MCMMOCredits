@@ -17,12 +17,12 @@ public class MessagesConfig extends Config<MessagesConfig> {
     @Setting("general")
     private GeneralMessages generalMessages = new GeneralMessages();
 
-    MessagesConfig() {
+    public MessagesConfig() {
         super(MessagesConfig.class, "messages.conf");
     }
 
     public String string(String path, boolean prefix) {
-        return prefix ? this.string("prefix") + this.string(path) : this.string(path);
+        return prefix ? super.string("prefix") + super.string(path) : super.string(path);
     }
 
     @Override

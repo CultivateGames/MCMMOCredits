@@ -16,7 +16,7 @@ public abstract sealed class SQLDatabase implements Database permits MYSQLDataba
     private static final UUID ZERO_UUID = new UUID(0, 0);
     final SettingsConfig settings;
     final HikariDataSource hikari;
-    private final MCMMOCredits plugin;
+    final MCMMOCredits plugin;
     private final Jdbi jdbi;
 
     @Inject

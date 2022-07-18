@@ -48,9 +48,9 @@ public final class Redeem {
     }
 
     @CommandDescription("Redeem MCMMO Credits into a specific skill for someone else")
-    @CommandMethod("<skill> <amount> <player>")
+    @CommandMethod("<skill> <amount> <username>")
     @CommandPermission("mcmmocredits.redeem.other")
-    public void adminRedeem(CommandSender sender, @Argument PrimarySkillType skill, @Argument @Range(min = "1") int amount, @Argument(suggestions = "players") String username, @Flag("s") boolean s) {
+    public void adminRedeem(CommandSender sender, @Argument PrimarySkillType skill, @Argument @Range(min = "1") int amount, @Argument(suggestions = "user") String username, @Flag("s") boolean s) {
         database.getUUID(username).whenCompleteAsync((uuid, throwable) -> {
             Optional<String> opt = this.performTransaction(uuid, skill, amount);
             if (opt.isPresent()) {

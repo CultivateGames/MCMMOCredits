@@ -12,13 +12,12 @@ import org.spongepowered.configurate.NodePath;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
 import org.spongepowered.configurate.serialize.SerializationException;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.logging.Level;
 
-public abstract class Config<T> {
+public class Config<T> {
     private final String fileName;
     private final Class<T> type;
     private T conf;
@@ -29,6 +28,7 @@ public abstract class Config<T> {
     Config(Class<T> type, String fileName) {
         this.type = type;
         this.fileName = fileName;
+        this.load();
     }
 
     public CommentedConfigurationNode baseNode() {
@@ -146,12 +146,13 @@ public abstract class Config<T> {
 
     /**
      * Sets a value to config. Returns true if successful.
-     * @param path config path where we want to change value.
+     *
+     * @param path  config path where we want to change value.
      * @param value value used for modification of config.
      * @return if the change was successful.
      */
     public boolean modify(String path, String value) {
-       return this.modify(String.class, path, value);
+        return this.modify(String.class, path, value);
     }
 
     /**
@@ -172,12 +173,19 @@ public abstract class Config<T> {
         return new Button(item, slot);
     }
 
-    public HoconConfigurationLoader createLoader() throws IOException {
-        Path p = JavaPlugin.getPlugin(MCMMOCredits.class).getDataFolder().toPath().resolve(this.fileName);
-        Files.createFile(p);
+    //FIXME properly inject plugin
+    public HoconConfigurationLoader createLoader() {
+        File file = new File(JavaPlugin.getPlugin(MCMMOCredits.class).getDataFolder().toPath().resolve(fileName).toString());
+        try {
+            if (file.getParentFile().mkdirs() && file.createNewFile()) {
+                Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created " + fileName + " file!");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return HoconConfigurationLoader.builder()
                 .defaultOptions(opts -> opts.serializers(build -> build.register(ItemStack.class, ItemStackSerializer.INSTANCE)))
-                .path(p).prettyPrinting(true).build();
+                .path(file.toPath()).prettyPrinting(true).build();
     }
 
     private void logWarning() {

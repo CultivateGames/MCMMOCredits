@@ -2,13 +2,17 @@ package games.cultivate.mcmmocredits.config;
 
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
+import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
 public class SettingsConfig extends Config<SettingsConfig> {
+    @Comment("General plugin settings.")
+    @Setting("general")
     private GeneralSettings general = new GeneralSettings();
 
     @Comment("Database related settings, that are not eligible for in-game configuration.")
+    @Setting("mysql")
     private MYSQLSettings mysql = new MYSQLSettings();
 
     SettingsConfig() {
@@ -16,7 +20,7 @@ public class SettingsConfig extends Config<SettingsConfig> {
     }
 
     public boolean isMYSQL() {
-        return this.string("databaseType").equals("mysql");
+        return general.databaseType.equals("mysql");
     }
 
     @ConfigSerializable
