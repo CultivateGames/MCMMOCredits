@@ -6,7 +6,6 @@ plugins {
     id ("java-library")
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("io.papermc.paperweight.userdev") version "1.3.6"
-    id("xyz.jpenilla.run-paper") version "1.0.6"
 }
 
 java {
@@ -30,7 +29,7 @@ repositories {
 
 dependencies {
     paperDevBundle("1.19-R0.1-SNAPSHOT")
-    annotationProcessor("cloud.commandframework:cloud-annotations:1.7.0")
+    //annotationProcessor("cloud.commandframework:cloud-annotations:1.7.0")
     implementation("cloud.commandframework:cloud-annotations:1.7.0")
     implementation("cloud.commandframework:cloud-paper:1.7.0")
     implementation("cloud.commandframework:cloud-minecraft-extras:1.7.0")
@@ -82,9 +81,5 @@ tasks {
         manifest {
             attributes(Pair("Main-Class", "games.cultivate.mcmmocredits.MCMMOCredits"))
         }
-    }
-
-    runServer {
-        minecraftVersion("1.19")
     }
 }

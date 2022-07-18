@@ -9,7 +9,7 @@ enum SQLStatements {
     SET_USERNAME("UPDATE `MCMMOCredits` SET last_known_name= ? WHERE `UUID`= ?;"),
     GET_USERNAME("SELECT `last_known_name` FROM `MCMMOCredits` WHERE `UUID`= ? LIMIT 1;"),
     GET_UUID("SELECT `UUID` FROM `MCMMOCredits` WHERE `last_known_name`= ? LIMIT 1;"),
-    SQLITE_CREATE_TABLE("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTOINCREMENT, UUID VARCHAR NOT NULL, last_known_name VARCHAR NOT NULL, credits INT CHECK(credits >= 0);"),
+    SQLITE_CREATE_TABLE("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTOINCREMENT, UUID VARCHAR NOT NULL, last_known_name VARCHAR NOT NULL, credits INT CHECK(credits >= 0));"),
     MYSQL_CREATE_TABLE("CREATE TABLE IF NOT EXISTS `MCMMOCredits`(`id` int PRIMARY KEY AUTO_INCREMENT,`UUID` text NOT NULL,`last_known_name` text NOT NULL,`credits` int CHECK(credits >= 0));");
 
     private final String statement;

@@ -52,11 +52,8 @@ public class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onEnable() {
-        this.checkForDependencies();
         this.injector = Guice.createInjector(new PluginModule(this));
-        this.injector.getInstance(SettingsConfig.class).load();
-        this.injector.getInstance(MessagesConfig.class).load();
-        this.injector.getInstance(MenuConfig.class).load();
+        this.checkForDependencies();
         this.settings = this.injector.getInstance(SettingsConfig.class);
         this.injector.getInstance(Database.class);
         this.loadCommands();
