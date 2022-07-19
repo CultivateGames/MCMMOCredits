@@ -14,9 +14,13 @@ import games.cultivate.mcmmocredits.placeholders.Resolver;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import javax.inject.Named;
+import java.nio.file.Path;
+
 public final class PluginModule extends AbstractModule {
     private final MCMMOCredits mcmmoCredits;
     private Database database;
+    private Path dir;
 
     public PluginModule(MCMMOCredits mcmmoCredits) {
         this.mcmmoCredits = mcmmoCredits;
@@ -39,5 +43,14 @@ public final class PluginModule extends AbstractModule {
             this.database = settings.isMYSQL() ? new MYSQLDatabase(settings, plugin) : new SQLiteDatabase(settings, plugin);
         }
         return this.database;
+    }
+
+    @Provides
+    @Named("dir")
+    public @NonNull Path provideDirectory(MCMMOCredits plugin) {
+        if (this.dir == null) {
+            this.dir = plugin.getDataFolder().toPath();
+        }
+        return this.dir;
     }
 }

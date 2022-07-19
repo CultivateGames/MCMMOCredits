@@ -6,7 +6,7 @@ import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
-public class MessagesConfig extends Config<MessagesConfig> {
+public class MessagesConfig extends Config {
     @Comment("Sender output for command exceptions.")
     @Setting("exceptions")
     private ExceptionMessages exceptionMessages = new ExceptionMessages();
@@ -31,7 +31,7 @@ public class MessagesConfig extends Config<MessagesConfig> {
     }
 
     @ConfigSerializable
-    protected static final class ExceptionMessages {
+    static class ExceptionMessages {
         //Placeholders: <sender>, <correct_syntax> (if syntax is wrong)
         @Comment("Sender output for invalid command argument input.")
         private String invalidArguments = "<red>Invalid arguments! Correct syntax (if applicable): <gray><correct_syntax>";
@@ -48,7 +48,7 @@ public class MessagesConfig extends Config<MessagesConfig> {
     }
 
     @ConfigSerializable
-    protected static final class GeneralMessages {
+    static class GeneralMessages {
         @Comment("Prefix for all plugin messages.")
         private String prefix = "<hover:show_text:'<green><player>: <credits> Credits'><gold><bold>CREDITS</bold> ";
         @Comment("Output for player joining.\n" + "Requires send-login-message: true.")
@@ -60,7 +60,7 @@ public class MessagesConfig extends Config<MessagesConfig> {
     }
 
     @ConfigSerializable
-    protected static final class CommandMessages {
+    static class CommandMessages {
         //Placeholders: <player>, <credits>, PAPI
         @Comment("All output for /credits")
         @Setting("credits")
@@ -76,7 +76,7 @@ public class MessagesConfig extends Config<MessagesConfig> {
     }
 
     @ConfigSerializable
-    protected static final class CreditsMessages {
+    static class CreditsMessages {
         @Comment("Sender output for /credits.")
         private String selfBalance = "<green>You have <credits> MCMMO Credits!";
         @Comment("Sender output for /credits <player>.")
@@ -96,7 +96,7 @@ public class MessagesConfig extends Config<MessagesConfig> {
     }
 
     @ConfigSerializable
-    protected static final class ModifyCreditsMessages {
+    static class ModifyCreditsMessages {
         @Comment("Sender output for /modifycredits add.")
         private String addSender = "<green>You have given <amount> Credits to <player>.";
         @Comment("Sender output for /modifycredits modify.")
@@ -112,7 +112,7 @@ public class MessagesConfig extends Config<MessagesConfig> {
     }
 
     @ConfigSerializable
-    protected static final class RedeemMessages {
+    static class RedeemMessages {
         @Comment("Sender output for /redeem failure.\n" + "Sent when skill cap would be exceeded.")
         private String skillCap = "<red>You cannot redeem this many MCMMO Credits into <skill>, due to the Level Cap (<cap>).";
         @Comment("Sender output for /redeem failure.\n" + "Sent when user does not have enough credits.")

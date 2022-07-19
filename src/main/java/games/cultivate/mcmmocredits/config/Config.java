@@ -8,27 +8,31 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.spongepowered.configurate.CommentedConfigurationNode;
+import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.NodePath;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
+import org.spongepowered.configurate.objectmapping.ObjectMapper;
 import org.spongepowered.configurate.serialize.SerializationException;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
-public class Config<T> {
-    private final String fileName;
-    private final Class<T> type;
-    private T conf;
-    private CommentedConfigurationNode root;
-    private HoconConfigurationLoader loader;
-    private Map<Object, CommentedConfigurationNode> configMap;
+public class Config {
+    private final transient String fileName;
+    private final transient Class<? extends Config> type;
+    private transient Config conf;
+    private transient CommentedConfigurationNode root;
+    private transient HoconConfigurationLoader loader;
+    private transient Map<Object, CommentedConfigurationNode> configMap;
 
-    Config(Class<T> type, String fileName) {
+    Config(Class<? extends Config> type, String fileName) {
         this.type = type;
         this.fileName = fileName;
-        this.load();
     }
 
     public CommentedConfigurationNode baseNode() {
@@ -36,15 +40,15 @@ public class Config<T> {
     }
 
     public void load() {
+        this.loader = this.createLoader();
         try {
-            this.loader = this.createLoader();
             this.root = this.loader.load();
-            this.conf = this.root.get(this.type);
+            this.conf = ObjectMapper.factory().get(this.type).load(this.root);
             this.loader.save(this.root);
             this.configMap = this.root.childrenMap();
             //Testing
             this.configMap.forEach((key, value) -> Bukkit.getLogger().info("Node Value: " + key.toString() + "Node Path: " + value.path()));
-        } catch (Exception e) {
+        } catch (ConfigurateException e) {
             e.printStackTrace();
         }
     }
@@ -63,7 +67,7 @@ public class Config<T> {
         this.save(this.root);
     }
 
-    public T config() {
+    public Config config() {
         return this.conf;
     }
 
@@ -110,7 +114,7 @@ public class Config<T> {
         return valueFromMap(int.class, path, def);
     }
 
-    private <C> C valueFromMap(Class<C> type, String path, C def) {
+    private <V> V valueFromMap(Class<V> type, String path, V def) {
         for (CommentedConfigurationNode node : this.configMap.values()) {
             if (node.path().toString().contains(path)) {
                 try {
@@ -120,7 +124,7 @@ public class Config<T> {
                 }
             }
         }
-        this.logWarning();
+        this.logWarning(path);
         return def;
     }
 
@@ -173,22 +177,25 @@ public class Config<T> {
         return new Button(item, slot);
     }
 
-    //FIXME properly inject plugin
     public HoconConfigurationLoader createLoader() {
-        File file = new File(JavaPlugin.getPlugin(MCMMOCredits.class).getDataFolder().toPath().resolve(fileName).toString());
+        Path dir = JavaPlugin.getPlugin(MCMMOCredits.class).getDataFolder().toPath();
         try {
-            if (file.getParentFile().mkdirs() && file.createNewFile()) {
-                Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created " + fileName + " file!");
+            if (!Files.exists(dir)) {
+                Files.createDirectories(dir);
+                Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created " + fileName + " path!");
             }
+            Files.createFile(dir.resolve(fileName));
+        } catch (FileAlreadyExistsException ignored) {
         } catch (IOException e) {
             e.printStackTrace();
         }
         return HoconConfigurationLoader.builder()
                 .defaultOptions(opts -> opts.serializers(build -> build.register(ItemStack.class, ItemStackSerializer.INSTANCE)))
-                .path(file.toPath()).prettyPrinting(true).build();
+                .defaultOptions(opts -> opts.nativeTypes(Set.of(String.class, int.class, boolean.class)))
+                .path(dir.resolve(fileName)).prettyPrinting(true).build();
     }
 
-    private void logWarning() {
-        Bukkit.getLogger().log(Level.WARNING, "Configuration was missing a value, Check your configuration!");
+    private void logWarning(String path) {
+        Bukkit.getLogger().log(Level.WARNING, "[MCMMOCredits] Configuration was missing a value at {0}, Check your configuration!", path);
     }
 }

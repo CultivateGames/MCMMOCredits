@@ -9,7 +9,7 @@ import java.util.List;
 
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
-public class MenuConfig extends Config<MenuConfig> {
+public class MenuConfig extends Config {
     @Comment("Editing Config menus: /credits menu <messages/settings>")
     @Setting("editing")
     private EditMenus editMenus = new EditMenus();
