@@ -59,9 +59,6 @@ public final class Credits {
     @CommandMethod("reload")
     @CommandPermission("mcmmocredits.admin.reload")
     public void reloadCredits(CommandSender sender) {
-        this.messages.load();
-        this.settings.load();
-        this.menus.load();
         Text.fromString(sender, this.messages.string("reloadSuccessful")).send();
     }
 

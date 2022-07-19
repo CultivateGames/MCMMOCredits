@@ -54,11 +54,18 @@ public class MCMMOCredits extends JavaPlugin {
     public void onEnable() {
         this.injector = Guice.createInjector(new PluginModule(this));
         this.checkForDependencies();
+        this.loadConfiguration();
         this.settings = this.injector.getInstance(SettingsConfig.class);
         this.injector.getInstance(Database.class);
         this.loadCommands();
         PaperInterfaceListeners.install(this);
         Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
+    }
+
+    public void loadConfiguration() {
+        this.injector.getInstance(MessagesConfig.class).load();
+        this.injector.getInstance(MenuConfig.class).load();
+        this.injector.getInstance(SettingsConfig.class).load();
     }
 
     /**

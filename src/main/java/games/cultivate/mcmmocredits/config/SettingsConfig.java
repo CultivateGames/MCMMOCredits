@@ -6,7 +6,8 @@ import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
-public class SettingsConfig extends Config<SettingsConfig> {
+public class SettingsConfig extends Config {
+
     @Comment("General plugin settings.")
     @Setting("general")
     private GeneralSettings general = new GeneralSettings();
@@ -24,7 +25,7 @@ public class SettingsConfig extends Config<SettingsConfig> {
     }
 
     @ConfigSerializable
-    protected static final class GeneralSettings {
+    static class GeneralSettings {
         @Comment("Toggles tab completion for Player based arguments.\n" + "Useful if you have other plugins which hide staff.")
         private boolean playerTabCompletion = true;
         @Comment("Toggles sending a login message to the user.")
@@ -38,7 +39,7 @@ public class SettingsConfig extends Config<SettingsConfig> {
     }
 
     @ConfigSerializable
-    protected static final class MYSQLSettings {
+    static class MYSQLSettings {
         @Comment("Host address of MySQL database.")
         private String host = "127.0.0.1";
         @Comment("Port for Host address of MySQL database.")

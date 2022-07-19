@@ -100,7 +100,7 @@ public class MenuDirector {
         }), button.x(), button.y()));
     }
 
-    public void transferToConfig(Button button, ClickType clickType, Config<?> config) {
+    public void transferToConfig(Button button, ClickType clickType, Config config) {
         this.builder = this.builder.addTransform(1, (pane, view) -> pane.element(ItemStackElement.of(button.item(), click -> {
             if (click.cause().getClick().equals(clickType)) {
                 view.viewer().close();
@@ -126,7 +126,7 @@ public class MenuDirector {
         return new Button(this.menus.item(type, player), this.menus.itemSlot(type), "redeem " + type.path().get(2) + " ");
     }
 
-    protected List<Button> createConfigItems(Config<?> config) {
+    protected List<Button> createConfigItems(Config config) {
         List<Button> configItems = new ArrayList<>();
         int slot = 0;
         String type = config.config() instanceof MessagesConfig ? "MESSAGES" : "SETTINGS";
@@ -179,7 +179,7 @@ public class MenuDirector {
         }
     }
 
-    public void config(Config<?> config) {
+    public void config(Config config) {
         String type = config.config() instanceof MessagesConfig ? "MESSAGES" : "SETTINGS";
         this.base(player, this.menus.string(type + ".title"), this.menus.integer(type + ".size", 0));
         for (Button button : this.createConfigItems(config)) {
