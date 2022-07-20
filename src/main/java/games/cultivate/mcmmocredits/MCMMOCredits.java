@@ -1,6 +1,7 @@
 package games.cultivate.mcmmocredits;
 
 import cloud.commandframework.annotations.AnnotationParser;
+import cloud.commandframework.exceptions.ArgumentParseException;
 import cloud.commandframework.exceptions.InvalidCommandSenderException;
 import cloud.commandframework.exceptions.InvalidSyntaxException;
 import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
@@ -129,8 +130,8 @@ public class MCMMOCredits extends JavaPlugin {
         handler.withHandler(ExceptionType.NO_PERMISSION, this.exceptionFunction(messages.string("noPermission")));
         handler.withHandler(ExceptionType.ARGUMENT_PARSING, this.exceptionFunction(messages.string("invalidArguments")));
         handler.withHandler(ExceptionType.COMMAND_EXECUTION, this.exceptionFunction(messages.string("commandError")));
-        handler.withHandler(ExceptionType.INVALID_SYNTAX, this.exceptionFunction(messages.string("invalidArguments")));
-        handler.withHandler(ExceptionType.INVALID_SENDER, this.exceptionFunction(messages.string("commandError")));
+        handler.withHandler(ExceptionType.INVALID_SYNTAX, this.exceptionFunction(messages.string("invalidSyntax")));
+        handler.withHandler(ExceptionType.INVALID_SENDER, this.exceptionFunction(messages.string("invalidSender")));
         handler.apply(manager, AudienceProvider.nativeAudience());
     }
 
@@ -139,12 +140,15 @@ public class MCMMOCredits extends JavaPlugin {
             if (this.settings.bool("debug", false)) {
                 exception.printStackTrace();
             }
-            Resolver.Builder rb = Resolver.builder().sender(sender).player((Player) sender);
-            if (exception instanceof InvalidSyntaxException ex) {
-                rb = rb.tags("correct_syntax", "/" + ex.getCorrectSyntax());
+            Resolver.Builder rb = Resolver.builder().sender(sender);
+            if (exception instanceof ArgumentParseException e1) {
+                rb = rb.tags("argument_error", e1.getCause().getMessage());
             }
-            if (exception instanceof InvalidCommandSenderException ex) {
-                rb = rb.tags("correct_sender", ex.getRequiredSender().getSimpleName());
+            if (exception instanceof InvalidSyntaxException e2) {
+                rb = rb.tags("correct_syntax", "/" + e2.getCorrectSyntax());
+            }
+            if (exception instanceof InvalidCommandSenderException e3) {
+                rb = rb.tags("correct_sender", e3.getRequiredSender().getSimpleName());
             }
             return Text.fromString(sender, string, rb.build()).toComponent();
         };

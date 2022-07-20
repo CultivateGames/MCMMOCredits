@@ -35,7 +35,13 @@ public class MessagesConfig extends Config {
         //Placeholders: <sender>, <correct_syntax> (if syntax is wrong)
         @Comment("Sender output for invalid command argument input.")
         @Setting("invalidArguments")
-        private String invalidArguments = "<red>Invalid arguments! Correct syntax (if applicable): <gray><correct_syntax>";
+        private String invalidArguments = "<red>Argument Error: <gray><argument_error>";
+        @Comment("Sender output for invalid command argument input.")
+        @Setting("invalidSyntax")
+        private String invalidSyntax = "<red>Invalid syntax! Correct syntax (if applicable): <gray><correct_syntax>";
+        @Comment("Sender output for invalid command argument input.")
+        @Setting("invalidSyntax")
+        private String invalidSender = "<red>Invalid command sender! You must be of type: <gray><correct_sender>";
         @Comment("Sender output for invalid number input.")
         @Setting("invalidNumber")
         private String invalidNumber = "<red>You need to specify a valid number.";
