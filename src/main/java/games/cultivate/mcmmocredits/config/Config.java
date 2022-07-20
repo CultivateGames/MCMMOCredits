@@ -19,10 +19,8 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 
@@ -32,13 +30,12 @@ public class Config {
     private transient Config conf;
     private transient CommentedConfigurationNode root;
     private transient HoconConfigurationLoader loader;
-    //We flip the traditional children Map format because defaults may be duplicate objects.
-    private transient Map<CommentedConfigurationNode, Object> configMap;
+    private transient List<CommentedConfigurationNode> nodeList;
 
     Config(Class<? extends Config> type, String fileName) {
         this.type = type;
         this.fileName = fileName;
-        this.configMap = new HashMap<>();
+        this.nodeList = new ArrayList<>();
     }
 
     public CommentedConfigurationNode baseNode() {
@@ -51,15 +48,14 @@ public class Config {
             this.root = this.loader.load();
             this.conf = ObjectMapper.factory().get(this.type).load(this.root);
             this.save(this.root);
-            this.configMap.forEach((k, v) -> Bukkit.getLogger().info("Node: " + k.path() + " | Value: " + v.toString()));
         } catch (ConfigurateException e) {
             e.printStackTrace();
         }
     }
-    //TODO fix config parsing for menu items.
-    private Map<CommentedConfigurationNode, Object> prepareMap(CommentedConfigurationNode parent) {
+
+    private List<CommentedConfigurationNode> nodesFromParent(CommentedConfigurationNode parent) {
         List<CommentedConfigurationNode> nodes = new CopyOnWriteArrayList<>(parent.childrenMap().values());
-        while (this.hasMaps(nodes)) {
+        while (nodes.stream().anyMatch(ConfigurationNode::isMap)) {
             nodes.forEach(i -> {
                 if (i.isMap()) {
                     nodes.addAll(i.childrenMap().values());
@@ -67,33 +63,14 @@ public class Config {
                 }
             });
         }
-        nodes.forEach(i -> System.out.println(i.path().toString()));
-        Map<CommentedConfigurationNode, Object> master = new LinkedHashMap<>();
-        nodes.forEach(i -> {
-            try {
-                master.put(i, i.get(Object.class));
-                System.out.println("Contains Key: " + i.path().toString() + ", " + master.containsKey(i) + ", ");
-                System.out.println(i.path().equals(NodePath.of(List.of("redeem", "items", "repair", "lore"))));
-            } catch (SerializationException e) {
-                e.printStackTrace();
-            }
-        });
-        System.out.println("##############");
-        System.out.println("List Size: " + nodes.size());
-        System.out.println("Config Size: " + master.size());
-        System.out.println("##############");
-        return master;
-    }
-
-    private boolean hasMaps(List<CommentedConfigurationNode> nodes) {
-        return nodes.stream().anyMatch(ConfigurationNode::isMap);
+        return nodes;
     }
 
     public void save(CommentedConfigurationNode root) {
         try {
             this.loader.save(root);
             this.root = root;
-            this.configMap = this.prepareMap(this.root);
+            this.nodeList = this.nodesFromParent(this.root);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -151,7 +128,7 @@ public class Config {
     }
 
     private <V> V valueFromMap(Class<V> type, String path, V def) {
-        for (CommentedConfigurationNode node : this.configMap.keySet()) {
+        for (CommentedConfigurationNode node : this.nodeList) {
             if (node.path().toString().contains(path)) {
                 try {
                     return node.get(type);
@@ -171,7 +148,7 @@ public class Config {
         if (value == null || value.toString().equalsIgnoreCase("cancel")) {
             return false;
         }
-        for (CommentedConfigurationNode node : this.configMap.keySet()) {
+        for (CommentedConfigurationNode node : this.nodeList) {
             if (node.path().toString().contains(path)) {
                 try {
                     this.save(this.root.node(node).set(type, value));

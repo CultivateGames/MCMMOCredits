@@ -118,7 +118,7 @@ public class MessagesConfig extends Config {
         private String addSender = "<green>You have given <amount> Credits to <player>.";
         @Comment("Sender output for /modifycredits modify.")
         @Setting("setSender")
-        private String setSender = "<yellow>You have modify <player>'s Credits to <amount>.";
+        private String setSender = "<yellow>You have set <player>'s Credits to <amount>.";
         @Comment("Sender output for /modifycredits take.")
         @Setting("takeSender")
         private String takeSender = "<red>You have taken <amount> Credits from <player>.";
@@ -127,7 +127,7 @@ public class MessagesConfig extends Config {
         private String addReceiver = "<green><amount> Credits have been added to your balance by <sender>. You now have <credits> Credits.";
         @Comment("Receiver output for /modifycredits modify.\n" + "Requires --silent flag to be used.")
         @Setting("setReceiver")
-        private String setReceiver = "<yellow>Your MCMMO Credit balance has been modify to <amount> by <sender>.";
+        private String setReceiver = "<yellow>Your MCMMO Credit balance has been set to <amount> by <sender>.";
         @Comment("Receiver output for /modifycredits take.\n" + "Requires --silent flag to be used.")
         @Setting("takeReceiver")
         private String takeReceiver = "<red>You had <amount> taken out of your Credit balance by <sender>. You now have <credits> Credits.";
