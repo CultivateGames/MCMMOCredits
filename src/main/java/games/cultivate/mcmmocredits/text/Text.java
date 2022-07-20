@@ -29,10 +29,7 @@ public class Text {
         if (this.audience instanceof Player player) {
             this.content = PlaceholderAPI.setPlaceholders(player, this.content);
         }
-        if (this.resolver != null) {
-            return MiniMessage.miniMessage().deserialize(this.content, this.resolver);
-        }
-        return MiniMessage.miniMessage().deserializeOr(this.content, Component.empty());
+        return MiniMessage.miniMessage().deserialize(this.content, this.resolver);
     }
 
     /**
