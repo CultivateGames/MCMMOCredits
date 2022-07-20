@@ -4,6 +4,7 @@ import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
+import games.cultivate.mcmmocredits.config.ItemType;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.config.MessagesConfig;
 import games.cultivate.mcmmocredits.config.SettingsConfig;
@@ -59,6 +60,8 @@ public final class Credits {
     @CommandMethod("reload")
     @CommandPermission("mcmmocredits.admin.reload")
     public void reloadCredits(CommandSender sender) {
+        this.menus.load();
+        System.out.println(this.menus.itemSlot(ItemType.ACROBATICS_ITEM));
         Text.fromString(sender, this.messages.string("reloadSuccessful")).send();
     }
 
