@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -33,6 +34,7 @@ public class Config {
     Config(Class<? extends Config> type, String fileName) {
         this.type = type;
         this.fileName = fileName;
+        this.configMap = new HashMap<>();
     }
 
     public CommentedConfigurationNode baseNode() {
@@ -45,12 +47,20 @@ public class Config {
             this.root = this.loader.load();
             this.conf = ObjectMapper.factory().get(this.type).load(this.root);
             this.loader.save(this.root);
-            this.configMap = this.root.childrenMap();
+            //TODO fix backing config map.
+            this.configMap = this.nodeMap(this.nodeMap(this.root.childrenMap()));
             //Testing
-            this.configMap.forEach((key, value) -> Bukkit.getLogger().info("Node Value: " + key.toString() + "Node Path: " + value.path()));
+            this.configMap.forEach((key, value) -> Bukkit.getLogger().info("Node Value: " + key.toString() + " Node Path: " + value.path()));
         } catch (ConfigurateException e) {
             e.printStackTrace();
         }
+    }
+
+    private Map<Object, CommentedConfigurationNode> nodeMap(Map<Object, CommentedConfigurationNode> map) {
+        Map<Object, CommentedConfigurationNode> hashMap = new HashMap<>();
+        this.root.childrenList().forEach(i -> this.configMap.putAll(i.childrenMap()));
+        map.forEach((k, v) -> hashMap.putAll(v.childrenMap()));
+        return hashMap;
     }
 
     public void save(CommentedConfigurationNode root) {
@@ -60,7 +70,7 @@ public class Config {
             e.printStackTrace();
         }
         this.root = root;
-        this.configMap = root.childrenMap();
+        this.configMap = this.nodeMap(this.root.childrenMap());
     }
 
     public void save() {

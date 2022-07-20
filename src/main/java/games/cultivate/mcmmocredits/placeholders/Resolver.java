@@ -9,6 +9,7 @@ import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
@@ -64,17 +65,9 @@ public class Resolver {
             this.transactionAmount = transactionAmount;
         }
 
-        private Builder(Map<String, String> tags, CommandSender sender, Player player, PrimarySkillType skill, int transactionAmount) {
-            this.tags = tags;
-            this.sender = sender;
-            this.player = player;
-            this.skill = skill;
-            this.transactionAmount = transactionAmount;
-        }
-
         public Builder tags(String key, String value) {
             this.tags.put(key, value);
-            return new Builder(this.tags, this.sender, this.player, this.skill, this.transactionAmount);
+            return new Builder(this.tags, this.resolverBuilder, this.sender, this.player, this.skill, this.transactionAmount);
         }
 
         public TagResolver build() {
@@ -85,11 +78,9 @@ public class Resolver {
             return this.resolverBuilder.build();
         }
 
-        public Builder sender(@Nullable CommandSender sender) {
-            if (sender != null) {
-                this.tags.put("sender", sender.getName());
-            }
-            return new Builder(this.tags, sender, this.player, this.skill, this.transactionAmount);
+        public Builder sender(@NotNull CommandSender sender) {
+            this.tags.put("sender", sender.getName());
+            return new Builder(this.tags, this.resolverBuilder, sender, this.player, this.skill, this.transactionAmount);
         }
 
         public Builder player(@Nullable Player player) {
@@ -97,24 +88,24 @@ public class Resolver {
                 this.tags.put("player", player.getName());
                 this.tags.put("credits", database.getCredits(player.getUniqueId()) + "");
             }
-            return new Builder(this.tags, this.sender, player, this.skill, this.transactionAmount);
+            return new Builder(this.tags, this.resolverBuilder, this.sender, player, this.skill, this.transactionAmount);
         }
 
         public Builder player(String username, UUID uuid) {
             this.tags.put("player", username);
             this.tags.put("credits", database.getCredits(uuid) + "");
-            return new Builder(this.tags, this.sender, Bukkit.getPlayer(uuid), this.skill, this.transactionAmount);
+            return new Builder(this.tags, this.resolverBuilder, this.sender, Bukkit.getPlayer(uuid), this.skill, this.transactionAmount);
         }
 
         public Builder skill(PrimarySkillType skill) {
             this.tags.put("skill", WordUtils.capitalizeFully(skill.name()));
             this.tags.put("cap", mcMMO.p.getGeneralConfig().getLevelCap(skill) + "");
-            return new Builder(this.tags, this.sender, this.player, skill, this.transactionAmount);
+            return new Builder(this.tags, this.resolverBuilder, this.sender, this.player, skill, this.transactionAmount);
         }
 
         public Builder transaction(int amount) {
             this.tags.put("amount", amount + "");
-            return new Builder(this.tags, this.sender, this.player, this.skill, amount);
+            return new Builder(this.tags, this.resolverBuilder, this.sender, this.player, this.skill, amount);
         }
     }
 }

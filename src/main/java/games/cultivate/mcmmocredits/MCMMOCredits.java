@@ -139,7 +139,7 @@ public class MCMMOCredits extends JavaPlugin {
             if (this.settings.bool("debug", false)) {
                 exception.printStackTrace();
             }
-            Resolver.Builder rb = Resolver.builder().sender(sender);
+            Resolver.Builder rb = Resolver.builder().sender(sender).player((Player) sender);
             if (exception instanceof InvalidSyntaxException ex) {
                 rb = rb.tags("correct_syntax", "/" + ex.getCorrectSyntax());
             }
