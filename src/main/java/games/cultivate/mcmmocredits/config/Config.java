@@ -19,8 +19,10 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 
 public class Config {
@@ -47,30 +49,40 @@ public class Config {
             this.root = this.loader.load();
             this.conf = ObjectMapper.factory().get(this.type).load(this.root);
             this.loader.save(this.root);
-            //TODO fix backing config map.
-            this.configMap = this.nodeMap(this.nodeMap(this.root.childrenMap()));
+            this.configMap = this.prepareMap(this.root);
             //Testing
-            this.configMap.forEach((key, value) -> Bukkit.getLogger().info("Node Value: " + key.toString() + " Node Path: " + value.path()));
+            this.configMap.forEach((key, value) -> Bukkit.getLogger().info("Node Value: " + key.toString() + " Node Path: " + value.path() + " Node Type: " + key.getClass().getSimpleName()));
         } catch (ConfigurateException e) {
             e.printStackTrace();
         }
     }
-
-    private Map<Object, CommentedConfigurationNode> nodeMap(Map<Object, CommentedConfigurationNode> map) {
-        Map<Object, CommentedConfigurationNode> hashMap = new HashMap<>();
-        this.root.childrenList().forEach(i -> this.configMap.putAll(i.childrenMap()));
-        map.forEach((k, v) -> hashMap.putAll(v.childrenMap()));
-        return hashMap;
+    //TODO fix config parsing for menu items.
+    private Map<Object, CommentedConfigurationNode> prepareMap(CommentedConfigurationNode parent) {
+        List<CommentedConfigurationNode> nodes = new CopyOnWriteArrayList<>(parent.childrenMap().values());
+        for (CommentedConfigurationNode cc : nodes) {
+            if (cc.isMap()) {
+                nodes.addAll(cc.childrenMap().values());
+            }
+        }
+        Map<Object, CommentedConfigurationNode> master = new ConcurrentHashMap<>();
+        nodes.forEach(i -> {
+            try {
+                master.put(i.get(Object.class), i);
+            } catch (SerializationException e) {
+                e.printStackTrace();
+            }
+        });
+        return master;
     }
 
     public void save(CommentedConfigurationNode root) {
         try {
             this.loader.save(root);
+            this.root = root;
+            this.configMap = this.prepareMap(this.root);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        this.root = root;
-        this.configMap = this.nodeMap(this.root.childrenMap());
     }
 
     public void save() {
@@ -201,7 +213,6 @@ public class Config {
         }
         return HoconConfigurationLoader.builder()
                 .defaultOptions(opts -> opts.serializers(build -> build.register(ItemStack.class, ItemStackSerializer.INSTANCE)))
-                .defaultOptions(opts -> opts.nativeTypes(Set.of(String.class, int.class, boolean.class)))
                 .path(dir.resolve(fileName)).prettyPrinting(true).build();
     }
 
