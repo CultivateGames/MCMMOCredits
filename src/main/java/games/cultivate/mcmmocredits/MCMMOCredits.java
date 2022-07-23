@@ -1,10 +1,10 @@
 package games.cultivate.mcmmocredits;
 
 import cloud.commandframework.annotations.AnnotationParser;
-import cloud.commandframework.exceptions.ArgumentParseException;
+import cloud.commandframework.captions.CaptionRegistry;
 import cloud.commandframework.exceptions.InvalidCommandSenderException;
 import cloud.commandframework.exceptions.InvalidSyntaxException;
-import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
+import cloud.commandframework.execution.CommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.minecraft.extras.AudienceProvider;
 import cloud.commandframework.minecraft.extras.MinecraftExceptionHandler;
@@ -26,6 +26,7 @@ import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.util.Listeners;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
@@ -33,13 +34,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.interfaces.paper.PaperInterfaceListeners;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.logging.Level;
 
 /**
  * This class is responsible for startup/shutdown logic, and command loading.
  */
 public class MCMMOCredits extends JavaPlugin {
+    public static final NamespacedKey NAMESPACED_KEY = Objects.requireNonNull(NamespacedKey.fromString("mcmmocredits"));
     private Injector injector;
     private SettingsConfig settings;
 
@@ -53,14 +57,18 @@ public class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onEnable() {
+        long start = System.nanoTime();
         this.injector = Guice.createInjector(new PluginModule(this));
         this.checkForDependencies();
         this.loadConfiguration();
         this.settings = this.injector.getInstance(SettingsConfig.class);
-        this.injector.getInstance(Database.class);
         this.loadCommands();
         PaperInterfaceListeners.install(this);
         Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
+        long end = System.nanoTime();
+        if (this.settings.bool("debug", false)) {
+            this.getSLF4JLogger().info("[MCMMOCredits] Plugin enabled! Startup took: {} s.", (double) (end - start) / 1000000000);
+        }
     }
 
     public void loadConfiguration() {
@@ -105,14 +113,14 @@ public class MCMMOCredits extends JavaPlugin {
     private void loadCommands() {
         PaperCommandManager<CommandSender> manager;
         try {
-            manager = new PaperCommandManager<>(this, AsynchronousCommandExecutionCoordinator.<CommandSender>newBuilder().withAsynchronousParsing().build(), t -> t, t -> t);
+            manager = new PaperCommandManager<>(this, CommandExecutionCoordinator.simpleCoordinator(), Function.identity(), Function.identity());
+            //manager = new PaperCommandManager<>(this, AsynchronousCommandExecutionCoordinator.<CommandSender>newBuilder().withAsynchronousParsing().build(), t -> t, t -> t);
         } catch (Exception e) {
             e.printStackTrace();
             return;
         }
         manager.registerBrigadier();
         manager.registerAsynchronousCompletions();
-
         manager.parserRegistry().registerSuggestionProvider("user", (c, i) -> {
             if (this.settings.bool("playerTabCompletion", true)) {
                 return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
@@ -133,22 +141,23 @@ public class MCMMOCredits extends JavaPlugin {
         handler.withHandler(ExceptionType.INVALID_SYNTAX, this.exceptionFunction(messages.string("invalidSyntax")));
         handler.withHandler(ExceptionType.INVALID_SENDER, this.exceptionFunction(messages.string("invalidSender")));
         handler.apply(manager, AudienceProvider.nativeAudience());
+
+        //TODO caption system, reload exception handler on configuration reload.
+        CaptionRegistry<CommandSender> registry = manager.captionRegistry();
     }
 
     private BiFunction<CommandSender, Exception, Component> exceptionFunction(String string) {
-        return (sender, exception) -> {
+        return (sender, ex) -> {
             if (this.settings.bool("debug", false)) {
-                exception.printStackTrace();
+                ex.printStackTrace();
             }
             Resolver.Builder rb = Resolver.builder().sender(sender);
-            if (exception instanceof ArgumentParseException e1) {
-                rb = rb.tags("argument_error", e1.getCause().getMessage());
-            }
-            if (exception instanceof InvalidSyntaxException e2) {
-                rb = rb.tags("correct_syntax", "/" + e2.getCorrectSyntax());
-            }
-            if (exception instanceof InvalidCommandSenderException e3) {
-                rb = rb.tags("correct_sender", e3.getRequiredSender().getSimpleName());
+            switch (ex.getClass().getSimpleName()) {
+                case "ArgumentParseException" -> rb = rb.tags("argument_error", ex.getCause().getMessage());
+                case "InvalidSyntaxException" ->
+                        rb = rb.tags("correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax());
+                case "InvalidCommandSenderException" ->
+                        rb = rb.tags("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName());
             }
             return Text.fromString(sender, string, rb.build()).toComponent();
         };

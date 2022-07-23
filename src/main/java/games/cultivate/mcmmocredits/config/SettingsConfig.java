@@ -19,7 +19,7 @@ public class SettingsConfig extends Config {
     }
 
     public boolean isMYSQL() {
-        return general.databaseType.equals("mysql");
+        return this.string("databaseType").equals("mysql");
     }
 
     @ConfigSerializable

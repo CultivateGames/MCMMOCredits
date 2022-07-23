@@ -127,6 +127,16 @@ public class Config {
         return valueFromMap(int.class, path, def);
     }
 
+    /**
+     * Returns an int from the underlying configuration map.
+     *
+     * @param path string that the path contains. Unique enough to not worry about duplication.
+     * @return String from the root configuration nodes children map, or the provided default value.
+     */
+    public int integer(String path) {
+        return valueFromMap(int.class, path, 0);
+    }
+
     private <V> V valueFromMap(Class<V> type, String path, V def) {
         for (CommentedConfigurationNode node : this.nodeList) {
             if (node.path().toString().contains(path)) {

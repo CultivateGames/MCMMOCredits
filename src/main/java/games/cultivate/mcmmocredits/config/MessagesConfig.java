@@ -40,7 +40,7 @@ public class MessagesConfig extends Config {
         @Setting("invalidSyntax")
         private String invalidSyntax = "<red>Invalid syntax! Correct syntax (if applicable): <gray><correct_syntax>";
         @Comment("Sender output for invalid command argument input.")
-        @Setting("invalidSyntax")
+        @Setting("invalidSender")
         private String invalidSender = "<red>Invalid command sender! You must be of type: <gray><correct_sender>";
         @Comment("Sender output for invalid number input.")
         @Setting("invalidNumber")
