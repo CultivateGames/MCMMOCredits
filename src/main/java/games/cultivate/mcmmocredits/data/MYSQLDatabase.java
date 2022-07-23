@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.SettingsConfig;
 import org.jdbi.v3.core.Jdbi;
-import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import javax.inject.Inject;
 
@@ -30,7 +29,7 @@ public final class MYSQLDatabase extends SQLDatabase {
 
     @Override
     Jdbi createJDBI() {
-        return Jdbi.create(super.hikari).installPlugin(new SqlObjectPlugin());
+        return Jdbi.create(super.hikari);
     }
 
     @Override

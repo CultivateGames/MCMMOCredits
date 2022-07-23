@@ -6,7 +6,6 @@ import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.specifier.Range;
-import cloud.commandframework.exceptions.CommandExecutionException;
 import games.cultivate.mcmmocredits.config.MessagesConfig;
 import games.cultivate.mcmmocredits.data.Database;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
@@ -58,14 +57,16 @@ public final class ModifyCredits {
     private BiConsumer<UUID,Throwable> modifyCredits(Operation op, CommandSender sender, String user, int amount, boolean silent) {
         return (i, t) -> {
             if (!this.database.doesPlayerExist(i)) {
-                throw new CommandExecutionException(t);
+                Text.fromString(sender, this.messages.string("playerDoesNotExist")).send();
+                //throw new CommandExecutionException(t);
+                return;
             }
             switch (op) {
                 case ADD -> this.database.addCredits(i, amount);
                 case TAKE -> this.database.takeCredits(i, amount);
                 case SET -> this.database.setCredits(i, amount);
             }
-            TagResolver r = Resolver.builder().player(user, i).transaction(amount).sender(sender).build();
+            TagResolver r = Resolver.fromTransaction(sender, user, i, amount);
             String content = this.messages.string(op.name().toLowerCase() + "Sender");
             Text.fromString(sender, content, r).send();
             Player player = Bukkit.getPlayer(i);

@@ -30,8 +30,8 @@ public class Resolver {
         return new Builder().player(player).build();
     }
 
-    public static TagResolver fromTransaction(CommandSender sender, Player player, int amount) {
-        return new Builder().sender(sender).player(player).transaction(amount).build();
+    public static TagResolver fromTransaction(CommandSender sender, String username, UUID uuid, int amount) {
+        return new Builder().sender(sender).player(username, uuid).transaction(amount).build();
     }
 
     public static TagResolver fromRedemption(CommandSender sender, Player player, PrimarySkillType skill, int amount) {
@@ -47,27 +47,27 @@ public class Resolver {
         private static Database database;
         private final Map<String, String> tags;
         private final CommandSender sender;
-        private final Player player;
-        private final PrimarySkillType skill;
-        private final int transactionAmount;
+        private Player player;
+        private PrimarySkillType skill;
+        private int amount;
         private TagResolver.Builder resolverBuilder;
 
         public Builder() {
             this(new HashMap<>(), TagResolver.builder(), null, null, null, 0);
         }
 
-        private Builder(Map<String, String> tags, TagResolver.Builder resolverBuilder, CommandSender sender, Player player, PrimarySkillType skill, int transactionAmount) {
+        private Builder(Map<String, String> tags, TagResolver.Builder resolverBuilder, CommandSender sender, Player player, PrimarySkillType skill, int amount) {
             this.tags = tags;
             this.resolverBuilder = resolverBuilder;
             this.sender = sender;
             this.player = player;
             this.skill = skill;
-            this.transactionAmount = transactionAmount;
+            this.amount = amount;
         }
 
         public Builder tags(String key, String value) {
             this.tags.put(key, value);
-            return new Builder(this.tags, this.resolverBuilder, this.sender, this.player, this.skill, this.transactionAmount);
+            return this;
         }
 
         public TagResolver build() {
@@ -80,32 +80,36 @@ public class Resolver {
 
         public Builder sender(@NotNull CommandSender sender) {
             this.tags.put("sender", sender.getName());
-            return new Builder(this.tags, this.resolverBuilder, sender, this.player, this.skill, this.transactionAmount);
+            return this;
         }
 
         public Builder player(@Nullable Player player) {
             if (player != null) {
-                this.tags.put("player", player.getName());
-                this.tags.put("credits", database.getCredits(player.getUniqueId()) + "");
+                this.player = player;
+                this.tags.put("player", this.player.getName());
+                this.tags.put("credits", database.getCredits(this.player.getUniqueId()) + "");
             }
-            return new Builder(this.tags, this.resolverBuilder, this.sender, player, this.skill, this.transactionAmount);
+            return this;
         }
 
         public Builder player(String username, UUID uuid) {
+            this.player = Bukkit.getPlayer(uuid);
             this.tags.put("player", username);
             this.tags.put("credits", database.getCredits(uuid) + "");
-            return new Builder(this.tags, this.resolverBuilder, this.sender, Bukkit.getPlayer(uuid), this.skill, this.transactionAmount);
+            return this;
         }
 
         public Builder skill(PrimarySkillType skill) {
-            this.tags.put("skill", WordUtils.capitalizeFully(skill.name()));
-            this.tags.put("cap", mcMMO.p.getGeneralConfig().getLevelCap(skill) + "");
-            return new Builder(this.tags, this.resolverBuilder, this.sender, this.player, skill, this.transactionAmount);
+            this.skill = skill;
+            this.tags.put("skill", WordUtils.capitalizeFully(this.skill.name()));
+            this.tags.put("cap", mcMMO.p.getGeneralConfig().getLevelCap(this.skill) + "");
+            return this;
         }
 
         public Builder transaction(int amount) {
-            this.tags.put("amount", amount + "");
-            return new Builder(this.tags, this.resolverBuilder, this.sender, this.player, this.skill, amount);
+            this.amount = amount;
+            this.tags.put("amount", this.amount + "");
+            return this;
         }
     }
 }

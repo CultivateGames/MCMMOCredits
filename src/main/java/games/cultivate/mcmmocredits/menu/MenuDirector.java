@@ -1,6 +1,7 @@
 package games.cultivate.mcmmocredits.menu;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.ItemType;
 import games.cultivate.mcmmocredits.config.MenuConfig;
@@ -10,7 +11,6 @@ import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import net.kyori.adventure.text.Component;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
@@ -25,12 +25,10 @@ import org.spongepowered.configurate.CommentedConfigurationNode;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 //This class will be ripped out soon tm.
 public class MenuDirector {
-    private static final NamespacedKey NAMESPACED_KEY = Objects.requireNonNull(NamespacedKey.fromString("mcmmocredits"));
     private final MessagesConfig messages;
     private final MenuConfig menus;
     private final InputStorage storage;
@@ -88,7 +86,7 @@ public class MenuDirector {
                 ItemStack stack = click.cause().getCurrentItem();
                 if (stack != null && stack.hasItemMeta()) {
                     PersistentDataContainer pdc = stack.getItemMeta().getPersistentDataContainer();
-                    PrimarySkillType skill = PrimarySkillType.valueOf(pdc.get(NAMESPACED_KEY, PersistentDataType.STRING));
+                    PrimarySkillType skill = PrimarySkillType.valueOf(pdc.get(MCMMOCredits.NAMESPACED_KEY, PersistentDataType.STRING));
                     Resolver.Builder rb = Resolver.builder().player(player).skill(skill);
                     Text.fromString(player, this.messages.string("menuRedeemPrompt"), rb.build()).send();
                     UUID uuid = player.getUniqueId();
@@ -106,7 +104,7 @@ public class MenuDirector {
                 view.viewer().close();
                 ItemStack stack = click.cause().getCurrentItem();
                 if (stack != null && stack.hasItemMeta()) {
-                    String path = stack.getItemMeta().getPersistentDataContainer().get(NAMESPACED_KEY, PersistentDataType.STRING);
+                    String path = stack.getItemMeta().getPersistentDataContainer().get(MCMMOCredits.NAMESPACED_KEY, PersistentDataType.STRING);
                     Resolver.Builder rb = Resolver.builder().sender(player).tags("setting", path);
                     Text.fromString(player, this.messages.string("editRedeemPrompt"), rb.build()).send();
                     UUID uuid = player.getUniqueId();
@@ -140,7 +138,7 @@ public class MenuDirector {
             item.setAmount(slot + 1);
             item.editMeta(meta -> {
                 meta.displayName(Component.text(path.substring(path.lastIndexOf('.')), Text.DEFAULT_STYLE));
-                meta.getPersistentDataContainer().set(NAMESPACED_KEY, PersistentDataType.STRING, path);
+                meta.getPersistentDataContainer().set(MCMMOCredits.NAMESPACED_KEY, PersistentDataType.STRING, path);
                 if (meta.hasLore()) {
                     meta.lore(meta.lore().stream().map(i -> Text.parseComponent(i, player)).toList());
                 }

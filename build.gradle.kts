@@ -40,7 +40,6 @@ dependencies {
         exclude(module = "paper-api")
     }
     implementation("org.jdbi:jdbi3-core:3.31.0")
-    implementation("org.jdbi:jdbi3-sqlobject:3.31.0")
     implementation("org.jdbi:jdbi3-sqlite:3.31.0")
 
     compileOnly("me.clip:placeholderapi:2.11.1")
@@ -70,6 +69,9 @@ tasks {
     }
 
     shadowJar {
+        minimize {
+            exclude(dependency("com.github.ben-manes.caffeine:caffeine:3.0.3"))
+        }
         relocate("cloud.commandframework", "games.cultivate.mcmmocredits.relocate.cloud.commandframework")
         relocate("org.incendo.interfaces", "games.cultivate.mcmmocredits.relocate.org.incendo.interfaces")
         relocate("io.leangen", "games.cultivate.mcmmocredits.relocate.io.leangen")
