@@ -25,7 +25,11 @@ public record Button(ItemStack item, int slot, String command) {
     }
 
     public static Button of(Config config, ItemType type, Player player) {
-        return new Button(config.item(type, player), config.itemSlot(type));
+        return config.button(type, player);
+    }
+
+    public static Button of(Config config, ItemType type, Player player, String command) {
+        return new Button(config.item(type, player), config.itemSlot(type), command);
     }
 
     public <T, Z> void addToPDC(PersistentDataType<T, Z> data, Z value) {

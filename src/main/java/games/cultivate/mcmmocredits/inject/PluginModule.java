@@ -2,6 +2,7 @@ package games.cultivate.mcmmocredits.inject;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.name.Names;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.config.MessagesConfig;
@@ -10,17 +11,17 @@ import games.cultivate.mcmmocredits.data.Database;
 import games.cultivate.mcmmocredits.data.InputStorage;
 import games.cultivate.mcmmocredits.data.MYSQLDatabase;
 import games.cultivate.mcmmocredits.data.SQLiteDatabase;
+import games.cultivate.mcmmocredits.menu.Menu;
+import games.cultivate.mcmmocredits.menu.MenuFactory;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
-import javax.inject.Named;
 import java.nio.file.Path;
 
 public final class PluginModule extends AbstractModule {
     private final MCMMOCredits mcmmoCredits;
     private Database database;
-    private Path dir;
+    private MenuFactory factory;
 
     public PluginModule(MCMMOCredits mcmmoCredits) {
         this.mcmmoCredits = mcmmoCredits;
@@ -30,15 +31,17 @@ public final class PluginModule extends AbstractModule {
     protected void configure() {
         this.bind(MCMMOCredits.class).toInstance(this.mcmmoCredits);
         this.bind(JavaPlugin.class).toInstance(this.mcmmoCredits);
+        this.bind(Path.class).annotatedWith(Names.named("dir")).toInstance(this.mcmmoCredits.getDataFolder().toPath());
         this.bind(MessagesConfig.class).asEagerSingleton();
         this.bind(SettingsConfig.class).asEagerSingleton();
         this.bind(MenuConfig.class).asEagerSingleton();
         this.bind(InputStorage.class).asEagerSingleton();
         this.requestStaticInjection(Resolver.Builder.class);
+        this.requestStaticInjection(Menu.Builder.class);
     }
 
     @Provides
-    public @NonNull Database provideDatabase(SettingsConfig settings, MCMMOCredits plugin) {
+    public Database provideDatabase(SettingsConfig settings, MCMMOCredits plugin) {
         if (this.database == null) {
             this.database = settings.isMYSQL() ? new MYSQLDatabase(settings, plugin) : new SQLiteDatabase(settings, plugin);
         }
@@ -46,11 +49,10 @@ public final class PluginModule extends AbstractModule {
     }
 
     @Provides
-    @Named("dir")
-    public @NonNull Path provideDirectory(MCMMOCredits plugin) {
-        if (this.dir == null) {
-            this.dir = plugin.getDataFolder().toPath();
+    public MenuFactory provideMenuFactory(MenuConfig menus) {
+        if (this.factory == null) {
+            this.factory = new MenuFactory(menus);
         }
-        return this.dir;
+        return this.factory;
     }
 }

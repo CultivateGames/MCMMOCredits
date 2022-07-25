@@ -10,7 +10,7 @@ import javax.inject.Inject;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static games.cultivate.mcmmocredits.data.SQLStatements.*;
+import static games.cultivate.mcmmocredits.data.SQLStatement.*;
 
 public abstract sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLiteDatabase {
     private static final UUID ZERO_UUID = new UUID(0, 0);
@@ -24,7 +24,7 @@ public abstract sealed class SQLDatabase implements Database permits MYSQLDataba
         this.settings = settings;
         this.plugin = plugin;
         this.hikari = this.createDataSource();
-        SQLStatements creation = settings.isMYSQL() ? MYSQL_CREATE_TABLE : SQLITE_CREATE_TABLE;
+        SQLStatement creation = settings.isMYSQL() ? MYSQL_CREATE_TABLE : SQLITE_CREATE_TABLE;
         this.jdbi = this.createJDBI();
         this.jdbi.useHandle(x -> x.execute(creation.toString()));
     }
@@ -95,11 +95,11 @@ public abstract sealed class SQLDatabase implements Database permits MYSQLDataba
         return credits != null ? credits : 0;
     }
 
-    private void update(SQLStatements statement, Object... args) {
+    private void update(SQLStatement statement, Object... args) {
        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> this.jdbi.useHandle(x -> x.execute(statement.toString(), args)));
     }
 
-    private <T> T query(Class<T> clazz, SQLStatements statement, Object... args) {
+    private <T> T query(Class<T> clazz, SQLStatement statement, Object... args) {
         try {
             return this.jdbi.withHandle(x -> x.select(statement.toString(), args).mapTo(clazz).one());
         } catch (IllegalStateException e) {

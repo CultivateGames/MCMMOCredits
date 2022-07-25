@@ -8,11 +8,13 @@ import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.config.MessagesConfig;
 import games.cultivate.mcmmocredits.config.SettingsConfig;
 import games.cultivate.mcmmocredits.data.Database;
+import games.cultivate.mcmmocredits.menu.MenuFactory;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.incendo.interfaces.paper.PlayerViewer;
 
 import javax.inject.Inject;
 
@@ -25,13 +27,15 @@ public final class Credits {
     private final MenuConfig menus;
     private final SettingsConfig settings;
     private final Database database;
+    private final MenuFactory factory;
 
     @Inject
-    public Credits(MessagesConfig messages, SettingsConfig settings, MenuConfig menus, Database database) {
+    public Credits(MessagesConfig messages, SettingsConfig settings, MenuConfig menus, Database database, MenuFactory factory) {
         this.messages = messages;
         this.settings = settings;
         this.menus = menus;
         this.database = database;
+        this.factory = factory;
     }
 
     @CommandDescription("Check your own MCMMO Credit balance.")
@@ -69,27 +73,27 @@ public final class Credits {
     @CommandMethod("menu")
     @CommandPermission("mcmmocredits.gui.basic")
     public void openMenu(Player player) {
-        //open main menu
+        this.factory.makeMainMenu(player).open(PlayerViewer.of(player));
     }
 
     @CommandDescription("Open the Edit Messages Menu")
     @CommandMethod("menu messages")
     @CommandPermission("mcmmocredits.gui.admin")
     public void openMessagesMenu(Player player) {
-        //open messages menu
+        this.factory.makeConfigMenu(player, this.messages).open(PlayerViewer.of(player));
     }
 
     @CommandDescription("Open the Edit Settings Menu")
     @CommandMethod("menu settings")
     @CommandPermission("mcmmocredits.gui.admin")
     public void openSettingsMenu(Player player) {
-        //open settings menu
+        this.factory.makeConfigMenu(player, this.settings).open(PlayerViewer.of(player));
     }
 
     @CommandDescription("Open the Credit Redemption Menu")
     @CommandMethod("menu redeem")
     @CommandPermission("mcmmocredits.gui.redeem")
     public void openRedeemMenu(Player player) {
-        //open redeem menu
+        this.factory.makeRedemptionMenu(player).open(PlayerViewer.of(player));
     }
 }

@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public enum ItemType {
-    MENU_FILL_ITEM("main.fill-item"),
+    MENU_FILL_ITEM("main.fillItem"),
     MENU_NAVIGATION_ITEM("main.navigationItem"),
     MENU_MESSAGES_ITEM("main.messages"),
     MENU_REDEEM_ITEM("main.redeem"),

@@ -33,6 +33,8 @@ public class InputStorage {
     }
 
     public void complete(UUID uuid, String completion) {
-        map.get(uuid).complete(completion);
+        if (this.contains(uuid)) {
+            map.get(uuid).complete(completion);
+        }
     }
 }

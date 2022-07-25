@@ -54,7 +54,7 @@ public class Text {
 
     public static Component parseComponent(Component comp, Player player) {
         Pattern p = PlaceholderAPI.getPlaceholderPattern();
-        comp = comp.replaceText(i -> i.match(p).replacement((m, b) -> b.content(PlaceholderAPI.setPlaceholders(player, m.group()))));
+        comp = comp.replaceText(i -> i.match(p).replacement((m, b) -> Component.text(PlaceholderAPI.setPlaceholders(player, m.group()))));
         return Component.empty().style(DEFAULT_STYLE).append(MiniMessage.miniMessage().deserialize(MiniMessage.miniMessage().serialize(comp), Resolver.fromPlayer(player)));
     }
 

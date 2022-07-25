@@ -51,7 +51,7 @@ public class Listeners implements Listener {
             String username = profile.getName();
             if (!this.database.doesPlayerExist(uuid)) {
                 this.database.addPlayer(uuid, username, 0);
-                if (this.settings.bool("addPlayerNotification", true)) {
+                if (this.settings.bool("addPlayerNotification")) {
                     TagResolver resolver = Resolver.builder().player(username, uuid).build();
                     String content = this.messages.string("addPlayerMessage", false);
                     Text.fromString(Bukkit.getConsoleSender(), content, resolver).send();
@@ -69,7 +69,7 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
-        if (this.settings.bool("sendLoginMessage", true)) {
+        if (this.settings.bool("sendLoginMessage")) {
             Text.fromString(e.getPlayer(), this.messages.string("loginMessage")).send();
         }
     }

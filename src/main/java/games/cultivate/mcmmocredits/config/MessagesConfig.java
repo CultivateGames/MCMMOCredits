@@ -21,8 +21,8 @@ public class MessagesConfig extends Config {
         super(MessagesConfig.class, "messages.conf");
     }
 
-    public String string(String path, boolean prefix) {
-        return prefix ? super.string("prefix") + super.string(path) : super.string(path);
+    public String string(String path, boolean withPrefix) {
+        return withPrefix ? super.string("prefix") + super.string(path) : super.string(path);
     }
 
     @Override
