@@ -1,14 +1,15 @@
 package games.cultivate.mcmmocredits;
 
 import cloud.commandframework.annotations.AnnotationParser;
+import cloud.commandframework.bukkit.CloudBukkitCapabilities;
 import cloud.commandframework.captions.CaptionRegistry;
+import cloud.commandframework.exceptions.CommandExecutionException;
 import cloud.commandframework.exceptions.InvalidCommandSenderException;
 import cloud.commandframework.exceptions.InvalidSyntaxException;
 import cloud.commandframework.execution.CommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.minecraft.extras.AudienceProvider;
 import cloud.commandframework.minecraft.extras.MinecraftExceptionHandler;
-import cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType;
 import cloud.commandframework.paper.PaperCommandManager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -34,17 +35,18 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.interfaces.paper.PaperInterfaceListeners;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.logging.Level;
+
+import static cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType.*;
+import static java.util.Objects.requireNonNull;
 
 /**
  * This class is responsible for startup/shutdown logic, and command loading.
  */
 public class MCMMOCredits extends JavaPlugin {
-    public static final NamespacedKey NAMESPACED_KEY = Objects.requireNonNull(NamespacedKey.fromString("mcmmocredits"));
+    public static final NamespacedKey NAMESPACED_KEY = requireNonNull(NamespacedKey.fromString("mcmmocredits"));
     private Injector injector;
+    private MessagesConfig messages;
     private SettingsConfig settings;
 
     /**
@@ -61,13 +63,12 @@ public class MCMMOCredits extends JavaPlugin {
         this.injector = Guice.createInjector(new PluginModule(this));
         this.checkForDependencies();
         this.loadConfiguration();
-        this.settings = this.injector.getInstance(SettingsConfig.class);
         this.loadCommands();
         PaperInterfaceListeners.install(this);
         Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
         long end = System.nanoTime();
-        if (this.settings.bool("debug", false)) {
-            this.getSLF4JLogger().info("[MCMMOCredits] Plugin enabled! Startup took: {} s.", (double) (end - start) / 1000000000);
+        if (this.settings.bool("debug")) {
+            this.getSLF4JLogger().info("Plugin enabled! Startup took: {} s.", (double) (end - start) / 1000000000);
         }
     }
 
@@ -75,6 +76,8 @@ public class MCMMOCredits extends JavaPlugin {
         this.injector.getInstance(MessagesConfig.class).load();
         this.injector.getInstance(MenuConfig.class).load();
         this.injector.getInstance(SettingsConfig.class).load();
+        this.messages = this.injector.getInstance(MessagesConfig.class);
+        this.settings = this.injector.getInstance(SettingsConfig.class);
     }
 
     /**
@@ -94,16 +97,16 @@ public class MCMMOCredits extends JavaPlugin {
         try {
             Class.forName("com.destroystokyo.paper.MaterialSetTag");
         } catch (Exception e) {
-            this.getLogger().log(Level.SEVERE, "Not running Paper, disabling plugin...");
+            this.getSLF4JLogger().warn("Not running Paper, disabling plugin...");
             this.setEnabled(false);
         }
         PluginManager pluginManager = Bukkit.getPluginManager();
         if (pluginManager.getPlugin("mcMMO") == null) {
-            this.getLogger().log(Level.SEVERE, "mcMMO is not found, disabling plugin...");
+            this.getSLF4JLogger().warn("mcMMO is not found, disabling plugin...");
             this.setEnabled(false);
             return;
         }
-        this.getLogger().log(Level.INFO, "mcMMO has been found! Continuing to load...");
+        this.getSLF4JLogger().info("mcMMO has been found! Continuing to load...");
 
         if (pluginManager.getPlugin("PlaceholderAPI") != null) {
             this.injector.getInstance(CreditsExpansion.class).register();
@@ -113,14 +116,20 @@ public class MCMMOCredits extends JavaPlugin {
     private void loadCommands() {
         PaperCommandManager<CommandSender> manager;
         try {
-            manager = new PaperCommandManager<>(this, CommandExecutionCoordinator.simpleCoordinator(), Function.identity(), Function.identity());
-            //manager = new PaperCommandManager<>(this, AsynchronousCommandExecutionCoordinator.<CommandSender>newBuilder().withAsynchronousParsing().build(), t -> t, t -> t);
+            manager = new PaperCommandManager<>(this, CommandExecutionCoordinator.simpleCoordinator(), t -> t, t -> t);
         } catch (Exception e) {
             e.printStackTrace();
             return;
         }
-        manager.registerBrigadier();
-        manager.registerAsynchronousCompletions();
+
+        if (manager.hasCapability(CloudBukkitCapabilities.BRIGADIER)) {
+            manager.registerBrigadier();
+        }
+
+        if (manager.hasCapability(CloudBukkitCapabilities.ASYNCHRONOUS_COMPLETION)) {
+            manager.registerAsynchronousCompletions();
+        }
+
         manager.parserRegistry().registerSuggestionProvider("user", (c, i) -> {
             if (this.settings.bool("playerTabCompletion", true)) {
                 return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
@@ -132,23 +141,23 @@ public class MCMMOCredits extends JavaPlugin {
         parser.parse(this.injector.getInstance(Credits.class));
         parser.parse(this.injector.getInstance(ModifyCredits.class));
         parser.parse(this.injector.getInstance(Redeem.class));
+        parser.parse(this);
 
-        MessagesConfig messages = this.injector.getInstance(MessagesConfig.class);
         MinecraftExceptionHandler<CommandSender> handler = new MinecraftExceptionHandler<>();
-        handler.withHandler(ExceptionType.NO_PERMISSION, this.exceptionFunction(messages.string("noPermission")));
-        handler.withHandler(ExceptionType.ARGUMENT_PARSING, this.exceptionFunction(messages.string("invalidArguments")));
-        handler.withHandler(ExceptionType.COMMAND_EXECUTION, this.exceptionFunction(messages.string("commandError")));
-        handler.withHandler(ExceptionType.INVALID_SYNTAX, this.exceptionFunction(messages.string("invalidSyntax")));
-        handler.withHandler(ExceptionType.INVALID_SENDER, this.exceptionFunction(messages.string("invalidSender")));
+        handler.withHandler(NO_PERMISSION, buildError("noPermission"));
+        handler.withHandler(ARGUMENT_PARSING, buildError("invalidArguments"));
+        handler.withHandler(COMMAND_EXECUTION, buildError("commandError"));
+        handler.withHandler(INVALID_SYNTAX, buildError("invalidSyntax"));
+        handler.withHandler(INVALID_SENDER, buildError("invalidSender"));
         handler.apply(manager, AudienceProvider.nativeAudience());
 
-        //TODO caption system, reload exception handler on configuration reload.
+        //TODO caption system
         CaptionRegistry<CommandSender> registry = manager.captionRegistry();
     }
 
-    private BiFunction<CommandSender, Exception, Component> exceptionFunction(String string) {
+    private BiFunction<CommandSender, Exception, Component> buildError(String path) {
         return (sender, ex) -> {
-            if (this.settings.bool("debug", false)) {
+            if (this.settings.bool("debug") || ex instanceof CommandExecutionException) {
                 ex.printStackTrace();
             }
             Resolver.Builder rb = Resolver.builder().sender(sender);
@@ -159,7 +168,9 @@ public class MCMMOCredits extends JavaPlugin {
                 case "InvalidCommandSenderException" ->
                         rb = rb.tags("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName());
             }
-            return Text.fromString(sender, string, rb.build()).toComponent();
+            return Text.fromString(sender, this.messages.string(path), rb.build()).toComponent();
         };
     }
+
+
 }

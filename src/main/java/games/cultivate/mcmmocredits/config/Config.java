@@ -1,12 +1,11 @@
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.menu.Button;
 import games.cultivate.mcmmocredits.serializers.ItemStackSerializer;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
@@ -15,6 +14,8 @@ import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
 import org.spongepowered.configurate.objectmapping.ObjectMapper;
 import org.spongepowered.configurate.serialize.SerializationException;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -31,6 +32,7 @@ public class Config {
     private transient CommentedConfigurationNode root;
     private transient HoconConfigurationLoader loader;
     private transient List<CommentedConfigurationNode> nodeList;
+    private transient @Inject @Named("dir") Path dir;
 
     Config(Class<? extends Config> type, String fileName) {
         this.type = type;
@@ -38,8 +40,12 @@ public class Config {
         this.nodeList = new ArrayList<>();
     }
 
-    public CommentedConfigurationNode baseNode() {
-        return root;
+    public List<CommentedConfigurationNode> nodes() {
+        return nodeList;
+    }
+
+    public String joinedPath(CommentedConfigurationNode node) {
+        return StringUtils.join(node.path().array(), ".");
     }
 
     public void load() {
@@ -84,6 +90,10 @@ public class Config {
         return this.conf;
     }
 
+    public String name() {
+        return this.conf.getClass().getSimpleName();
+    }
+
     /**
      * Returns a boolean from the underlying configuration map.
      *
@@ -93,6 +103,16 @@ public class Config {
      */
     public boolean bool(String path, boolean def) {
         return valueFromMap(boolean.class, path, def);
+    }
+
+    /**
+     * Returns a boolean from the underlying configuration map.
+     *
+     * @param path string that the path contains. Unique enough to not worry about duplication.
+     * @return boolean from the root configuration nodes children map, or the provided default value.
+     */
+    public boolean bool(String path) {
+        return valueFromMap(boolean.class, path, false);
     }
 
     /**
@@ -139,7 +159,7 @@ public class Config {
 
     private <V> V valueFromMap(Class<V> type, String path, V def) {
         for (CommentedConfigurationNode node : this.nodeList) {
-            if (node.path().toString().contains(path)) {
+            if (StringUtils.join(node.path().array(), ".").contains(path)) {
                 try {
                     return node.get(type);
                 } catch (SerializationException e) {
@@ -159,9 +179,10 @@ public class Config {
             return false;
         }
         for (CommentedConfigurationNode node : this.nodeList) {
-            if (node.path().toString().contains(path)) {
+            if (this.joinedPath(node).contains(path)) {
                 try {
-                    this.save(this.root.node(node).set(type, value));
+                    node.set(type, value);
+                    this.save();
                     return true;
                 } catch (SerializationException e) {
                     e.printStackTrace();
@@ -194,14 +215,10 @@ public class Config {
     }
 
     public Button button(ItemType itemType, Player player) {
-        CommentedConfigurationNode node = this.root.node(itemType.path());
-        ItemStack item = ItemStackSerializer.INSTANCE.deserializePlayer(node, player);
-        int slot = node.node("slot").getInt(0);
-        return new Button(item, slot);
+        return new Button(this.item(itemType, player), this.itemSlot(itemType));
     }
 
     public HoconConfigurationLoader createLoader() {
-        Path dir = JavaPlugin.getPlugin(MCMMOCredits.class).getDataFolder().toPath();
         try {
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);

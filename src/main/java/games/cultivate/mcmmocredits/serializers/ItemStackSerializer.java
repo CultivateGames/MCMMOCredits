@@ -2,11 +2,11 @@ package games.cultivate.mcmmocredits.serializers;
 
 import com.destroystokyo.paper.profile.ProfileProperty;
 import dev.dbassett.skullcreator.SkullCreator;
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.text.Text;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -30,27 +30,26 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
 
     @Override
     public ItemStack deserialize(Type type, ConfigurationNode node) {
-        ItemStack item;
-        if (node.node("skull").virtual()) {
-            item = new ItemStack(Material.valueOf(node.node("material").getString()));
-        } else {
-            item = SkullCreator.itemWithBase64(new ItemStack(Material.PLAYER_HEAD), node.node("skull").getString(""));
+        ItemStack item = new ItemStack(Material.valueOf(node.node("material").getString()));
+        if (!node.node("skull").virtual()) {
+            item = SkullCreator.itemWithBase64(item, node.node("skull").getString(""));
         }
         item.setAmount(node.node("amount").getInt());
         item.setDurability((short) node.node("durability").getInt());
         item.editMeta(meta -> {
+            meta.displayName(Component.text(node.node("name").getString("")));
             try {
-                meta.displayName(Component.text(node.node("name").getString("")));
-                meta.lore(node.node("lore").getList(String.class, List.of()).stream().map(i -> Component.text(i).asComponent()).toList());
-                if (node.node("glow").getBoolean()) {
-                    meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
-                    meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                }
-                int slot = node.node("inventory-slot").virtual() ? 0 : node.node("inventory-slot").getInt();
-                meta.getPersistentDataContainer().set(NamespacedKey.fromString("mcmmocredits"), PersistentDataType.INTEGER, slot);
-            } catch (Exception e) {
+                List<String> loreList = node.node("lore").getList(String.class);
+                meta.lore(loreList.stream().map(i -> Component.text(i).asComponent()).toList());
+            } catch (SerializationException e) {
                 e.printStackTrace();
             }
+            if (node.node("glow").getBoolean(false)) {
+                meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
+                meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            }
+            ConfigurationNode slotNode = node.node("slot");
+            meta.getPersistentDataContainer().set(MCMMOCredits.NAMESPACED_KEY, PersistentDataType.INTEGER, slotNode.getInt(0));
         });
         return item;
     }
