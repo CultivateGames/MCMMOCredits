@@ -9,7 +9,6 @@ import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
-import org.spongepowered.configurate.NodePath;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
 import org.spongepowered.configurate.objectmapping.ObjectMapper;
 import org.spongepowered.configurate.serialize.SerializationException;
@@ -46,6 +45,10 @@ public class Config {
 
     public String joinedPath(CommentedConfigurationNode node) {
         return StringUtils.join(node.path().array(), ".");
+    }
+
+    public String joinedPath(Iterable<String> path ){
+        return StringUtils.join(path.iterator(), ".");
     }
 
     public void load() {
@@ -159,7 +162,7 @@ public class Config {
 
     private <V> V valueFromMap(Class<V> type, String path, V def) {
         for (CommentedConfigurationNode node : this.nodeList) {
-            if (StringUtils.join(node.path().array(), ".").contains(path)) {
+            if (this.joinedPath(node).contains(path)) {
                 try {
                     return node.get(type);
                 } catch (SerializationException e) {
@@ -211,11 +214,17 @@ public class Config {
     }
 
     public int itemSlot(ItemType itemType) {
-        return this.root.node(NodePath.of(itemType.path()).withAppendedChild("slot").toString()).getInt(0);
+        List<String> list = new ArrayList<>(itemType.path());
+        list.add("slot");
+        return this.integer(this.joinedPath(list));
     }
 
     public Button button(ItemType itemType, Player player) {
         return new Button(this.item(itemType, player), this.itemSlot(itemType));
+    }
+
+    public Button button(ItemType itemType, Player player, String command, int slot) {
+       return new Button(this.item(itemType, player), slot, command);
     }
 
     public HoconConfigurationLoader createLoader() {

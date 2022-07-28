@@ -2,7 +2,6 @@ package games.cultivate.mcmmocredits.serializers;
 
 import com.destroystokyo.paper.profile.ProfileProperty;
 import dev.dbassett.skullcreator.SkullCreator;
-import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.text.Text;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -13,7 +12,6 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurationNode;
@@ -48,8 +46,6 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
                 meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
                 meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             }
-            ConfigurationNode slotNode = node.node("slot");
-            meta.getPersistentDataContainer().set(MCMMOCredits.NAMESPACED_KEY, PersistentDataType.INTEGER, slotNode.getInt(0));
         });
         return item;
     }
@@ -69,7 +65,7 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
                         node.node("lore").set(obj.lore().stream().map(i -> MiniMessage.miniMessage().serialize(i)).toList());
                     }
                     if (meta instanceof SkullMeta skullMeta) {
-                        this.setSkullMeta(skullMeta, (CommentedConfigurationNode) node);
+                        this.setSkullMeta(skullMeta, node);
                     }
                 }
             } catch (Exception e) {
@@ -89,7 +85,7 @@ public class ItemStackSerializer implements TypeSerializer<ItemStack> {
         return item;
     }
 
-    private void setSkullMeta(SkullMeta skullMeta, CommentedConfigurationNode node) throws SerializationException {
+    private void setSkullMeta(SkullMeta skullMeta, ConfigurationNode node) throws SerializationException {
         Optional<ProfileProperty> opt = skullMeta.getPlayerProfile().getProperties().stream().filter(i -> i.getName().equals("textures")).findAny();
         if (opt.isPresent()) {
             node.node("skull").set(opt.get().getValue());

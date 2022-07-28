@@ -28,6 +28,10 @@ public record Button(ItemStack item, int slot, String command) {
         return config.button(type, player);
     }
 
+    public static Button of(Config config, ItemType type, Player player, String command, int slot) {
+        return new Button(config.item(type, player), slot, command);
+    }
+
     public static Button of(Config config, ItemType type, Player player, String command) {
         return new Button(config.item(type, player), config.itemSlot(type), command);
     }

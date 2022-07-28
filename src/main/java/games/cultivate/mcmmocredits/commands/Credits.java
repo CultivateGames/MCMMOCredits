@@ -73,7 +73,7 @@ public final class Credits {
     @CommandMethod("menu")
     @CommandPermission("mcmmocredits.gui.basic")
     public void openMenu(Player player) {
-        this.factory.makeMainMenu(player).open(PlayerViewer.of(player));
+        this.factory.makeMainMenu(player, this.messages, this.settings).open(PlayerViewer.of(player));
     }
 
     @CommandDescription("Open the Edit Messages Menu")

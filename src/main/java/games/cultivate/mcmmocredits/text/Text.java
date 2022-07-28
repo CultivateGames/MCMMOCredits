@@ -8,16 +8,15 @@ import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-
-import java.util.regex.Pattern;
 
 public class Text {
     public static final Style DEFAULT_STYLE = Style.style().decoration(TextDecoration.ITALIC, false).build();
     private final Audience audience;
-    private String content;
     private final TagResolver resolver;
+    private String content;
 
     private Text(Audience audience, String content, TagResolver resolver) {
         this.audience = audience;
@@ -25,18 +24,11 @@ public class Text {
         this.resolver = resolver;
     }
 
-    public Component toComponent() {
-        if (this.audience instanceof Player player) {
-            this.content = PlaceholderAPI.setPlaceholders(player, this.content);
-        }
-        return MiniMessage.miniMessage().deserialize(this.content, this.resolver);
-    }
-
     /**
      * Creates a Text object from an existing String.
      *
      * @param audience recipient of the message.
-     * @param content content of the message.
+     * @param content  content of the message.
      * @param resolver TagResolver to use for parsing.
      * @return a populated Text object.
      */
@@ -48,17 +40,28 @@ public class Text {
         return new Text(audience, content, createResolver(audience));
     }
 
-    public void send() {
-        this.audience.sendMessage(this.toComponent());
+    public static Component parseComponent(Component comp, Player player) {
+        String content = PlainTextComponentSerializer.plainText().serialize(comp);
+        content = PlaceholderAPI.setPlaceholders(player, content);
+        return Text.removeItalics(MiniMessage.miniMessage().deserialize(content, Resolver.fromPlayer(player)));
     }
 
-    public static Component parseComponent(Component comp, Player player) {
-        Pattern p = PlaceholderAPI.getPlaceholderPattern();
-        comp = comp.replaceText(i -> i.match(p).replacement((m, b) -> Component.text(PlaceholderAPI.setPlaceholders(player, m.group()))));
-        return Component.empty().style(DEFAULT_STYLE).append(MiniMessage.miniMessage().deserialize(MiniMessage.miniMessage().serialize(comp), Resolver.fromPlayer(player)));
+    public static Component removeItalics(Component component) {
+        return Component.empty().style(Text.DEFAULT_STYLE).append(component);
     }
 
     private static TagResolver createResolver(Audience audience) {
         return audience instanceof Player p ? Resolver.fromPlayer(p) : Resolver.fromSender((CommandSender) audience);
+    }
+
+    public Component toComponent() {
+        if (this.audience instanceof Player player) {
+            this.content = PlaceholderAPI.setPlaceholders(player, this.content);
+        }
+        return MiniMessage.miniMessage().deserialize(this.content, this.resolver);
+    }
+
+    public void send() {
+        this.audience.sendMessage(this.toComponent());
     }
 }

@@ -111,10 +111,10 @@ public class MessagesConfig extends Config {
         @Comment("Sender prompt for /credits menu redeem prompt.")
         @Setting("menuRedeemPrompt")
         private String menuRedeemPrompt = "<gray>How many credits would you like to redeem into <green><skill>? You have <credits> Credits available.";
-        //Placeholders: <player>, <credits>, <option>, <current_value>, PAPI
+        //Placeholders: <player>, <credits>, <setting>, <current_value>, PAPI
         @Comment("Sender prompt for /credits menu settings/messages.")
         @Setting("menuEditingPrompt")
-        private String menuEditingPrompt = "<red>Enter the new value for <gray><option>:";
+        private String menuEditingPrompt = "<red>Enter the new value for <gray><setting>:";
     }
 
     @ConfigSerializable

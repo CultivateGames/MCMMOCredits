@@ -15,6 +15,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.incendo.interfaces.core.click.ClickHandler;
 import org.incendo.interfaces.core.transform.Transform;
 import org.incendo.interfaces.paper.PlayerViewer;
 import org.incendo.interfaces.paper.element.ItemStackElement;
@@ -62,22 +63,22 @@ public class Menu {
         }
 
         public Builder interfaceTransfer(Button button, ClickType clickType, ChestInterface chestInterface) {
-            this.builder = this.builder.addTransform(1, this.interfaceTransform(button, chestInterface, clickType));
+            this.builder = this.builder.addTransform(2, this.interfaceTransform(button, chestInterface, clickType));
             return this;
         }
 
         public Builder commandTransfer(Button button, ClickType clickType) {
-            this.builder = this.builder.addTransform(1, this.commandTransform(button, clickType));
+            this.builder = this.builder.addTransform(3, this.commandTransform(button, clickType));
             return this;
         }
 
         public Builder redeemTransfer(Button button, ClickType clickType) {
-            this.builder = this.builder.addTransform(1, this.redeemTransform(button, clickType));
+            this.builder = this.builder.addTransform(4, this.redeemTransform(button, clickType));
             return this;
         }
 
         public Builder configTransfer(Button button, ClickType clickType, Config config) {
-            this.builder = this.builder.addTransform(1, this.configTransform(button, clickType, config));
+            this.builder = this.builder.addTransform(5, this.configTransform(button, clickType, config));
             return this;
         }
 
@@ -146,14 +147,17 @@ public class Menu {
 
         public ChestInterface build() {
             if (menus.bool("fill", false)) {
-                ItemStackElement<ChestPane> item = ItemStackElement.of(menus.item(ItemType.MENU_FILL_ITEM, player));
-                return this.builder.addTransform(0, PaperTransform.chestFill(item)).build();
+                ItemStackElement<ChestPane> item = ItemStackElement.of(menus.item(ItemType.MAIN_FILL, player));
+                this.builder = this.builder.addTransform(0, PaperTransform.chestFill(item));
             }
             if (menus.bool("navigation", false)) {
-                Button button = Button.of(menus, ItemType.MENU_NAVIGATION_ITEM, player, "credits menu");
-                return this.commandTransfer(button, ClickType.LEFT).build();
+                Button button = Button.of(menus, ItemType.MAIN_NAVIGATION, player, "credits menu");
+                this.builder = this.builder.addTransform(1, this.commandTransform(button, ClickType.LEFT));
             }
-            return this.builder.updates(true, 10).build();
+            this.builder = this.builder.updates(true, 10).clickHandler(ClickHandler.cancel());
+            ChestInterface updates = this.builder.build();
+            System.out.println(updates.updates() + " " + updates.updateDelay());
+            return updates;
         }
     }
 }

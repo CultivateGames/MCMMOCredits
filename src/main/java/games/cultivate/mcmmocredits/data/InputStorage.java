@@ -29,7 +29,7 @@ public class InputStorage {
     }
 
     public void act(UUID uuid, Consumer<? super String> action) {
-        map.get(uuid).thenAcceptAsync(action).whenCompleteAsync((i, throwable) -> this.remove(uuid));
+        map.get(uuid).thenAccept(action).whenComplete((i, throwable) -> this.remove(uuid));
     }
 
     public void complete(UUID uuid, String completion) {
