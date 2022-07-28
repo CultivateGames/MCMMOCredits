@@ -7,15 +7,13 @@ import java.util.Arrays;
 import java.util.List;
 
 public enum ItemType {
-    MENU_FILL_ITEM("main.fillItem"),
-    MENU_NAVIGATION_ITEM("main.navigationItem"),
-    MENU_MESSAGES_ITEM("main.messages"),
-    MENU_REDEEM_ITEM("main.redeem"),
-    MENU_SETTINGS_ITEM("main.settings"),
-
     EDIT_MESSAGES_ITEM("editing.messages.item"),
     EDIT_SETTINGS_ITEM("editing.settings.item"),
-
+    MAIN_FILL("main.items.fill"),
+    MAIN_MESSAGES("main.items.messages"),
+    MAIN_NAVIGATION("main.items.navigation"),
+    MAIN_REDEEM("main.items.redeem"),
+    MAIN_SETTINGS("main.items.settings"),
     ACROBATICS_ITEM("redeem.items.acrobatics"),
     ALCHEMY_ITEM("redeem.items.alchemy"),
     ARCHERY_ITEM("redeem.items.archery"),
@@ -40,7 +38,7 @@ public enum ItemType {
         return path;
     }
 
-    public ItemType fromSkill(PrimarySkillType skill) {
+    public static ItemType fromSkill(PrimarySkillType skill) {
         for (ItemType it : ItemType.values()) {
             if (it.path().contains(skill.name().toLowerCase())) {
                 return it;

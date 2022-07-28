@@ -58,9 +58,9 @@ public final class Redeem {
             } else {
                 Player player = Bukkit.getPlayer(uuid);
                 TagResolver tr = Resolver.fromRedemption(sender, player, skill, amount);
-                Text.fromString(sender, "otherRedeemSender", tr).send();
+                Text.fromString(sender, this.messages.string("otherRedeemSender"), tr).send();
                 if (!s) {
-                    Text.fromString(player, "otherRedeemReceiver", tr).send();
+                    Text.fromString(player, this.messages.string("otherRedeemSender"), tr).send();
                 }
             }
         });
