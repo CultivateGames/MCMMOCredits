@@ -60,7 +60,7 @@ public final class Redeem {
                 TagResolver tr = Resolver.fromRedemption(sender, player, skill, amount);
                 Text.fromString(sender, this.messages.string("otherRedeemSender"), tr).send();
                 if (!s) {
-                    Text.fromString(player, this.messages.string("otherRedeemSender"), tr).send();
+                    Text.fromString(player, this.messages.string("otherRedeemReceiver"), tr).send();
                 }
             }
         });
