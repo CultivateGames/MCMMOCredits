@@ -130,7 +130,7 @@ public class Menu {
                     if (stack != null && stack.hasItemMeta()) {
                         String path = stack.getItemMeta().getPersistentDataContainer().get(MCMMOCredits.NAMESPACED_KEY, PersistentDataType.STRING);
                         Player player = view.viewer().player();
-                        Resolver.Builder rb = Resolver.builder().player(player).tags("setting", path);
+                        Resolver.Builder rb = Resolver.builder().player(player).tag("setting", path);
                         Text.fromString(player, messages.string("menuEditingPrompt"), rb.build()).send();
                         UUID uuid = player.getUniqueId();
                         storage.remove(uuid);
@@ -138,7 +138,7 @@ public class Menu {
                         storage.act(uuid, i -> {
                             boolean result = config.modify(path, i);
                             String content = "settingChange" + (result ? "Successful" : "Failure");
-                            Text.fromString(player, messages.string(content), rb.tags("change", i).build()).send();
+                            Text.fromString(player, messages.string(content), rb.tag("change", i).build()).send();
                         });
                     }
                 }

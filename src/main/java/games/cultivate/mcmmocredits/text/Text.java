@@ -4,7 +4,6 @@ import games.cultivate.mcmmocredits.placeholders.Resolver;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -13,7 +12,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class Text {
-    public static final Style DEFAULT_STYLE = Style.style().decoration(TextDecoration.ITALIC, false).build();
     private final Audience audience;
     private final TagResolver resolver;
     private String content;
@@ -42,12 +40,14 @@ public class Text {
 
     public static Component parseComponent(Component comp, Player player) {
         String content = PlainTextComponentSerializer.plainText().serialize(comp);
+        //TODO find better way to delegate local placeholder to PAPI. In the meantime this simplifies the resolver.
+        content = content.replace("<credits>", "%mcmmocredits_credits%");
         content = PlaceholderAPI.setPlaceholders(player, content);
         return Text.removeItalics(MiniMessage.miniMessage().deserialize(content, Resolver.fromPlayer(player)));
     }
 
     public static Component removeItalics(Component component) {
-        return Component.empty().style(Text.DEFAULT_STYLE).append(component);
+        return Component.empty().decoration(TextDecoration.ITALIC, false).append(component);
     }
 
     private static TagResolver createResolver(Audience audience) {
@@ -62,6 +62,6 @@ public class Text {
     }
 
     public void send() {
-        this.audience.sendMessage(this.toComponent());
+        this.audience.sendMessage(removeItalics(this.toComponent()));
     }
 }
