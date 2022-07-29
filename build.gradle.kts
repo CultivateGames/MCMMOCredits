@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCMMOCredits"
 
 plugins {
@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-    paperDevBundle("1.19-R0.1-SNAPSHOT")
+    paperDevBundle("1.19.1-R0.1-SNAPSHOT")
     implementation("cloud.commandframework:cloud-annotations:1.7.0")
     implementation("cloud.commandframework:cloud-paper:1.7.0")
     implementation("cloud.commandframework:cloud-minecraft-extras:1.7.0")

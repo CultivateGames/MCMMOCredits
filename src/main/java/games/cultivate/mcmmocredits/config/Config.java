@@ -1,7 +1,8 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.menu.Button;
-import games.cultivate.mcmmocredits.serializers.ItemStackSerializer;
+import games.cultivate.mcmmocredits.serializers.ItemSerializer;
+import games.cultivate.mcmmocredits.util.FileUtil;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -15,9 +16,6 @@ import org.spongepowered.configurate.serialize.SerializationException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -210,7 +208,7 @@ public class Config {
      * Returns an ItemStack from the underlying configuration map.
      */
     public ItemStack item(ItemType itemType, Player player) {
-        return ItemStackSerializer.INSTANCE.deserializePlayer(this.root.node(itemType.path()), player);
+        return ItemSerializer.INSTANCE.deserializePlayer(this.root.node(itemType.path()), player);
     }
 
     public int itemSlot(ItemType itemType) {
@@ -228,19 +226,11 @@ public class Config {
     }
 
     public HoconConfigurationLoader createLoader() {
-        try {
-            if (!Files.exists(dir)) {
-                Files.createDirectories(dir);
-                Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created " + fileName + " path!");
-            }
-            Files.createFile(dir.resolve(fileName));
-        } catch (FileAlreadyExistsException ignored) {
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Path path = this.dir.resolve(this.fileName);
+        FileUtil.createFile(path);
         return HoconConfigurationLoader.builder()
-                .defaultOptions(opts -> opts.serializers(build -> build.register(ItemStack.class, ItemStackSerializer.INSTANCE)))
-                .path(dir.resolve(fileName)).prettyPrinting(true).build();
+                .defaultOptions(opts -> opts.serializers(build -> build.register(ItemStack.class, ItemSerializer.INSTANCE)))
+                .path(path).prettyPrinting(true).build();
     }
 
     private void logWarning(String path) {

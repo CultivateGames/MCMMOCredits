@@ -64,7 +64,7 @@ public class MCMMOCredits extends JavaPlugin {
         this.checkForDependencies();
         this.loadConfiguration();
         this.loadCommands();
-        PaperInterfaceListeners.install(this);
+        Bukkit.getPluginManager().registerEvents(new PaperInterfaceListeners(this, 10L), this);
         Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
         long end = System.nanoTime();
         if (this.settings.bool("debug")) {
@@ -162,11 +162,11 @@ public class MCMMOCredits extends JavaPlugin {
             }
             Resolver.Builder rb = Resolver.builder().sender(sender);
             switch (ex.getClass().getSimpleName()) {
-                case "ArgumentParseException" -> rb = rb.tags("argument_error", ex.getCause().getMessage());
+                case "ArgumentParseException" -> rb = rb.tag("argument_error", ex.getCause().getMessage());
                 case "InvalidSyntaxException" ->
-                        rb = rb.tags("correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax());
+                        rb = rb.tag("correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax());
                 case "InvalidCommandSenderException" ->
-                        rb = rb.tags("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName());
+                        rb = rb.tag("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName());
             }
             return Text.fromString(sender, this.messages.string(path), rb.build()).toComponent();
         };

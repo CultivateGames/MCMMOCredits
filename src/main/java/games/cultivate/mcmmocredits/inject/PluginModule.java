@@ -13,7 +13,6 @@ import games.cultivate.mcmmocredits.data.MYSQLDatabase;
 import games.cultivate.mcmmocredits.data.SQLiteDatabase;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.menu.MenuFactory;
-import games.cultivate.mcmmocredits.placeholders.Resolver;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.nio.file.Path;
@@ -36,7 +35,6 @@ public final class PluginModule extends AbstractModule {
         this.bind(SettingsConfig.class).asEagerSingleton();
         this.bind(MenuConfig.class).asEagerSingleton();
         this.bind(InputStorage.class).asEagerSingleton();
-        this.requestStaticInjection(Resolver.Builder.class);
         this.requestStaticInjection(Menu.Builder.class);
     }
 

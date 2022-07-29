@@ -66,7 +66,7 @@ public final class ModifyCredits {
                 case TAKE -> this.database.takeCredits(i, amount);
                 case SET -> this.database.setCredits(i, amount);
             }
-            TagResolver r = Resolver.fromTransaction(sender, user, i, amount);
+            TagResolver r = Resolver.fromTransaction(sender, user, amount);
             String content = this.messages.string(op.name().toLowerCase() + "Sender");
             Text.fromString(sender, content, r).send();
             Player player = Bukkit.getPlayer(i);

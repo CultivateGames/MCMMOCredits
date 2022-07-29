@@ -51,7 +51,7 @@ public final class Credits {
     public void checkCreditsOther(CommandSender sender, @Argument(suggestions = "user") String username) {
         this.database.getUUID(username).whenCompleteAsync((i, t) -> {
             if (this.database.doesPlayerExist(i)) {
-                TagResolver tr = Resolver.builder().sender(sender).player(username, i).build();
+                TagResolver tr = Resolver.builder().sender(sender).player(username).build();
                 Text.fromString(sender, this.messages.string("otherBalance"), tr).send();
                 return;
             }

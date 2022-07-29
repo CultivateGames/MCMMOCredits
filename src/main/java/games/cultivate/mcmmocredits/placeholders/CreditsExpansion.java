@@ -30,7 +30,7 @@ public class CreditsExpansion extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getVersion() {
-        return "0.1.0";
+        return "0.1.1";
     }
 
     @Override
