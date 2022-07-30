@@ -1,6 +1,7 @@
 package games.cultivate.mcmmocredits.inject;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.name.Names;
 import games.cultivate.mcmmocredits.MCMMOCredits;
@@ -10,6 +11,7 @@ import games.cultivate.mcmmocredits.config.SettingsConfig;
 import games.cultivate.mcmmocredits.data.Database;
 import games.cultivate.mcmmocredits.data.InputStorage;
 import games.cultivate.mcmmocredits.data.MYSQLDatabase;
+import games.cultivate.mcmmocredits.data.SQLDatabase;
 import games.cultivate.mcmmocredits.data.SQLiteDatabase;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.menu.MenuFactory;
@@ -39,9 +41,10 @@ public final class PluginModule extends AbstractModule {
     }
 
     @Provides
-    public Database provideDatabase(SettingsConfig settings, MCMMOCredits plugin) {
+    public Database provideDatabase(SettingsConfig settings, Injector injector) {
         if (this.database == null) {
-            this.database = settings.isMYSQL() ? new MYSQLDatabase(settings, plugin) : new SQLiteDatabase(settings, plugin);
+            Class<? extends SQLDatabase> sqlClass = settings.isMYSQL() ? MYSQLDatabase.class : SQLiteDatabase.class;
+            this.database = injector.getInstance(sqlClass);
         }
         return this.database;
     }

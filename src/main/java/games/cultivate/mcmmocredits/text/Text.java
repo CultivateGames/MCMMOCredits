@@ -56,6 +56,8 @@ public class Text {
 
     public Component toComponent() {
         if (this.audience instanceof Player player) {
+            //TODO find better way to delegate local placeholder to PAPI. In the meantime this simplifies the resolver.
+            this.content = content.replace("<credits>", "%mcmmocredits_credits%");
             this.content = PlaceholderAPI.setPlaceholders(player, this.content);
         }
         return MiniMessage.miniMessage().deserialize(this.content, this.resolver);

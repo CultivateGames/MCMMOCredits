@@ -7,6 +7,8 @@ import org.bukkit.Bukkit;
 import org.jdbi.v3.core.Jdbi;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -18,11 +20,13 @@ public abstract sealed class SQLDatabase implements Database permits MYSQLDataba
     final HikariDataSource hikari;
     final MCMMOCredits plugin;
     private final Jdbi jdbi;
+    final Path dir;
 
     @Inject
-    SQLDatabase(SettingsConfig settings, MCMMOCredits plugin) {
+    SQLDatabase(SettingsConfig settings, MCMMOCredits plugin, @Named("dir") Path dir) {
         this.settings = settings;
         this.plugin = plugin;
+        this.dir = dir;
         this.hikari = this.createDataSource();
         SQLStatement creation = settings.isMYSQL() ? MYSQL_CREATE_TABLE : SQLITE_CREATE_TABLE;
         this.jdbi = this.createJDBI();
@@ -76,17 +80,17 @@ public abstract sealed class SQLDatabase implements Database permits MYSQLDataba
 
     @Override
     public void setCredits(UUID uuid, int credits) {
-        this.update(SET_CREDITS, credits, uuid.toString());
+        this.updateSync(SET_CREDITS, credits, uuid.toString());
     }
 
     @Override
     public void addCredits(UUID uuid, int credits) {
-        this.update(ADD_CREDITS, credits, uuid.toString());
+        this.updateSync(ADD_CREDITS, credits, uuid.toString());
     }
 
     @Override
     public void takeCredits(UUID uuid, int credits) {
-        this.update(TAKE_CREDITS, credits, uuid.toString());
+        this.updateSync(TAKE_CREDITS, credits, uuid.toString());
     }
 
     @Override
@@ -97,6 +101,11 @@ public abstract sealed class SQLDatabase implements Database permits MYSQLDataba
 
     private void update(SQLStatement statement, Object... args) {
        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> this.jdbi.useHandle(x -> x.execute(statement.toString(), args)));
+    }
+
+    //Credit Updates are done synchronously so that information is current.
+    private void updateSync(SQLStatement statement, Object... args) {
+        Bukkit.getScheduler().runTask(plugin, () -> this.jdbi.useHandle(x -> x.execute(statement.toString(), args)));
     }
 
     private <T> T query(Class<T> clazz, SQLStatement statement, Object... args) {

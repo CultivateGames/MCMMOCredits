@@ -13,11 +13,10 @@ import javax.inject.Named;
 import java.nio.file.Path;
 
 public final class SQLiteDatabase extends SQLDatabase {
-    private @Inject @Named("dir") Path dir;
 
     @Inject
-    public SQLiteDatabase(SettingsConfig settings, MCMMOCredits plugin) {
-        super(settings, plugin);
+    public SQLiteDatabase(SettingsConfig settings, MCMMOCredits plugin, @Named("dir") Path dir) {
+        super(settings, plugin, dir);
     }
 
     @Override
@@ -30,7 +29,7 @@ public final class SQLiteDatabase extends SQLDatabase {
         HikariConfig config = new HikariConfig();
         config.setPoolName("MCMMOCredits SQLite");
         config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
-        Path path = this.dir.resolve("database.db");
+        Path path = super.dir.resolve("database.db");
         FileUtil.createFile(path);
         config.addDataSourceProperty("url", "jdbc:sqlite:" + path);
         return new HikariDataSource(config);

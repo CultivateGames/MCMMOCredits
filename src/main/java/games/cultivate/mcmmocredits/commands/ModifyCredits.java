@@ -58,7 +58,6 @@ public final class ModifyCredits {
         return (i, t) -> {
             if (!this.database.doesPlayerExist(i)) {
                 Text.fromString(sender, this.messages.string("playerDoesNotExist")).send();
-                //throw new CommandExecutionException(t);
                 return;
             }
             switch (op) {
