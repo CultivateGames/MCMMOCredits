@@ -7,6 +7,8 @@ import games.cultivate.mcmmocredits.config.SettingsConfig;
 import org.jdbi.v3.core.Jdbi;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+import java.nio.file.Path;
 
 public final class MYSQLDatabase extends SQLDatabase {
     private final int databasePort;
@@ -17,8 +19,8 @@ public final class MYSQLDatabase extends SQLDatabase {
     private final boolean databaseSSL;
 
     @Inject
-    public MYSQLDatabase(SettingsConfig settings, MCMMOCredits plugin) {
-        super(settings, plugin);
+    public MYSQLDatabase(SettingsConfig settings, MCMMOCredits plugin, @Named("dir") Path dir) {
+        super(settings, plugin, dir);
         this.databasePort = super.settings.integer("mysql.port", 3306);
         this.databaseHost = super.settings.string("mysql.host");
         this.databaseName = super.settings.string("mysql.name", "database");
