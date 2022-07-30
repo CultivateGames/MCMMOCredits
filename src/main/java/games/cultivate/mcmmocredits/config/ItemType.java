@@ -30,15 +30,15 @@ public enum ItemType {
 
     private final List<String> path;
 
-    ItemType(String path) {
+    ItemType(final String path) {
         this.path = Arrays.asList(path.split("\\."));
     }
 
     public @NotNull List<String> path() {
-        return path;
+        return this.path;
     }
 
-    public static ItemType fromSkill(PrimarySkillType skill) {
+    public static ItemType fromSkill(final PrimarySkillType skill) {
         for (ItemType it : ItemType.values()) {
             if (it.path().contains(skill.name().toLowerCase())) {
                 return it;

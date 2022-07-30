@@ -24,7 +24,7 @@ public final class PluginModule extends AbstractModule {
     private Database database;
     private MenuFactory factory;
 
-    public PluginModule(MCMMOCredits mcmmoCredits) {
+    public PluginModule(final MCMMOCredits mcmmoCredits) {
         this.mcmmoCredits = mcmmoCredits;
     }
 
@@ -41,7 +41,7 @@ public final class PluginModule extends AbstractModule {
     }
 
     @Provides
-    public Database provideDatabase(SettingsConfig settings, Injector injector) {
+    public Database provideDatabase(final SettingsConfig settings, final Injector injector) {
         if (this.database == null) {
             Class<? extends SQLDatabase> sqlClass = settings.isMYSQL() ? MYSQLDatabase.class : SQLiteDatabase.class;
             this.database = injector.getInstance(sqlClass);
@@ -50,9 +50,9 @@ public final class PluginModule extends AbstractModule {
     }
 
     @Provides
-    public MenuFactory provideMenuFactory(MenuConfig menus) {
+    public MenuFactory provideMenuFactory(final MenuConfig menus, final MessagesConfig messages, final InputStorage storage, final MCMMOCredits plugin) {
         if (this.factory == null) {
-            this.factory = new MenuFactory(menus);
+            this.factory = new MenuFactory(menus, messages, storage, plugin);
         }
         return this.factory;
     }

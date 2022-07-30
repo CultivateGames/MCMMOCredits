@@ -28,7 +28,7 @@ public final class ModifyCredits {
     private final MessagesConfig messages;
 
     @Inject
-    public ModifyCredits(MessagesConfig messages, Database database) {
+    public ModifyCredits(final MessagesConfig messages, final Database database) {
         this.messages = messages;
         this.database = database;
     }
@@ -36,25 +36,25 @@ public final class ModifyCredits {
     @CommandDescription("Add MCMMO Credits to a user's balance.")
     @CommandMethod("add <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
-    public void addCredits(CommandSender sender, @Argument @Range(min = "1") int amount, @Argument(suggestions = "user") String username, @Flag("s") boolean silent) {
+    public void addCredits(final CommandSender sender, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
         this.database.getUUID(username).whenCompleteAsync(this.modifyCredits(Operation.ADD, sender, username, amount, silent));
     }
 
     @CommandDescription("Set a user's MCMMO Credit balance to the specified amount.")
     @CommandMethod("set <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
-    public void setCredits(CommandSender sender, @Argument @Range(min = "0") int amount, @Argument(suggestions = "user") String username, @Flag("s") boolean silent) {
+    public void setCredits(final CommandSender sender, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
         this.database.getUUID(username).whenCompleteAsync(this.modifyCredits(Operation.SET, sender, username, amount, silent));
     }
 
     @CommandDescription("Take MCMMO Credits away from a user's balance")
     @CommandMethod("take <amount> <username>")
     @CommandPermission("mcmmocredits.admin.modify")
-    public void takeCredits(CommandSender sender, @Argument @Range(min = "1") int amount, @Argument(suggestions = "user") String username, @Flag("s") boolean silent) {
+    public void takeCredits(final CommandSender sender, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
         this.database.getUUID(username).whenCompleteAsync(this.modifyCredits(Operation.TAKE, sender, username, amount, silent));
     }
 
-    private BiConsumer<UUID,Throwable> modifyCredits(Operation op, CommandSender sender, String user, int amount, boolean silent) {
+    private BiConsumer<UUID, Throwable> modifyCredits(final Operation op, final CommandSender sender, final String user, final int amount, final boolean silent) {
         return (i, t) -> {
             if (!this.database.doesPlayerExist(i)) {
                 Text.fromString(sender, this.messages.string("playerDoesNotExist")).send();
@@ -65,6 +65,7 @@ public final class ModifyCredits {
                     case ADD -> this.database.addCredits(i, amount);
                     case TAKE -> this.database.takeCredits(i, amount);
                     case SET -> this.database.setCredits(i, amount);
+                    default -> {}
                 }
             } catch (Exception e) {
                 Text.fromString(sender, this.messages.string("notEnoughCredits")).send();

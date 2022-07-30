@@ -7,8 +7,11 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class FileUtil {
-    public static void createFile(Path dir) {
+public final class FileUtil {
+    private FileUtil() {
+    }
+
+    public static void createFile(final Path dir) {
         try {
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);

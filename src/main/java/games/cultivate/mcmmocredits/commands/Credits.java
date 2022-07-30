@@ -30,7 +30,7 @@ public final class Credits {
     private final MenuFactory factory;
 
     @Inject
-    public Credits(MessagesConfig messages, SettingsConfig settings, MenuConfig menus, Database database, MenuFactory factory) {
+    public Credits(final MessagesConfig messages, final SettingsConfig settings, final MenuConfig menus, final Database database, final MenuFactory factory) {
         this.messages = messages;
         this.settings = settings;
         this.menus = menus;
@@ -41,14 +41,14 @@ public final class Credits {
     @CommandDescription("Check your own MCMMO Credit balance.")
     @CommandMethod("")
     @CommandPermission("mcmmocredits.check.self")
-    public void checkCredits(Player player) {
+    public void checkCredits(final Player player) {
         Text.fromString(player, this.messages.string("selfBalance")).send();
     }
 
     @CommandDescription("Check someone else's MCMMO Credit balance.")
     @CommandMethod("<username>")
     @CommandPermission("mcmmocredits.check.other")
-    public void checkCreditsOther(CommandSender sender, @Argument(suggestions = "user") String username) {
+    public void checkCreditsOther(final CommandSender sender, final @Argument(suggestions = "user") String username) {
         this.database.getUUID(username).whenCompleteAsync((i, t) -> {
             if (this.database.doesPlayerExist(i)) {
                 TagResolver tr = Resolver.builder().sender(sender).player(username).build();
@@ -62,7 +62,7 @@ public final class Credits {
     @CommandDescription("Reload all configuration files provided by the plugin.")
     @CommandMethod("reload")
     @CommandPermission("mcmmocredits.admin.reload")
-    public void reloadCredits(CommandSender sender) {
+    public void reloadCredits(final CommandSender sender) {
         this.menus.load();
         this.settings.load();
         this.messages.load();
@@ -72,28 +72,28 @@ public final class Credits {
     @CommandDescription("Open a Menu that can be used to interface with this plugin.")
     @CommandMethod("menu")
     @CommandPermission("mcmmocredits.gui.basic")
-    public void openMenu(Player player) {
+    public void openMenu(final Player player) {
         this.factory.makeMainMenu(player, this.messages, this.settings).open(PlayerViewer.of(player));
     }
 
     @CommandDescription("Open the Edit Messages Menu")
     @CommandMethod("menu messages")
     @CommandPermission("mcmmocredits.gui.admin")
-    public void openMessagesMenu(Player player) {
+    public void openMessagesMenu(final Player player) {
         this.factory.makeConfigMenu(player, this.messages).open(PlayerViewer.of(player));
     }
 
     @CommandDescription("Open the Edit Settings Menu")
     @CommandMethod("menu settings")
     @CommandPermission("mcmmocredits.gui.admin")
-    public void openSettingsMenu(Player player) {
+    public void openSettingsMenu(final Player player) {
         this.factory.makeConfigMenu(player, this.settings).open(PlayerViewer.of(player));
     }
 
     @CommandDescription("Open the Credit Redemption Menu")
     @CommandMethod("menu redeem")
     @CommandPermission("mcmmocredits.gui.redeem")
-    public void openRedeemMenu(Player player) {
+    public void openRedeemMenu(final Player player) {
         this.factory.makeRedemptionMenu(player).open(PlayerViewer.of(player));
     }
 }

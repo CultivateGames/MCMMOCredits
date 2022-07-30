@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
@@ -19,6 +20,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
@@ -30,23 +32,24 @@ public class Config {
     private transient CommentedConfigurationNode root;
     private transient HoconConfigurationLoader loader;
     private transient List<CommentedConfigurationNode> nodeList;
-    private transient @Inject @Named("dir") Path dir;
+    private transient @Inject
+    @Named("dir") Path dir;
 
-    Config(Class<? extends Config> type, String fileName) {
+    Config(final Class<? extends Config> type, final String fileName) {
         this.type = type;
         this.fileName = fileName;
         this.nodeList = new ArrayList<>();
     }
 
     public List<CommentedConfigurationNode> nodes() {
-        return nodeList;
+        return this.nodeList;
     }
 
-    public String joinedPath(CommentedConfigurationNode node) {
+    public String joinedPath(final CommentedConfigurationNode node) {
         return StringUtils.join(node.path().array(), ".");
     }
 
-    public String joinedPath(Iterable<String> path) {
+    public String joinedPath(final Iterable<String> path) {
         return StringUtils.join(path.iterator(), ".");
     }
 
@@ -61,7 +64,7 @@ public class Config {
         }
     }
 
-    private List<CommentedConfigurationNode> nodesFromParent(CommentedConfigurationNode parent) {
+    private List<CommentedConfigurationNode> nodesFromParent(final CommentedConfigurationNode parent) {
         List<CommentedConfigurationNode> nodes = new CopyOnWriteArrayList<>(parent.childrenMap().values());
         while (nodes.stream().anyMatch(ConfigurationNode::isMap)) {
             nodes.forEach(i -> {
@@ -74,7 +77,7 @@ public class Config {
         return nodes;
     }
 
-    public void save(CommentedConfigurationNode root) {
+    public void save(final CommentedConfigurationNode root) {
         try {
             this.loader.save(root);
             this.root = root;
@@ -103,8 +106,8 @@ public class Config {
      * @param def  default value. Will log if the value is missing to let the user know to populate the value.
      * @return boolean from the root configuration nodes children map, or the provided default value.
      */
-    public boolean bool(String path, boolean def) {
-        return valueFromMap(boolean.class, path, def);
+    public boolean bool(final String path, final boolean def) {
+        return this.valueFromMap(boolean.class, path, def);
     }
 
     /**
@@ -113,8 +116,8 @@ public class Config {
      * @param path string that the path contains. Unique enough to not worry about duplication.
      * @return boolean from the root configuration nodes children map, or the provided default value.
      */
-    public boolean bool(String path) {
-        return valueFromMap(boolean.class, path, false);
+    public boolean bool(final String path) {
+        return this.valueFromMap(boolean.class, path, false);
     }
 
     /**
@@ -124,8 +127,8 @@ public class Config {
      * @param def  default value. Will log if the value is missing to let the user know to populate the value.
      * @return String from the root configuration nodes children map, or the provided default value.
      */
-    public String string(String path, String def) {
-        return valueFromMap(String.class, path, def);
+    public String string(final String path, final String def) {
+        return this.valueFromMap(String.class, path, def);
     }
 
     /**
@@ -134,8 +137,8 @@ public class Config {
      * @param path string that the path contains. Unique enough to not worry about duplication.
      * @return String from the root configuration nodes children map, or an empty string.
      */
-    public String string(String path) {
-        return valueFromMap(String.class, path, "");
+    public String string(final String path) {
+        return this.valueFromMap(String.class, path, "");
     }
 
     /**
@@ -145,8 +148,8 @@ public class Config {
      * @param def  default value. Will log if the value is missing to let the user know to populate the value.
      * @return String from the root configuration nodes children map, or the provided default value.
      */
-    public int integer(String path, int def) {
-        return valueFromMap(int.class, path, def);
+    public int integer(final String path, final int def) {
+        return this.valueFromMap(int.class, path, def);
     }
 
     /**
@@ -155,11 +158,11 @@ public class Config {
      * @param path string that the path contains. Unique enough to not worry about duplication.
      * @return String from the root configuration nodes children map, or the provided default value.
      */
-    public int integer(String path) {
-        return valueFromMap(int.class, path, 0);
+    public int integer(final String path) {
+        return this.valueFromMap(int.class, path, 0);
     }
 
-    private <V> V valueFromMap(Class<V> type, String path, V def) {
+    private <V> @NonNull V valueFromMap(final Class<V> type, final String path, final V def) {
         for (CommentedConfigurationNode node : this.nodeList) {
             if (this.joinedPath(node).contains(path)) {
                 try {
@@ -176,7 +179,7 @@ public class Config {
     /**
      * Sets a value to config. Returns true if successful
      */
-    public <V> boolean modify(Class<V> type, String path, V value) {
+    public <V> boolean modify(final Class<V> type, final String path, final V value) {
         if (value == null || value.toString().equalsIgnoreCase("cancel")) {
             return false;
         }
@@ -201,14 +204,14 @@ public class Config {
      * @param value value used for modification of config.
      * @return if the change was successful.
      */
-    public boolean modify(String path, String value) {
+    public boolean modify(final String path, final String value) {
         return this.modify(String.class, path, value);
     }
 
     /**
      * Returns an ItemStack from the underlying configuration map.
      */
-    public ItemStack item(ItemType itemType, Player player)  {
+    public ItemStack item(final ItemType itemType, final Player player) {
         try {
             return ItemSerializer.INSTANCE.deserializePlayer(this.root.node(itemType.path()), player);
         } catch (SerializationException e) {
@@ -217,18 +220,36 @@ public class Config {
         }
     }
 
-    public int itemSlot(ItemType itemType) {
+    /**
+     * Returns an ItemStack from the underlying configuration map.
+     */
+    public ItemStack item(final String path, final Player player) {
+        try {
+            return ItemSerializer.INSTANCE.deserializePlayer(this.root.node(path), player);
+        } catch (SerializationException e) {
+            e.printStackTrace();
+            return new ItemStack(Material.AIR);
+        }
+    }
+
+    public int itemSlot(final ItemType itemType) {
         List<String> list = new ArrayList<>(itemType.path());
         list.add("slot");
         return this.integer(this.joinedPath(list));
     }
 
-    public Button button(ItemType itemType, Player player) {
+    public int slot(final String path) {
+        List<String> list = Arrays.asList(path.split("\\."));
+        list.add("slot");
+        return this.integer(this.joinedPath(list));
+    }
+
+    public Button button(final ItemType itemType, final Player player) {
         return new Button(this.item(itemType, player), this.itemSlot(itemType));
     }
 
-    public Button button(ItemType itemType, Player player, String command, int slot) {
-       return new Button(this.item(itemType, player), slot, command);
+    public Button button(final ItemType itemType, final Player player, final String command, final int slot) {
+        return new Button(this.item(itemType, player), slot, command);
     }
 
     public HoconConfigurationLoader createLoader() {
@@ -239,7 +260,7 @@ public class Config {
                 .path(path).prettyPrinting(true).build();
     }
 
-    private void logWarning(String path) {
+    private void logWarning(final String path) {
         Bukkit.getLogger().log(Level.WARNING, "[MCMMOCredits] Configuration was missing a value at {0}, Check your configuration!", path);
     }
 }

@@ -13,18 +13,11 @@ java {
 }
 
 repositories {
-    //Maven Central
     mavenCentral()
-    //Paper
     maven("https://papermc.io/repo/repository/maven-public/")
-    //Configurate
     maven("https://oss.sonatype.org/content/repositories/snapshots/")
-    //Placeholder API
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
-    //mcMMO
     maven("https://nexus.neetgames.com/repository/maven-releases/")
-    //SkullCreator
-    maven("https://github.com/deanveloper/SkullCreator/raw/mvn-repo/")
     maven("https://repo.broccol.ai/releases/")
 }
 

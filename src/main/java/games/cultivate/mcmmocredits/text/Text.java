@@ -11,12 +11,12 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class Text {
+public final class Text {
     private final Audience audience;
     private final TagResolver resolver;
     private String content;
 
-    private Text(Audience audience, String content, TagResolver resolver) {
+    private Text(final Audience audience, final String content, final TagResolver resolver) {
         this.audience = audience;
         this.content = content;
         this.resolver = resolver;
@@ -30,15 +30,15 @@ public class Text {
      * @param resolver TagResolver to use for parsing.
      * @return a populated Text object.
      */
-    public static Text fromString(Audience audience, String content, TagResolver resolver) {
+    public static Text fromString(final Audience audience, final String content, final TagResolver resolver) {
         return new Text(audience, content, resolver);
     }
 
-    public static Text fromString(Audience audience, String content) {
+    public static Text fromString(final Audience audience, final String content) {
         return new Text(audience, content, createResolver(audience));
     }
 
-    public static Component parseComponent(Component comp, Player player) {
+    public static Component parseComponent(final Component comp, final Player player) {
         String content = PlainTextComponentSerializer.plainText().serialize(comp);
         //TODO find better way to delegate local placeholder to PAPI. In the meantime this simplifies the resolver.
         content = content.replace("<credits>", "%mcmmocredits_credits%");
@@ -46,18 +46,18 @@ public class Text {
         return Text.removeItalics(MiniMessage.miniMessage().deserialize(content, Resolver.fromPlayer(player)));
     }
 
-    public static Component removeItalics(Component component) {
+    public static Component removeItalics(final Component component) {
         return Component.empty().decoration(TextDecoration.ITALIC, false).append(component);
     }
 
-    private static TagResolver createResolver(Audience audience) {
+    private static TagResolver createResolver(final Audience audience) {
         return audience instanceof Player p ? Resolver.fromPlayer(p) : Resolver.fromSender((CommandSender) audience);
     }
 
     public Component toComponent() {
         if (this.audience instanceof Player player) {
             //TODO find better way to delegate local placeholder to PAPI. In the meantime this simplifies the resolver.
-            this.content = content.replace("<credits>", "%mcmmocredits_credits%");
+            this.content = this.content.replace("<credits>", "%mcmmocredits_credits%");
             this.content = PlaceholderAPI.setPlaceholders(player, this.content);
         }
         return MiniMessage.miniMessage().deserialize(this.content, this.resolver);

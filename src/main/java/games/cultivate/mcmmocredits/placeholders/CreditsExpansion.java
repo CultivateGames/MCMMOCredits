@@ -10,11 +10,11 @@ import javax.inject.Inject;
 /**
  * This is responsible for handling our registration with PlaceholderAPI.
  */
-public class CreditsExpansion extends PlaceholderExpansion {
+public final class CreditsExpansion extends PlaceholderExpansion {
     private final Database database;
 
     @Inject
-    public CreditsExpansion(Database database) {
+    public CreditsExpansion(final Database database) {
         this.database = database;
     }
 
@@ -39,9 +39,9 @@ public class CreditsExpansion extends PlaceholderExpansion {
     }
 
     @Override
-    public String onRequest(OfflinePlayer player, String identifier) {
+    public String onRequest(final OfflinePlayer player, final String identifier) {
         if (identifier.equalsIgnoreCase("credits")) {
-            return database.getCredits(player.getUniqueId()) + "";
+            return this.database.getCredits(player.getUniqueId()) + "";
         }
         return null;
     }

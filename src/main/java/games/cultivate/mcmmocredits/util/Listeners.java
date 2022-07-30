@@ -31,7 +31,7 @@ public class Listeners implements Listener {
     private final Database database;
 
     @Inject
-    public Listeners(MessagesConfig messages, SettingsConfig settings, InputStorage storage, Database database) {
+    public Listeners(final MessagesConfig messages, final SettingsConfig settings, final InputStorage storage, final Database database) {
         this.messages = messages;
         this.settings = settings;
         this.storage = storage;
@@ -44,7 +44,7 @@ public class Listeners implements Listener {
      * @param e Instance of AsyncPlayerPreLoginEvent
      */
     @EventHandler
-    public void onPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
+    public void onPlayerPreLogin(final AsyncPlayerPreLoginEvent e) {
         if (e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
             PlayerProfile profile = e.getPlayerProfile();
             UUID uuid = profile.getId();
@@ -68,7 +68,7 @@ public class Listeners implements Listener {
      * @param e Instance of the PlayerJoinEvent
      */
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent e) {
+    public void onPlayerJoin(final PlayerJoinEvent e) {
         if (this.settings.bool("sendLoginMessage")) {
             Text.fromString(e.getPlayer(), this.messages.string("loginMessage")).send();
         }
@@ -80,7 +80,7 @@ public class Listeners implements Listener {
      * @param e Instance of the AsyncChatEvent.
      */
     @EventHandler
-    public void onPlayerChat(AsyncChatEvent e) {
+    public void onPlayerChat(final AsyncChatEvent e) {
         Player player = e.getPlayer();
         UUID uuid = player.getUniqueId();
         if (this.storage.contains(uuid)) {
@@ -100,7 +100,7 @@ public class Listeners implements Listener {
      * @param e Instance of the PlayerQuitEvent.
      */
     @EventHandler
-    public void onPlayerLeave(PlayerQuitEvent e) {
+    public void onPlayerLeave(final PlayerQuitEvent e) {
         this.storage.remove(e.getPlayer().getUniqueId());
     }
 }

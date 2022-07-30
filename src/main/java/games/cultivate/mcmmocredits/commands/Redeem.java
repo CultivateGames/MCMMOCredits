@@ -32,7 +32,7 @@ public final class Redeem {
     private final Database database;
 
     @Inject
-    public Redeem(MessagesConfig messages, Database database) {
+    public Redeem(final MessagesConfig messages, final Database database) {
         this.messages = messages;
         this.database = database;
     }
@@ -40,7 +40,7 @@ public final class Redeem {
     @CommandDescription("Redeem your own MCMMO Credits into a specific skill.")
     @CommandMethod("<skill> <amount>")
     @CommandPermission("mcmmocredits.redeem.self")
-    public void selfRedeem(Player player, @Argument PrimarySkillType skill, @Argument @Range(min = "1") int amount) {
+    public void selfRedeem(final Player player, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
         TagResolver resolver = Resolver.fromRedemption(player, player, skill, amount);
         Optional<String> opt = this.performTransaction(player.getUniqueId(), skill, amount);
         String content = opt.isEmpty() ? "selfRedeem" : opt.get();
@@ -50,7 +50,7 @@ public final class Redeem {
     @CommandDescription("Redeem MCMMO Credits into a specific skill for someone else")
     @CommandMethod("<skill> <amount> <username>")
     @CommandPermission("mcmmocredits.redeem.other")
-    public void adminRedeem(CommandSender sender, @Argument PrimarySkillType skill, @Argument @Range(min = "1") int amount, @Argument(suggestions = "user") String username, @Flag("s") boolean s) {
+    public void adminRedeem(final CommandSender sender, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean s) {
         this.database.getUUID(username).whenCompleteAsync((uuid, throwable) -> {
             Optional<String> opt = this.performTransaction(uuid, skill, amount);
             if (opt.isPresent()) {
@@ -74,23 +74,23 @@ public final class Redeem {
      * @param amount amount of credits to take/levels to add to the target.
      * @return Failure reason via associated StringKey, empty Optional if transaction was successful.
      */
-    public Optional<String> performTransaction(UUID uuid, PrimarySkillType skill, int amount) {
+    public Optional<String> performTransaction(final UUID uuid, final PrimarySkillType skill, final int amount) {
         if (SkillTools.isChildSkill(skill)) {
             return Optional.of("invalidArguments");
         }
-        if (!database.doesPlayerExist(uuid)) {
+        if (!this.database.doesPlayerExist(uuid)) {
             return Optional.of("playerDoesNotExist");
         }
         PlayerProfile profile = mcMMO.getDatabaseManager().loadPlayerProfile(uuid);
         if (profile.isLoaded()) {
-            if (database.getCredits(uuid) < amount) {
+            if (this.database.getCredits(uuid) < amount) {
                 return Optional.of("notEnoughCredits");
             }
             if (profile.getSkillLevel(skill) + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill)) {
                 return Optional.of("skillCap");
             }
             profile.addLevels(skill, amount);
-            database.takeCredits(uuid, amount);
+            this.database.takeCredits(uuid, amount);
             return Optional.empty();
         }
         return Optional.of("playerDoesNotExist");

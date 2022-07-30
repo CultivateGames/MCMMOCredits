@@ -34,7 +34,9 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.interfaces.paper.PaperInterfaceListeners;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 
 import static cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType.*;
@@ -43,7 +45,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * This class is responsible for startup/shutdown logic, and command loading.
  */
-public class MCMMOCredits extends JavaPlugin {
+public final class MCMMOCredits extends JavaPlugin {
     public static final NamespacedKey NAMESPACED_KEY = requireNonNull(NamespacedKey.fromString("mcmmocredits"));
     private Injector injector;
     private MessagesConfig messages;
@@ -137,40 +139,44 @@ public class MCMMOCredits extends JavaPlugin {
             return List.of();
         });
 
-        AnnotationParser<CommandSender> parser = new AnnotationParser<>(manager, CommandSender.class, parameters -> SimpleCommandMeta.empty());
+        AnnotationParser<CommandSender> parser = new AnnotationParser<>(manager, CommandSender.class, p -> SimpleCommandMeta.empty());
         parser.parse(this.injector.getInstance(Credits.class));
         parser.parse(this.injector.getInstance(ModifyCredits.class));
         parser.parse(this.injector.getInstance(Redeem.class));
         parser.parse(this);
 
         MinecraftExceptionHandler<CommandSender> handler = new MinecraftExceptionHandler<>();
-        handler.withHandler(NO_PERMISSION, buildError("noPermission"));
-        handler.withHandler(ARGUMENT_PARSING, buildError("invalidArguments"));
-        handler.withHandler(COMMAND_EXECUTION, buildError("commandError"));
-        handler.withHandler(INVALID_SYNTAX, buildError("invalidSyntax"));
-        handler.withHandler(INVALID_SENDER, buildError("invalidSender"));
+        handler.withHandler(NO_PERMISSION, this.buildError("noPermission"));
+        handler.withHandler(ARGUMENT_PARSING, this.buildError("invalidArguments"));
+        handler.withHandler(COMMAND_EXECUTION, this.buildError("commandError"));
+        handler.withHandler(INVALID_SYNTAX, this.buildError("invalidSyntax"));
+        handler.withHandler(INVALID_SENDER, this.buildError("invalidSender"));
         handler.apply(manager, AudienceProvider.nativeAudience());
 
         //TODO caption system
         CaptionRegistry<CommandSender> registry = manager.captionRegistry();
     }
 
-    private BiFunction<CommandSender, Exception, Component> buildError(String path) {
+    private BiFunction<CommandSender, Exception, Component> buildError(final String path) {
         return (sender, ex) -> {
             if (this.settings.bool("debug") || ex instanceof CommandExecutionException) {
                 ex.printStackTrace();
             }
             Resolver.Builder rb = Resolver.builder().sender(sender);
+            Map<String, String> placeholders = new HashMap<>();
             switch (ex.getClass().getSimpleName()) {
-                case "ArgumentParseException" -> rb = rb.tag("argument_error", ex.getCause().getMessage());
+                case "ArgumentParseException" -> placeholders.put("argument_error", ex.getCause().getMessage());
                 case "InvalidSyntaxException" ->
-                        rb = rb.tag("correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax());
+                        placeholders.put("correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax());
                 case "InvalidCommandSenderException" ->
-                        rb = rb.tag("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName());
+                        placeholders.put("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName());
+                default -> {
+                }
+            }
+            for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+                rb = rb.tag(entry.getKey(), entry.getValue());
             }
             return Text.fromString(sender, this.messages.string(path), rb.build()).toComponent();
         };
     }
-
-
 }

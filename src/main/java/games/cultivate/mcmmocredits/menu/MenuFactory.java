@@ -1,5 +1,6 @@
 package games.cultivate.mcmmocredits.menu;
 
+import broccolai.corn.paper.item.PaperItemBuilder;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.util.skills.SkillTools;
 import games.cultivate.mcmmocredits.MCMMOCredits;
@@ -8,12 +9,14 @@ import games.cultivate.mcmmocredits.config.ItemType;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.config.MessagesConfig;
 import games.cultivate.mcmmocredits.config.SettingsConfig;
+import games.cultivate.mcmmocredits.data.InputStorage;
+import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+import org.incendo.interfaces.paper.element.ItemStackElement;
 import org.incendo.interfaces.paper.type.ChestInterface;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 
@@ -21,10 +24,16 @@ import javax.inject.Inject;
 
 public class MenuFactory {
     private final MenuConfig menus;
+    private final MCMMOCredits plugin;
+    private final MessagesConfig messages;
+    private final InputStorage storage;
 
     @Inject
-    public MenuFactory(MenuConfig menus) {
+    public MenuFactory(MenuConfig menus, MessagesConfig messages, InputStorage storage, MCMMOCredits plugin) {
         this.menus = menus;
+        this.plugin = plugin;
+        this.messages = messages;
+        this.storage = storage;
     }
 
     public Menu.Builder base(Player player, String title, int slots) {
@@ -36,25 +45,33 @@ public class MenuFactory {
     }
 
     public ChestInterface makeConfigMenu(Player player, Config config) {
+        String type = config.getClass().getSimpleName().replace("Config", "").toLowerCase();
+        ChestInterface.Builder ci = ChestInterface.builder()
+                .title(Text.fromString(player, menus.string(type + ".info.title")).toComponent())
+                .rows(menus.integer(type + ".info.size") / 9);
         int slot = 0;
-        String type = config.name().replace("Config", "");
-        Menu.Builder builder = this.baseFromString(player, type.toLowerCase());
         for (CommentedConfigurationNode node : config.nodes()) {
             String path = config.joinedPath(node);
             if (path.contains("mysql") || path.contains("item")) {
                 continue;
             }
-            ItemStack item = this.menus.item(ItemType.valueOf("EDIT_" + type.toUpperCase() + "_ITEM"), player);
-            item.setAmount(slot + 1);
-            item.editMeta(meta -> {
-                Component displayName = Text.removeItalics(Component.text(path.substring(path.lastIndexOf('.') + 1)));
-                meta.displayName(displayName);
-                meta.getPersistentDataContainer().set(MCMMOCredits.NAMESPACED_KEY, PersistentDataType.STRING, path);
-            });
-            builder = builder.configTransfer(new Button(item, slot), ClickType.LEFT, config);
+            PaperItemBuilder pib = PaperItemBuilder.of(menus.item(path, player))
+                    .amount(slot + 1)
+                    .name(Text.removeItalics(Component.text(path.substring(path.lastIndexOf('.') + 1))));
+            ci = ci.addTransform(5, (p, v) -> p.element(ItemStackElement.of(pib.build(), c -> {
+                if (c.click().leftClick()) {
+                    Resolver.Builder resolver = Resolver.builder().player(player).tag("setting", path);
+                    Text.fromString(player, messages.string("menuEditingPrompt"), resolver.build()).send();
+                    storage.act(player.getUniqueId(), i -> {
+                        boolean result = config.modify(path, i);
+                        String content = "settingChange" + (result ? "Successful" : "Failure");
+                        Text.fromString(player, messages.string(content), resolver.tag("change", i).build()).send();
+                    });
+                }
+            }), (pib.amount() - 1) % 9, (pib.amount() - 1) / 9));
             slot++;
         }
-        return builder.build();
+        return ci.build();
     }
 
     public ChestInterface makeRedemptionMenu(Player player) {

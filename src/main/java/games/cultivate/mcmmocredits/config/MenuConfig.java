@@ -91,25 +91,25 @@ public class MenuConfig extends Config {
 
     @ConfigSerializable
     record ConfigMenu(PartialConfigItem item, MenuInfo info) {
-        ConfigMenu(Material material, String title, int size) {
+        ConfigMenu(final Material material, final String title, final int size) {
             this(new PartialConfigItem(material), new MenuInfo(title, size));
         }
     }
 
     @ConfigSerializable
     record ConfigItem(Material material, String name, List<String> lore, int amount, int slot, boolean glow) {
-        ConfigItem(Material material, PrimarySkillType skill, int slot) {
+        ConfigItem(final Material material, final PrimarySkillType skill, final int slot) {
             this(material, "<yellow> " + WordUtils.capitalizeFully(skill.name()), List.of("<yellow><player>, click here to redeem!"), 1, slot, false);
         }
 
-        ConfigItem(Material material, String name, String lore, int slot) {
+        ConfigItem(final Material material, final String name, final String lore, final int slot) {
             this(material, name, List.of(lore), 1, slot, false);
         }
     }
 
     @ConfigSerializable
     record PartialConfigItem(Material material, List<String> lore, boolean glow) {
-        PartialConfigItem(Material material) {
+        PartialConfigItem(final Material material) {
             this(material, List.of("<gray>Click here to edit this config option!"), false);
         }
     }
