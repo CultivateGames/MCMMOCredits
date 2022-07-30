@@ -7,8 +7,6 @@ import games.cultivate.mcmmocredits.config.SettingsConfig;
 import org.jdbi.v3.core.Jdbi;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import java.nio.file.Path;
 
 public final class MYSQLDatabase extends SQLDatabase {
     private final int databasePort;
@@ -19,19 +17,19 @@ public final class MYSQLDatabase extends SQLDatabase {
     private final boolean databaseSSL;
 
     @Inject
-    public MYSQLDatabase(SettingsConfig settings, MCMMOCredits plugin, @Named("dir") Path dir) {
-        super(settings, plugin, dir);
-        this.databasePort = super.settings.integer("mysql.port", 3306);
-        this.databaseHost = super.settings.string("mysql.host");
-        this.databaseName = super.settings.string("mysql.name", "database");
-        this.databaseUsername = super.settings.string("mysql.username", "username");
-        this.databasePassword = super.settings.string("mysql.password", "");
-        this.databaseSSL = super.settings.bool("mysql.ssl", true);
+    public MYSQLDatabase(final SettingsConfig settings, final MCMMOCredits plugin) {
+        super(settings, plugin);
+        this.databasePort = settings.integer("mysql.port", 3306);
+        this.databaseHost = settings.string("mysql.host");
+        this.databaseName = settings.string("mysql.name", "database");
+        this.databaseUsername = settings.string("mysql.username", "username");
+        this.databasePassword = settings.string("mysql.password", "");
+        this.databaseSSL = settings.bool("mysql.ssl", true);
     }
 
     @Override
     Jdbi createJDBI() {
-        return Jdbi.create(super.hikari);
+        return Jdbi.create(this.hikari());
     }
 
     @Override

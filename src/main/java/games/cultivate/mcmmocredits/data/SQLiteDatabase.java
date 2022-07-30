@@ -13,15 +13,17 @@ import javax.inject.Named;
 import java.nio.file.Path;
 
 public final class SQLiteDatabase extends SQLDatabase {
+    private final Path dir;
 
     @Inject
-    public SQLiteDatabase(SettingsConfig settings, MCMMOCredits plugin, @Named("dir") Path dir) {
-        super(settings, plugin, dir);
+    public SQLiteDatabase(final SettingsConfig settings, final MCMMOCredits plugin, final @Named("dir") Path dir) {
+        super(settings, plugin);
+        this.dir = dir;
     }
 
     @Override
     Jdbi createJDBI() {
-        return Jdbi.create(super.hikari).installPlugin(new SQLitePlugin());
+        return Jdbi.create(this.hikari()).installPlugin(new SQLitePlugin());
     }
 
     @Override
@@ -29,7 +31,7 @@ public final class SQLiteDatabase extends SQLDatabase {
         HikariConfig config = new HikariConfig();
         config.setPoolName("MCMMOCredits SQLite");
         config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
-        Path path = super.dir.resolve("database.db");
+        Path path = this.dir.resolve("database.db");
         FileUtil.createFile(path);
         config.addDataSourceProperty("url", "jdbc:sqlite:" + path);
         return new HikariDataSource(config);

@@ -14,7 +14,7 @@ enum SQLStatement {
 
     private final String statement;
 
-    SQLStatement(String statement) {
+    SQLStatement(final String statement) {
         this.statement = statement;
     }
 

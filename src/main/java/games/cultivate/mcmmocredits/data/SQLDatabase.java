@@ -7,8 +7,6 @@ import org.bukkit.Bukkit;
 import org.jdbi.v3.core.Jdbi;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -16,17 +14,13 @@ import static games.cultivate.mcmmocredits.data.SQLStatement.*;
 
 public abstract sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLiteDatabase {
     private static final UUID ZERO_UUID = new UUID(0, 0);
-    final SettingsConfig settings;
-    final HikariDataSource hikari;
-    final MCMMOCredits plugin;
+    private final HikariDataSource hikari;
+    private final MCMMOCredits plugin;
     private final Jdbi jdbi;
-    final Path dir;
 
     @Inject
-    SQLDatabase(SettingsConfig settings, MCMMOCredits plugin, @Named("dir") Path dir) {
-        this.settings = settings;
+    SQLDatabase(final SettingsConfig settings, final MCMMOCredits plugin) {
         this.plugin = plugin;
-        this.dir = dir;
         this.hikari = this.createDataSource();
         SQLStatement creation = settings.isMYSQL() ? MYSQL_CREATE_TABLE : SQLITE_CREATE_TABLE;
         this.jdbi = this.createJDBI();
@@ -37,6 +31,10 @@ public abstract sealed class SQLDatabase implements Database permits MYSQLDataba
 
     abstract HikariDataSource createDataSource();
 
+    HikariDataSource hikari() {
+        return this.hikari;
+    }
+
     @Override
     public void disable() {
         if (this.hikari != null) {
@@ -45,12 +43,12 @@ public abstract sealed class SQLDatabase implements Database permits MYSQLDataba
     }
 
     @Override
-    public void addPlayer(UUID uuid, String username, int credits) {
+    public void addPlayer(final UUID uuid, final String username, final int credits) {
         this.update(ADD_PLAYER, uuid.toString(), username, credits);
     }
 
     @Override
-    public CompletableFuture<UUID> getUUID(String username) {
+    public CompletableFuture<UUID> getUUID(final String username) {
         return CompletableFuture.supplyAsync(() -> {
             UUID uuid = this.query(UUID.class, GET_UUID, username);
             return uuid != null ? uuid : ZERO_UUID;
@@ -58,57 +56,57 @@ public abstract sealed class SQLDatabase implements Database permits MYSQLDataba
     }
 
     @Override
-    public boolean doesPlayerExist(UUID uuid) {
+    public boolean doesPlayerExist(final UUID uuid) {
         if (uuid == null || uuid.equals(ZERO_UUID)) {
             return false;
         }
-        return this.query(String.class,GET_USERNAME, uuid.toString()) != null;
+        return this.query(String.class, GET_USERNAME, uuid.toString()) != null;
     }
 
     @Override
-    public void setUsername(UUID uuid, String username) {
+    public void setUsername(final UUID uuid, final String username) {
         this.update(SET_USERNAME, username, uuid.toString());
     }
 
     @Override
-    public CompletableFuture<String> getUsername(UUID uuid) {
+    public CompletableFuture<String> getUsername(final UUID uuid) {
         return CompletableFuture.supplyAsync(() -> {
-            String content = this.query(String.class,GET_USERNAME, uuid.toString());
+            String content = this.query(String.class, GET_USERNAME, uuid.toString());
             return content != null ? content : "";
         });
     }
 
     @Override
-    public void setCredits(UUID uuid, int credits) {
+    public void setCredits(final UUID uuid, final int credits) {
         this.updateSync(SET_CREDITS, credits, uuid.toString());
     }
 
     @Override
-    public void addCredits(UUID uuid, int credits) {
+    public void addCredits(final UUID uuid, final int credits) {
         this.updateSync(ADD_CREDITS, credits, uuid.toString());
     }
 
     @Override
-    public void takeCredits(UUID uuid, int credits) {
+    public void takeCredits(final UUID uuid, final int credits) {
         this.updateSync(TAKE_CREDITS, credits, uuid.toString());
     }
 
     @Override
-    public int getCredits(UUID uuid) {
+    public int getCredits(final UUID uuid) {
         Integer credits = this.query(Integer.class, GET_CREDITS, uuid.toString());
         return credits != null ? credits : 0;
     }
 
-    private void update(SQLStatement statement, Object... args) {
-       Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> this.jdbi.useHandle(x -> x.execute(statement.toString(), args)));
+    private void update(final SQLStatement statement, final Object... args) {
+       Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> this.jdbi.useHandle(x -> x.execute(statement.toString(), args)));
     }
 
     //Credit Updates are done synchronously so that information is current.
-    private void updateSync(SQLStatement statement, Object... args) {
-        Bukkit.getScheduler().runTask(plugin, () -> this.jdbi.useHandle(x -> x.execute(statement.toString(), args)));
+    private void updateSync(final SQLStatement statement, final Object... args) {
+        Bukkit.getScheduler().runTask(this.plugin, () -> this.jdbi.useHandle(x -> x.execute(statement.toString(), args)));
     }
 
-    private <T> T query(Class<T> clazz, SQLStatement statement, Object... args) {
+    private <T> T query(final Class<T> clazz, final SQLStatement statement, final Object... args) {
         try {
             return this.jdbi.withHandle(x -> x.select(statement.toString(), args).mapTo(clazz).one());
         } catch (IllegalStateException e) {

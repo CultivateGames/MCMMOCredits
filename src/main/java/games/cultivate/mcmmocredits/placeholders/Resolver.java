@@ -10,20 +10,23 @@ import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Resolver {
-    public static TagResolver fromSender(CommandSender sender) {
+public final class Resolver {
+    private Resolver() {
+    }
+
+    public static TagResolver fromSender(final CommandSender sender) {
         return Resolver.builder().sender(sender).build();
     }
 
-    public static TagResolver fromPlayer(Player player) {
+    public static TagResolver fromPlayer(final Player player) {
         return Resolver.builder().player(player).build();
     }
 
-    public static TagResolver fromTransaction(CommandSender sender, String username, int amount) {
+    public static TagResolver fromTransaction(final CommandSender sender, final String username, final int amount) {
         return Resolver.builder().sender(sender).player(username).transaction(amount).build();
     }
 
-    public static TagResolver fromRedemption(CommandSender sender, Player player, PrimarySkillType skill, int amount) {
+    public static TagResolver fromRedemption(final CommandSender sender, final Player player, final PrimarySkillType skill, final int amount) {
         return Resolver.builder().sender(sender).player(player).skill(skill).transaction(amount).build();
     }
 
@@ -38,29 +41,29 @@ public class Resolver {
             this.placeholders = new HashMap<>();
         }
 
-        public Builder tag(String key, String value) {
+        public Builder tag(final String key, final String value) {
             this.placeholders.putIfAbsent(key, Tag.preProcessParsed(value));
             return this;
         }
 
-        public Builder sender(CommandSender sender) {
+        public Builder sender(final CommandSender sender) {
             return this.tag("sender", sender.getName());
         }
 
-        public Builder player(String username) {
+        public Builder player(final String username) {
             return this.tag("player", username);
         }
 
-        public Builder player(Player player) {
+        public Builder player(final Player player) {
             return this.player(player.getName());
         }
 
-        public Builder transaction(int amount) {
+        public Builder transaction(final int amount) {
             return this.tag("amount", amount + "");
         }
 
         @SuppressWarnings("deprecation")
-        public Builder skill(PrimarySkillType skill) {
+        public Builder skill(final PrimarySkillType skill) {
             return this.tag("skill", WordUtils.capitalizeFully(skill.name())).tag("cap", skill.getMaxLevel() + "");
         }
 

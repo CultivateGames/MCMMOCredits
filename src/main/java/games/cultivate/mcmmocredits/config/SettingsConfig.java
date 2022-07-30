@@ -5,7 +5,7 @@ import org.spongepowered.configurate.objectmapping.meta.Comment;
 
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
-public class SettingsConfig extends Config {
+public final class SettingsConfig extends Config {
     @Comment("General plugin settings.")
     private GeneralSettings general = new GeneralSettings();
     @Comment("Database related settings, that are not eligible for in-game configuration.")
@@ -16,7 +16,7 @@ public class SettingsConfig extends Config {
     }
 
     public boolean isMYSQL() {
-        return general.databaseType.equalsIgnoreCase("mysql");
+        return this.general.databaseType.equalsIgnoreCase("mysql");
     }
 
     @ConfigSerializable

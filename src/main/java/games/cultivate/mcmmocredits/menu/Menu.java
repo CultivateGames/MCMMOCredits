@@ -27,6 +27,8 @@ import javax.inject.Inject;
 import java.util.UUID;
 
 public class Menu {
+    private Menu () {}
+
     public static Builder builder() {
         return new Menu.Builder();
     }
@@ -68,42 +70,16 @@ public class Menu {
         }
 
         public Builder commandTransfer(Button button, ClickType clickType) {
-            this.builder = this.builder.addTransform(3, this.commandTransform(button, clickType));
+            this.builder = this.builder.addTransform(3, (pane, view) -> pane.element(ItemStackElement.of(button.item(), clickHandler -> {
+                if (clickHandler.cause().getClick().equals(clickType) && !button.command().isEmpty()) {
+                    view.viewer().player().performCommand(button.command());
+                }
+            }), button.x(), button.y()));
             return this;
         }
 
         public Builder redeemTransfer(Button button, ClickType clickType) {
-            this.builder = this.builder.addTransform(4, this.redeemTransform(button, clickType));
-            return this;
-        }
-
-        public Builder configTransfer(Button button, ClickType clickType, Config config) {
-            this.builder = this.builder.addTransform(5, this.configTransform(button, clickType, config));
-            return this;
-        }
-
-        private Transform<ChestPane, PlayerViewer> interfaceTransform(Button button, ChestInterface chestInterface, ClickType clickType) {
-            return (pane, view) -> pane.element(ItemStackElement.of(button.item(), clickHandler -> {
-                if (clickHandler.cause().getClick().equals(clickType)) {
-                    chestInterface.open(view.viewer());
-                }
-            }), button.x(), button.y());
-        }
-
-        private Transform<ChestPane, PlayerViewer> commandTransform(Button button, ClickType clickType, String command) {
-            return (pane, view) -> pane.element(ItemStackElement.of(button.item(), clickHandler -> {
-                if (clickHandler.cause().getClick().equals(clickType) && !command.isEmpty()) {
-                    view.viewer().player().performCommand(button.command());
-                }
-            }), button.x(), button.y());
-        }
-
-        private Transform<ChestPane, PlayerViewer> commandTransform(Button button, ClickType clickType) {
-            return commandTransform(button, clickType, button.command());
-        }
-
-        private Transform<ChestPane, PlayerViewer> redeemTransform(Button button, ClickType clickType) {
-            return (pane, view) -> pane.element(ItemStackElement.of(button.item(), click -> {
+            this.builder = this.builder.addTransform(4, (pane, view) -> pane.element(ItemStackElement.of(button.item(), click -> {
                 if (click.cause().getClick().equals(clickType)) {
                     view.viewer().close();
                     ItemStack stack = click.cause().getCurrentItem();
@@ -119,8 +95,17 @@ public class Menu {
                         storage.act(uuid, i -> player.performCommand(button.command() + Integer.parseInt(i)));
                     }
                 }
-            }), button.x(), button.y());
+            }), button.x(), button.y()));
+            return this;
         }
+
+            private Transform<ChestPane, PlayerViewer> interfaceTransform (Button button, ChestInterface chestInterface, ClickType clickType) {
+                return (pane, view) -> pane.element(ItemStackElement.of(button.item(), clickHandler -> {
+                    if (clickHandler.cause().getClick().equals(clickType)) {
+                        chestInterface.open(view.viewer());
+                    }
+                }), button.x(), button.y());
+            }
 
         private Transform<ChestPane, PlayerViewer> configTransform(Button button, ClickType clickType, Config config) {
             return (pane, view) -> pane.element(ItemStackElement.of(button.item(), click -> {
@@ -152,7 +137,8 @@ public class Menu {
             }
             if (menus.bool("navigation", false)) {
                 Button button = Button.of(menus, ItemType.MAIN_NAVIGATION, player, "credits menu");
-                this.builder = this.builder.addTransform(1, this.commandTransform(button, ClickType.LEFT));
+                //We are going to fix this after commit.
+                //this.builder = this.builder.addTransform(1, this.commandTransform(button, ClickType.LEFT));
             }
             this.builder = this.builder.updates(true, 10).clickHandler(ClickHandler.cancel());
             ChestInterface updates = this.builder.build();

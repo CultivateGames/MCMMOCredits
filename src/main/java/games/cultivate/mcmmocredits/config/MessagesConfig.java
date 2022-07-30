@@ -17,12 +17,12 @@ public class MessagesConfig extends Config {
         super(MessagesConfig.class, "messages.conf");
     }
 
-    public String string(String path, boolean withPrefix) {
+    public String string(final String path, final boolean withPrefix) {
         return withPrefix ? super.string("prefix") + super.string(path) : super.string(path);
     }
 
     @Override
-    public String string(String path) {
+    public String string(final String path) {
         return this.string(path, true);
     }
 

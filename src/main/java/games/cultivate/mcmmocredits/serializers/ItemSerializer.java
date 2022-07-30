@@ -18,11 +18,11 @@ import org.spongepowered.configurate.serialize.TypeSerializer;
 
 import java.lang.reflect.Type;
 
-public class ItemSerializer implements TypeSerializer<ItemStack> {
+public final class ItemSerializer implements TypeSerializer<ItemStack> {
     public static final ItemSerializer INSTANCE = new ItemSerializer();
 
     @Override
-    public ItemStack deserialize(Type type, ConfigurationNode node) throws SerializationException {
+    public ItemStack deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
         AbstractPaperItemBuilder<?, ?> builder = this.generateBuilder(node)
                 .amount(node.node("amount").getInt(1))
                 .name(Component.text(node.node("name").getString("")))
@@ -34,7 +34,7 @@ public class ItemSerializer implements TypeSerializer<ItemStack> {
     }
 
     @Override
-    public void serialize(Type type, ItemStack item, ConfigurationNode node) throws SerializationException {
+    public void serialize(final Type type, final ItemStack item, final ConfigurationNode node) throws SerializationException {
         AbstractPaperItemBuilder<?, ?> builder = this.generateBuilder(node);
         if (builder instanceof SkullBuilder sb) {
             node.node("skull").set(sb.textures().get(0).getValue());
@@ -46,12 +46,12 @@ public class ItemSerializer implements TypeSerializer<ItemStack> {
         node.node("glow").set(!builder.enchants().isEmpty());
     }
 
-    private AbstractPaperItemBuilder<?, ?> generateBuilder(ConfigurationNode node) throws SerializationException {
+    private AbstractPaperItemBuilder<?, ?> generateBuilder(final ConfigurationNode node) throws SerializationException {
         ConfigurationNode skull = node.node("skull");
         return skull.virtual() ? PaperItemBuilder.ofType(node.node("material").get(Material.class, Material.AIR)) : SkullBuilder.ofPlayerHead().textures(skull.getString(""));
     }
 
-    public ItemStack deserializePlayer(CommentedConfigurationNode node, Player player) throws SerializationException {
+    public ItemStack deserializePlayer(final CommentedConfigurationNode node, final Player player) throws SerializationException {
         ItemStack result = this.deserialize(ItemStack.class, node);
         return PaperItemBuilder.of(result)
                 .name(Text.parseComponent(result.displayName(), player))
