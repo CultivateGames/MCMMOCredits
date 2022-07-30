@@ -5,6 +5,7 @@ import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.util.FileUtil;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.CommentedConfigurationNode;
@@ -45,7 +46,7 @@ public class Config {
         return StringUtils.join(node.path().array(), ".");
     }
 
-    public String joinedPath(Iterable<String> path ){
+    public String joinedPath(Iterable<String> path) {
         return StringUtils.join(path.iterator(), ".");
     }
 
@@ -207,8 +208,13 @@ public class Config {
     /**
      * Returns an ItemStack from the underlying configuration map.
      */
-    public ItemStack item(ItemType itemType, Player player) {
-        return ItemSerializer.INSTANCE.deserializePlayer(this.root.node(itemType.path()), player);
+    public ItemStack item(ItemType itemType, Player player)  {
+        try {
+            return ItemSerializer.INSTANCE.deserializePlayer(this.root.node(itemType.path()), player);
+        } catch (SerializationException e) {
+            e.printStackTrace();
+            return new ItemStack(Material.AIR);
+        }
     }
 
     public int itemSlot(ItemType itemType) {

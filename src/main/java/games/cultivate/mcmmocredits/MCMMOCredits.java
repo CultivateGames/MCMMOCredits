@@ -97,12 +97,12 @@ public class MCMMOCredits extends JavaPlugin {
         try {
             Class.forName("com.destroystokyo.paper.MaterialSetTag");
         } catch (Exception e) {
-            this.getSLF4JLogger().warn("Not running Paper, disabling plugin...");
+            this.getSLF4JLogger().warn("Not using Paper, disabling plugin...");
             this.setEnabled(false);
         }
         PluginManager pluginManager = Bukkit.getPluginManager();
         if (pluginManager.getPlugin("mcMMO") == null) {
-            this.getSLF4JLogger().warn("mcMMO is not found, disabling plugin...");
+            this.getSLF4JLogger().warn("Not using mcMMO, disabling plugin...");
             this.setEnabled(false);
             return;
         }
