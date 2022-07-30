@@ -60,10 +60,14 @@ public final class ModifyCredits {
                 Text.fromString(sender, this.messages.string("playerDoesNotExist")).send();
                 return;
             }
-            switch (op) {
-                case ADD -> this.database.addCredits(i, amount);
-                case TAKE -> this.database.takeCredits(i, amount);
-                case SET -> this.database.setCredits(i, amount);
+            try {
+                switch (op) {
+                    case ADD -> this.database.addCredits(i, amount);
+                    case TAKE -> this.database.takeCredits(i, amount);
+                    case SET -> this.database.setCredits(i, amount);
+                }
+            } catch (Exception e) {
+                Text.fromString(sender, this.messages.string("notEnoughCredits")).send();
             }
             TagResolver r = Resolver.fromTransaction(sender, user, amount);
             String content = this.messages.string(op.name().toLowerCase() + "Sender");

@@ -25,6 +25,7 @@ repositories {
     maven("https://nexus.neetgames.com/repository/maven-releases/")
     //SkullCreator
     maven("https://github.com/deanveloper/SkullCreator/raw/mvn-repo/")
+    maven("https://repo.broccol.ai/releases/")
 }
 
 dependencies {
@@ -35,7 +36,7 @@ dependencies {
     implementation("com.google.inject:guice:5.1.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.spongepowered:configurate-hocon:4.2.0-SNAPSHOT")
-    implementation("dev.dbassett:skullcreator:3.0.1")
+    implementation("broccolai.corn:corn-minecraft-paper:3.1.0")
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
         exclude(module = "paper-api")
     }

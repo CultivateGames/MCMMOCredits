@@ -1,10 +1,11 @@
 package games.cultivate.mcmmocredits.config;
 
+import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import org.apache.commons.lang.WordUtils;
+import org.bukkit.Material;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
 
-import java.util.Arrays;
 import java.util.List;
 
 @ConfigSerializable
@@ -32,9 +33,9 @@ public class MenuConfig extends Config {
     @ConfigSerializable
     static class EditConfigMenus {
         @Comment("Edit Messages Menu configuration")
-        private ConfigMenu messages = new ConfigMenu(new MenuInfo("<dark_gray>Edit Messages", 45), PartialConfigItem.forConfig("WRITABLE_BOOK"));
+        private ConfigMenu messages = new ConfigMenu(Material.WRITABLE_BOOK, "<dark_gray>Edit Messages", 45);
         @Comment("Edit Settings Menu configuration")
-        private ConfigMenu settings = new ConfigMenu(new MenuInfo("<dark_gray>Edit Settings", 27), PartialConfigItem.forConfig("REDSTONE"));
+        private ConfigMenu settings = new ConfigMenu(Material.REDSTONE, "<dark_gray>Edit Settings", 27);
     }
 
     @ConfigSerializable
@@ -48,62 +49,68 @@ public class MenuConfig extends Config {
     @ConfigSerializable
     static class MainMenuItems {
         @Comment("Change settings for menu filler item. This will apply to all menus. Slot option does nothing.")
-        private ConfigItem fill = new ConfigItem("BLACK_STAINED_GLASS_PANE", "", List.of(), 1, 0, -1, false);
+        private ConfigItem fill = new ConfigItem(Material.BLACK_STAINED_GLASS_PANE, "", List.of(), 1, -1, false);
         @Comment("Change settings for menu navigation item. This will apply to all menus.")
-        private ConfigItem navigation = ConfigItem.populate("COMPASS", "<red>Previous Menu", "<gray>Left Click to go back!", 26);
+        private ConfigItem navigation = new ConfigItem(Material.COMPASS, "<red>Previous Menu", "<gray>Left Click to go back!", 26);
         @Comment("Change settings for in-game message editor shortcut.")
-        private ConfigItem messages = ConfigItem.populate("DIAMOND", "<#FF253C>Edit Messages", "<gray>Left Click to edit messages!", 11);
+        private ConfigItem messages = new ConfigItem(Material.DIAMOND, "<#FF253C>Edit Messages", "<gray>Left Click to edit messages!", 11);
         @Comment("Change settings for in-game MCMMO Credit redemption shortcut.")
-        private ConfigItem redeem = ConfigItem.populate("EMERALD", "<green>Redeem MCMMO Credits!", "<gray>Left Click to redeem MCMMO Credits!", 13);
+        private ConfigItem redeem = new ConfigItem(Material.EMERALD, "<green>Redeem MCMMO Credits!", "<gray>Left Click to redeem MCMMO Credits!", 13);
         @Comment("Change settings for in-game settings editor shortcut.")
-        private ConfigItem settings = ConfigItem.populate("IRON_INGOT", "<#FF253C>Edit Settings", "<gray>Left Click to edit settings!", 15);
+        private ConfigItem settings = new ConfigItem(Material.IRON_INGOT, "<#FF253C>Edit Settings", "<gray>Left Click to edit settings!", 15);
     }
 
     @ConfigSerializable
     static class RedeemMenu {
         @Comment("Redeem Menu Size must be >=18 or larger to fit all skills.")
         private MenuInfo info = new MenuInfo("<dark_gray>Redeem Your Credits...", 36);
-        @Setting("items")
         private RedeemItems items = new RedeemItems();
     }
 
     @ConfigSerializable
     static class RedeemItems {
-        private ConfigItem acrobatics = ConfigItem.forSkill("NETHERITE_BOOTS", "<yellow>Acrobatics", 10);
-        private ConfigItem alchemy = ConfigItem.forSkill("BREWING_STAND", "<yellow>Alchemy", 11);
-        private ConfigItem archery = ConfigItem.forSkill("BOW", "<yellow>Archery", 12);
-        private ConfigItem axes = ConfigItem.forSkill("NETHERITE_AXE", "<yellow>Axes", 13);
-        private ConfigItem excavation = ConfigItem.forSkill("NETHERITE_SHOVEL", "<yellow>Excavation", 14);
-        private ConfigItem fishing = ConfigItem.forSkill("FISHING_ROD", "<yellow>Fishing", 15);
-        private ConfigItem herbalism = ConfigItem.forSkill("SUGAR_CANE", "<yellow>Herbalism", 16);
-        private ConfigItem mining = ConfigItem.forSkill("NETHERITE_PICKAXE", "<yellow>Mining", 19);
-        private ConfigItem repair = ConfigItem.forSkill("ANVIL", "<yellow>Repair", 20);
-        private ConfigItem swords = ConfigItem.forSkill("NETHERITE_SWORD", "<yellow>Swords", 21);
-        private ConfigItem taming = ConfigItem.forSkill("LEAD", "<yellow>Taming", 23);
-        private ConfigItem unarmed = ConfigItem.forSkill("CARROT_ON_A_STICK", "<yellow>Unarmed", 24);
-        private ConfigItem woodcutting = ConfigItem.forSkill("OAK_LOG", "<yellow>Woodcutting", 25);
+        private ConfigItem acrobatics = new ConfigItem(Material.NETHERITE_BOOTS, PrimarySkillType.ACROBATICS, 10);
+        private ConfigItem alchemy = new ConfigItem(Material.BREWING_STAND, PrimarySkillType.ALCHEMY, 11);
+        private ConfigItem archery = new ConfigItem(Material.BOW, PrimarySkillType.ARCHERY, 12);
+        private ConfigItem axes = new ConfigItem(Material.NETHERITE_AXE, PrimarySkillType.AXES, 13);
+        private ConfigItem excavation = new ConfigItem(Material.NETHERITE_SHOVEL, PrimarySkillType.EXCAVATION, 14);
+        private ConfigItem fishing = new ConfigItem(Material.FISHING_ROD, PrimarySkillType.FISHING, 15);
+        private ConfigItem herbalism = new ConfigItem(Material.SUGAR_CANE, PrimarySkillType.HERBALISM, 16);
+        private ConfigItem mining = new ConfigItem(Material.NETHERITE_PICKAXE, PrimarySkillType.MINING, 19);
+        private ConfigItem repair = new ConfigItem(Material.ANVIL, PrimarySkillType.REPAIR, 20);
+        private ConfigItem swords = new ConfigItem(Material.NETHERITE_SWORD, PrimarySkillType.SWORDS, 21);
+        private ConfigItem taming = new ConfigItem(Material.LEAD, PrimarySkillType.TAMING, 23);
+        private ConfigItem unarmed = new ConfigItem(Material.CARROT_ON_A_STICK, PrimarySkillType.UNARMED, 24);
+        private ConfigItem woodcutting = new ConfigItem(Material.OAK_LOG, PrimarySkillType.WOODCUTTING, 25);
     }
 
     @ConfigSerializable
-    record MenuInfo(String title, int size){}
+    record MenuInfo(String title, int size) {
+
+    }
 
     @ConfigSerializable
-    record ConfigMenu(MenuInfo info, PartialConfigItem item) {}
-
-    @ConfigSerializable
-    record ConfigItem(String material, String name, List<String> lore, int amount, int durability, int slot, boolean glow) {
-        static ConfigItem forSkill(String material, String name, int slot) {
-            return new ConfigItem(material, name, Arrays.asList("<yellow><player>, click here to redeem!"), 1, 0, slot, false);
-        }
-        static ConfigItem populate(String material, String name, String lore, int slot) {
-            return new ConfigItem(material, name, Arrays.asList(lore), 1, 0, slot, false);
+    record ConfigMenu(PartialConfigItem item, MenuInfo info) {
+        ConfigMenu(Material material, String title, int size) {
+            this(new PartialConfigItem(material), new MenuInfo(title, size));
         }
     }
 
     @ConfigSerializable
-    record PartialConfigItem(String material, List<String> lore, int durability, boolean glow) {
-        static PartialConfigItem forConfig(String material) {
-            return new PartialConfigItem(material, Arrays.asList("<gray>Click here to edit this config option!"), 0, false);
+    record ConfigItem(Material material, String name, List<String> lore, int amount, int slot, boolean glow) {
+        ConfigItem(Material material, PrimarySkillType skill, int slot) {
+            this(material, "<yellow> " + WordUtils.capitalizeFully(skill.name()), List.of("<yellow><player>, click here to redeem!"), 1, slot, false);
+        }
+
+        ConfigItem(Material material, String name, String lore, int slot) {
+            this(material, name, List.of(lore), 1, slot, false);
+        }
+    }
+
+    @ConfigSerializable
+    record PartialConfigItem(Material material, List<String> lore, boolean glow) {
+        PartialConfigItem(Material material) {
+            this(material, List.of("<gray>Click here to edit this config option!"), false);
         }
     }
 }
