@@ -13,7 +13,6 @@ import games.cultivate.mcmmocredits.data.InputStorage;
 import games.cultivate.mcmmocredits.data.MYSQLDatabase;
 import games.cultivate.mcmmocredits.data.SQLDatabase;
 import games.cultivate.mcmmocredits.data.SQLiteDatabase;
-import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.menu.MenuFactory;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -37,7 +36,6 @@ public final class PluginModule extends AbstractModule {
         this.bind(SettingsConfig.class).asEagerSingleton();
         this.bind(MenuConfig.class).asEagerSingleton();
         this.bind(InputStorage.class).asEagerSingleton();
-        this.requestStaticInjection(Menu.Builder.class);
     }
 
     @Provides
@@ -50,9 +48,9 @@ public final class PluginModule extends AbstractModule {
     }
 
     @Provides
-    public MenuFactory provideMenuFactory(final MenuConfig menus, final MessagesConfig messages, final InputStorage storage, final MCMMOCredits plugin) {
+    public MenuFactory provideMenuFactory(final MenuConfig menus, final MessagesConfig messages, final SettingsConfig settings, final InputStorage storage, final MCMMOCredits plugin) {
         if (this.factory == null) {
-            this.factory = new MenuFactory(menus, messages, storage, plugin);
+            this.factory = new MenuFactory(menus, messages, settings, storage, plugin);
         }
         return this.factory;
     }
