@@ -5,7 +5,7 @@ import org.incendo.interfaces.paper.PlayerViewer;
 import org.incendo.interfaces.paper.pane.ChestPane;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
-public class RedeemMenu extends Menu {
+public final class RedeemMenu extends Menu {
     @Override
     public void open() {
 

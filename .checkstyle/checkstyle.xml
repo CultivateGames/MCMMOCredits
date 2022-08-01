@@ -80,13 +80,6 @@ Sourced from: https://github.com/TehBrian/Iteminator/blob/main/.checkstyle/check
         <property name="message" value="Line has trailing spaces."/>
     </module>
 
-    <!-- Checks for Headers                            -->
-    <!-- See https://checkstyle.org/config_header.html -->
-    <!--    <module name="Header">-->
-    <!--        <property name="headerFile" value="${checkstyle.header.file}"/>-->
-    <!--        <property name="fileExtensions" value="java"/>-->
-    <!--    </module>-->
-
     <module name="TreeWalker">
 
         <!-- Checks for Javadoc comments.                   -->
@@ -170,7 +163,6 @@ Sourced from: https://github.com/TehBrian/Iteminator/blob/main/.checkstyle/check
         <!-- See https://checkstyle.org/config_misc.html -->
         <module name="ArrayTypeStyle"/>
         <module name="FinalParameters"/>
-        <!--        <module name="TodoComment"/>-->
         <module name="UpperEll"/>
 
         <module name="RequireThis">

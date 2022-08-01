@@ -5,7 +5,6 @@ import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.config.MessagesConfig;
-import games.cultivate.mcmmocredits.config.SettingsConfig;
 import games.cultivate.mcmmocredits.data.InputStorage;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
@@ -29,40 +28,39 @@ import java.util.List;
 public class ConfigMenu extends Menu {
     private final MenuConfig menu;
     private final MessagesConfig messages;
-    private final Config config;
     private final InputStorage storage;
     private final Player player;
+    private final Config config;
 
-    @Inject //TODO test, this may need to be removed.
-    public ConfigMenu(final MenuConfig menu, final MessagesConfig messages, final InputStorage storage, final Player player) {
+    @Inject
+    public ConfigMenu(final MenuConfig menu, final MessagesConfig messages, final Config config, final InputStorage storage, final Player player) {
         this.menu = menu;
         this.messages = messages;
-        this.config = messages;
+        this.config = config;
         this.storage = storage;
         this.player = player;
         this.viewer = PlayerViewer.of(player);
         this.chest = this.create();
     }
 
-    @Inject //TODO test, this may need to be removed.
-    public ConfigMenu(final MenuConfig menu, final MessagesConfig messages, final SettingsConfig settings, final InputStorage storage, final Player player) {
-        this.menu = menu;
-        this.messages = messages;
-        this.config = settings;
-        this.storage = storage;
-        this.player = player;
-        this.viewer = PlayerViewer.of(player);
-        this.chest = this.create();
+    public ConfigMenu(final MenuConfig menu, final MessagesConfig messages, final InputStorage storage, final Player player) {
+        this(menu, messages, messages, storage, player);
     }
 
     @Override
     public void open() {
-
+        if (this.chest == null) {
+            this.chest = this.create();
+        }
+        this.chest.open(PlayerViewer.of(this.player));
     }
 
     @Override
     public void close() {
-
+        if (this.chest == null) {
+            this.chest = this.create();
+        }
+        PlayerViewer.of(this.player).close();
     }
 
     @Override
@@ -96,18 +94,18 @@ public class ConfigMenu extends Menu {
 
     private ChestPane createConfigTransform(final ChestPane pane, final ItemStack item) {
         String path = item.getItemMeta().getPersistentDataContainer().get(MCMMOCredits.NAMESPACED_KEY, PersistentDataType.STRING);
-        int amount = item.getAmount() - 1;
+        int slot = item.getAmount() - 1;
         return pane.element(ItemStackElement.of(item, click -> {
             if (click.cause().isLeftClick()) {
                 Resolver.Builder resolver = Resolver.builder().player(this.player).tag("setting", path);
                 Text.fromString(this.player, this.messages.string("menuEditingPrompt"), resolver.build()).send();
                 this.storage.act(this.player.getUniqueId(), i -> {
                     boolean result = this.config.modify(path, i);
-                    String content = "settingChange" + (result ? "Successful" : "Failure");
+                    String content = result ? "settingChangeSuccessful" : "settingChangeFailure";
                     Text.fromString(this.player, this.messages.string(content), resolver.tag("change", i).build()).send();
                 });
             }
-        }), amount % 9, amount / 9);
+        }), slot % 9, slot / 9);
     }
 
     private PaperItemBuilder itemFromPath(String path) {

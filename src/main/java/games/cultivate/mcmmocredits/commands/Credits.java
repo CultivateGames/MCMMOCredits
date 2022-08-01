@@ -87,7 +87,7 @@ public final class Credits {
     @CommandMethod("menu settings")
     @CommandPermission("mcmmocredits.menu.admin")
     public void openSettingsMenu(final Player player) {
-       this.factory.createSettingsMenu(player, this.settings).open();
+       this.factory.createSettingsMenu(player).open();
     }
 
     @CommandDescription("Open the Credit Redemption Menu")

@@ -6,7 +6,6 @@ import org.bukkit.Bukkit;
 import org.jdbi.v3.core.Jdbi;
 
 import javax.inject.Inject;
-import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -21,11 +20,6 @@ public sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLit
     @Inject
     SQLDatabase(final MCMMOCredits plugin) {
         this.plugin = plugin;
-    }
-
-    //TODO fix path injection
-    Path path() {
-        return this.plugin.getDataFolder().toPath();
     }
 
     @Override

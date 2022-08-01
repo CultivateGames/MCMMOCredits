@@ -33,7 +33,7 @@ public class MenuFactory {
         return new ConfigMenu(this.menus, this.messages, this.storage, player);
     }
 
-    public ConfigMenu createSettingsMenu(final Player player, final SettingsConfig config) {
+    public ConfigMenu createSettingsMenu(final Player player) {
         return new ConfigMenu(this.menus, this.messages, this.settings, this.storage, player);
     }
 
