@@ -2,37 +2,30 @@ package games.cultivate.mcmmocredits.data;
 
 import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.SettingsConfig;
 import org.bukkit.Bukkit;
 import org.jdbi.v3.core.Jdbi;
 
 import javax.inject.Inject;
+import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static games.cultivate.mcmmocredits.data.SQLStatement.*;
 
-public abstract sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLiteDatabase {
+public sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLiteDatabase {
     private static final UUID ZERO_UUID = new UUID(0, 0);
-    private final HikariDataSource hikari;
     private final MCMMOCredits plugin;
-    private final Jdbi jdbi;
+    protected HikariDataSource hikari;
+    protected Jdbi jdbi;
 
     @Inject
-    SQLDatabase(final SettingsConfig settings, final MCMMOCredits plugin) {
+    SQLDatabase(final MCMMOCredits plugin) {
         this.plugin = plugin;
-        this.hikari = this.createDataSource();
-        SQLStatement creation = settings.isMYSQL() ? MYSQL_CREATE_TABLE : SQLITE_CREATE_TABLE;
-        this.jdbi = this.createJDBI();
-        this.jdbi.useHandle(x -> x.execute(creation.toString()));
     }
 
-    abstract Jdbi createJDBI();
-
-    abstract HikariDataSource createDataSource();
-
-    HikariDataSource hikari() {
-        return this.hikari;
+    //TODO fix path injection
+    Path path() {
+        return this.plugin.getDataFolder().toPath();
     }
 
     @Override
@@ -98,7 +91,7 @@ public abstract sealed class SQLDatabase implements Database permits MYSQLDataba
     }
 
     private void update(final SQLStatement statement, final Object... args) {
-       Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> this.jdbi.useHandle(x -> x.execute(statement.toString(), args)));
+        Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> this.jdbi.useHandle(x -> x.execute(statement.toString(), args)));
     }
 
     //Credit Updates are done synchronously so that information is current.

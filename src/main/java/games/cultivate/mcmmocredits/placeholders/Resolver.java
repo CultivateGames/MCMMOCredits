@@ -23,11 +23,11 @@ public final class Resolver {
     }
 
     public static TagResolver fromTransaction(final CommandSender sender, final String username, final int amount) {
-        return Resolver.builder().sender(sender).player(username).transaction(amount).build();
+        return Resolver.builder().sender(sender).transaction(username, amount).build();
     }
 
     public static TagResolver fromRedemption(final CommandSender sender, final Player player, final PrimarySkillType skill, final int amount) {
-        return Resolver.builder().sender(sender).player(player).skill(skill).transaction(amount).build();
+        return Resolver.builder().sender(sender).skill(skill).transaction(player.getName(), amount).build();
     }
 
     public static Builder builder() {
@@ -58,8 +58,8 @@ public final class Resolver {
             return this.player(player.getName());
         }
 
-        public Builder transaction(final int amount) {
-            return this.tag("amount", amount + "");
+        public Builder transaction(final String username, final int amount) {
+            return this.tag("amount", amount + "").player(username);
         }
 
         @SuppressWarnings("deprecation")

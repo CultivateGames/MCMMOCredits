@@ -14,7 +14,6 @@ import games.cultivate.mcmmocredits.text.Text;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.incendo.interfaces.paper.PlayerViewer;
 
 import javax.inject.Inject;
 
@@ -63,6 +62,7 @@ public final class Credits {
     @CommandMethod("reload")
     @CommandPermission("mcmmocredits.admin.reload")
     public void reloadCredits(final CommandSender sender) {
+        //TODO close all inventories.
         this.menus.load();
         this.settings.load();
         this.messages.load();
@@ -71,29 +71,29 @@ public final class Credits {
 
     @CommandDescription("Open a Menu that can be used to interface with this plugin.")
     @CommandMethod("menu")
-    @CommandPermission("mcmmocredits.gui.basic")
+    @CommandPermission("mcmmocredits.menu.basic")
     public void openMenu(final Player player) {
-        this.factory.makeMainMenu(player, this.messages, this.settings).open(PlayerViewer.of(player));
+        this.factory.createMainMenu(player).open();
     }
 
     @CommandDescription("Open the Edit Messages Menu")
     @CommandMethod("menu messages")
-    @CommandPermission("mcmmocredits.gui.admin")
+    @CommandPermission("mcmmocredits.menu.admin")
     public void openMessagesMenu(final Player player) {
-        this.factory.makeConfigMenu(player, this.messages).open(PlayerViewer.of(player));
+        this.factory.createMessagesMenu(player).open();
     }
 
     @CommandDescription("Open the Edit Settings Menu")
     @CommandMethod("menu settings")
-    @CommandPermission("mcmmocredits.gui.admin")
+    @CommandPermission("mcmmocredits.menu.admin")
     public void openSettingsMenu(final Player player) {
-        this.factory.makeConfigMenu(player, this.settings).open(PlayerViewer.of(player));
+       this.factory.createSettingsMenu(player, this.settings).open();
     }
 
     @CommandDescription("Open the Credit Redemption Menu")
     @CommandMethod("menu redeem")
-    @CommandPermission("mcmmocredits.gui.redeem")
+    @CommandPermission("mcmmocredits.menu.redeem")
     public void openRedeemMenu(final Player player) {
-        this.factory.makeRedemptionMenu(player).open(PlayerViewer.of(player));
+        this.factory.createRedeemMenu(player).open();
     }
 }

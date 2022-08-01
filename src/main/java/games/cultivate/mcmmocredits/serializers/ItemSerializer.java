@@ -47,14 +47,16 @@ public final class ItemSerializer implements TypeSerializer<ItemStack> {
     }
 
     private AbstractPaperItemBuilder<?, ?> generateBuilder(final ConfigurationNode node) throws SerializationException {
-        ConfigurationNode skull = node.node("skull");
-        return skull.virtual() ? PaperItemBuilder.ofType(node.node("material").get(Material.class, Material.AIR)) : SkullBuilder.ofPlayerHead().textures(skull.getString(""));
+        if (!node.node("skull").virtual()) {
+            return SkullBuilder.ofPlayerHead().textures(node.node("skull").getString(""));
+        }
+        return PaperItemBuilder.ofType(node.node("material").get(Material.class, Material.AIR));
     }
 
     public ItemStack deserializePlayer(final CommentedConfigurationNode node, final Player player) throws SerializationException {
         ItemStack result = this.deserialize(ItemStack.class, node);
         return PaperItemBuilder.of(result)
-                .name(Text.parseComponent(result.displayName(), player))
+                .name(Text.parseComponent(Component.text(node.node("name").getString("")), player))
                 .loreModifier(i -> i.forEach(x -> Text.parseComponent(x, player))).build();
     }
 }

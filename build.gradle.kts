@@ -25,7 +25,9 @@ dependencies {
     paperDevBundle("1.19.1-R0.1-SNAPSHOT")
     implementation("cloud.commandframework:cloud-annotations:1.7.0")
     implementation("cloud.commandframework:cloud-paper:1.7.0")
-    implementation("cloud.commandframework:cloud-minecraft-extras:1.7.0")
+    implementation("cloud.commandframework:cloud-minecraft-extras:1.7.0") {
+        exclude(group = "net.kyori")
+    }
     implementation("com.google.inject:guice:5.1.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.spongepowered:configurate-hocon:4.2.0-SNAPSHOT")
