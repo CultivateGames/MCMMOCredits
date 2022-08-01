@@ -11,13 +11,13 @@ public final class FileUtil {
     private FileUtil() {
     }
 
-    public static void createFile(final Path dir) {
+    public static void createFile(final Path dir, final String fileName) {
         try {
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);
                 Bukkit.getLogger().info("[MCMMOCredits] Created file:" + dir.getFileName().toString() + "!");
             }
-            Files.createFile(dir);
+            Files.createFile(dir.resolve(fileName));
         } catch (FileAlreadyExistsException ignored) {
         } catch (IOException e) {
             e.printStackTrace();

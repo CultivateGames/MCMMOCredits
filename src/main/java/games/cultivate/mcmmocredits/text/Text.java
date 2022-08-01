@@ -43,7 +43,7 @@ public final class Text {
         //TODO find better way to delegate local placeholder to PAPI. In the meantime this simplifies the resolver.
         content = content.replace("<credits>", "%mcmmocredits_credits%");
         content = PlaceholderAPI.setPlaceholders(player, content);
-        return Text.removeItalics(MiniMessage.miniMessage().deserialize(content, Resolver.fromPlayer(player)));
+        return MiniMessage.miniMessage().deserialize(content, Resolver.fromPlayer(player));
     }
 
     public static Component removeItalics(final Component component) {

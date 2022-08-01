@@ -1,6 +1,5 @@
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.menu.Button;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.util.FileUtil;
 import org.apache.commons.lang.StringUtils;
@@ -8,10 +7,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.NodePath;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
 import org.spongepowered.configurate.objectmapping.ObjectMapper;
 import org.spongepowered.configurate.serialize.SerializationException;
@@ -20,7 +19,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
@@ -32,8 +30,7 @@ public class Config {
     private transient CommentedConfigurationNode root;
     private transient HoconConfigurationLoader loader;
     private transient List<CommentedConfigurationNode> nodeList;
-    private transient @Inject
-    @Named("dir") Path dir;
+    private transient @Inject @Named("dir") Path dir;
 
     Config(final Class<? extends Config> type, final String fileName) {
         this.type = type;
@@ -47,10 +44,6 @@ public class Config {
 
     public String joinedPath(final CommentedConfigurationNode node) {
         return StringUtils.join(node.path().array(), ".");
-    }
-
-    public String joinedPath(final Iterable<String> path) {
-        return StringUtils.join(path.iterator(), ".");
     }
 
     public void load() {
@@ -162,7 +155,7 @@ public class Config {
         return this.valueFromMap(int.class, path, 0);
     }
 
-    private <V> @NonNull V valueFromMap(final Class<V> type, final String path, final V def) {
+    private <V> V valueFromMap(final Class<V> type, final String path, final V def) {
         for (CommentedConfigurationNode node : this.nodeList) {
             if (this.joinedPath(node).contains(path)) {
                 try {
@@ -211,53 +204,24 @@ public class Config {
     /**
      * Returns an ItemStack from the underlying configuration map.
      */
-    public ItemStack item(final ItemType itemType, final Player player) {
-        try {
-            return ItemSerializer.INSTANCE.deserializePlayer(this.root.node(itemType.path()), player);
-        } catch (SerializationException e) {
-            e.printStackTrace();
-            return new ItemStack(Material.AIR);
-        }
-    }
-
-    /**
-     * Returns an ItemStack from the underlying configuration map.
-     */
     public ItemStack item(final String path, final Player player) {
         try {
-            return ItemSerializer.INSTANCE.deserializePlayer(this.root.node(path), player);
+            return ItemSerializer.INSTANCE.deserializePlayer(this.root.node(NodePath.of(path.split("\\."))), player);
         } catch (SerializationException e) {
             e.printStackTrace();
             return new ItemStack(Material.AIR);
         }
-    }
-
-    public int itemSlot(final ItemType itemType) {
-        List<String> list = new ArrayList<>(itemType.path());
-        list.add("slot");
-        return this.integer(this.joinedPath(list));
     }
 
     public int slot(final String path) {
-        List<String> list = Arrays.asList(path.split("\\."));
-        list.add("slot");
-        return this.integer(this.joinedPath(list));
-    }
-
-    public Button button(final ItemType itemType, final Player player) {
-        return new Button(this.item(itemType, player), this.itemSlot(itemType));
-    }
-
-    public Button button(final ItemType itemType, final Player player, final String command, final int slot) {
-        return new Button(this.item(itemType, player), slot, command);
+        return this.integer(path + ".slot");
     }
 
     public HoconConfigurationLoader createLoader() {
-        Path path = this.dir.resolve(this.fileName);
-        FileUtil.createFile(path);
+        FileUtil.createFile(this.dir, this.fileName);
         return HoconConfigurationLoader.builder()
                 .defaultOptions(opts -> opts.serializers(build -> build.register(ItemStack.class, ItemSerializer.INSTANCE)))
-                .path(path).prettyPrinting(true).build();
+                .path(this.dir.resolve(this.fileName)).prettyPrinting(true).build();
     }
 
     private void logWarning(final String path) {
