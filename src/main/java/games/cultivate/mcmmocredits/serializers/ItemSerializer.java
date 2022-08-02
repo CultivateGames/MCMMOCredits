@@ -3,15 +3,12 @@ package games.cultivate.mcmmocredits.serializers;
 import broccolai.corn.paper.item.AbstractPaperItemBuilder;
 import broccolai.corn.paper.item.PaperItemBuilder;
 import broccolai.corn.paper.item.special.SkullBuilder;
-import games.cultivate.mcmmocredits.text.Text;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.serialize.TypeSerializer;
@@ -51,12 +48,5 @@ public final class ItemSerializer implements TypeSerializer<ItemStack> {
             return SkullBuilder.ofPlayerHead().textures(node.node("skull").getString(""));
         }
         return PaperItemBuilder.ofType(node.node("material").get(Material.class, Material.AIR));
-    }
-
-    public ItemStack deserializePlayer(final CommentedConfigurationNode node, final Player player) throws SerializationException {
-        ItemStack result = this.deserialize(ItemStack.class, node);
-        return PaperItemBuilder.of(result)
-                .name(Text.parseComponent(Component.text(node.node("name").getString("")), player))
-                .loreModifier(i -> i.forEach(x -> Text.parseComponent(x, player))).build();
     }
 }

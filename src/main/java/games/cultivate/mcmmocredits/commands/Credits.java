@@ -9,6 +9,7 @@ import games.cultivate.mcmmocredits.config.MessagesConfig;
 import games.cultivate.mcmmocredits.config.SettingsConfig;
 import games.cultivate.mcmmocredits.data.Database;
 import games.cultivate.mcmmocredits.menu.MenuFactory;
+import games.cultivate.mcmmocredits.menu.MenuType;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -62,7 +63,6 @@ public final class Credits {
     @CommandMethod("reload")
     @CommandPermission("mcmmocredits.admin.reload")
     public void reloadCredits(final CommandSender sender) {
-        //TODO close all inventories.
         this.menus.load();
         this.settings.load();
         this.messages.load();
@@ -70,30 +70,18 @@ public final class Credits {
     }
 
     @CommandDescription("Open a Menu that can be used to interface with this plugin.")
-    @CommandMethod("menu")
-    @CommandPermission("mcmmocredits.menu.basic")
-    public void openMenu(final Player player) {
-        this.factory.createMainMenu(player).open();
-    }
-
-    @CommandDescription("Open the Edit Messages Menu")
-    @CommandMethod("menu messages")
-    @CommandPermission("mcmmocredits.menu.admin")
-    public void openMessagesMenu(final Player player) {
-        this.factory.createMessagesMenu(player).open();
-    }
-
-    @CommandDescription("Open the Edit Settings Menu")
-    @CommandMethod("menu settings")
-    @CommandPermission("mcmmocredits.menu.admin")
-    public void openSettingsMenu(final Player player) {
-       this.factory.createSettingsMenu(player).open();
-    }
-
-    @CommandDescription("Open the Credit Redemption Menu")
-    @CommandMethod("menu redeem")
-    @CommandPermission("mcmmocredits.menu.redeem")
-    public void openRedeemMenu(final Player player) {
-        this.factory.createRedeemMenu(player).open();
+    @CommandMethod("menu <type>")
+    @CommandPermission("mcmmocredits.menu.main")
+    public void openMenu(final Player player, @Argument final MenuType type) {
+        if (type.canOpen(player)) {
+            switch (type) {
+                case MAIN -> this.factory.createMainMenu(player).open();
+                case REDEEM -> this.factory.createRedeemMenu(player).open();
+                case MESSAGES -> this.factory.createMessagesMenu(player).open();
+                case SETTINGS -> this.factory.createSettingsMenu(player).open();
+                default -> { //do nothing
+                }
+            }
+        }
     }
 }

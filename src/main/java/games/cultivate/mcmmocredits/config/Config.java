@@ -1,7 +1,10 @@
 package games.cultivate.mcmmocredits.config;
 
+import broccolai.corn.paper.item.PaperItemBuilder;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
+import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.util.FileUtil;
+import net.kyori.adventure.text.Component;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -205,12 +208,15 @@ public class Config {
      * Returns an ItemStack from the underlying configuration map.
      */
     public ItemStack item(final String path, final Player player) {
+        CommentedConfigurationNode node = this.root.node(NodePath.of(path.split("\\.")));
         try {
-            return ItemSerializer.INSTANCE.deserializePlayer(this.root.node(NodePath.of(path.split("\\."))), player);
+            return PaperItemBuilder.of(ItemSerializer.INSTANCE.deserialize(ItemStack.class, node))
+                    .name(Text.parseComponent(Component.text(node.node("name").getString("")), player))
+                    .loreModifier(i -> i.forEach(x -> Text.parseComponent(x, player))).build();
         } catch (SerializationException e) {
             e.printStackTrace();
-            return new ItemStack(Material.AIR);
         }
+        return new ItemStack(Material.AIR);
     }
 
     public int slot(final String path) {
