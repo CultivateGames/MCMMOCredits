@@ -15,7 +15,9 @@ import org.incendo.interfaces.paper.pane.ChestPane;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 public final class MainMenu extends Menu {
     private final MenuConfig menu;
@@ -46,14 +48,13 @@ public final class MainMenu extends Menu {
     }
 
     public Transform<ChestPane, PlayerViewer> itemTransform() {
-        String redeemPath = "main.items.redeem";
-        String messagesPath = "main.items.messages";
-        String settingsPath = "main.items.settings";
+        Set<MenuType> set = EnumSet.allOf(MenuType.class);
+        set.remove(MenuType.MAIN);
         return (pane, view) -> {
-            pane = this.createCommandTransform(pane, redeemPath, this.pathCommand(redeemPath));
-            if (this.player.hasPermission("mcmmocredits.Menu.admin")) {
-                pane = this.createCommandTransform(pane, messagesPath, this.pathCommand(messagesPath));
-                pane = this.createCommandTransform(pane, settingsPath, this.pathCommand(settingsPath));
+            for (MenuType type : set) {
+                if (type.canOpen(this.player)) {
+                    pane = this.createCommandTransform(pane, type);
+                }
             }
             return pane;
         };
@@ -71,15 +72,12 @@ public final class MainMenu extends Menu {
         return new ChestInterface(rows, title, transforms, List.of(), true, 10, ClickHandler.cancel());
     }
 
-    private String pathCommand(final String path) {
-        return "credits menu " + path.substring(path.lastIndexOf('.') + 1);
-    }
-
-    private ChestPane createCommandTransform(final ChestPane pane, final String itemPath, final String command) {
-        return pane.element(ItemStackElement.of(this.menu.item(itemPath, this.player), click -> {
+    private ChestPane createCommandTransform(final ChestPane pane, final MenuType menuType) {
+        String menuPath = "main.items" + menuType.name().toLowerCase();
+        return pane.element(ItemStackElement.of(this.menu.item(menuPath, this.player), click -> {
             if (click.cause().isLeftClick()) {
-                Bukkit.getScheduler().runTask(this.plugin, () -> Bukkit.dispatchCommand(this.player, command));
+                Bukkit.getScheduler().runTask(this.plugin, () -> Bukkit.dispatchCommand(this.player, "credits menu " + menuType));
             }
-        }), this.menu.slot(itemPath) % 9, this.menu.slot(itemPath) / 9);
+        }), this.menu.slot(menuPath) % 9, this.menu.slot(menuPath) / 9);
     }
 }

@@ -35,7 +35,10 @@ public final class Text {
     }
 
     public static Text fromString(final Audience audience, final String content) {
-        return new Text(audience, content, createResolver(audience));
+        if (audience instanceof Player p) {
+            return new Text(audience, content, Resolver.fromPlayer(p));
+        }
+        return new Text(audience, content, Resolver.fromSender((CommandSender) audience));
     }
 
     public static Component parseComponent(final Component comp, final Player player) {
@@ -44,14 +47,6 @@ public final class Text {
         content = content.replace("<credits>", "%mcmmocredits_credits%");
         content = PlaceholderAPI.setPlaceholders(player, content);
         return MiniMessage.miniMessage().deserialize(content, Resolver.fromPlayer(player));
-    }
-
-    public static Component removeItalics(final Component component) {
-        return Component.empty().decoration(TextDecoration.ITALIC, false).append(component);
-    }
-
-    private static TagResolver createResolver(final Audience audience) {
-        return audience instanceof Player p ? Resolver.fromPlayer(p) : Resolver.fromSender((CommandSender) audience);
     }
 
     public Component toComponent() {
@@ -64,6 +59,6 @@ public final class Text {
     }
 
     public void send() {
-        this.audience.sendMessage(removeItalics(this.toComponent()));
+        this.audience.sendMessage(Component.empty().decoration(TextDecoration.ITALIC, false).append(this.toComponent()));
     }
 }
