@@ -41,4 +41,13 @@ public class MenuFactory {
         //TODO method stub
         return new RedeemMenu();
     }
+
+    public Menu fromType(final Player player, final MenuType type) {
+        return switch (type) {
+            case MAIN -> this.createMainMenu(player);
+            case REDEEM -> this.createRedeemMenu(player);
+            case MESSAGES -> this.createMessagesMenu(player);
+            case SETTINGS -> this.createSettingsMenu(player);
+        };
+    }
 }

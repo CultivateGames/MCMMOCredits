@@ -14,13 +14,20 @@ import java.util.Map;
 
 //TODO override methods should not be called in the constructor.
 public abstract class Menu {
-    protected ChestInterface chest;
-    protected PlayerViewer viewer;
-    protected MCMMOCredits plugin;
+    ChestInterface chest;
+    PlayerViewer viewer;
+    MCMMOCredits plugin;
 
-    public abstract void open();
+    public void open() {
+        if (this.chest == null) {
+            this.chest = this.create();
+        }
+        this.chest.open(this.viewer);
+    }
 
-    public abstract void close();
+    public void close() {
+        this.viewer.close();
+    }
 
     public abstract Transform<ChestPane, PlayerViewer> itemTransform();
 

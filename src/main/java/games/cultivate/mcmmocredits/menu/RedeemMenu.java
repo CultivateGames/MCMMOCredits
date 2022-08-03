@@ -6,15 +6,6 @@ import org.incendo.interfaces.paper.pane.ChestPane;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
 public final class RedeemMenu extends Menu {
-    @Override
-    public void open() {
-
-    }
-
-    @Override
-    public void close() {
-
-    }
 
     @Override
     public Transform<ChestPane, PlayerViewer> itemTransform() {

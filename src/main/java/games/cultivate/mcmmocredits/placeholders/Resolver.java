@@ -46,6 +46,11 @@ public final class Resolver {
             return this;
         }
 
+        public Builder tags(Map<String, String> tags) {
+            tags.forEach((k, v) -> this.placeholders.putIfAbsent(k, Tag.preProcessParsed(v)));
+            return this;
+        }
+
         public Builder sender(final CommandSender sender) {
             return this.tag("sender", sender.getName());
         }

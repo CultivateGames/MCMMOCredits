@@ -68,6 +68,7 @@ public final class ModifyCredits {
                     default -> {}
                 }
             } catch (Exception e) {
+                //Exception is from SQL constraint.
                 Text.fromString(sender, this.messages.string("notEnoughCredits")).send();
             }
             TagResolver r = Resolver.fromTransaction(sender, user, amount);

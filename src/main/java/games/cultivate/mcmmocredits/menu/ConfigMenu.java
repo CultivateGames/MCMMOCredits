@@ -40,27 +40,6 @@ public class ConfigMenu extends Menu {
         this.storage = storage;
         this.player = player;
         this.viewer = PlayerViewer.of(player);
-        this.chest = this.create();
-    }
-
-    public ConfigMenu(final MenuConfig menu, final MessagesConfig messages, final InputStorage storage, final Player player) {
-        this(menu, messages, messages, storage, player);
-    }
-
-    @Override
-    public void open() {
-        if (this.chest == null) {
-            this.chest = this.create();
-        }
-        this.chest.open(PlayerViewer.of(this.player));
-    }
-
-    @Override
-    public void close() {
-        if (this.chest == null) {
-            this.chest = this.create();
-        }
-        PlayerViewer.of(this.player).close();
     }
 
     @Override
@@ -108,7 +87,7 @@ public class ConfigMenu extends Menu {
         }), slot % 9, slot / 9);
     }
 
-    private PaperItemBuilder itemFromPath(String path) {
+    private PaperItemBuilder itemFromPath(final String path) {
         return PaperItemBuilder.of(this.menu.item(path, this.player))
                 .name(Component.text(path.substring(path.lastIndexOf('.') + 1)))
                 .setData(MCMMOCredits.NAMESPACED_KEY, PersistentDataType.STRING, path);

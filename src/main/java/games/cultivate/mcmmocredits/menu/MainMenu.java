@@ -31,22 +31,6 @@ public final class MainMenu extends Menu {
         this.chest = this.create();
     }
 
-    @Override
-    public void open() {
-        if (this.chest == null) {
-            throw new IllegalStateException("Chest Interface has not been created!");
-        }
-        this.chest.open(this.viewer);
-    }
-
-    @Override
-    public void close() {
-        if (this.chest == null) {
-            throw new IllegalStateException("Chest Interface has not been created!");
-        }
-        this.viewer.close();
-    }
-
     public Transform<ChestPane, PlayerViewer> itemTransform() {
         Set<MenuType> set = EnumSet.allOf(MenuType.class);
         set.remove(MenuType.MAIN);

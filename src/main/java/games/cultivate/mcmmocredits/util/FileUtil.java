@@ -16,7 +16,7 @@ public final class FileUtil {
         try {
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);
-                Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created file: {0} !", dir.getFileName());
+                Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created file: {0}!", dir.getFileName());
             }
             Files.createFile(dir.resolve(fileName));
         } catch (FileAlreadyExistsException ignored) { //Ignore if file already exists.

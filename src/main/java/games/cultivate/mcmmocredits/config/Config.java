@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 
-public class Config {
+public sealed class Config permits MenuConfig, MessagesConfig, SettingsConfig {
     private final transient String fileName;
     private final transient Class<? extends Config> type;
     private transient Config conf;
