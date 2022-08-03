@@ -74,14 +74,7 @@ public final class Credits {
     @CommandPermission("mcmmocredits.menu.main")
     public void openMenu(final Player player, @Argument final MenuType type) {
         if (type.canOpen(player)) {
-            switch (type) {
-                case MAIN -> this.factory.createMainMenu(player).open();
-                case REDEEM -> this.factory.createRedeemMenu(player).open();
-                case MESSAGES -> this.factory.createMessagesMenu(player).open();
-                case SETTINGS -> this.factory.createSettingsMenu(player).open();
-                default -> { //do nothing
-                }
-            }
+            this.factory.fromType(player, type).open();
         }
     }
 }

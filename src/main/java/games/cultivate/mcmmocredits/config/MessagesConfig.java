@@ -6,7 +6,7 @@ import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
-public class MessagesConfig extends Config {
+public final class MessagesConfig extends Config {
     @Comment("Sender output for command exceptions.")
     private ExceptionMessages exceptions = new ExceptionMessages();
     @Comment("Output for command execution.Includes command-specific errors.")

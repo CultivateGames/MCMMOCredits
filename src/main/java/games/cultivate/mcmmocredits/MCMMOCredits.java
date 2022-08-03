@@ -163,20 +163,17 @@ public final class MCMMOCredits extends JavaPlugin {
                 ex.printStackTrace();
             }
             Resolver.Builder rb = Resolver.builder().sender(sender);
-            Map<String, String> placeholders = new HashMap<>();
+            Map<String, String> tags = new HashMap<>();
             switch (ex.getClass().getSimpleName()) {
-                case "ArgumentParseException" -> placeholders.put("argument_error", ex.getCause().getMessage());
+                case "ArgumentParseException" -> tags.put("argument_error", ex.getCause().getMessage());
                 case "InvalidSyntaxException" ->
-                        placeholders.put("correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax());
+                        tags.put("correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax());
                 case "InvalidCommandSenderException" ->
-                        placeholders.put("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName());
-                default -> {
+                        tags.put("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName());
+                default -> { //do nothing if no error
                 }
             }
-            for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-                rb = rb.tag(entry.getKey(), entry.getValue());
-            }
-            return Text.fromString(sender, this.messages.string(path), rb.build()).toComponent();
+            return Text.fromString(sender, this.messages.string(path), rb.tags(tags).build()).toComponent();
         };
     }
 }

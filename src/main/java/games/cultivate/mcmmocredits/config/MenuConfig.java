@@ -10,7 +10,7 @@ import java.util.List;
 
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
-public class MenuConfig extends Config {
+public final class MenuConfig extends Config {
     @Comment("Change settings for all menus")
     private AllMenuSettings all = new AllMenuSettings();
     @Comment("Change settings for: /credits menu <messages/settings>")
