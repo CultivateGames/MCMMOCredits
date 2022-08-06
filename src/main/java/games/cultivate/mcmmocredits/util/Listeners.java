@@ -1,10 +1,8 @@
 package games.cultivate.mcmmocredits.util;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
-import games.cultivate.mcmmocredits.config.MessagesConfig;
-import games.cultivate.mcmmocredits.config.SettingsConfig;
+import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.data.Database;
-import games.cultivate.mcmmocredits.data.InputStorage;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -25,15 +23,13 @@ import java.util.UUID;
  * Event Handlers used to manage the database, and input storage.
  */
 public class Listeners implements Listener {
-    private final MessagesConfig messages;
-    private final SettingsConfig settings;
     private final InputStorage storage;
     private final Database database;
+    private final GeneralConfig config;
 
     @Inject
-    public Listeners(final MessagesConfig messages, final SettingsConfig settings, final InputStorage storage, final Database database) {
-        this.messages = messages;
-        this.settings = settings;
+    public Listeners(final GeneralConfig config, final InputStorage storage, final Database database) {
+        this.config = config;
         this.storage = storage;
         this.database = database;
     }
@@ -51,9 +47,9 @@ public class Listeners implements Listener {
             String username = profile.getName();
             if (!this.database.doesPlayerExist(uuid)) {
                 this.database.addPlayer(uuid, username, 0);
-                if (this.settings.bool("addPlayerNotification")) {
+                if (this.config.bool("addPlayerNotification")) {
                     TagResolver resolver = Resolver.builder().player(username).build();
-                    String content = this.messages.string("addPlayerMessage", false);
+                    String content = this.config.string("addPlayerMessage", false);
                     Text.fromString(Bukkit.getConsoleSender(), content, resolver).send();
                 }
             }
@@ -69,8 +65,8 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(final PlayerJoinEvent e) {
-        if (this.settings.bool("sendLoginMessage")) {
-            Text.fromString(e.getPlayer(), this.messages.string("loginMessage")).send();
+        if (this.config.bool("sendLoginMessage")) {
+            Text.fromString(e.getPlayer(), this.config.string("loginMessage")).send();
         }
     }
 
@@ -87,7 +83,7 @@ public class Listeners implements Listener {
             String completion = MiniMessage.miniMessage().serialize(e.message());
             if (completion.equalsIgnoreCase("cancel")) {
                 this.storage.remove(uuid);
-                Text.fromString(player, this.messages.string("cancelPrompt")).send();
+                Text.fromString(player, this.config.string("cancelPrompt")).send();
             }
             this.storage.complete(uuid, completion);
             e.setCancelled(true);

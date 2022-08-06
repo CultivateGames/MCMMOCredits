@@ -2,10 +2,9 @@ package games.cultivate.mcmmocredits.menu;
 
 import broccolai.corn.paper.item.PaperItemBuilder;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.Config;
+import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.config.MessagesConfig;
-import games.cultivate.mcmmocredits.data.InputStorage;
+import games.cultivate.mcmmocredits.util.InputStorage;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import net.kyori.adventure.text.Component;
@@ -24,18 +23,16 @@ import org.spongepowered.configurate.CommentedConfigurationNode;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
-//TODO one constructor
+
 public class ConfigMenu extends Menu {
     private final MenuConfig menu;
-    private final MessagesConfig messages;
+    private final GeneralConfig config;
     private final InputStorage storage;
     private final Player player;
-    private final Config config;
 
     @Inject
-    public ConfigMenu(final MenuConfig menu, final MessagesConfig messages, final Config config, final InputStorage storage, final Player player) {
+    public ConfigMenu(final MenuConfig menu, final GeneralConfig config, final InputStorage storage, final Player player) {
         this.menu = menu;
-        this.messages = messages;
         this.config = config;
         this.storage = storage;
         this.player = player;
@@ -60,7 +57,7 @@ public class ConfigMenu extends Menu {
 
     @Override
     public ChestInterface create() {
-        String type = this.config.getClass().getSimpleName().replace("Config", "").toLowerCase();
+        String type = this.config.getClass().getSimpleName().replace("BaseConfig", "").toLowerCase();
         Component title = Text.fromString(this.player, this.menu.string(type + ".info.title")).toComponent();
         int rows = this.menu.integer(type + ".info.size") / 9;
         List<TransformContext<ChestPane, PlayerViewer>> transforms = new ArrayList<>();
@@ -77,11 +74,11 @@ public class ConfigMenu extends Menu {
         return pane.element(ItemStackElement.of(item, click -> {
             if (click.cause().isLeftClick()) {
                 Resolver.Builder resolver = Resolver.builder().player(this.player).tag("setting", path);
-                Text.fromString(this.player, this.messages.string("menuEditingPrompt"), resolver.build()).send();
+                Text.fromString(this.player, this.config.string("menuEditingPrompt"), resolver.build()).send();
                 this.storage.act(this.player.getUniqueId(), i -> {
                     boolean result = this.config.modify(path, i);
                     String content = result ? "settingChangeSuccessful" : "settingChangeFailure";
-                    Text.fromString(this.player, this.messages.string(content), resolver.tag("change", i).build()).send();
+                    Text.fromString(this.player, this.config.string(content), resolver.tag("change", i).build()).send();
                 });
             }
         }), slot % 9, slot / 9);

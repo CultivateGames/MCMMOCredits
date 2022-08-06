@@ -4,12 +4,10 @@ import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
+import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.config.MessagesConfig;
-import games.cultivate.mcmmocredits.config.SettingsConfig;
 import games.cultivate.mcmmocredits.data.Database;
 import games.cultivate.mcmmocredits.menu.MenuFactory;
-import games.cultivate.mcmmocredits.menu.MenuType;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -23,16 +21,14 @@ import javax.inject.Inject;
  */
 @CommandMethod("credits")
 public final class Credits {
-    private final MessagesConfig messages;
     private final MenuConfig menus;
-    private final SettingsConfig settings;
+    private final GeneralConfig config;
     private final Database database;
     private final MenuFactory factory;
 
     @Inject
-    public Credits(final MessagesConfig messages, final SettingsConfig settings, final MenuConfig menus, final Database database, final MenuFactory factory) {
-        this.messages = messages;
-        this.settings = settings;
+    public Credits(final GeneralConfig config, final MenuConfig menus, final Database database, final MenuFactory factory) {
+        this.config = config;
         this.menus = menus;
         this.database = database;
         this.factory = factory;
@@ -42,7 +38,7 @@ public final class Credits {
     @CommandMethod("")
     @CommandPermission("mcmmocredits.check.self")
     public void checkCredits(final Player player) {
-        Text.fromString(player, this.messages.string("selfBalance")).send();
+        Text.fromString(player, this.config.string("selfBalance")).send();
     }
 
     @CommandDescription("Check someone else's MCMMO Credit balance.")
@@ -52,10 +48,10 @@ public final class Credits {
         this.database.getUUID(username).whenCompleteAsync((i, t) -> {
             if (this.database.doesPlayerExist(i)) {
                 TagResolver tr = Resolver.builder().sender(sender).player(username).build();
-                Text.fromString(sender, this.messages.string("otherBalance"), tr).send();
+                Text.fromString(sender, this.config.string("otherBalance"), tr).send();
                 return;
             }
-            Text.fromString(sender, this.messages.string("playerDoesNotExist")).send();
+            Text.fromString(sender, this.config.string("playerDoesNotExist")).send();
         });
     }
 
@@ -63,18 +59,15 @@ public final class Credits {
     @CommandMethod("reload")
     @CommandPermission("mcmmocredits.admin.reload")
     public void reloadCredits(final CommandSender sender) {
+        this.config.load();
         this.menus.load();
-        this.settings.load();
-        this.messages.load();
-        Text.fromString(sender, this.messages.string("reloadSuccessful")).send();
+        Text.fromString(sender, this.config.string("reloadSuccessful")).send();
     }
 
+    //TODO skeleton method
     @CommandDescription("Open a Menu that can be used to interface with this plugin.")
     @CommandMethod("menu <type>")
     @CommandPermission("mcmmocredits.menu.main")
-    public void openMenu(final Player player, @Argument final MenuType type) {
-        if (type.canOpen(player)) {
-            this.factory.fromType(player, type).open();
-        }
+    public void openMenu(final Player player, @Argument(suggestions = "menus") String type) {
     }
 }

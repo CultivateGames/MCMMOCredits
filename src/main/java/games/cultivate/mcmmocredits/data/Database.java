@@ -3,7 +3,7 @@ package games.cultivate.mcmmocredits.data;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public sealed interface Database permits SQLDatabase {
+public sealed interface Database permits SQLDatabase, JSONDatabase {
 
     void disable();
 
