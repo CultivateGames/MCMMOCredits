@@ -11,37 +11,37 @@ public final class JSONDatabase implements Database {
     }
 
     @Override
-    public void addPlayer(UUID uuid, String username, int credits) {
+    public void addPlayer(final UUID uuid, final String username, final int credits) {
 
     }
 
     @Override
-    public CompletableFuture<UUID> getUUID(String username) {
+    public CompletableFuture<UUID> getUUID(final String username) {
         return null;
     }
 
     @Override
-    public boolean doesPlayerExist(UUID uuid) {
+    public boolean doesPlayerExist(final UUID uuid) {
         return false;
     }
 
     @Override
-    public void setUsername(UUID uuid, String username) {
+    public void setUsername(final UUID uuid, final String username) {
 
     }
 
     @Override
-    public CompletableFuture<String> getUsername(UUID uuid) {
+    public CompletableFuture<String> getUsername(final UUID uuid) {
         return null;
     }
 
     @Override
-    public void setCredits(UUID uuid, int credits) {
+    public void setCredits(final UUID uuid, final int credits) {
 
     }
 
     @Override
-    public int getCredits(UUID uuid) {
+    public int getCredits(final UUID uuid) {
         return 0;
     }
 }

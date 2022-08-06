@@ -11,27 +11,75 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 
-public interface IConfig {
+/**
+ * Interface which represents usable methods for an object that represents a configuration file.
+ */
+public interface Config {
+    /**
+     * Creates the HoconConfigurationLoader used by the configuration.
+     *
+     * @return the Loader to be used.
+     */
     HoconConfigurationLoader createLoader();
 
+    /**
+     * Loads the configuration.
+     */
     void load();
 
+    /**
+     * Saves the configuration using the provided root.
+     *
+     * @param root The configuration root node to apply to our configuration.
+     */
     void save(CommentedConfigurationNode root);
 
+    /**
+     * Saves the configuration using the existing root node.
+     */
     default void save() {
         this.save(this.rootNode());
     }
 
+    /**
+     * Gets the current configuration object.
+     *
+     * @return the current configuration object.
+     */
     BaseConfig config();
 
+    /**
+     * Gets the current root node of the configuration.
+     *
+     * @return the root node of the configuration.
+     */
     CommentedConfigurationNode rootNode();
 
+    /**
+     * Gets the current list of all nodes represented by this configuration object.
+     *
+     * @return list of all nodes represented by this configuration object.
+     */
     List<CommentedConfigurationNode> nodes();
 
+    /**
+     * Transforms a node's path to be a singular string separated by "."
+     * <p>
+     * Example Transformation: messages, general, prefix -> messages.general.prefix
+     *
+     * @param node node that provides the path to be transformed.
+     * @return node path that is joined by "."
+     */
     default String joinedPath(final CommentedConfigurationNode node) {
         return StringUtils.join(node.path().array(), ".");
     }
 
+    /**
+     * Grabs all CommentedConfigurationNodes using the root node generated in the loading process.
+     *
+     * @param parent The configurations root node.
+     * @return list of all configuration nodes represented in the config.
+     */
     default List<CommentedConfigurationNode> nodesFromParent(CommentedConfigurationNode parent) {
         List<CommentedConfigurationNode> nodes = new CopyOnWriteArrayList<>(parent.childrenMap().values());
         while (nodes.stream().anyMatch(ConfigurationNode::isMap)) {
@@ -108,6 +156,15 @@ public interface IConfig {
         return this.value(int.class, path, 0);
     }
 
+    /**
+     * Accesses a configuration's node list to return a value from the node that best matches the provided path.
+     *
+     * @param type type of value to return.
+     * @param path configuration path where the value is retrieved from.
+     * @param def default value to provide if value cannot be found.
+     * @return value found at provided path.
+     * @param <V> value type used to correctly retrieve value.
+     */
     default <V> V value(Class<V> type, String path, V def) {
         for (CommentedConfigurationNode node : this.nodes()) {
             if (this.joinedPath(node).contains(path)) {
@@ -123,7 +180,13 @@ public interface IConfig {
     }
 
     /**
-     * Sets a value to config. Returns true if successful
+     * Modifies an existing value in the configuration. If path does not exist, does nothing.
+     *
+     * @param type Type of the value we are setting in configuration.
+     * @param path path of the node we are trying to modify.
+     * @param value value we are setting to the node.
+     * @return if the modification was successful.
+     * @param <V> type of the value we are setting to configuration.
      */
     default <V> boolean modify(Class<V> type, String path, V value) {
         if (value == null || value.toString().equalsIgnoreCase("cancel")) {

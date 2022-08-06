@@ -34,7 +34,7 @@ public final class Resolver {
         return new Builder();
     }
 
-    public static class Builder {
+    public static final class Builder {
         private final Map<String, Tag> placeholders;
 
         public Builder() {
@@ -46,7 +46,7 @@ public final class Resolver {
             return this;
         }
 
-        public Builder tags(Map<String, String> tags) {
+        public Builder tags(final Map<String, String> tags) {
             tags.forEach((k, v) -> this.placeholders.putIfAbsent(k, Tag.preProcessParsed(v)));
             return this;
         }
