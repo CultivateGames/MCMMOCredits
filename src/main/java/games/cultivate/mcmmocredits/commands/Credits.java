@@ -68,6 +68,6 @@ public final class Credits {
     @CommandDescription("Open a Menu that can be used to interface with this plugin.")
     @CommandMethod("menu <type>")
     @CommandPermission("mcmmocredits.menu.main")
-    public void openMenu(final Player player, @Argument(suggestions = "menus") String type) {
+    public void openMenu(final Player player, final @Argument(suggestions = "menus") String type) {
     }
 }

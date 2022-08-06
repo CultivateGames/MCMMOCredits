@@ -28,6 +28,13 @@ public final class GeneralConfig extends BaseConfig {
         return false;
     }
 
+    /**
+     * Returns string from configuration and applies prefix to the result.
+     *
+     * @param path path where the string resides.
+     * @param withPrefix whether we apply a prefix to the string.
+     * @return String with or without prefix from the configuration.
+     */
     public String string(final String path, final boolean withPrefix) {
         return withPrefix ? super.string("prefix") + super.string(path) : super.string(path);
     }

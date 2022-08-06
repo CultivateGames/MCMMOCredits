@@ -16,8 +16,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import javax.inject.Inject;
-import java.util.UUID;
-import java.util.function.BiConsumer;
 
 /**
  * This class is responsible for handling of the /modifycredits command.
@@ -33,54 +31,34 @@ public final class ModifyCredits {
         this.database = database;
     }
 
-    @CommandDescription("Add MCMMO Credits to a user's balance.")
-    @CommandMethod("add <amount> <username>")
+    @CommandDescription("Modify MCMMO Credits of a user")
+    @CommandMethod("add|set|take <username> <amount>")
     @CommandPermission("mcmmocredits.admin.modify")
-    public void addCredits(final CommandSender sender, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
-        this.database.getUUID(username).whenCompleteAsync(this.modifyCredits(Operation.ADD, sender, username, amount, silent));
-    }
-
-    @CommandDescription("Set a user's MCMMO Credit balance to the specified amount.")
-    @CommandMethod("set <amount> <username>")
-    @CommandPermission("mcmmocredits.admin.modify")
-    public void setCredits(final CommandSender sender, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
-        this.database.getUUID(username).whenCompleteAsync(this.modifyCredits(Operation.SET, sender, username, amount, silent));
-    }
-
-    @CommandDescription("Take MCMMO Credits away from a user's balance")
-    @CommandMethod("take <amount> <username>")
-    @CommandPermission("mcmmocredits.admin.modify")
-    public void takeCredits(final CommandSender sender, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
-        this.database.getUUID(username).whenCompleteAsync(this.modifyCredits(Operation.TAKE, sender, username, amount, silent));
-    }
-
-    private BiConsumer<UUID, Throwable> modifyCredits(final Operation op, final CommandSender sender, final String user, final int amount, final boolean silent) {
-        return (i, t) -> {
+    public void modifyCredits(final CommandSender sender, final @Argument String op, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
+        this.database.getUUID(username).whenComplete((i, t) -> {
             if (!this.database.doesPlayerExist(i)) {
                 Text.fromString(sender, this.config.string("playerDoesNotExist")).send();
                 return;
             }
+            String operation = op.toLowerCase();
             try {
-                switch (op) {
-                    case ADD -> this.database.addCredits(i, amount);
-                    case TAKE -> this.database.takeCredits(i, amount);
-                    case SET -> this.database.setCredits(i, amount);
-                    default -> {}
+                switch (operation) {
+                    case "add" -> this.database.addCredits(i, amount);
+                    case "take" -> this.database.takeCredits(i, amount);
+                    case "set" -> this.database.setCredits(i, amount);
+                    default -> { //do nothing by default.
+                    }
                 }
             } catch (Exception e) {
                 //Exception is from SQL constraint.
                 Text.fromString(sender, this.config.string("notEnoughCredits")).send();
             }
-            TagResolver r = Resolver.fromTransaction(sender, user, amount);
-            String content = this.config.string(op.name().toLowerCase() + "Sender");
-            Text.fromString(sender, content, r).send();
+            TagResolver r = Resolver.fromTransaction(sender, username, amount);
+            Text.fromString(sender, this.config.string(operation + "Sender"), r).send();
             Player player = Bukkit.getPlayer(i);
             if (player != null && !silent && sender != player) {
-                content = this.config.string(op.name().toLowerCase() + "Receiver");
-                Text.fromString(player, content, r).send();
+                Text.fromString(player, this.config.string(operation + "Receiver"), r).send();
             }
-        };
+        });
     }
-
-    private enum Operation {ADD, SET, TAKE}
 }

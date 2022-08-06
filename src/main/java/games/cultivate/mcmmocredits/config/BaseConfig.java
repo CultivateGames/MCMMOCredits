@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BaseConfig implements IConfig {
+public class BaseConfig implements Config {
     private final transient String fileName;
     private final transient Class<? extends BaseConfig> type;
     private transient BaseConfig conf;

@@ -7,25 +7,25 @@ public sealed interface Database permits SQLDatabase, JSONDatabase {
 
     void disable();
 
-    void addPlayer(UUID uuid, String username, int credits);
+    void addPlayer(final UUID uuid, final String username, final int credits);
 
-    CompletableFuture<UUID> getUUID(String username);
+    CompletableFuture<UUID> getUUID(final String username);
 
-    boolean doesPlayerExist(UUID uuid);
+    boolean doesPlayerExist(final UUID uuid);
 
-    void setUsername(UUID uuid, String username);
+    void setUsername(final UUID uuid, final String username);
 
-    CompletableFuture<String> getUsername(UUID uuid);
+    CompletableFuture<String> getUsername(final UUID uuid);
 
-    void setCredits(UUID uuid, int credits);
+    void setCredits(final UUID uuid, final int credits);
 
-    int getCredits(UUID uuid);
+    int getCredits(final UUID uuid);
 
-    default void addCredits(UUID uuid, int credits) {
+    default void addCredits(final UUID uuid, final int credits) {
         this.setCredits(uuid, this.getCredits(uuid) + credits);
     }
 
-    default void takeCredits(UUID uuid, int credits) {
+    default void takeCredits(final UUID uuid, final int credits) {
         this.setCredits(uuid, Math.max(0, this.getCredits(uuid) - credits));
     }
 }

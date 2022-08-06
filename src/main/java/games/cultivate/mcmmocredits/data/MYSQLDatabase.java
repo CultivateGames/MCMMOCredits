@@ -30,7 +30,7 @@ public final class MYSQLDatabase extends SQLDatabase {
         hconfig.addDataSourceProperty("useServerPrepStmts", "true");
         hconfig.addDataSourceProperty("useLocalSessionState", "true");
         hconfig.addDataSourceProperty("cacheResultSetMetadata", "true");
-        hconfig.addDataSourceProperty("cacheServerhconfiguration", "true");
+        hconfig.addDataSourceProperty("cacheServerConfiguration", "true");
         this.hikari = new HikariDataSource(hconfig);
         this.jdbi = Jdbi.create(this.hikari);
         this.jdbi.useHandle(x -> x.execute(SQLStatement.MYSQL_CREATE_TABLE.toString()));

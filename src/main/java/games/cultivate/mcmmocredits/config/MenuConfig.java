@@ -36,7 +36,11 @@ public final class MenuConfig extends BaseConfig {
     }
 
     /**
-     * Returns an ItemStack from the underlying configuration map.
+     * Generates an item from the provided path within this configuration.
+     *
+     * @param path path to derive ItemStack from.
+     * @param player player to deserialize the ItemStack against.
+     * @return parsed ItemStack derived from the configuration.
      */
     public ItemStack item(final String path, final Player player) {
         CommentedConfigurationNode node = this.rootNode().node(NodePath.of(path.split("\\.")));
@@ -50,6 +54,12 @@ public final class MenuConfig extends BaseConfig {
         return new ItemStack(Material.AIR);
     }
 
+    /**
+     * Get inventory slot for an ItemStack from provided path.
+     *
+     * @param path path to derive inventory slot from.
+     * @return inventory slot derived from the path.
+     */
     public int slot(final String path) {
         return this.integer(path + ".slot");
     }
