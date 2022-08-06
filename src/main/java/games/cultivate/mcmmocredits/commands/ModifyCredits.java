@@ -6,7 +6,7 @@ import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.specifier.Range;
-import games.cultivate.mcmmocredits.config.MessagesConfig;
+import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.data.Database;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
@@ -25,11 +25,11 @@ import java.util.function.BiConsumer;
 @CommandMethod("modifycredits")
 public final class ModifyCredits {
     private final Database database;
-    private final MessagesConfig messages;
+    private final GeneralConfig config;
 
     @Inject
-    public ModifyCredits(final MessagesConfig messages, final Database database) {
-        this.messages = messages;
+    public ModifyCredits(final GeneralConfig config, final Database database) {
+        this.config = config;
         this.database = database;
     }
 
@@ -57,7 +57,7 @@ public final class ModifyCredits {
     private BiConsumer<UUID, Throwable> modifyCredits(final Operation op, final CommandSender sender, final String user, final int amount, final boolean silent) {
         return (i, t) -> {
             if (!this.database.doesPlayerExist(i)) {
-                Text.fromString(sender, this.messages.string("playerDoesNotExist")).send();
+                Text.fromString(sender, this.config.string("playerDoesNotExist")).send();
                 return;
             }
             try {
@@ -69,14 +69,14 @@ public final class ModifyCredits {
                 }
             } catch (Exception e) {
                 //Exception is from SQL constraint.
-                Text.fromString(sender, this.messages.string("notEnoughCredits")).send();
+                Text.fromString(sender, this.config.string("notEnoughCredits")).send();
             }
             TagResolver r = Resolver.fromTransaction(sender, user, amount);
-            String content = this.messages.string(op.name().toLowerCase() + "Sender");
+            String content = this.config.string(op.name().toLowerCase() + "Sender");
             Text.fromString(sender, content, r).send();
             Player player = Bukkit.getPlayer(i);
             if (player != null && !silent && sender != player) {
-                content = this.messages.string(op.name().toLowerCase() + "Receiver");
+                content = this.config.string(op.name().toLowerCase() + "Receiver");
                 Text.fromString(player, content, r).send();
             }
         };

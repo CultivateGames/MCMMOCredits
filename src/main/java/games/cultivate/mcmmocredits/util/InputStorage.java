@@ -1,4 +1,4 @@
-package games.cultivate.mcmmocredits.data;
+package games.cultivate.mcmmocredits.util;
 
 import java.util.Map;
 import java.util.UUID;

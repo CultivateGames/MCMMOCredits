@@ -4,9 +4,14 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
+/**
+ * Object that represents a configuration used to customize the plugin's settings and messages.
+ */
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
-public final class MessagesConfig extends Config {
+public final class GeneralConfig extends BaseConfig {
+    @Comment("General plugin settings.")
+    private Settings settings = new Settings();
     @Comment("Sender output for command exceptions.")
     private ExceptionMessages exceptions = new ExceptionMessages();
     @Comment("Output for command execution.Includes command-specific errors.")
@@ -14,8 +19,13 @@ public final class MessagesConfig extends Config {
     @Comment("Output for all other messages.")
     private GeneralMessages general = new GeneralMessages();
 
-    public MessagesConfig() {
-        super(MessagesConfig.class, "messages.conf");
+    private GeneralConfig() {
+        super(GeneralConfig.class, "config.conf");
+    }
+
+    //TODO config setup db
+    public boolean isMYSQL() {
+        return false;
     }
 
     public String string(final String path, final boolean withPrefix) {
@@ -25,6 +35,41 @@ public final class MessagesConfig extends Config {
     @Override
     public String string(final String path) {
         return this.string(path, true);
+    }
+
+    @ConfigSerializable
+    static class Settings {
+        @Comment("Toggles tab completion for Player based arguments.\n" + "Useful if you have other plugins which hide staff.")
+        @Setting("playerTabCompletion")
+        private boolean playerTabCompletion = true;
+        @Comment("Toggles sending a login message to the user.")
+        @Setting("sendLoginMessage")
+        private boolean sendLoginMessage = true;
+        @Comment("Toggles console message when a user\n" + "is added to the MCMMO Credits database")
+        @Setting("addPlayerNotification")
+        private boolean addPlayerNotification = true;
+        @Comment("Enables debug")
+        private boolean debug = false;
+    }
+
+    @ConfigSerializable
+    static class DatabaseSettings {
+        @Comment("Options: sqlite, mysql. Which database type should we use?\n" + "NOTE: There is not native support for changing between DB types.")
+        @Setting("type")
+        private String type = "sqlite";
+        @Comment("Host address of MySQL database.")
+        private String host = "127.0.0.1";
+        @Comment("Port for Host address of MySQL database.")
+        private int port = 3306;
+        @Comment("Name of Database to create.")
+        private String database = "database";
+        @Comment("MySQL Account Username.")
+        private String username = "root";
+        @Comment("MySQL Account Password.")
+        private String password = "passw0rd+";
+        @Comment("UseSSL connection property. Should the connection use SSL?")
+        @Setting("useSSL")
+        private boolean useSSL = true;
     }
 
     @ConfigSerializable

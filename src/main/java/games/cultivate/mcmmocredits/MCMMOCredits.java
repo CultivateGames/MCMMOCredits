@@ -16,9 +16,8 @@ import com.google.inject.Injector;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.ModifyCredits;
 import games.cultivate.mcmmocredits.commands.Redeem;
+import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.config.MessagesConfig;
-import games.cultivate.mcmmocredits.config.SettingsConfig;
 import games.cultivate.mcmmocredits.data.Database;
 import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.placeholders.CreditsExpansion;
@@ -48,8 +47,7 @@ import static java.util.Objects.requireNonNull;
 public final class MCMMOCredits extends JavaPlugin {
     public static final NamespacedKey NAMESPACED_KEY = requireNonNull(NamespacedKey.fromString("mcmmocredits"));
     private Injector injector;
-    private MessagesConfig messages;
-    private SettingsConfig settings;
+    private GeneralConfig config;
 
     /**
      * This handles all startup logic.
@@ -69,17 +67,15 @@ public final class MCMMOCredits extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PaperInterfaceListeners(this, 10L), this);
         Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
         long end = System.nanoTime();
-        if (this.settings.bool("debug")) {
+        if (this.config.bool("debug")) {
             this.getSLF4JLogger().info("Plugin enabled! Startup took: {} s.", (double) (end - start) / 1000000000);
         }
     }
 
     public void loadConfiguration() {
-        this.injector.getInstance(MessagesConfig.class).load();
+        this.injector.getInstance(GeneralConfig.class).load();
         this.injector.getInstance(MenuConfig.class).load();
-        this.injector.getInstance(SettingsConfig.class).load();
-        this.messages = this.injector.getInstance(MessagesConfig.class);
-        this.settings = this.injector.getInstance(SettingsConfig.class);
+        this.config = this.injector.getInstance(GeneralConfig.class);
     }
 
     /**
@@ -89,8 +85,7 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        this.injector.getInstance(SettingsConfig.class).save();
-        this.injector.getInstance(MessagesConfig.class).save();
+        this.injector.getInstance(GeneralConfig.class).save();
         this.injector.getInstance(MenuConfig.class).save();
         this.injector.getInstance(Database.class).disable();
     }
@@ -133,11 +128,13 @@ public final class MCMMOCredits extends JavaPlugin {
         }
 
         manager.parserRegistry().registerSuggestionProvider("user", (c, i) -> {
-            if (this.settings.bool("playerTabCompletion", true)) {
+            if (this.config.bool("playerTabCompletion", true)) {
                 return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
             }
             return List.of();
         });
+        List<String> menus = List.of("messages", "settings", "main", "redeem");
+        manager.parserRegistry().registerSuggestionProvider("menus", (c, i) -> menus);
 
         AnnotationParser<CommandSender> parser = new AnnotationParser<>(manager, CommandSender.class, p -> SimpleCommandMeta.empty());
         parser.parse(this.injector.getInstance(Credits.class));
@@ -159,7 +156,7 @@ public final class MCMMOCredits extends JavaPlugin {
 
     private BiFunction<CommandSender, Exception, Component> buildError(final String path) {
         return (sender, ex) -> {
-            if (this.settings.bool("debug") || ex instanceof CommandExecutionException) {
+            if (this.config.bool("debug") || ex instanceof CommandExecutionException) {
                 ex.printStackTrace();
             }
             Resolver.Builder rb = Resolver.builder().sender(sender);
@@ -173,7 +170,7 @@ public final class MCMMOCredits extends JavaPlugin {
                 default -> { //do nothing if no error
                 }
             }
-            return Text.fromString(sender, this.messages.string(path), rb.tags(tags).build()).toComponent();
+            return Text.fromString(sender, this.config.string(path), rb.tags(tags).build()).toComponent();
         };
     }
 }

@@ -1,16 +1,27 @@
 package games.cultivate.mcmmocredits.config;
 
+import broccolai.corn.paper.item.PaperItemBuilder;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import games.cultivate.mcmmocredits.serializers.ItemSerializer;
+import games.cultivate.mcmmocredits.text.Text;
+import net.kyori.adventure.text.Component;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.spongepowered.configurate.CommentedConfigurationNode;
+import org.spongepowered.configurate.NodePath;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
+import org.spongepowered.configurate.serialize.SerializationException;
 
 import java.util.List;
-
+/**
+ * Object that represents a configuration used to customize the plugin's UI.
+ */
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
-public final class MenuConfig extends Config {
+public final class MenuConfig extends BaseConfig {
     @Comment("Change settings for all menus")
     private AllMenuSettings all = new AllMenuSettings();
     @Comment("Change settings for: /credits menu <messages/settings>")
@@ -20,8 +31,27 @@ public final class MenuConfig extends Config {
     @Comment("Change settings for: /credits menu redeem")
     private RedeemMenu redeem = new RedeemMenu();
 
-    MenuConfig() {
+    private MenuConfig() {
         super(MenuConfig.class, "menus.conf");
+    }
+
+    /**
+     * Returns an ItemStack from the underlying configuration map.
+     */
+    public ItemStack item(final String path, final Player player) {
+        CommentedConfigurationNode node = this.rootNode().node(NodePath.of(path.split("\\.")));
+        try {
+            return PaperItemBuilder.of(ItemSerializer.INSTANCE.deserialize(ItemStack.class, node))
+                    .name(Text.parseComponent(Component.text(node.node("name").getString("")), player))
+                    .loreModifier(i -> i.forEach(x -> Text.parseComponent(x, player))).build();
+        } catch (SerializationException e) {
+            e.printStackTrace();
+        }
+        return new ItemStack(Material.AIR);
+    }
+
+    public int slot(final String path) {
+        return this.integer(path + ".slot");
     }
 
     @ConfigSerializable

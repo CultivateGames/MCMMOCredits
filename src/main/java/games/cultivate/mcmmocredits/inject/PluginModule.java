@@ -5,11 +5,10 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.name.Names;
 import games.cultivate.mcmmocredits.MCMMOCredits;
+import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.config.MessagesConfig;
-import games.cultivate.mcmmocredits.config.SettingsConfig;
 import games.cultivate.mcmmocredits.data.Database;
-import games.cultivate.mcmmocredits.data.InputStorage;
+import games.cultivate.mcmmocredits.util.InputStorage;
 import games.cultivate.mcmmocredits.data.MYSQLDatabase;
 import games.cultivate.mcmmocredits.data.SQLDatabase;
 import games.cultivate.mcmmocredits.data.SQLiteDatabase;
@@ -32,25 +31,24 @@ public final class PluginModule extends AbstractModule {
         this.bind(MCMMOCredits.class).toInstance(this.mcmmoCredits);
         this.bind(JavaPlugin.class).toInstance(this.mcmmoCredits);
         this.bind(Path.class).annotatedWith(Names.named("dir")).toInstance(this.mcmmoCredits.getDataFolder().toPath());
-        this.bind(MessagesConfig.class).asEagerSingleton();
-        this.bind(SettingsConfig.class).asEagerSingleton();
+        this.bind(GeneralConfig.class).asEagerSingleton();
         this.bind(MenuConfig.class).asEagerSingleton();
         this.bind(InputStorage.class).asEagerSingleton();
     }
 
     @Provides
-    public Database provideDatabase(final SettingsConfig settings, final Injector injector) {
+    public Database provideDatabase(final GeneralConfig config, final Injector injector) {
         if (this.database == null) {
-            Class<? extends SQLDatabase> sqlClass = settings.isMYSQL() ? MYSQLDatabase.class : SQLiteDatabase.class;
+            Class<? extends SQLDatabase> sqlClass = config.isMYSQL() ? MYSQLDatabase.class : SQLiteDatabase.class;
             this.database = injector.getInstance(sqlClass);
         }
         return this.database;
     }
 
     @Provides
-    public MenuFactory provideMenuFactory(final MenuConfig menus, final MessagesConfig messages, final SettingsConfig settings, final InputStorage storage, final MCMMOCredits plugin) {
+    public MenuFactory provideMenuFactory(final MenuConfig menus, final GeneralConfig config, final InputStorage storage, final MCMMOCredits plugin) {
         if (this.factory == null) {
-            this.factory = new MenuFactory(menus, messages, settings, storage, plugin);
+            this.factory = new MenuFactory(menus, config, storage, plugin);
         }
         return this.factory;
     }

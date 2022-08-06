@@ -15,9 +15,7 @@ import org.incendo.interfaces.paper.pane.ChestPane;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 
 public final class MainMenu extends Menu {
     private final MenuConfig menu;
@@ -31,13 +29,20 @@ public final class MainMenu extends Menu {
         this.chest = this.create();
     }
 
+    //TODO remove string type param
     public Transform<ChestPane, PlayerViewer> itemTransform() {
-        Set<MenuType> set = EnumSet.allOf(MenuType.class);
-        set.remove(MenuType.MAIN);
+        List<String> menus = List.of("messages", "settings", "redeem");
         return (pane, view) -> {
-            for (MenuType type : set) {
-                if (type.canOpen(this.player)) {
-                    pane = this.createCommandTransform(pane, type);
+            for (String type : menus) {
+                if (this.player.hasPermission("mcmmocredits.menu." + type)) {
+                    String menuPath = "main.items" + type;
+                    int slot = this.menu.slot(menuPath);
+                    pane = pane.element(ItemStackElement.of(this.menu.item(menuPath, this.player), click -> {
+                        if (click.cause().isLeftClick()) {
+                            String command = "credits menu " + type;
+                            Bukkit.getScheduler().runTask(this.plugin, () -> Bukkit.dispatchCommand(this.player, command));
+                        }
+                    }), slot % 9, slot / 9);
                 }
             }
             return pane;
@@ -56,11 +61,12 @@ public final class MainMenu extends Menu {
         return new ChestInterface(rows, title, transforms, List.of(), true, 10, ClickHandler.cancel());
     }
 
-    private ChestPane createCommandTransform(final ChestPane pane, final MenuType menuType) {
-        String menuPath = "main.items" + menuType.name().toLowerCase();
+    //TODO remove String type param
+    private ChestPane createCommandTransform(final ChestPane pane, String type) {
+        String menuPath = "main.items" + type;
         return pane.element(ItemStackElement.of(this.menu.item(menuPath, this.player), click -> {
             if (click.cause().isLeftClick()) {
-                Bukkit.getScheduler().runTask(this.plugin, () -> Bukkit.dispatchCommand(this.player, "credits menu " + menuType));
+                Bukkit.getScheduler().runTask(this.plugin, () -> Bukkit.dispatchCommand(this.player, "credits menu " + type));
             }
         }), this.menu.slot(menuPath) % 9, this.menu.slot(menuPath) / 9);
     }

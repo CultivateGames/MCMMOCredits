@@ -10,7 +10,7 @@ import com.gmail.nossr50.datatypes.player.PlayerProfile;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.util.skills.SkillTools;
-import games.cultivate.mcmmocredits.config.MessagesConfig;
+import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.data.Database;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
@@ -28,12 +28,12 @@ import java.util.UUID;
  */
 @CommandMethod("redeem|rmc|redeemcredits")
 public final class Redeem {
-    private final MessagesConfig messages;
+    private final GeneralConfig config;
     private final Database database;
 
     @Inject
-    public Redeem(final MessagesConfig messages, final Database database) {
-        this.messages = messages;
+    public Redeem(final GeneralConfig config, final Database database) {
+        this.config = config;
         this.database = database;
     }
 
@@ -44,7 +44,7 @@ public final class Redeem {
         TagResolver resolver = Resolver.fromRedemption(player, player, skill, amount);
         Optional<String> opt = this.performTransaction(player.getUniqueId(), skill, amount);
         String content = opt.isEmpty() ? "selfRedeem" : opt.get();
-        Text.fromString(player, this.messages.string(content), resolver).send();
+        Text.fromString(player, this.config.string(content), resolver).send();
     }
 
     @CommandDescription("Redeem MCMMO Credits into a specific skill for someone else")
@@ -54,13 +54,13 @@ public final class Redeem {
         this.database.getUUID(username).whenCompleteAsync((uuid, throwable) -> {
             Optional<String> opt = this.performTransaction(uuid, skill, amount);
             if (opt.isPresent()) {
-                Text.fromString(sender, this.messages.string(opt.get())).send();
+                Text.fromString(sender, this.config.string(opt.get())).send();
             } else {
                 Player player = Bukkit.getPlayer(uuid);
                 TagResolver tr = Resolver.fromRedemption(sender, player, skill, amount);
-                Text.fromString(sender, this.messages.string("otherRedeemSender"), tr).send();
+                Text.fromString(sender, this.config.string("otherRedeemSender"), tr).send();
                 if (!s) {
-                    Text.fromString(player, this.messages.string("otherRedeemReceiver"), tr).send();
+                    Text.fromString(player, this.config.string("otherRedeemReceiver"), tr).send();
                 }
             }
         });
