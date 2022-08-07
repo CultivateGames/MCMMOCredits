@@ -12,7 +12,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 
 /**
- * Interface which represents usable methods for an object that represents a configuration file.
+ * Interface which represents a configuration file.
  */
 public interface Config {
     /**
@@ -161,9 +161,9 @@ public interface Config {
      *
      * @param type type of value to return.
      * @param path configuration path where the value is retrieved from.
-     * @param def default value to provide if value cannot be found.
+     * @param def  default value to provide if value cannot be found.
+     * @param <V>  value type used to correctly retrieve value.
      * @return value found at provided path.
-     * @param <V> value type used to correctly retrieve value.
      */
     default <V> V value(Class<V> type, String path, V def) {
         for (CommentedConfigurationNode node : this.nodes()) {
@@ -182,11 +182,11 @@ public interface Config {
     /**
      * Modifies an existing value in the configuration. If path does not exist, does nothing.
      *
-     * @param type Type of the value we are setting in configuration.
-     * @param path path of the node we are trying to modify.
+     * @param type  Type of the value we are setting in configuration.
+     * @param path  path of the node we are trying to modify.
      * @param value value we are setting to the node.
+     * @param <V>   type of the value we are setting to configuration.
      * @return if the modification was successful.
-     * @param <V> type of the value we are setting to configuration.
      */
     default <V> boolean modify(Class<V> type, String path, V value) {
         if (value == null || value.toString().equalsIgnoreCase("cancel")) {

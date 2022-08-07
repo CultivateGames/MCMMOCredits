@@ -64,10 +64,31 @@ public final class Credits {
         Text.fromString(sender, this.config.string("reloadSuccessful")).send();
     }
 
-    //TODO skeleton method
-    @CommandDescription("Open a Menu that can be used to interface with this plugin.")
-    @CommandMethod("menu <type>")
-    @CommandPermission("mcmmocredits.menu.main")
-    public void openMenu(final Player player, final @Argument(suggestions = "menus") String type) {
+    @CommandDescription("Open the Main Menu")
+    @CommandMethod("menu")
+    @CommandPermission("mcmmocredits.gui.basic")
+    private void openMenu(final Player player) {
+        this.factory.createMainMenu(player).open();
+    }
+
+    @CommandDescription("Open the Edit Messages Menu")
+    @CommandMethod("menu messages")
+    @CommandPermission("mcmmocredits.menu.messages")
+    private void openMessagesMenu(final Player player) {
+        this.factory.createMessagesMenu(player).open();
+    }
+
+    @CommandDescription("Open the Edit Settings Menu")
+    @CommandMethod("menu settings")
+    @CommandPermission("mcmmocredits.menu.settings")
+    private void openSettingsMenu(final Player player) {
+        this.factory.createSettingsMenu(player).open();
+    }
+
+    @CommandDescription("Open the Credit Redemption Menu")
+    @CommandMethod("menu redeem")
+    @CommandPermission("mcmmocredits.menu.redeem")
+    private void openRedeemMenu(final Player player) {
+        this.factory.createRedeemMenu(player).open();
     }
 }
