@@ -5,33 +5,26 @@ import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 /**
- * Object that represents a configuration used to customize the plugin's settings and messages.
+ * Object that represents a specific configuration used to modify the plugin's settings and messages.
  */
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
 public final class GeneralConfig extends BaseConfig {
-    @Comment("General plugin settings.")
     private Settings settings = new Settings();
-    @Comment("Sender output for command exceptions.")
-    private ExceptionMessages exceptions = new ExceptionMessages();
-    @Comment("Output for command execution.Includes command-specific errors.")
-    private CommandMessages commands = new CommandMessages();
-    @Comment("Output for all other messages.")
-    private GeneralMessages general = new GeneralMessages();
+    private Messages messages = new Messages();
 
     private GeneralConfig() {
         super(GeneralConfig.class, "config.conf");
     }
 
-    //TODO config setup db
     public boolean isMYSQL() {
-        return false;
+        return settings.databaseType.equalsIgnoreCase("mysql");
     }
 
     /**
      * Returns string from configuration and applies prefix to the result.
      *
-     * @param path path where the string resides.
+     * @param path       path where the string resides.
      * @param withPrefix whether we apply a prefix to the string.
      * @return String with or without prefix from the configuration.
      */
@@ -45,7 +38,20 @@ public final class GeneralConfig extends BaseConfig {
     }
 
     @ConfigSerializable
+    static class Messages {
+        @Comment("Output for command execution.Includes command-specific errors.")
+        private CommandMessages commands = new CommandMessages();
+        @Comment("Sender output for command exceptions.")
+        private ExceptionMessages exceptions = new ExceptionMessages();
+        @Comment("Output for all other messages.")
+        private GeneralMessages general = new GeneralMessages();
+    }
+
+    @ConfigSerializable
     static class Settings {
+        @Comment("Options: sqlite, mysql. Which database type should we use?\n" + "NOTE: There is not native support for changing between DB types.")
+        @Setting("databaseType")
+        private String databaseType = "sqlite";
         @Comment("Toggles tab completion for Player based arguments.\n" + "Useful if you have other plugins which hide staff.")
         @Setting("playerTabCompletion")
         private boolean playerTabCompletion = true;
@@ -57,13 +63,13 @@ public final class GeneralConfig extends BaseConfig {
         private boolean addPlayerNotification = true;
         @Comment("Enables debug")
         private boolean debug = false;
+        @Comment("Configurable MySQL connection settings")
+        @Setting("mysql")
+        private DatabaseSettings mysql = new DatabaseSettings();
     }
 
     @ConfigSerializable
     static class DatabaseSettings {
-        @Comment("Options: sqlite, mysql. Which database type should we use?\n" + "NOTE: There is not native support for changing between DB types.")
-        @Setting("type")
-        private String type = "sqlite";
         @Comment("Host address of MySQL database.")
         private String host = "127.0.0.1";
         @Comment("Port for Host address of MySQL database.")

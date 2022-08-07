@@ -140,7 +140,6 @@ public final class MCMMOCredits extends JavaPlugin {
         parser.parse(this.injector.getInstance(Credits.class));
         parser.parse(this.injector.getInstance(ModifyCredits.class));
         parser.parse(this.injector.getInstance(Redeem.class));
-        parser.parse(this);
 
         MinecraftExceptionHandler<CommandSender> handler = new MinecraftExceptionHandler<>();
         handler.withHandler(NO_PERMISSION, this.buildError("noPermission"));

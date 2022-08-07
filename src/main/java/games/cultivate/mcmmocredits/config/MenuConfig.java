@@ -16,8 +16,9 @@ import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.serialize.SerializationException;
 
 import java.util.List;
+
 /**
- * Object that represents a configuration used to customize the plugin's UI.
+ * Object that represents a configuration used to modify the plugin's UI.
  */
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
@@ -25,7 +26,7 @@ public final class MenuConfig extends BaseConfig {
     @Comment("Change settings for all menus")
     private AllMenuSettings all = new AllMenuSettings();
     @Comment("Change settings for: /credits menu <messages/settings>")
-    private EditConfigMenus editing = new EditConfigMenus();
+    private EditConfigMenu editing = new EditConfigMenu();
     @Comment("Change settings for: /credits menu")
     private MainMenu main = new MainMenu();
     @Comment("Change settings for: /credits menu redeem")
@@ -38,7 +39,7 @@ public final class MenuConfig extends BaseConfig {
     /**
      * Generates an item from the provided path within this configuration.
      *
-     * @param path path to derive ItemStack from.
+     * @param path   path to derive ItemStack from.
      * @param player player to deserialize the ItemStack against.
      * @return parsed ItemStack derived from the configuration.
      */
@@ -71,11 +72,13 @@ public final class MenuConfig extends BaseConfig {
     }
 
     @ConfigSerializable
-    static class EditConfigMenus {
-        @Comment("Edit Messages Menu configuration")
-        private ConfigMenu messages = new ConfigMenu(Material.WRITABLE_BOOK, "<dark_gray>Edit Messages", 45);
-        @Comment("Edit Settings Menu configuration")
-        private ConfigMenu settings = new ConfigMenu(Material.REDSTONE, "<dark_gray>Edit Settings", 27);
+    static class EditConfigMenu {
+        @Comment("Menu size must be >= 27 to fit all options.")
+        private MenuInfo info = new MenuInfo("<dark_gray>Modify Configuration", 45);
+        @Comment("Item settings for message nodes.")
+        private PartialConfigItem messages = new PartialConfigItem(Material.WRITABLE_BOOK);
+        @Comment("Item settings for setting nodes.")
+        private PartialConfigItem settings = new PartialConfigItem(Material.REDSTONE);
     }
 
     @ConfigSerializable
@@ -102,7 +105,7 @@ public final class MenuConfig extends BaseConfig {
 
     @ConfigSerializable
     static class RedeemMenu {
-        @Comment("Redeem Menu Size must be >=18 or larger to fit all skills.")
+        @Comment("Menu Size must be >=18 or larger to fit all options.")
         private MenuInfo info = new MenuInfo("<dark_gray>Redeem Your Credits...", 36);
         private RedeemItems items = new RedeemItems();
     }

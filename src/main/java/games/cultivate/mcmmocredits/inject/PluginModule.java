@@ -46,9 +46,9 @@ public final class PluginModule extends AbstractModule {
     }
 
     @Provides
-    public MenuFactory provideMenuFactory(final MenuConfig menus, final GeneralConfig config, final InputStorage storage, final MCMMOCredits plugin) {
+    public MenuFactory provideMenuFactory(final MenuConfig menus, final GeneralConfig config, final InputStorage storage) {
         if (this.factory == null) {
-            this.factory = new MenuFactory(menus, config, storage, plugin);
+            this.factory = new MenuFactory(menus, config, storage);
         }
         return this.factory;
     }

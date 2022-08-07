@@ -14,7 +14,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Object which represents all configuration files.
+ */
 public class BaseConfig implements Config {
+    //transience added to avoid serialization by Configurate.
     private final transient String fileName;
     private final transient Class<? extends BaseConfig> type;
     private transient BaseConfig conf;
