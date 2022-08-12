@@ -17,13 +17,11 @@ import org.spongepowered.configurate.CommentedConfigurationNode;
 public final class ConfigMenu extends BaseMenu {
     private final InputStorage storage;
     private final GeneralConfig config;
-    private final String type;
 
-    ConfigMenu(final MenuConfig menu, final Player player, final GeneralConfig config, final InputStorage storage, final String type) {
+    ConfigMenu(final MenuConfig menu, final Player player, final GeneralConfig config, final InputStorage storage) {
         super(menu, player, "editing");
         this.config = config;
         this.storage = storage;
-        this.type = type;
     }
 
     @Override
@@ -32,17 +30,17 @@ public final class ConfigMenu extends BaseMenu {
             int slot = 1;
             for (CommentedConfigurationNode node : this.config.nodes()) {
                 String path = this.config.joinedPath(node);
-                if (!path.contains("mysql") && !path.contains("item") && path.startsWith(this.type)) {
-                    pane = this.createConfigTransform(pane, path, slot);
+                if (!path.contains("mysql") && !path.contains("item")) {
+                    pane = this.createConfigTransform(pane, path, path.substring(0, path.indexOf('.')), slot);
+                    slot++;
                 }
-                slot++;
             }
             return pane;
         }));
     }
 
-    private ChestPane createConfigTransform(final ChestPane pane, final String path, final int amount) {
-        ItemStack item = this.itemFromPath(path).amount(amount).build();
+    private ChestPane createConfigTransform(final ChestPane pane, final String path, final String type, final int amount) {
+        ItemStack item = this.itemFromPath(path, type).amount(amount).build();
         int slot = item.getAmount() - 1;
         return pane.element(ItemStackElement.of(item, click -> {
             if (click.cause().isLeftClick()) {
@@ -58,8 +56,8 @@ public final class ConfigMenu extends BaseMenu {
         }), slot % 9, slot / 9);
     }
 
-    private PaperItemBuilder itemFromPath(final String path) {
-        return PaperItemBuilder.of(this.menu.item(path, this.player))
+    private PaperItemBuilder itemFromPath(final String path, final String type) {
+        return PaperItemBuilder.of(this.menu.item("editing." + type, this.player))
                 .name(Component.text(path.substring(path.lastIndexOf('.') + 1)));
     }
 }

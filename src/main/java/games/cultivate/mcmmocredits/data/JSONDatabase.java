@@ -36,8 +36,8 @@ public final class JSONDatabase implements Database {
     }
 
     @Override
-    public void setCredits(final UUID uuid, final int credits) {
-
+    public boolean setCredits(final UUID uuid, final int credits) {
+        return false;
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import org.bukkit.Bukkit;
 import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.statement.StatementException;
 
 import javax.inject.Inject;
 import java.util.UUID;
@@ -64,18 +65,18 @@ public sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLit
     }
 
     @Override
-    public void setCredits(final UUID uuid, final int credits) {
-        this.updateSync(SET_CREDITS, credits, uuid.toString());
+    public boolean setCredits(final UUID uuid, final int credits) {
+        return this.updateSync(SET_CREDITS, credits, uuid.toString());
     }
 
     @Override
-    public void addCredits(final UUID uuid, final int credits) {
-        this.updateSync(ADD_CREDITS, credits, uuid.toString());
+    public boolean addCredits(final UUID uuid, final int credits) {
+        return this.updateSync(ADD_CREDITS, credits, uuid.toString());
     }
 
     @Override
-    public void takeCredits(final UUID uuid, final int credits) {
-        this.updateSync(TAKE_CREDITS, credits, uuid.toString());
+    public boolean takeCredits(final UUID uuid, final int credits) {
+        return this.updateSync(TAKE_CREDITS, credits, uuid.toString());
     }
 
     @Override
@@ -89,8 +90,12 @@ public sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLit
     }
 
     //Credit Updates are done synchronously so that information is current.
-    private void updateSync(final SQLStatement statement, final Object... args) {
-        Bukkit.getScheduler().runTask(this.plugin, () -> this.jdbi.useHandle(x -> x.execute(statement.toString(), args)));
+    private boolean updateSync(final SQLStatement statement, final Object... args) {
+        try {
+            return this.jdbi.withHandle(x -> x.execute(statement.toString(), args) > 0);
+        } catch (StatementException e) {
+            return false;
+        }
     }
 
     private <T> T query(final Class<T> clazz, final SQLStatement statement, final Object... args) {

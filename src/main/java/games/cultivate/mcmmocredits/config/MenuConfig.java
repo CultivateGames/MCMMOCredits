@@ -32,7 +32,7 @@ public final class MenuConfig extends BaseConfig {
     @Comment("Change settings for: /credits menu redeem")
     private RedeemMenu redeem = new RedeemMenu();
 
-    private MenuConfig() {
+    MenuConfig() {
         super(MenuConfig.class, "menus.conf");
     }
 
@@ -48,7 +48,7 @@ public final class MenuConfig extends BaseConfig {
         try {
             return PaperItemBuilder.of(ItemSerializer.INSTANCE.deserialize(ItemStack.class, node))
                     .name(Text.parseComponent(Component.text(node.node("name").getString("")), player))
-                    .loreModifier(i -> i.forEach(x -> Text.parseComponent(x, player))).build();
+                    .loreModifier(i -> i.replaceAll(x -> Text.parseComponent(x, player))).build();
         } catch (SerializationException e) {
             e.printStackTrace();
         }
@@ -142,7 +142,7 @@ public final class MenuConfig extends BaseConfig {
     @ConfigSerializable
     record ConfigItem(Material material, String name, List<String> lore, int amount, int slot, boolean glow) {
         ConfigItem(final Material material, final PrimarySkillType skill, final int slot) {
-            this(material, "<yellow> " + WordUtils.capitalizeFully(skill.name()), List.of("<yellow><player>, click here to redeem!"), 1, slot, false);
+            this(material, "<yellow>" + WordUtils.capitalizeFully(skill.name()), List.of("<yellow><player>, click here to redeem!"), 1, slot, false);
         }
 
         ConfigItem(final Material material, final String name, final String lore, final int slot) {

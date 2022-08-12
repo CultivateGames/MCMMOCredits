@@ -55,13 +55,13 @@ public final class Redeem {
             Optional<String> opt = this.performTransaction(uuid, skill, amount);
             if (opt.isPresent()) {
                 Text.fromString(sender, this.config.string(opt.get())).send();
-            } else {
-                Player player = Bukkit.getPlayer(uuid);
-                TagResolver tr = Resolver.fromRedemption(sender, player, skill, amount);
-                Text.fromString(sender, this.config.string("otherRedeemSender"), tr).send();
-                if (!s) {
-                    Text.fromString(player, this.config.string("otherRedeemReceiver"), tr).send();
-                }
+                return;
+            }
+            Player player = Bukkit.getPlayer(uuid);
+            TagResolver tr = Resolver.fromRedemption(sender, player, skill, amount);
+            Text.fromString(sender, this.config.string("otherRedeemSender"), tr).send();
+            if (!s) {
+                Text.fromString(player, this.config.string("otherRedeemReceiver"), tr).send();
             }
         });
     }
@@ -72,7 +72,7 @@ public final class Redeem {
      * @param uuid   UUID of the target for the credit redemption.
      * @param skill  PrimarySkillType that is being modified.
      * @param amount amount of credits to take/levels to add to the target.
-     * @return Failure reason via associated StringKey, empty Optional if transaction was successful.
+     * @return Failure reason via associated Config path, empty Optional if transaction was successful.
      */
     public Optional<String> performTransaction(final UUID uuid, final PrimarySkillType skill, final int amount) {
         if (SkillTools.isChildSkill(skill)) {

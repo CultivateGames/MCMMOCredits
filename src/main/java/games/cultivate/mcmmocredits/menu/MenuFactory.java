@@ -21,25 +21,19 @@ public final class MenuFactory {
 
     public MainMenu createMainMenu(final Player player) {
         MainMenu menu = new MainMenu(this.menus, player);
-        menu.create();
+        menu.load();
         return menu;
     }
 
-    public ConfigMenu createMessagesMenu(final Player player) {
-        ConfigMenu messages = new ConfigMenu(this.menus, player, this.config, this.storage, "messages");
-        messages.create();
-        return messages;
-    }
-
-    public ConfigMenu createSettingsMenu(final Player player) {
-        ConfigMenu settings = new ConfigMenu(this.menus, player, this.config, this.storage, "settings");
-        settings.create();
-        return settings;
+    public ConfigMenu createConfigMenu(final Player player) {
+        ConfigMenu configMenu = new ConfigMenu(this.menus, player, this.config, this.storage);
+        configMenu.load();
+        return configMenu;
     }
 
     public RedeemMenu createRedeemMenu(final Player player) {
         RedeemMenu redeem = new RedeemMenu(this.menus, player, this.config, this.storage);
-        redeem.create();
+        redeem.load();
         return redeem;
     }
 }

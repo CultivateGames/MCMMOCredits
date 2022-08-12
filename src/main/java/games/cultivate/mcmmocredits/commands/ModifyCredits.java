@@ -32,33 +32,31 @@ public final class ModifyCredits {
     }
 
     @CommandDescription("Modify MCMMO Credits of a user")
-    @CommandMethod("add|set|take <username> <amount>")
+    @CommandMethod("<operation> <username> <amount>")
     @CommandPermission("mcmmocredits.admin.modify")
-    public void modifyCredits(final CommandSender sender, final @Argument String op, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
+    public void modifyCredits(final CommandSender sender, final @Argument(suggestions = "ops") String operation, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
         this.database.getUUID(username).whenComplete((i, t) -> {
             if (!this.database.doesPlayerExist(i)) {
                 Text.fromString(sender, this.config.string("playerDoesNotExist")).send();
                 return;
             }
-            String operation = op.toLowerCase();
-            try {
-                switch (operation) {
-                    case "add" -> this.database.addCredits(i, amount);
-                    case "take" -> this.database.takeCredits(i, amount);
-                    case "set" -> this.database.setCredits(i, amount);
-                    default -> { //do nothing by default.
-                    }
+            boolean transactionSuccessful = switch (operation) {
+                case "add" -> this.database.addCredits(i, amount);
+                case "take" -> this.database.takeCredits(i, amount);
+                case "set" -> this.database.setCredits(i, amount);
+                default -> false;
+            };
+            if (transactionSuccessful) {
+                TagResolver r = Resolver.fromTransaction(sender, username, amount);
+                Text.fromString(sender, this.config.string(operation + "Sender"), r).send();
+                Player player = Bukkit.getPlayer(i);
+                if (player != null && !silent && sender != player) {
+                    Text.fromString(player, this.config.string(operation + "Receiver"), r).send();
                 }
-            } catch (Exception e) {
-                //Exception is from SQL constraint.
-                Text.fromString(sender, this.config.string("notEnoughCredits")).send();
+                return;
             }
-            TagResolver r = Resolver.fromTransaction(sender, username, amount);
-            Text.fromString(sender, this.config.string(operation + "Sender"), r).send();
-            Player player = Bukkit.getPlayer(i);
-            if (player != null && !silent && sender != player) {
-                Text.fromString(player, this.config.string(operation + "Receiver"), r).send();
-            }
+            //Transaction failed due to exception. The user did not have enough credits (SQL constraint of < 0)
+            Text.fromString(sender, this.config.string("notEnoughCredits")).send();
         });
     }
 }

@@ -17,15 +17,15 @@ public sealed interface Database permits SQLDatabase, JSONDatabase {
 
     CompletableFuture<String> getUsername(final UUID uuid);
 
-    void setCredits(final UUID uuid, final int credits);
+    boolean setCredits(final UUID uuid, final int credits);
 
     int getCredits(final UUID uuid);
 
-    default void addCredits(final UUID uuid, final int credits) {
-        this.setCredits(uuid, this.getCredits(uuid) + credits);
+    default boolean addCredits(final UUID uuid, final int credits) {
+        return this.setCredits(uuid, this.getCredits(uuid) + credits);
     }
 
-    default void takeCredits(final UUID uuid, final int credits) {
-        this.setCredits(uuid, Math.max(0, this.getCredits(uuid) - credits));
+    default boolean takeCredits(final UUID uuid, final int credits) {
+       return this.setCredits(uuid, Math.max(0, this.getCredits(uuid) - credits));
     }
 }

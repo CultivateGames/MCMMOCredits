@@ -133,8 +133,7 @@ public final class MCMMOCredits extends JavaPlugin {
             }
             return List.of();
         });
-        List<String> menus = List.of("messages", "settings", "main", "redeem");
-        manager.parserRegistry().registerSuggestionProvider("menus", (c, i) -> menus);
+        manager.parserRegistry().registerSuggestionProvider("ops", (c, i) -> List.of("add", "set", "take"));
 
         AnnotationParser<CommandSender> parser = new AnnotationParser<>(manager, CommandSender.class, p -> SimpleCommandMeta.empty());
         parser.parse(this.injector.getInstance(Credits.class));

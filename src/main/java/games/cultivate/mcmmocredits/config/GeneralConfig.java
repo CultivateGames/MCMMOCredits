@@ -13,7 +13,7 @@ public final class GeneralConfig extends BaseConfig {
     private Settings settings = new Settings();
     private Messages messages = new Messages();
 
-    private GeneralConfig() {
+   GeneralConfig() {
         super(GeneralConfig.class, "config.conf");
     }
 
@@ -74,7 +74,7 @@ public final class GeneralConfig extends BaseConfig {
         private String host = "127.0.0.1";
         @Comment("Port for Host address of MySQL database.")
         private int port = 3306;
-        @Comment("Name of Database to create.")
+        @Comment("Name of Database to load.")
         private String database = "database";
         @Comment("MySQL Account Username.")
         private String username = "root";
@@ -162,7 +162,7 @@ public final class GeneralConfig extends BaseConfig {
         //Placeholders: <player>, <credits>, <skill>, <cap>, PAPI
         @Comment("Sender prompt for /credits menu redeem prompt.")
         @Setting("menuRedeemPrompt")
-        private String menuRedeemPrompt = "<gray>How many credits would you like to redeem into <green><skill>? You have <credits> Credits available.";
+        private String menuRedeemPrompt = "<gray>How many credits would you like to redeem into <green><skill>? <gray>You have <green><credits> Credits available.";
         //Placeholders: <player>, <credits>, <setting>, <current_value>, PAPI
         @Comment("Sender prompt for /credits menu settings/messages.")
         @Setting("menuEditingPrompt")
