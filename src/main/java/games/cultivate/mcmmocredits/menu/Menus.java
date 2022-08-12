@@ -7,7 +7,7 @@ public interface Menus {
 
     default void open() {
         if (this.chest() == null) {
-            this.create();
+            this.load();
         }
         this.chest().open(this.viewer());
     }
@@ -16,7 +16,7 @@ public interface Menus {
         this.viewer().close();
     }
 
-    void create();
+    void load();
 
     ChestInterface chest();
 

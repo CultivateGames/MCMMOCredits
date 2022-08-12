@@ -41,7 +41,7 @@ public abstract class BaseMenu implements Menus {
     @Override
     public ChestInterface chest() {
         if (this.chest == null) {
-            this.create();
+            this.load();
         }
         return this.chest;
     }
@@ -78,7 +78,7 @@ public abstract class BaseMenu implements Menus {
     }
 
     @Override
-    public void create() {
+    public void load() {
         this.applySpecialItems();
         this.applyFillItems();
         this.chest = new ChestInterface(this.rows, this.title, this.transformations, List.of(), true, 10, ClickHandler.cancel());

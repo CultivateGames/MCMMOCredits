@@ -65,24 +65,17 @@ public final class Credits {
     }
 
     @CommandDescription("Open the Main Menu")
-    @CommandMethod("menu")
-    @CommandPermission("mcmmocredits.gui.basic")
+    @CommandMethod("menu main")
+    @CommandPermission("mcmmocredits.menu.main")
     public void openMenu(final Player player) {
         this.factory.createMainMenu(player).open();
     }
 
     @CommandDescription("Open the Edit Messages Menu")
-    @CommandMethod("menu messages")
-    @CommandPermission("mcmmocredits.menu.messages")
-    public void openMessagesMenu(final Player player) {
-        this.factory.createMessagesMenu(player).open();
-    }
-
-    @CommandDescription("Open the Edit Settings Menu")
-    @CommandMethod("menu settings")
-    @CommandPermission("mcmmocredits.menu.settings")
-    public void openSettingsMenu(final Player player) {
-        this.factory.createSettingsMenu(player).open();
+    @CommandMethod("menu config")
+    @CommandPermission("mcmmocredits.menu.config")
+    public void openConfigMenu(final Player player) {
+        this.factory.createConfigMenu(player).open();
     }
 
     @CommandDescription("Open the Credit Redemption Menu")
