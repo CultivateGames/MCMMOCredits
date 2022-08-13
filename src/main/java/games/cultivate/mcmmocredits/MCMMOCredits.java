@@ -26,7 +26,6 @@ import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.util.Listeners;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
@@ -39,13 +38,11 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 import static cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType.*;
-import static java.util.Objects.requireNonNull;
 
 /**
  * This class is responsible for startup/shutdown logic, and command loading.
  */
 public final class MCMMOCredits extends JavaPlugin {
-    public static final NamespacedKey NAMESPACED_KEY = requireNonNull(NamespacedKey.fromString("mcmmocredits"));
     private Injector injector;
     private GeneralConfig config;
 
