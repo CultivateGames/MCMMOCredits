@@ -40,7 +40,8 @@ public final class ModifyCredits {
                 Text.fromString(sender, this.config.string("playerDoesNotExist")).send();
                 return;
             }
-            boolean transactionSuccessful = switch (operation) {
+            String op = operation.toLowerCase();
+            boolean transactionSuccessful = switch (op) {
                 case "add" -> this.database.addCredits(i, amount);
                 case "take" -> this.database.takeCredits(i, amount);
                 case "set" -> this.database.setCredits(i, amount);
@@ -48,10 +49,10 @@ public final class ModifyCredits {
             };
             if (transactionSuccessful) {
                 TagResolver r = Resolver.fromTransaction(sender, username, amount);
-                Text.fromString(sender, this.config.string(operation + "Sender"), r).send();
+                Text.fromString(sender, this.config.string(op + "Sender"), r).send();
                 Player player = Bukkit.getPlayer(i);
                 if (player != null && !silent && sender != player) {
-                    Text.fromString(player, this.config.string(operation + "Receiver"), r).send();
+                    Text.fromString(player, this.config.string(op + "Receiver"), r).send();
                 }
                 return;
             }

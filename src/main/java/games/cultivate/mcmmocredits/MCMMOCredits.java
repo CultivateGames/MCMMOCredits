@@ -58,8 +58,9 @@ public final class MCMMOCredits extends JavaPlugin {
     public void onEnable() {
         long start = System.nanoTime();
         this.injector = Guice.createInjector(new PluginModule(this));
-        this.checkForDependencies();
+        this.config = this.injector.getInstance(GeneralConfig.class);
         this.loadConfiguration();
+        this.checkForDependencies();
         this.loadCommands();
         Bukkit.getPluginManager().registerEvents(new PaperInterfaceListeners(this, 10L), this);
         Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
@@ -72,7 +73,6 @@ public final class MCMMOCredits extends JavaPlugin {
     public void loadConfiguration() {
         this.injector.getInstance(GeneralConfig.class).load();
         this.injector.getInstance(MenuConfig.class).load();
-        this.config = this.injector.getInstance(GeneralConfig.class);
     }
 
     /**
