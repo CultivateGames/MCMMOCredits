@@ -112,12 +112,12 @@ public final class JSONDatabase implements Database {
     }
 
     @Override
-    public boolean addCredits(UUID uuid, int credits) {
+    public boolean addCredits(final UUID uuid, final int credits) {
         return this.setCredits(uuid, this.getCredits(uuid) + credits);
     }
 
     @Override
-    public boolean takeCredits(UUID uuid, int credits) {
+    public boolean takeCredits(final UUID uuid, final int credits) {
         return this.setCredits(uuid, Math.max(0, this.getCredits(uuid) - credits));
     }
 
