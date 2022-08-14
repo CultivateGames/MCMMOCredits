@@ -59,7 +59,7 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Update username if necessary and send login message if it is enabled.
+     * Send login message to user if it is enabled.
      *
      * @param e Instance of the PlayerJoinEvent
      */
@@ -71,7 +71,7 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Capture player's chat if the user is part of the Chat Input map.
+     * Capture player's chat if the user is part of InputStorage.
      *
      * @param e Instance of the AsyncChatEvent.
      */

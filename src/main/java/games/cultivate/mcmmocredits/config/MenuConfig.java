@@ -96,11 +96,9 @@ public final class MenuConfig extends BaseConfig {
         @Comment("Change settings for menu navigation item. This will apply to all menus.")
         private ConfigItem navigation = new ConfigItem(Material.COMPASS, "<red>Previous Menu", "<gray>Left Click to go back!", 26);
         @Comment("Change settings for in-game message editor shortcut.")
-        private ConfigItem messages = new ConfigItem(Material.DIAMOND, "<#FF253C>Edit Messages", "<gray>Left Click to edit messages!", 11);
+        private ConfigItem config = new ConfigItem(Material.DIAMOND, "<#FF253C>Edit Config", "<gray>Left Click to edit config!", 11);
         @Comment("Change settings for in-game MCMMO Credit redemption shortcut.")
-        private ConfigItem redeem = new ConfigItem(Material.EMERALD, "<green>Redeem MCMMO Credits!", "<gray>Left Click to redeem MCMMO Credits!", 13);
-        @Comment("Change settings for in-game settings editor shortcut.")
-        private ConfigItem settings = new ConfigItem(Material.IRON_INGOT, "<#FF253C>Edit Settings", "<gray>Left Click to edit settings!", 15);
+        private ConfigItem redeem = new ConfigItem(Material.EMERALD, "<green>Redeem MCMMO Credits!", "<gray>Left Click to redeem MCMMO Credits!", 15);
     }
 
     @ConfigSerializable

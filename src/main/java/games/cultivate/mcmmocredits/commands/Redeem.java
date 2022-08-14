@@ -48,10 +48,19 @@ public final class Redeem {
     }
 
     @CommandDescription("Redeem MCMMO Credits into a specific skill for someone else")
-    @CommandMethod("<skill> <amount> <username>")
+    @CommandMethod("<skill> <amount> [username]")
     @CommandPermission("mcmmocredits.redeem.other")
     public void adminRedeem(final CommandSender sender, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean s) {
-        this.database.getUUID(username).whenCompleteAsync((uuid, throwable) -> {
+        String userArg;
+        if (username != null) {
+            userArg = username;
+        } else if (sender instanceof Player p) {
+            userArg = p.getName();
+        } else {
+            Text.fromString(sender, this.config.string("playerDoesNotExist")).send();
+            return;
+        }
+        this.database.getUUID(userArg).whenCompleteAsync((uuid, throwable) -> {
             Optional<String> opt = this.performTransaction(uuid, skill, amount);
             if (opt.isPresent()) {
                 Text.fromString(sender, this.config.string(opt.get())).send();
@@ -89,7 +98,9 @@ public final class Redeem {
             if (profile.getSkillLevel(skill) + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill)) {
                 return Optional.of("skillCap");
             }
+            //TODO: force update on mcmmo side.
             profile.addLevels(skill, amount);
+            mcMMO.getDatabaseManager().saveUser(profile);
             this.database.takeCredits(uuid, amount);
             return Optional.empty();
         }
