@@ -8,22 +8,25 @@ import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.data.Database;
-import games.cultivate.mcmmocredits.util.InputStorage;
+import games.cultivate.mcmmocredits.data.JSONDatabase;
 import games.cultivate.mcmmocredits.data.MYSQLDatabase;
-import games.cultivate.mcmmocredits.data.SQLDatabase;
 import games.cultivate.mcmmocredits.data.SQLiteDatabase;
 import games.cultivate.mcmmocredits.menu.MenuFactory;
+import games.cultivate.mcmmocredits.util.InputStorage;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 public final class PluginModule extends AbstractModule {
     private final MCMMOCredits mcmmoCredits;
     private Database database;
     private MenuFactory factory;
+    private final Map<String, Class<? extends Database>> map;
 
     public PluginModule(final MCMMOCredits mcmmoCredits) {
         this.mcmmoCredits = mcmmoCredits;
+        this.map = Map.of("JSON", JSONDatabase.class, "MYSQL", MYSQLDatabase.class, "SQLITE", SQLiteDatabase.class);
     }
 
     @Override
@@ -39,8 +42,9 @@ public final class PluginModule extends AbstractModule {
     @Provides
     public Database provideDatabase(final GeneralConfig config, final Injector injector) {
         if (this.database == null) {
-            Class<? extends SQLDatabase> sqlClass = config.isMYSQL() ? MYSQLDatabase.class : SQLiteDatabase.class;
-            this.database = injector.getInstance(sqlClass);
+            //Load the config here to make sure db type is accessible.
+            config.load();
+            this.database = injector.getInstance(this.map.get(config.string("databaseType", false).toUpperCase()));
         }
         return this.database;
     }

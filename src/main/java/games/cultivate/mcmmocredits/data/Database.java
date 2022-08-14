@@ -21,11 +21,7 @@ public sealed interface Database permits SQLDatabase, JSONDatabase {
 
     int getCredits(final UUID uuid);
 
-    default boolean addCredits(final UUID uuid, final int credits) {
-        return this.setCredits(uuid, this.getCredits(uuid) + credits);
-    }
+    boolean addCredits(final UUID uuid, final int credits);
 
-    default boolean takeCredits(final UUID uuid, final int credits) {
-       return this.setCredits(uuid, Math.max(0, this.getCredits(uuid) - credits));
-    }
+    boolean takeCredits(final UUID  uuid, final int credits);
 }

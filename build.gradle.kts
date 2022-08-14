@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.1.1"
+version = "0.1.2"
 description = "MCMMOCredits"
 
 plugins {
@@ -35,13 +35,17 @@ dependencies {
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
         exclude(module = "paper-api")
     }
-    implementation("org.jdbi:jdbi3-core:3.31.0")
-    implementation("org.jdbi:jdbi3-sqlite:3.31.0")
+    implementation("org.jdbi:jdbi3-core:3.32.0")
+    implementation("org.jdbi:jdbi3-sqlite:3.32.0")
 
-    compileOnly("me.clip:placeholderapi:2.11.1")
-    compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.214") {
+    compileOnly("me.clip:placeholderapi:2.11.2") {
+        exclude(group = "net.kyori")
+    }
+
+    compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.217") {
         exclude("com.sk89q.worldguard")
         exclude("com.sk89q.worldedit")
+        exclude(group = "net.kyori")
     }
 }
 

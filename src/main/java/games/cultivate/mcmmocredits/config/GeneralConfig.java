@@ -17,8 +17,8 @@ public final class GeneralConfig extends BaseConfig {
         super(GeneralConfig.class, "config.conf");
     }
 
-    public boolean isMYSQL() {
-        return settings.databaseType.equalsIgnoreCase("mysql");
+    public String databaseType() {
+        return settings.databaseType;
     }
 
     /**
@@ -49,7 +49,7 @@ public final class GeneralConfig extends BaseConfig {
 
     @ConfigSerializable
     static class Settings {
-        @Comment("Options: sqlite, mysql. Which database type should we use?\n" + "NOTE: There is not native support for changing between DB types.")
+        @Comment("Options: sqlite, mysql, json.\n" + "NOTE: Changing DB type is not supported. JSON is included as a last resort.\n" + "JSON will slow as user size increases")
         @Setting("databaseType")
         private String databaseType = "sqlite";
         @Comment("Toggles tab completion for Player based arguments.\n" + "Useful if you have other plugins which hide staff.")

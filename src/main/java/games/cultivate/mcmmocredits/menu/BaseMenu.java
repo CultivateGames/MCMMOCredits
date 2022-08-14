@@ -15,6 +15,7 @@ import org.incendo.interfaces.paper.type.ChestInterface;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public abstract class BaseMenu implements Menus {
     protected final List<TransformContext<ChestPane, PlayerViewer>> transformations;
@@ -66,7 +67,7 @@ public abstract class BaseMenu implements Menus {
         if (this.menu.bool("all.fill")) {
             ItemStackElement<ChestPane> filler = ItemStackElement.of(this.menu.item("main.items.fill", this.player));
             this.transformations.add(TransformContext.of(1, (pane, view) -> {
-                for (var ele : pane.chestElements().entrySet()) {
+                for (Map.Entry<Vector2, ItemStackElement<ChestPane>> ele : pane.chestElements().entrySet()) {
                     if (ele.getValue().equals(ItemStackElement.empty())) {
                         Vector2 vector = ele.getKey();
                         pane = pane.element(filler, vector.x(), vector.y());
