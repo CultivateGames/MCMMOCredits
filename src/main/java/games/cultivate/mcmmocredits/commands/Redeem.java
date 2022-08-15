@@ -9,6 +9,7 @@ import cloud.commandframework.annotations.specifier.Range;
 import com.gmail.nossr50.datatypes.player.PlayerProfile;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.mcMMO;
+import com.gmail.nossr50.util.player.UserManager;
 import com.gmail.nossr50.util.skills.SkillTools;
 import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.data.Database;
@@ -90,17 +91,18 @@ public final class Redeem {
         if (!this.database.doesPlayerExist(uuid)) {
             return Optional.of("playerDoesNotExist");
         }
-        PlayerProfile profile = mcMMO.getDatabaseManager().loadPlayerProfile(uuid);
+        Player player = Bukkit.getPlayer(uuid);
+        PlayerProfile profile = player != null ? UserManager.getPlayer(player).getProfile() : mcMMO.getDatabaseManager().loadPlayerProfile(uuid);
         if (profile.isLoaded()) {
             if (this.database.getCredits(uuid) < amount) {
                 return Optional.of("notEnoughCredits");
             }
-            if (profile.getSkillLevel(skill) + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill)) {
+            int currentLevel = profile.getSkillLevel(skill);
+            if (currentLevel + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill)) {
                 return Optional.of("skillCap");
             }
-            //TODO: force update on mcmmo side.
-            profile.addLevels(skill, amount);
-            mcMMO.getDatabaseManager().saveUser(profile);
+            profile.modifySkill(skill, currentLevel + amount);
+            profile.save(true);
             this.database.takeCredits(uuid, amount);
             return Optional.empty();
         }
