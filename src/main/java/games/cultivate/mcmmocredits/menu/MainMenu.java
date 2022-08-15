@@ -19,7 +19,7 @@ public final class MainMenu extends BaseMenu {
         this.transformations.add(this.mainTransformContext("redeem"));
     }
 
-    private TransformContext<ChestPane, PlayerViewer> mainTransformContext(String type) {
+    private TransformContext<ChestPane, PlayerViewer> mainTransformContext(final String type) {
         return TransformContext.of(0, (pane, view) -> {
             if (this.player.hasPermission("mcmmocredits.menu." + type)) {
                 String menuPath = "main.items." + type;

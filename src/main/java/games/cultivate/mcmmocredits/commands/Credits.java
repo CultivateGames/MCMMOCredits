@@ -55,7 +55,7 @@ public final class Credits {
         });
     }
 
-    @CommandDescription("Reload all configuration files provided by the plugin.")
+    @CommandDescription("Reloads all configuration files provided by the plugin.")
     @CommandMethod("reload")
     @CommandPermission("mcmmocredits.admin.reload")
     public void reloadCredits(final CommandSender sender) {
@@ -64,21 +64,21 @@ public final class Credits {
         Text.fromString(sender, this.config.string("reloadSuccessful")).send();
     }
 
-    @CommandDescription("Open the Main Menu")
+    @CommandDescription("Opens the Main Menu")
     @CommandMethod("menu main")
     @CommandPermission("mcmmocredits.menu.main")
     public void openMenu(final Player player) {
         this.factory.createMainMenu(player).open();
     }
 
-    @CommandDescription("Open the Edit Messages Menu")
+    @CommandDescription("Opens the Edit Configuration Menu")
     @CommandMethod("menu config")
     @CommandPermission("mcmmocredits.menu.config")
     public void openConfigMenu(final Player player) {
         this.factory.createConfigMenu(player).open();
     }
 
-    @CommandDescription("Open the Credit Redemption Menu")
+    @CommandDescription("Opens the Credit Redemption Menu")
     @CommandMethod("menu redeem")
     @CommandPermission("mcmmocredits.menu.redeem")
     public void openRedeemMenu(final Player player) {

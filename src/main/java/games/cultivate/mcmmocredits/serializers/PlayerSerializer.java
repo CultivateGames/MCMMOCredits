@@ -9,9 +9,9 @@ import games.cultivate.mcmmocredits.util.JSONUser;
 import java.io.IOException;
 import java.util.UUID;
 
-public class PlayerSerializer extends TypeAdapter<JSONUser> {
+public final class PlayerSerializer extends TypeAdapter<JSONUser> {
     @Override
-    public void write(JsonWriter out, JSONUser value) throws IOException {
+    public void write(final JsonWriter out, final JSONUser value) throws IOException {
         out.beginObject().name("UUID").value(value.uuid().toString())
                 .name("name").value(value.username())
                 .name("credits").value(value.credits())
@@ -19,7 +19,7 @@ public class PlayerSerializer extends TypeAdapter<JSONUser> {
     }
 
     @Override
-    public JSONUser read(JsonReader in) throws IOException {
+    public JSONUser read(final JsonReader in) throws IOException {
         UUID uuid = new UUID(0, 0);
         String username = "";
         String fieldName = "";
