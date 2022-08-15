@@ -37,7 +37,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-import static cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType.*;
+import static cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType.ARGUMENT_PARSING;
+import static cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType.COMMAND_EXECUTION;
+import static cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType.INVALID_SENDER;
+import static cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType.INVALID_SYNTAX;
+import static cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType.NO_PERMISSION;
 
 /**
  * This class is responsible for startup/shutdown logic, and command loading.

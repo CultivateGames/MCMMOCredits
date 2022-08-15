@@ -10,7 +10,14 @@ import javax.inject.Inject;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static games.cultivate.mcmmocredits.data.SQLStatement.*;
+import static games.cultivate.mcmmocredits.data.SQLStatement.ADD_CREDITS;
+import static games.cultivate.mcmmocredits.data.SQLStatement.ADD_PLAYER;
+import static games.cultivate.mcmmocredits.data.SQLStatement.GET_CREDITS;
+import static games.cultivate.mcmmocredits.data.SQLStatement.GET_USERNAME;
+import static games.cultivate.mcmmocredits.data.SQLStatement.GET_UUID;
+import static games.cultivate.mcmmocredits.data.SQLStatement.SET_CREDITS;
+import static games.cultivate.mcmmocredits.data.SQLStatement.SET_USERNAME;
+import static games.cultivate.mcmmocredits.data.SQLStatement.TAKE_CREDITS;
 
 public sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLiteDatabase {
     private static final UUID ZERO_UUID = new UUID(0, 0);

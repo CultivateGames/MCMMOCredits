@@ -18,7 +18,7 @@ public final class GeneralConfig extends BaseConfig {
     }
 
     public String databaseType() {
-        return settings.databaseType;
+        return this.settings.databaseType;
     }
 
     /**

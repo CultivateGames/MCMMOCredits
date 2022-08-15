@@ -80,6 +80,7 @@ public interface Config {
      * @param parent The configurations root node.
      * @return list of all configuration nodes represented in the config.
      */
+    //TODO can we reduce time complexity of this operation?
     default List<CommentedConfigurationNode> nodesFromParent(CommentedConfigurationNode parent) {
         List<CommentedConfigurationNode> nodes = new CopyOnWriteArrayList<>(parent.childrenMap().values());
         while (nodes.stream().anyMatch(ConfigurationNode::isMap)) {
