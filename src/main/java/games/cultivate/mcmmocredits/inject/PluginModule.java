@@ -12,6 +12,7 @@ import games.cultivate.mcmmocredits.data.JSONDatabase;
 import games.cultivate.mcmmocredits.data.MYSQLDatabase;
 import games.cultivate.mcmmocredits.data.SQLiteDatabase;
 import games.cultivate.mcmmocredits.menu.MenuFactory;
+import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
 import games.cultivate.mcmmocredits.util.InputStorage;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -19,21 +20,22 @@ import java.nio.file.Path;
 import java.util.Map;
 
 public final class PluginModule extends AbstractModule {
-    private final MCMMOCredits mcmmoCredits;
+    private final MCMMOCredits plugin;
     private Database database;
     private MenuFactory factory;
+    private ResolverFactory resolverFactory;
     private final Map<String, Class<? extends Database>> map;
 
-    public PluginModule(final MCMMOCredits mcmmoCredits) {
-        this.mcmmoCredits = mcmmoCredits;
+    public PluginModule(final MCMMOCredits plugin) {
+        this.plugin = plugin;
         this.map = Map.of("JSON", JSONDatabase.class, "MYSQL", MYSQLDatabase.class, "SQLITE", SQLiteDatabase.class);
     }
 
     @Override
     protected void configure() {
-        this.bind(MCMMOCredits.class).toInstance(this.mcmmoCredits);
-        this.bind(JavaPlugin.class).toInstance(this.mcmmoCredits);
-        this.bind(Path.class).annotatedWith(Names.named("dir")).toInstance(this.mcmmoCredits.getDataFolder().toPath());
+        this.bind(MCMMOCredits.class).toInstance(this.plugin);
+        this.bind(JavaPlugin.class).toInstance(this.plugin);
+        this.bind(Path.class).annotatedWith(Names.named("dir")).toInstance(this.plugin.getDataFolder().toPath());
         this.bind(GeneralConfig.class).asEagerSingleton();
         this.bind(MenuConfig.class).asEagerSingleton();
         this.bind(InputStorage.class).asEagerSingleton();
@@ -50,9 +52,17 @@ public final class PluginModule extends AbstractModule {
     }
 
     @Provides
-    public MenuFactory provideMenuFactory(final MenuConfig menus, final GeneralConfig config, final InputStorage storage, final MCMMOCredits plugin) {
+    public ResolverFactory provideResolverFactory(final Database database) {
+        if (this.resolverFactory == null) {
+            this.resolverFactory = new ResolverFactory(database);
+        }
+        return this.resolverFactory;
+    }
+
+    @Provides
+    public MenuFactory provideMenuFactory(final MenuConfig menus, final ResolverFactory resolverFactory, final GeneralConfig config, final InputStorage storage, final MCMMOCredits plugin) {
         if (this.factory == null) {
-            this.factory = new MenuFactory(menus, config, storage, plugin);
+            this.factory = new MenuFactory(menus, resolverFactory, config, storage, plugin);
         }
         return this.factory;
     }

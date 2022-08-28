@@ -2,6 +2,7 @@ package games.cultivate.mcmmocredits.config;
 
 import broccolai.corn.paper.item.PaperItemBuilder;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.text.Text;
 import net.kyori.adventure.text.Component;
@@ -41,14 +42,15 @@ public final class MenuConfig extends BaseConfig {
      *
      * @param path   path to derive ItemStack from.
      * @param player player to deserialize the ItemStack against.
+     * @param resolverFactory Resolver Factory to parse Components against.
      * @return parsed ItemStack derived from the configuration.
      */
-    public ItemStack item(final String path, final Player player) {
+    public ItemStack item(final String path, final Player player, final ResolverFactory resolverFactory) {
         CommentedConfigurationNode node = this.rootNode().node(NodePath.of(path.split("\\.")));
         try {
             return PaperItemBuilder.of(ItemSerializer.INSTANCE.deserialize(ItemStack.class, node))
-                    .name(Text.parseComponent(Component.text(node.node("name").getString("")), player))
-                    .loreModifier(i -> i.replaceAll(x -> Text.parseComponent(x, player))).build();
+                    .name(Text.parseComponent(player, Component.text(node.node("name").getString("")), resolverFactory))
+                    .loreModifier(i -> i.replaceAll(x -> Text.parseComponent(player, x, resolverFactory))).build();
         } catch (SerializationException e) {
             e.printStackTrace();
         }
@@ -140,7 +142,7 @@ public final class MenuConfig extends BaseConfig {
     @ConfigSerializable
     record ConfigItem(Material material, String name, List<String> lore, int amount, int slot, boolean glow) {
         ConfigItem(final Material material, final PrimarySkillType skill, final int slot) {
-            this(material, "<yellow>" + WordUtils.capitalizeFully(skill.name()), List.of("<yellow><player>, click here to redeem!"), 1, slot, false);
+            this(material, "<yellow>" + WordUtils.capitalizeFully(skill.name()), List.of("<yellow><target>, click here to redeem!"), 1, slot, false);
         }
 
         ConfigItem(final Material material, final String name, final String lore, final int slot) {

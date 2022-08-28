@@ -47,7 +47,7 @@ public class BaseConfig implements Config {
         try {
             this.root = this.loader.load();
             this.conf = ObjectMapper.factory().get(this.type).load(this.root);
-            this.save(this.root);
+            this.save();
         } catch (ConfigurateException e) {
             e.printStackTrace();
         }

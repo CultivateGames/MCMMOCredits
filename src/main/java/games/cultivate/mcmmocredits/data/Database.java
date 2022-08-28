@@ -22,7 +22,7 @@ public sealed interface Database permits SQLDatabase, JSONDatabase {
     void addPlayer(UUID uuid, String username, int credits);
 
     /**
-     * Gets UUID of a player through username. Avoid OfflinePlayer call.
+     * Gets UUID of a player through username. Avoids OfflinePlayer call.
      *
      * @param username username of Player that holds relevant UUID.
      * @return UUID of player with specified username.
