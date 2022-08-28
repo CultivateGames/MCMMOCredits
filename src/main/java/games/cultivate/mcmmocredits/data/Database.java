@@ -49,9 +49,9 @@ public sealed interface Database permits SQLDatabase, JSONDatabase {
      * Gets username of player in our database. Finds user via UUID.
      *
      * @param uuid UUID to search for player with.
-     * @return CompletableFuture containing the username.
+     * @return the username if it exists.
      */
-    CompletableFuture<String> getUsername(UUID uuid);
+    String getUsername(UUID uuid);
 
     /**
      * Sets credit amount of player in our database. Finds user via UUID. This method runs synchronously.

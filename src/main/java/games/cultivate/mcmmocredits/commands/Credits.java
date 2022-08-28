@@ -58,9 +58,9 @@ public final class Credits {
     @CommandMethod("balance <user>")
     @CommandPermission("mcmmocredits.balance.other")
     public void otherCredits(final CommandSender sender, final @Argument(suggestions = "user") @User String user) {
-        this.database.getUUID(user).whenCompleteAsync((i, t) -> {
-            if (this.database.doesPlayerExist(i)) {
-                Text.fromString(sender, this.config.string("otherBalance"), this.resolverFactory.fromUsers(sender, user)).send();
+        this.database.getUUID(user).whenCompleteAsync((uuid, t) -> {
+            if (this.database.doesPlayerExist(uuid)) {
+                Text.fromString(sender, this.config.string("otherBalance"), this.resolverFactory.fromUsers(sender, this.database.getUsername(uuid))).send();
                 return;
             }
             Text.fromString(sender, this.config.string("playerDoesNotExist"), this.resolverFactory.fromUsers(sender)).send();
@@ -81,17 +81,17 @@ public final class Credits {
     @CommandMethod("<operation> <amount> <user>")
     @CommandPermission("mcmmocredits.admin.modify.other")
     public void modifyOtherCredits(final CommandSender sender, final @Argument(suggestions = "ops") String operation, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") @User String user, final @Flag("s") boolean silent) {
-        this.database.getUUID(user).whenComplete((i, t) -> {
-            if (!this.database.doesPlayerExist(i)) {
+        this.database.getUUID(user).whenComplete((uuid, t) -> {
+            if (!this.database.doesPlayerExist(uuid)) {
                 Text.fromString(sender, this.config.string("playerDoesNotExist"), this.resolverFactory.fromUsers(sender, user)).send();
                 return;
             }
             String op = operation.toLowerCase();
-            if (this.performCreditTransaction(sender, i, op, amount)) {
-                TagResolver r = this.resolverFactory.fromTransaction(sender, user, amount);
+            if (this.performCreditTransaction(sender, uuid, op, amount)) {
+                TagResolver r = this.resolverFactory.fromTransaction(sender, this.database.getUsername(uuid), amount);
                 Text.fromString(sender, this.config.string(op + "Sender"), r).send();
                 if (!silent) {
-                    Player player = Bukkit.getPlayer(i);
+                    Player player = Bukkit.getPlayer(uuid);
                     if (player != null && sender != player) {
                         Text.fromString(player, this.config.string(op + "Receiver"), r).send();
                     }

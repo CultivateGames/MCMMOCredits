@@ -10,14 +10,7 @@ import javax.inject.Inject;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static games.cultivate.mcmmocredits.data.SQLStatement.ADD_CREDITS;
-import static games.cultivate.mcmmocredits.data.SQLStatement.ADD_PLAYER;
-import static games.cultivate.mcmmocredits.data.SQLStatement.GET_CREDITS;
-import static games.cultivate.mcmmocredits.data.SQLStatement.GET_USERNAME;
-import static games.cultivate.mcmmocredits.data.SQLStatement.GET_UUID;
-import static games.cultivate.mcmmocredits.data.SQLStatement.SET_CREDITS;
-import static games.cultivate.mcmmocredits.data.SQLStatement.SET_USERNAME;
-import static games.cultivate.mcmmocredits.data.SQLStatement.TAKE_CREDITS;
+import static games.cultivate.mcmmocredits.data.SQLStatement.*;
 
 public sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLiteDatabase {
     private static final UUID ZERO_UUID = new UUID(0, 0);
@@ -64,11 +57,9 @@ public sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLit
     }
 
     @Override
-    public CompletableFuture<String> getUsername(final UUID uuid) {
-        return CompletableFuture.supplyAsync(() -> {
-            String content = this.query(String.class, GET_USERNAME, uuid.toString());
-            return content != null ? content : "";
-        });
+    public String getUsername(final UUID uuid) {
+        String content = this.query(String.class, GET_USERNAME, uuid.toString());
+        return content != null ? content : "";
     }
 
     @Override
