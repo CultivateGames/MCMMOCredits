@@ -88,8 +88,8 @@ public final class JSONDatabase implements Database {
     }
 
     @Override
-    public CompletableFuture<String> getUsername(final UUID uuid) {
-        return CompletableFuture.supplyAsync(() -> this.findUserByUUID(uuid).map(JSONUser::username).orElse(""));
+    public String getUsername(final UUID uuid) {
+        return this.findUserByUUID(uuid).map(JSONUser::username).orElse(null);
     }
 
     @Override
