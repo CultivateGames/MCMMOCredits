@@ -23,9 +23,9 @@ repositories {
 
 dependencies {
     paperDevBundle("1.19.2-R0.1-SNAPSHOT")
-    implementation("cloud.commandframework:cloud-annotations:1.7.0")
-    implementation("cloud.commandframework:cloud-paper:1.7.0")
-    implementation("cloud.commandframework:cloud-minecraft-extras:1.7.0") {
+    implementation("cloud.commandframework:cloud-annotations:1.7.1")
+    implementation("cloud.commandframework:cloud-paper:1.7.1")
+    implementation("cloud.commandframework:cloud-minecraft-extras:1.7.1") {
         exclude(group = "net.kyori")
     }
     implementation("com.google.inject:guice:5.1.0")

@@ -3,6 +3,7 @@ package games.cultivate.mcmmocredits.menu;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
+import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
 import games.cultivate.mcmmocredits.util.InputStorage;
 import org.bukkit.entity.Player;
 
@@ -12,31 +13,33 @@ public final class MenuFactory {
     private final MenuConfig menus;
     private final InputStorage storage;
     private final GeneralConfig config;
+    private final ResolverFactory resolverFactory;
     private final MCMMOCredits plugin;
 
     @Inject
-    public MenuFactory(final MenuConfig menus, final GeneralConfig config, final InputStorage storage, final MCMMOCredits plugin) {
+    public MenuFactory(final MenuConfig menus, final ResolverFactory resolverFactory, final GeneralConfig config, final InputStorage storage, final MCMMOCredits plugin) {
         this.menus = menus;
+        this.resolverFactory = resolverFactory;
         this.config = config;
         this.storage = storage;
         this.plugin = plugin;
     }
 
-    public MainMenu createMainMenu(final Player player) {
-        MainMenu menu = new MainMenu(this.menus, player);
+    public Menu createMainMenu(final Player player) {
+        Menu menu = new MainMenu(this.menus, this.resolverFactory, player, this.plugin);
         menu.load();
         return menu;
     }
 
-    public ConfigMenu createConfigMenu(final Player player) {
-        ConfigMenu configMenu = new ConfigMenu(this.menus, player, this.config, this.storage);
+    public Menu createConfigMenu(final Player player) {
+        Menu configMenu = new ConfigMenu(this.menus, this.resolverFactory, player, this.plugin, this.config, this.storage);
         configMenu.load();
         return configMenu;
     }
 
-    public RedeemMenu createRedeemMenu(final Player player) {
-        RedeemMenu redeem = new RedeemMenu(this.menus, player, this.config, this.storage, this.plugin);
-        redeem.load();
-        return redeem;
+    public Menu createRedeemMenu(final Player player) {
+        Menu redeemMenu = new RedeemMenu(this.menus, this.resolverFactory, player, this.plugin, this.config, this.storage);
+        redeemMenu.load();
+        return redeemMenu;
     }
 }

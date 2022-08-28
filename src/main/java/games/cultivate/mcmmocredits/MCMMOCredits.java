@@ -10,18 +10,19 @@ import cloud.commandframework.execution.CommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.minecraft.extras.AudienceProvider;
 import cloud.commandframework.minecraft.extras.MinecraftExceptionHandler;
+import cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType;
 import cloud.commandframework.paper.PaperCommandManager;
+import com.google.common.base.CaseFormat;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import games.cultivate.mcmmocredits.commands.Credits;
-import games.cultivate.mcmmocredits.commands.ModifyCredits;
-import games.cultivate.mcmmocredits.commands.Redeem;
 import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.data.Database;
 import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.placeholders.CreditsExpansion;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.util.Listeners;
 import net.kyori.adventure.text.Component;
@@ -32,19 +33,14 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.interfaces.paper.PaperInterfaceListeners;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-import static cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType.ARGUMENT_PARSING;
-import static cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType.COMMAND_EXECUTION;
-import static cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType.INVALID_SENDER;
-import static cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType.INVALID_SYNTAX;
-import static cloud.commandframework.minecraft.extras.MinecraftExceptionHandler.ExceptionType.NO_PERMISSION;
-
 /**
- * This class is responsible for startup/shutdown logic, and command loading.
+ * This class is responsible for startup/shutdown logic.
  */
 public final class MCMMOCredits extends JavaPlugin {
     private Injector injector;
@@ -122,14 +118,17 @@ public final class MCMMOCredits extends JavaPlugin {
 
         if (manager.hasCapability(CloudBukkitCapabilities.BRIGADIER)) {
             manager.registerBrigadier();
+            manager.brigadierManager().setNativeNumberSuggestions(false);
         }
 
         if (manager.hasCapability(CloudBukkitCapabilities.ASYNCHRONOUS_COMPLETION)) {
             manager.registerAsynchronousCompletions();
         }
-
         manager.parserRegistry().registerSuggestionProvider("user", (c, i) -> {
             if (this.config.bool("playerTabCompletion", true)) {
+                if (c.getSender() instanceof Player sp) {
+                    return Bukkit.getOnlinePlayers().stream().filter(sp::canSee).map(Player::getName).toList();
+                }
                 return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
             }
             return List.of();
@@ -138,27 +137,22 @@ public final class MCMMOCredits extends JavaPlugin {
 
         AnnotationParser<CommandSender> parser = new AnnotationParser<>(manager, CommandSender.class, p -> SimpleCommandMeta.empty());
         parser.parse(this.injector.getInstance(Credits.class));
-        parser.parse(this.injector.getInstance(ModifyCredits.class));
-        parser.parse(this.injector.getInstance(Redeem.class));
 
         MinecraftExceptionHandler<CommandSender> handler = new MinecraftExceptionHandler<>();
-        handler.withHandler(NO_PERMISSION, this.buildError("noPermission"));
-        handler.withHandler(ARGUMENT_PARSING, this.buildError("invalidArguments"));
-        handler.withHandler(COMMAND_EXECUTION, this.buildError("commandError"));
-        handler.withHandler(INVALID_SYNTAX, this.buildError("invalidSyntax"));
-        handler.withHandler(INVALID_SENDER, this.buildError("invalidSender"));
+        EnumSet.allOf(ExceptionType.class).forEach(x -> handler.withHandler(x, this.buildError(x)));
         handler.apply(manager, AudienceProvider.nativeAudience());
 
         //TODO caption system
         CaptionRegistry<CommandSender> registry = manager.captionRegistry();
     }
 
-    private BiFunction<CommandSender, Exception, Component> buildError(final String path) {
+    private BiFunction<CommandSender, Exception, Component> buildError(final ExceptionType exType) {
+        String path = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, exType.name());
         return (sender, ex) -> {
             if (this.config.bool("debug") || ex instanceof CommandExecutionException) {
                 ex.printStackTrace();
             }
-            Resolver.Builder rb = Resolver.builder().sender(sender);
+            Resolver.Builder rb = this.injector.getInstance(ResolverFactory.class).builder().users(sender);
             Map<String, String> tags = new HashMap<>();
             switch (ex.getClass().getSimpleName()) {
                 case "ArgumentParseException" -> tags.put("argument_error", ex.getCause().getMessage());

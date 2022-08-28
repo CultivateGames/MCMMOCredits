@@ -3,7 +3,7 @@ package games.cultivate.mcmmocredits.util;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.data.Database;
-import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
 import games.cultivate.mcmmocredits.text.Text;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -26,12 +26,14 @@ public class Listeners implements Listener {
     private final InputStorage storage;
     private final Database database;
     private final GeneralConfig config;
+    private final ResolverFactory resolverFactory;
 
     @Inject
-    public Listeners(final GeneralConfig config, final InputStorage storage, final Database database) {
+    public Listeners(final GeneralConfig config, final InputStorage storage, final Database database, final ResolverFactory resolverFactory) {
         this.config = config;
         this.storage = storage;
         this.database = database;
+        this.resolverFactory = resolverFactory;
     }
 
     /**
@@ -48,7 +50,7 @@ public class Listeners implements Listener {
             if (!this.database.doesPlayerExist(uuid)) {
                 this.database.addPlayer(uuid, username, 0);
                 if (this.config.bool("addPlayerNotification")) {
-                    TagResolver resolver = Resolver.builder().player(username).build();
+                    TagResolver resolver = this.resolverFactory.fromUsers(Bukkit.getConsoleSender(), username);
                     String content = this.config.string("addPlayerMessage", false);
                     Text.fromString(Bukkit.getConsoleSender(), content, resolver).send();
                 }
@@ -66,7 +68,8 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerJoin(final PlayerJoinEvent e) {
         if (this.config.bool("sendLoginMessage")) {
-            Text.fromString(e.getPlayer(), this.config.string("loginMessage")).send();
+            Player player = e.getPlayer();
+            Text.fromString(player, this.config.string("loginMessage"), this.resolverFactory.fromUsers(player)).send();
         }
     }
 
@@ -83,7 +86,7 @@ public class Listeners implements Listener {
             String completion = MiniMessage.miniMessage().serialize(e.message());
             if (completion.equalsIgnoreCase("cancel")) {
                 this.storage.remove(uuid);
-                Text.fromString(player, this.config.string("cancelPrompt")).send();
+                Text.fromString(player, this.config.string("cancelPrompt"), this.resolverFactory.fromUsers(player)).send();
             }
             this.storage.complete(uuid, completion);
             e.setCancelled(true);

@@ -1,6 +1,6 @@
 package games.cultivate.mcmmocredits.text;
 
-import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
@@ -8,7 +8,6 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public final class Text {
@@ -34,25 +33,13 @@ public final class Text {
         return new Text(audience, content, resolver);
     }
 
-    public static Text fromString(final Audience audience, final String content) {
-        if (audience instanceof Player p) {
-            return new Text(audience, content, Resolver.fromPlayer(p));
-        }
-        return new Text(audience, content, Resolver.fromSender((CommandSender) audience));
-    }
-
-    public static Component parseComponent(final Component comp, final Player player) {
-        String content = PlainTextComponentSerializer.plainText().serialize(comp);
-        //TODO find better way to delegate local placeholder to PAPI. In the meantime this simplifies the resolver.
-        content = content.replace("<credits>", "%mcmmocredits_credits%");
-        content = PlaceholderAPI.setPlaceholders(player, content);
-        return MiniMessage.miniMessage().deserialize(content, Resolver.fromPlayer(player));
+    public static Component parseComponent(final Player player, final Component component, final ResolverFactory factory) {
+        String content = PlainTextComponentSerializer.plainText().serialize(component);
+        return MiniMessage.miniMessage().deserialize(PlaceholderAPI.setPlaceholders(player, content), factory.fromUsers(player));
     }
 
     public Component toComponent() {
         if (this.audience instanceof Player player) {
-            //TODO find better way to delegate local placeholder to PAPI. In the meantime this simplifies the resolver.
-            this.content = this.content.replace("<credits>", "%mcmmocredits_credits%");
             this.content = PlaceholderAPI.setPlaceholders(player, this.content);
         }
         return MiniMessage.miniMessage().deserialize(this.content, this.resolver);

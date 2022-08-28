@@ -3,12 +3,9 @@ package games.cultivate.mcmmocredits.menu;
 import org.incendo.interfaces.paper.PlayerViewer;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
-public interface Menus {
+public interface Menu {
 
     default void open() {
-        if (this.chest() == null) {
-            this.load();
-        }
         this.chest().open(this.viewer());
     }
 

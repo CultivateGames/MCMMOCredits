@@ -1,9 +1,11 @@
 package games.cultivate.mcmmocredits.menu;
 
 import broccolai.corn.paper.item.PaperItemBuilder;
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.util.InputStorage;
 import net.kyori.adventure.text.Component;
@@ -18,8 +20,8 @@ public final class ConfigMenu extends BaseMenu {
     private final InputStorage storage;
     private final GeneralConfig config;
 
-    ConfigMenu(final MenuConfig menu, final Player player, final GeneralConfig config, final InputStorage storage) {
-        super(menu, player, "editing");
+    ConfigMenu(final MenuConfig menu, final ResolverFactory resolverFactory, final Player player, final MCMMOCredits plugin, final GeneralConfig config, final InputStorage storage) {
+        super(menu, resolverFactory, player, plugin, "editing");
         this.config = config;
         this.storage = storage;
     }
@@ -45,7 +47,7 @@ public final class ConfigMenu extends BaseMenu {
         return pane.element(ItemStackElement.of(item, click -> {
             if (click.cause().isLeftClick()) {
                 this.close();
-                Resolver.Builder resolver = Resolver.builder().player(this.player).tag("setting", path);
+                Resolver.Builder resolver = this.resolverFactory.builder().users(this.player).tag("setting", path);
                 Text.fromString(this.player, this.config.string("menuEditingPrompt"), resolver.build()).send();
                 this.storage.act(this.player.getUniqueId(), i -> {
                     //Modify config, set message content based on result.
@@ -57,7 +59,7 @@ public final class ConfigMenu extends BaseMenu {
     }
 
     private PaperItemBuilder itemFromPath(final String path, final String type) {
-        return PaperItemBuilder.of(this.menu.item("editing." + type, this.player))
+        return PaperItemBuilder.of(this.menu.item("editing." + type, this.player, this.resolverFactory))
                 .name(Component.text(path.substring(path.lastIndexOf('.') + 1)));
     }
 }

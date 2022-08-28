@@ -5,7 +5,7 @@ import com.gmail.nossr50.util.skills.SkillTools;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.util.InputStorage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -17,13 +17,11 @@ import org.incendo.interfaces.paper.element.ItemStackElement;
 public final class RedeemMenu extends BaseMenu {
     private final InputStorage storage;
     private final GeneralConfig config;
-    private final MCMMOCredits plugin;
 
-    RedeemMenu(final MenuConfig menu, final Player player, final GeneralConfig config, final InputStorage storage, final MCMMOCredits plugin) {
-        super(menu, player, "redeem");
+    RedeemMenu(final MenuConfig menu, final ResolverFactory resolverFactory, final Player player, final MCMMOCredits plugin, final GeneralConfig config, final InputStorage storage) {
+        super(menu, resolverFactory, player, plugin, "redeem");
         this.config = config;
         this.storage = storage;
-        this.plugin = plugin;
     }
 
     @Override
@@ -35,13 +33,13 @@ public final class RedeemMenu extends BaseMenu {
                 }
                 String path = "redeem.items." + skill.name().toLowerCase();
                 int slot = this.menu.slot(path);
-                pane = pane.element(ItemStackElement.of(this.menu.item(path, this.player), click -> {
+                pane = pane.element(ItemStackElement.of(this.menu.item(path, this.player, this.resolverFactory), click -> {
                     if (click.cause().isLeftClick()) {
                         this.close();
-                        TagResolver resolver = Resolver.builder().player(this.player).skill(skill).build();
+                        TagResolver resolver = this.resolverFactory.builder().users(this.player).skill(skill).build();
                         Text.fromString(this.player, this.config.string("menuRedeemPrompt"), resolver).send();
                         this.storage.act(this.player.getUniqueId(), i -> {
-                            String command = String.format("redeem %s %d", skill.name(), Integer.parseInt(i));
+                            String command = String.format("credits redeem %d %s", Integer.parseInt(i), skill.name());
                             Bukkit.getScheduler().callSyncMethod(this.plugin, () -> {
                                 Bukkit.dispatchCommand(this.player, command);
                                 return this;
