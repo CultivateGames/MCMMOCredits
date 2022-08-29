@@ -96,7 +96,7 @@ public final class MenuConfig extends BaseConfig {
         @Comment("Change settings for menu filler item. This will apply to all menus. Slot option does nothing.")
         private ConfigItem fill = new ConfigItem(Material.BLACK_STAINED_GLASS_PANE, "", List.of(), 1, -1, false);
         @Comment("Change settings for menu navigation item. This will apply to all menus.")
-        private ConfigItem navigation = new ConfigItem(Material.COMPASS, "<red>Previous Menu", "<gray>Left Click to go back!", 26);
+        private ConfigItem navigation = new ConfigItem(Material.COMPASS, "<red>Previous Menu", "<gray>Left Click to go back!", 40);
         @Comment("Change settings for in-game message editor shortcut.")
         private ConfigItem config = new ConfigItem(Material.DIAMOND, "<#FF253C>Edit Config", "<gray>Left Click to edit config!", 11);
         @Comment("Change settings for in-game MCMMO Credit redemption shortcut.")
@@ -106,7 +106,7 @@ public final class MenuConfig extends BaseConfig {
     @ConfigSerializable
     static class RedeemMenu {
         @Comment("Menu Size must be >=18 or larger to fit all options.")
-        private MenuInfo info = new MenuInfo("<dark_gray>Redeem Your Credits...", 36);
+        private MenuInfo info = new MenuInfo("<dark_gray>Redeem Your Credits...", 45);
         private RedeemItems items = new RedeemItems();
     }
 

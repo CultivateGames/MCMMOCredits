@@ -9,8 +9,8 @@ import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.util.InputStorage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.incendo.interfaces.core.transform.TransformContext;
 import org.incendo.interfaces.paper.element.ItemStackElement;
 
@@ -26,24 +26,22 @@ public final class RedeemMenu extends BaseMenu {
 
     @Override
     public void applySpecialItems() {
-        this.transformations.add(TransformContext.of(0, (pane, view) -> {
+        this.transformations.add(TransformContext.of(3, (pane, view) -> {
             for (PrimarySkillType skill : PrimarySkillType.values()) {
                 if (SkillTools.isChildSkill(skill)) {
                     continue;
                 }
                 String path = "redeem.items." + skill.name().toLowerCase();
+                ItemStack item = this.menu.item(path, this.player, this.resolverFactory);
                 int slot = this.menu.slot(path);
-                pane = pane.element(ItemStackElement.of(this.menu.item(path, this.player, this.resolverFactory), click -> {
+                pane = pane.element(ItemStackElement.of(item, click -> {
                     if (click.cause().isLeftClick()) {
                         this.close();
                         TagResolver resolver = this.resolverFactory.builder().users(this.player).skill(skill).build();
                         Text.fromString(this.player, this.config.string("menuRedeemPrompt"), resolver).send();
                         this.storage.act(this.player.getUniqueId(), i -> {
-                            String command = String.format("credits redeem %d %s", Integer.parseInt(i), skill.name());
-                            Bukkit.getScheduler().callSyncMethod(this.plugin, () -> {
-                                Bukkit.dispatchCommand(this.player, command);
-                                return this;
-                            });
+                            String command = "credits redeem %d %s";
+                            this.runSyncCommand(command.formatted(Integer.parseInt(i), path.substring(path.lastIndexOf('.') + 1)));
                         });
                     }
                 }), slot % 9, slot / 9);

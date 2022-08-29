@@ -155,7 +155,7 @@ public final class GeneralConfig extends BaseConfig {
         private String menuRedeemPrompt = "<gray>How many credits would you like to redeem into <green><skill>? <gray>You have <green><target_credits> Credits available.";
         @Comment("Sender prompt for /credits menu settings/messages.")
         @Setting("menuEditingPrompt")
-        private String menuEditingPrompt = "<red>Enter the new value for <gray><setting>:";
+        private String menuEditingPrompt = "<red>Enter the new value for <gray><setting>, or type 'cancel' to abort.";
     }
 
     @ConfigSerializable

@@ -28,13 +28,16 @@ public final class ConfigMenu extends BaseMenu {
 
     @Override
     public void applySpecialItems() {
-        this.transformations.add(TransformContext.of(0, (pane, view) -> {
+        this.transformations.add(TransformContext.of(3, (pane, view) -> {
             int slot = 1;
             for (CommentedConfigurationNode node : this.config.nodes()) {
                 String path = this.config.joinedPath(node);
-                if (!path.contains("mysql") && !path.contains("item")) {
-                    pane = this.createConfigTransform(pane, path, path.substring(0, path.indexOf('.')), slot);
-                    slot++;
+                if (!path.contains("mysql") && !path.contains("item") && !path.startsWith("database")) {
+                    String display = path.substring(0, path.indexOf('.'));
+                    if (!display.startsWith("database")) {
+                        pane = this.createConfigTransform(pane, path, display, slot);
+                        slot++;
+                    }
                 }
             }
             return pane;
