@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * This class is responsible for handling of the /credits command.
+ * This class is responsible for handling of all commands.
  */
 @CommandMethod("credits|mcmmocredits")
 public final class Credits {
@@ -46,6 +46,13 @@ public final class Credits {
         this.resolverFactory = resolverFactory;
     }
 
+    /**
+     * Command which allows the player to check their own credits. Cannot be executed by Console.
+     * <p>
+     * Usage: /credits balance
+     *
+     * @param player The {@link Player} executing the command.
+     */
     @CommandDescription("Check your own MCMMO Credit balance.")
     @CommandMethod("balance")
     @CommandPermission("mcmmocredits.balance.self")
@@ -54,10 +61,18 @@ public final class Credits {
         Text.fromString(player, this.config.string("selfBalance"), resolver).send();
     }
 
+    /**
+     * Command which allows a {@link CommandSender} to check credit balance of any user.
+     * <p>
+     * Usage: /credits balance Notch
+     *
+     * @param sender The {@link CommandSender} executing the command.
+     * @param user The username of the {@link Player} being checked.
+     */
     @CommandDescription("Check someone else's MCMMO Credit balance.")
     @CommandMethod("balance <user>")
     @CommandPermission("mcmmocredits.balance.other")
-    public void otherCredits(final CommandSender sender, final @Argument(suggestions = "user") @User String user) {
+    public void otherCredits(final CommandSender sender, final @Argument(suggestions = "user") String user) {
         this.database.getUUID(user).whenCompleteAsync((uuid, t) -> {
             if (this.database.doesPlayerExist(uuid)) {
                 Text.fromString(sender, this.config.string("otherBalance"), this.resolverFactory.fromUsers(sender, this.database.getUsername(uuid))).send();
@@ -67,6 +82,15 @@ public final class Credits {
         });
     }
 
+    /**
+     * Command which allows a player to modify their own credit balance.
+     * <p>
+     * Usage: /credits add 100, /credits set 100, /credits take 100
+     *
+     * @param player The {@link Player} being affected by credit balance modification.
+     * @param operation How to modify the balance. Add or take credits from the credit balance, or set the balance to a specific amount.
+     * @param amount Amount of credits to modify the credit balance with.
+     */
     @CommandDescription("Modify your own MCMMO Credit balance.")
     @CommandMethod("<operation> <amount>")
     @CommandPermission("mcmmocredits.admin.modify.self")
@@ -77,10 +101,23 @@ public final class Credits {
         }
     }
 
+    /**
+     * Command that allows a {@link CommandSender} to modify the credit balance of a {@link Player}.
+     * <p>
+     * Usage: /credits add 100 Notch, /credits set 100 Notch, /credits take 100 Notch
+     * <p>
+     * Silent Flag Usage: /credits add 100 Notch --s, /credits set 100 Notch --s, /credits take 100 Notch --s
+     *
+     * @param sender The {@link CommandSender} who executed the command.
+     * @param operation How to modify the balance. Add or take credits from the credit balance, or set the balance to a specific amount.
+     * @param amount Amount of credits to modify the credit balance with.
+     * @param user The username of the {@link Player} being modified.
+     * @param silent A "flag" indicating whether command feedback is enabled for the user. --s added to the end of the command means that the user will not see a message when their credit balance is modified.
+     */
     @CommandDescription("Modify MCMMO Credits of a user")
     @CommandMethod("<operation> <amount> <user>")
     @CommandPermission("mcmmocredits.admin.modify.other")
-    public void modifyOtherCredits(final CommandSender sender, final @Argument(suggestions = "ops") String operation, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") @User String user, final @Flag("s") boolean silent) {
+    public void modifyOtherCredits(final CommandSender sender, final @Argument(suggestions = "ops") String operation, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") String user, final @Flag("s") boolean silent) {
         this.database.getUUID(user).whenComplete((uuid, t) -> {
             if (!this.database.doesPlayerExist(uuid)) {
                 Text.fromString(sender, this.config.string("playerDoesNotExist"), this.resolverFactory.fromUsers(sender, user)).send();
@@ -100,6 +137,15 @@ public final class Credits {
         });
     }
 
+    /**
+     * Command which allows a {@link Player} to exchange their credits for +1 level in a {@link PrimarySkillType}.
+     * <p>
+     * Usage: /credits redeem 100 acrobatics. This will exchange 100 credits for +100 levels in Acrobatics.
+     *
+     * @param player The {@link Player} being affected by credit balance redemption.
+     * @param skill The {@link PrimarySkillType} being upgraded.
+     * @param amount Amount of credits to exchange.
+     */
     @CommandDescription("Redeem your own MCMMO Credits into a specific skill.")
     @CommandMethod("redeem <amount> <skill>")
     @CommandPermission("mcmmocredits.redeem.self")
@@ -109,10 +155,24 @@ public final class Credits {
         Text.fromString(player, this.config.string(content), resolver).send();
     }
 
+    /**
+     * Command that allows a {@link CommandSender} to sudo a {@link Player} for a credit exchange into a {@link PrimarySkillType}.
+     * <p>
+     * Usage: /credits redeem 100 acrobatics Notch. Command exchanges 100 credits for +100 levels in Acrobatics for Notch.
+     * <p>
+     * Silent Flag Usage: /credits redeem 100 acrobatics Notch --s
+     *
+     * @param sender The {@link CommandSender} who executed the command.
+     * @param skill The {@link PrimarySkillType} being upgraded.
+     * @param amount Amount of credits to exchange.
+     * @param user The username of the {@link Player} being modified.
+     * @param silent A "flag" indicating whether command feedback is enabled for the user. --s added to the end of the command means that the user will not see a message when their credit balance is changed. Depending on MCMMO config settings, a user may see a broadcast in chat about leveling up a skill in MCMMO.
+     * @see #selfRedeem(Player, PrimarySkillType, int)
+     */
     @CommandDescription("Redeem MCMMO Credits into a specific skill for someone else")
     @CommandMethod("redeem <amount> <skill> <user>")
     @CommandPermission("mcmmocredits.redeem.other")
-    public void adminRedeem(final CommandSender sender, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") @User String user, final @Flag("s") boolean silent) {
+    public void adminRedeem(final CommandSender sender, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String user, final @Flag("s") boolean silent) {
         if (user == null) {
             if (sender instanceof Player p) {
                 this.selfRedeem(p, skill, amount);
@@ -136,6 +196,11 @@ public final class Credits {
         });
     }
 
+    /**
+     * Command which will reload configuration files. Does not support changes to Database.
+     *
+     * @param sender The {@link CommandSender} who executed the command.
+     */
     @CommandDescription("Reloads all configuration files provided by the plugin.")
     @CommandMethod("reload")
     @CommandPermission("mcmmocredits.admin.reload")
@@ -145,6 +210,11 @@ public final class Credits {
         Text.fromString(sender, this.config.string("reloadSuccessful"), this.resolverFactory.fromUsers(sender)).send();
     }
 
+    /**
+     * Command which allows a {@link Player} to open the Main Menu.
+     *
+     * @param player The {@link Player} who executed the command and will see the menu.
+     */
     @CommandDescription("Opens the Main Menu")
     @CommandMethod("menu main")
     @CommandPermission("mcmmocredits.menu.main")
@@ -152,6 +222,11 @@ public final class Credits {
         this.menuFactory.createMainMenu(player).open();
     }
 
+    /**
+     * Command which allows a {@link Player} to open the Edit Configuration Menu.
+     *
+     * @param player The {@link Player} who executed the command and will see the menu.
+     */
     @CommandDescription("Opens the Edit Configuration Menu")
     @CommandMethod("menu config")
     @CommandPermission("mcmmocredits.menu.config")
@@ -159,6 +234,11 @@ public final class Credits {
         this.menuFactory.createConfigMenu(player).open();
     }
 
+    /**
+     * Command which allows a {@link Player} to open the Credit Redemption Menu.
+     *
+     * @param player The {@link Player} who executed the command and will see the menu.
+     */
     @CommandDescription("Opens the Credit Redemption Menu")
     @CommandMethod("menu redeem")
     @CommandPermission("mcmmocredits.menu.redeem")
@@ -172,7 +252,7 @@ public final class Credits {
      * @param uuid   UUID of the target for the credit redemption.
      * @param skill  PrimarySkillType that is being modified.
      * @param amount amount of credits to take/levels to add to the target.
-     * @return Failure reason via associated Config path, empty Optional if transaction was successful.
+     * @return {@link Optional} containing config path associated with failure. Optional is empty if successful.
      */
     private Optional<String> performRedemption(final UUID uuid, final PrimarySkillType skill, final int amount) {
         if (SkillTools.isChildSkill(skill)) {
@@ -199,6 +279,15 @@ public final class Credits {
         return Optional.of("playerDoesNotExist");
     }
 
+    /**
+     * Performs a credit balance transaction.
+     *
+     * @param sender The {@link CommandSender} who executed the command.
+     * @param uuid {@link UUID} of the {@link Player} who is being modified.
+     * @param op String that represents the operation taking place. Add or take credits from the credit balance, or set the balance to a specific amount.
+     * @param amount Amount of credits to modify the balance with.
+     * @return if the transaction was successful. If unsuccessful, it is likely due to a {@link Database} exception.
+     */
     private boolean performCreditTransaction(final CommandSender sender, final UUID uuid, final String op, final int amount) {
         boolean success = switch (op) {
             case "add" -> this.database.addCredits(uuid, amount);
@@ -207,7 +296,6 @@ public final class Credits {
             default -> false;
         };
         if (!success) {
-            //Transaction failed due to exception. Likely caused by the user failing SQL constraint of <0
             Text.fromString(sender, this.config.string("notEnoughCredits"), this.resolverFactory.fromUsers(sender)).send();
         }
         return success;

@@ -34,18 +34,17 @@ public final class Text {
     }
 
     public static Component parseComponent(final Player player, final Component component, final ResolverFactory factory) {
-        String content = PlainTextComponentSerializer.plainText().serialize(component);
-        return MiniMessage.miniMessage().deserialize(PlaceholderAPI.setPlaceholders(player, content), factory.fromUsers(player));
+       return Text.fromString(player, PlainTextComponentSerializer.plainText().serialize(component), factory.fromUsers(player)).toComponent();
     }
 
     public Component toComponent() {
         if (this.audience instanceof Player player) {
             this.content = PlaceholderAPI.setPlaceholders(player, this.content);
         }
-        return MiniMessage.miniMessage().deserialize(this.content, this.resolver);
+        return Component.empty().decoration(TextDecoration.ITALIC, false).append(MiniMessage.miniMessage().deserialize(this.content, this.resolver));
     }
 
     public void send() {
-        this.audience.sendMessage(Component.empty().decoration(TextDecoration.ITALIC, false).append(this.toComponent()));
+        this.audience.sendMessage(this.toComponent());
     }
 }

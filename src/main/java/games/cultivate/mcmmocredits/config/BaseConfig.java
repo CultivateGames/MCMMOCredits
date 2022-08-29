@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Object which represents all configuration files.
+ * Class which represents all configuration files.
  */
 public class BaseConfig implements Config {
     //transience added to avoid serialization by Configurate.

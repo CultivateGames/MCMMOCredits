@@ -75,7 +75,7 @@ public final class JSONDatabase implements Database {
         if (uuid == null || uuid.equals(new UUID(0, 0))) {
             return false;
         }
-        return this.findUserByUUID(uuid).isPresent();
+        return this.users.stream().anyMatch(u -> u.uuid().equals(uuid));
     }
 
     @Override
@@ -98,11 +98,10 @@ public final class JSONDatabase implements Database {
         if (credits < 0 || possibleUser.isEmpty()) {
             return false;
         }
-        possibleUser.ifPresent(user -> {
-            this.users.remove(user);
-            this.users.add(new JSONUser(user.uuid(), user.username(), credits));
-            this.writeUsers();
-        });
+        JSONUser user = possibleUser.orElseThrow();
+        this.users.remove(user);
+        this.users.add(new JSONUser(user.uuid(), user.username(), credits));
+        this.writeUsers();
         return true;
     }
 
@@ -122,7 +121,8 @@ public final class JSONDatabase implements Database {
     }
 
     private void writeUsers() {
-        try (FileWriter fw = new FileWriter(this.file); JsonWriter jw = this.gson.newJsonWriter(fw)) {
+        try (FileWriter fw = new FileWriter(this.file);
+             JsonWriter jw = this.gson.newJsonWriter(fw)) {
             jw.beginArray();
             for (JSONUser user : this.users) {
                 jw.beginObject().name("uuid").value(user.uuid().toString())

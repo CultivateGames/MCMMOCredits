@@ -4,7 +4,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Interface which represents all available database operations. All I/O runs asynchronously unless stated otherwise.
+ * Interface which represents all available database operations. All I/O should run asynchronously unless noted.
  */
 public sealed interface Database permits SQLDatabase, JSONDatabase {
     /**

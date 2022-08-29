@@ -7,6 +7,7 @@ import games.cultivate.mcmmocredits.text.Text;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.incendo.interfaces.core.click.ClickHandler;
 import org.incendo.interfaces.core.transform.TransformContext;
 import org.incendo.interfaces.core.util.Vector2;
@@ -17,7 +18,6 @@ import org.incendo.interfaces.paper.type.ChestInterface;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public abstract class BaseMenu implements Menu {
     protected final List<TransformContext<ChestPane, PlayerViewer>> transformations;
@@ -54,28 +54,33 @@ public abstract class BaseMenu implements Menu {
         return PlayerViewer.of(this.player);
     }
 
-    public void applyFillItems() {
+    public void runSyncCommand(final String command) {
+        Bukkit.getScheduler().getMainThreadExecutor(this.plugin).execute(() -> Bukkit.dispatchCommand(this.player, command));
+    }
+
+    public void applyNavigationItem() {
         if (this.menu.bool("all.navigation")) {
             String path = "main.items.navigation";
+            ItemStack item = this.menu.item(path, this.player, this.resolverFactory);
             this.transformations.add(TransformContext.of(2, (pane, view) -> {
-                pane = pane.element(ItemStackElement.of(this.menu.item(path, this.player, this.resolverFactory), click -> {
-                    if (click.click().leftClick()) {
-                        Bukkit.getScheduler().callSyncMethod(this.plugin, () -> {
-                            Bukkit.dispatchCommand(this.player, "credits menu main");
-                            return this;
-                        });
+                pane = pane.element(ItemStackElement.of(item, click -> {
+                    if (click.cause().isLeftClick()) {
+                        this.runSyncCommand("credits menu main");
                     }
                 }), this.menu.slot(path) % 9, this.menu.slot(path) / 9);
                 return pane;
             }));
         }
+    }
+
+    public void applyFillItems() {
         if (this.menu.bool("all.fill")) {
-            ItemStackElement<ChestPane> filler = ItemStackElement.of(this.menu.item("main.items.fill", this.player, this.resolverFactory));
+            ItemStack item = this.menu.item("main.items.fill", this.player, this.resolverFactory);
             this.transformations.add(TransformContext.of(1, (pane, view) -> {
-                for (Map.Entry<Vector2, ItemStackElement<ChestPane>> ele : pane.chestElements().entrySet()) {
+                for (var ele : pane.chestElements().entrySet()) {
                     if (ele.getValue().equals(ItemStackElement.empty())) {
                         Vector2 vector = ele.getKey();
-                        pane = pane.element(filler, vector.x(), vector.y());
+                        pane = pane.element(ItemStackElement.of(item), vector.x(), vector.y());
                     }
                 }
                 return pane;
@@ -86,6 +91,7 @@ public abstract class BaseMenu implements Menu {
     @Override
     public void load() {
         this.applySpecialItems();
+        this.applyNavigationItem();
         this.applyFillItems();
         this.chest = new ChestInterface(this.rows, this.title, this.transformations, List.of(), true, 10, ClickHandler.cancel());
     }
