@@ -1,3 +1,26 @@
+//
+// MIT License
+//
+// Copyright (c) 2022 Cultivate Games
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
 package games.cultivate.mcmmocredits;
 
 import cloud.commandframework.annotations.AnnotationParser;
@@ -48,9 +71,11 @@ public final class MCMMOCredits extends JavaPlugin {
     private GeneralConfig config;
 
     /**
-     * Called when the application starts up. Handles injection, checks for required dependencies (Paper, MCMMO etc.), and loads configurations/commands.
+     * Called when the application starts up. Handles injection, checks for required dependencies (Paper, MCMMO etc.),
+     * and loads configurations/commands.
      * <p>
-     * If debug is enabled in {@link GeneralConfig}, we also track the startup time of the application and print it to console.
+     * If debug is enabled in {@link GeneralConfig}, we also track the startup time of the application
+     * and print it to console.
      */
     @Override
     public void onEnable() {
