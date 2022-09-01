@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class which represents all configuration files.
+ * Object represents all {@link Config} types.
  */
 public class BaseConfig implements Config {
     //transience added to avoid serialization by Configurate.
@@ -33,6 +33,9 @@ public class BaseConfig implements Config {
         this.nodeList = new ArrayList<>();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public HoconConfigurationLoader createLoader() {
         FileUtil.createFile(this.dir, this.fileName);
@@ -41,6 +44,9 @@ public class BaseConfig implements Config {
                 .path(this.dir.resolve(this.fileName)).prettyPrinting(true).build();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void load() {
         this.loader = this.createLoader();
@@ -53,6 +59,9 @@ public class BaseConfig implements Config {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void save(final CommentedConfigurationNode root) {
         try {
@@ -64,16 +73,25 @@ public class BaseConfig implements Config {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public BaseConfig config() {
         return this.conf;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public CommentedConfigurationNode rootNode() {
         return this.root;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<CommentedConfigurationNode> nodes() {
         return this.nodeList;

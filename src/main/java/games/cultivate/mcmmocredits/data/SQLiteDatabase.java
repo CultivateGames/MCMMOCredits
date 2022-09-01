@@ -11,6 +11,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
 
+/**
+ * {@link Database} instance that utilizes a SQLite database.
+ */
 public final class SQLiteDatabase extends SQLDatabase {
 
     @Inject

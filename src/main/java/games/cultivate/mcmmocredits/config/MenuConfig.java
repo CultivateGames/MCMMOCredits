@@ -40,8 +40,8 @@ public final class MenuConfig extends BaseConfig {
     /**
      * Generates an item from the provided path within this configuration.
      *
-     * @param path   path to derive ItemStack from.
-     * @param player player to deserialize the ItemStack against.
+     * @param path            path to derive ItemStack from.
+     * @param player          player to deserialize the ItemStack against.
      * @param resolverFactory Resolver Factory to parse Components against.
      * @return parsed ItemStack derived from the configuration.
      */
@@ -130,13 +130,6 @@ public final class MenuConfig extends BaseConfig {
     @ConfigSerializable
     record MenuInfo(String title, int size) {
 
-    }
-
-    @ConfigSerializable
-    record ConfigMenu(PartialConfigItem item, MenuInfo info) {
-        ConfigMenu(final Material material, final String title, final int size) {
-            this(new PartialConfigItem(material), new MenuInfo(title, size));
-        }
     }
 
     @ConfigSerializable

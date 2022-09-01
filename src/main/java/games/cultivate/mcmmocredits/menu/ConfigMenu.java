@@ -16,6 +16,9 @@ import org.incendo.interfaces.paper.element.ItemStackElement;
 import org.incendo.interfaces.paper.pane.ChestPane;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 
+/**
+ * {@link Menu} allowing users to edit the configuration and have the changes applied from in-game via chat queue.
+ */
 public final class ConfigMenu extends BaseMenu {
     private final InputStorage storage;
     private final GeneralConfig config;
@@ -26,6 +29,9 @@ public final class ConfigMenu extends BaseMenu {
         this.storage = storage;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void applySpecialItems() {
         this.transformations.add(TransformContext.of(3, (pane, view) -> {
@@ -44,6 +50,15 @@ public final class ConfigMenu extends BaseMenu {
         }));
     }
 
+    /**
+     * Used to transform a {@link ChestPane} to allow users to edit the configuration via chat queue when added menu items are left-clicked.
+     *
+     * @param pane   The current {@link ChestPane}
+     * @param path   The configuration path to be changed.
+     * @param type   The configuration section to be changed.
+     * @param amount number representing the quantity of the {@link ItemStack}. Number is changed to help differentiate between options.
+     * @return The modified {@link ChestPane}
+     */
     private ChestPane createConfigTransform(final ChestPane pane, final String path, final String type, final int amount) {
         ItemStack item = this.itemFromPath(path, type).amount(amount).build();
         int slot = item.getAmount() - 1;

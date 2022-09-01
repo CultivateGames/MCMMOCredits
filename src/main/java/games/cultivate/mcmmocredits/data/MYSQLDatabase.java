@@ -8,6 +8,9 @@ import org.jdbi.v3.core.Jdbi;
 
 import javax.inject.Inject;
 
+/**
+ * {@link Database} instance that utilizes a MySQL database.
+ */
 public final class MYSQLDatabase extends SQLDatabase {
 
     @Inject

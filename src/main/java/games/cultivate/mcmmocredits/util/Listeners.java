@@ -37,9 +37,9 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Add users to MCMMO Credits database.
+     * Add users to MCMMO Credits database, and updates username for existing records.
      *
-     * @param e Instance of AsyncPlayerPreLoginEvent
+     * @param e Instance of {@link AsyncPlayerPreLoginEvent}
      */
     @EventHandler
     public void onPlayerPreLogin(final AsyncPlayerPreLoginEvent e) {
@@ -54,8 +54,8 @@ public class Listeners implements Listener {
                     String content = this.config.string("addPlayerMessage", false);
                     Text.fromString(Bukkit.getConsoleSender(), content, resolver).send();
                 }
+                return;
             }
-            //Set the username on every allowed login to keep track of last known username.
             this.database.setUsername(uuid, username);
         }
     }
@@ -63,7 +63,7 @@ public class Listeners implements Listener {
     /**
      * Send login message to user if it is enabled.
      *
-     * @param e Instance of the PlayerJoinEvent
+     * @param e Instance of the {@link PlayerJoinEvent}
      */
     @EventHandler
     public void onPlayerJoin(final PlayerJoinEvent e) {
@@ -74,9 +74,9 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Capture player's chat if the user is part of InputStorage.
+     * Capture player's chat if the user is part of {@link InputStorage}
      *
-     * @param e Instance of the AsyncChatEvent.
+     * @param e Instance of the {@link AsyncChatEvent}
      */
     @EventHandler
     public void onPlayerChat(final AsyncChatEvent e) {
@@ -94,12 +94,12 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Terminate CompletableFuture from Chat Input map and remove the player.
+     * Removes the user from the {@link InputStorage} if they are being tracked.
      *
-     * @param e Instance of the PlayerQuitEvent.
+     * @param e Instance of the {@link PlayerQuitEvent}.
      */
     @EventHandler
-    public void onPlayerLeave(final PlayerQuitEvent e) {
+    public void onPlayerQuit(final PlayerQuitEvent e) {
         this.storage.remove(e.getPlayer().getUniqueId());
     }
 }
