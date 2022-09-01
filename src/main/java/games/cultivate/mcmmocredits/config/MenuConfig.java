@@ -1,118 +1,152 @@
 package games.cultivate.mcmmocredits.config;
 
+import broccolai.corn.paper.item.PaperItemBuilder;
+import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
+import games.cultivate.mcmmocredits.serializers.ItemSerializer;
+import games.cultivate.mcmmocredits.text.Text;
+import net.kyori.adventure.text.Component;
+import org.apache.commons.lang.WordUtils;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.spongepowered.configurate.CommentedConfigurationNode;
+import org.spongepowered.configurate.NodePath;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
+import org.spongepowered.configurate.serialize.SerializationException;
 
-import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Object that represents a configuration used to modify the plugin's UI.
+ */
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
-public class MenuConfig {
-    @Comment("Editing Config menus: /credits menu <messages/settings>")
-    @Setting("editing")
-    private EditMenus editMenus = new EditMenus();
-    @Comment("Main menu: /credits menu")
-    @Setting("main")
-    private MainMenu mainMenu = new MainMenu();
-    @Comment("Redeem Menu from /credits menu redeem")
-    @Setting("redeem")
-    private RedeemMenu redeemMenu = new RedeemMenu();
+public final class MenuConfig extends BaseConfig {
+    @Comment("Change settings for all menus")
+    private AllMenuSettings all = new AllMenuSettings();
+    @Comment("Change settings for: /credits menu <messages/settings>")
+    private EditConfigMenu editing = new EditConfigMenu();
+    @Comment("Change settings for: /credits menu")
+    private MainMenu main = new MainMenu();
+    @Comment("Change settings for: /credits menu redeem")
+    private RedeemMenu redeem = new RedeemMenu();
 
-    @ConfigSerializable
-    protected static final class EditMenus {
-        @Comment("Edit Messages Menu configuration")
-        @Setting("messages")
-        private MessagesMenu messagesMenu = new MessagesMenu();
-        @Comment("Edit Settings Menu configuration")
-        @Setting("settings")
-        private SettingsMenu settingsMenu = new SettingsMenu();
+    MenuConfig() {
+        super(MenuConfig.class, "menus.conf");
+    }
+
+    /**
+     * Generates an item from the provided path within this configuration.
+     *
+     * @param path            path to derive ItemStack from.
+     * @param player          player to deserialize the ItemStack against.
+     * @param resolverFactory Resolver Factory to parse Components against.
+     * @return parsed ItemStack derived from the configuration.
+     */
+    public ItemStack item(final String path, final Player player, final ResolverFactory resolverFactory) {
+        CommentedConfigurationNode node = this.rootNode().node(NodePath.of(path.split("\\.")));
+        try {
+            return PaperItemBuilder.of(ItemSerializer.INSTANCE.deserialize(ItemStack.class, node))
+                    .name(Text.parseComponent(player, Component.text(node.node("name").getString("")), resolverFactory))
+                    .loreModifier(i -> i.replaceAll(x -> Text.parseComponent(player, x, resolverFactory))).build();
+        } catch (SerializationException e) {
+            e.printStackTrace();
+        }
+        return new ItemStack(Material.AIR);
+    }
+
+    /**
+     * Get inventory slot for an ItemStack from provided path.
+     *
+     * @param path path to derive inventory slot from.
+     * @return inventory slot derived from the path.
+     */
+    public int slot(final String path) {
+        return this.integer(path + ".slot");
     }
 
     @ConfigSerializable
-    protected static final class MessagesMenu {
-        private String inventory_title = "<dark_gray>Edit Messages";
-        @Comment("Must be at least 27")
-        private int inventory_size = 45;
-        @Comment("Change item appearance. Name, amount and inventory slot are not configurable.")
-        private ConfigItem item = new ConfigItem();
-    }
-
-    @ConfigSerializable
-    protected static final class SettingsMenu {
-        private String inventory_title = "<dark_gray>Edit Settings";
-        private int inventory_size = 45;
-        @Comment("Change item appearance. Name, amount and inventory slot are not configurable.")
-        private ConfigItem item = new ConfigItem();
-    }
-
-    @ConfigSerializable
-    protected static final class MainMenu {
-        private String inventory_title = "<#ff253c><bold>MCMMO Credits";
-        private int inventory_size = 54;
-        @Comment("This will apply to all menus.")
+    static class AllMenuSettings {
         private boolean fill = false;
-        @Comment("This will apply to all menus.")
-        private ShortcutItem fill_item = new ShortcutItem();
-        @Comment("This will apply to all menus.")
         private boolean navigation = false;
-        @Comment("This will apply to all menus.")
-        private ShortcutItem navigation_item = new ShortcutItem();
-        @Comment("Appearance of Edit Messages shortcut.")
-        @Setting("messages")
-        private ShortcutItem messages_item = new ShortcutItem();
-        @Comment("Appearance of Redeem shortcut.")
-        @Setting("redeem")
-        private ShortcutItem redeem_item = new ShortcutItem();
-        @Comment("Appearance of Edit Settings shortcut.")
-        @Setting("settings")
-        private ShortcutItem settings_item = new ShortcutItem();
     }
 
     @ConfigSerializable
-    protected static final class RedeemMenu {
-        private String inventory_title = "<dark_gray>Redeem Your Credits...";
-        @Comment("Must be at least 18")
-        private int inventory_size = 45;
-        @Comment("Credit redemption items")
-        @Setting("items")
-        private Items items = new Items();
+    static class EditConfigMenu {
+        @Comment("Menu size must be >= 27 to fit all options.")
+        private MenuInfo info = new MenuInfo("<dark_gray>Modify Configuration", 45);
+        @Comment("Item settings for message nodes.")
+        private PartialConfigItem messages = new PartialConfigItem(Material.WRITABLE_BOOK);
+        @Comment("Item settings for setting nodes.")
+        private PartialConfigItem settings = new PartialConfigItem(Material.REDSTONE);
     }
 
     @ConfigSerializable
-    protected static final class Items {
-        private ShortcutItem acrobatics = new ShortcutItem();
-        private ShortcutItem alchemy = new ShortcutItem();
-        private ShortcutItem archery = new ShortcutItem();
-        private ShortcutItem axes = new ShortcutItem();
-        private ShortcutItem excavation = new ShortcutItem();
-        private ShortcutItem fishing = new ShortcutItem();
-        private ShortcutItem herbalism = new ShortcutItem();
-        private ShortcutItem mining = new ShortcutItem();
-        private ShortcutItem repair = new ShortcutItem();
-        private ShortcutItem swords = new ShortcutItem();
-        private ShortcutItem taming = new ShortcutItem();
-        private ShortcutItem unarmed = new ShortcutItem();
-        private ShortcutItem woodcutting = new ShortcutItem();
+    static class MainMenu {
+        @Comment("Information for the Main Menu")
+        private MenuInfo info = new MenuInfo("<#ff253c><bold>MCMMO Credits", 54);
+        @Comment("Items used in the Main Menu")
+        private MainMenuItems items = new MainMenuItems();
     }
 
     @ConfigSerializable
-    protected  static final class ConfigItem {
-        private String material = "STONE";
-        private int durability = 0;
-        private List<String> lore = Arrays.asList("<gray><player>, welcome to MCMMO Credits!", "<gradient:#666666:#FFFFFF>Configure this menu in config.conf!");
-        private boolean glow = true;
+    static class MainMenuItems {
+        @Comment("Change settings for menu filler item. This will apply to all menus. Slot option does nothing.")
+        private ConfigItem fill = new ConfigItem(Material.BLACK_STAINED_GLASS_PANE, "", List.of(), 1, -1, false);
+        @Comment("Change settings for menu navigation item. This will apply to all menus.")
+        private ConfigItem navigation = new ConfigItem(Material.COMPASS, "<red>Previous Menu", "<gray>Left Click to go back!", 40);
+        @Comment("Change settings for in-game message editor shortcut.")
+        private ConfigItem config = new ConfigItem(Material.DIAMOND, "<#FF253C>Edit Config", "<gray>Left Click to edit config!", 11);
+        @Comment("Change settings for in-game MCMMO Credit redemption shortcut.")
+        private ConfigItem redeem = new ConfigItem(Material.EMERALD, "<green>Redeem MCMMO Credits!", "<gray>Left Click to redeem MCMMO Credits!", 15);
     }
 
     @ConfigSerializable
-    protected static final class ShortcutItem {
-        private String material = "STONE";
-        private int amount = 1;
-        private int durability = 0;
-        private String name = "<gray>Menu Item!";
-        private List<String> lore = Arrays.asList("<gray><player>, welcome to MCMMO Credits!", "<gradient:#666666:#FFFFFF>Configure this menu in config.conf!");
-        private boolean glow = true;
-        private int inventory_slot;
+    static class RedeemMenu {
+        @Comment("Menu Size must be >=18 or larger to fit all options.")
+        private MenuInfo info = new MenuInfo("<dark_gray>Redeem Your Credits...", 45);
+        private RedeemItems items = new RedeemItems();
+    }
+
+    @ConfigSerializable
+    static class RedeemItems {
+        private ConfigItem acrobatics = new ConfigItem(Material.NETHERITE_BOOTS, PrimarySkillType.ACROBATICS, 10);
+        private ConfigItem alchemy = new ConfigItem(Material.BREWING_STAND, PrimarySkillType.ALCHEMY, 11);
+        private ConfigItem archery = new ConfigItem(Material.BOW, PrimarySkillType.ARCHERY, 12);
+        private ConfigItem axes = new ConfigItem(Material.NETHERITE_AXE, PrimarySkillType.AXES, 13);
+        private ConfigItem excavation = new ConfigItem(Material.NETHERITE_SHOVEL, PrimarySkillType.EXCAVATION, 14);
+        private ConfigItem fishing = new ConfigItem(Material.FISHING_ROD, PrimarySkillType.FISHING, 15);
+        private ConfigItem herbalism = new ConfigItem(Material.SUGAR_CANE, PrimarySkillType.HERBALISM, 16);
+        private ConfigItem mining = new ConfigItem(Material.NETHERITE_PICKAXE, PrimarySkillType.MINING, 19);
+        private ConfigItem repair = new ConfigItem(Material.ANVIL, PrimarySkillType.REPAIR, 20);
+        private ConfigItem swords = new ConfigItem(Material.NETHERITE_SWORD, PrimarySkillType.SWORDS, 21);
+        private ConfigItem taming = new ConfigItem(Material.LEAD, PrimarySkillType.TAMING, 23);
+        private ConfigItem unarmed = new ConfigItem(Material.CARROT_ON_A_STICK, PrimarySkillType.UNARMED, 24);
+        private ConfigItem woodcutting = new ConfigItem(Material.OAK_LOG, PrimarySkillType.WOODCUTTING, 25);
+    }
+
+    @ConfigSerializable
+    record MenuInfo(String title, int size) {
+
+    }
+
+    @ConfigSerializable
+    record ConfigItem(Material material, String name, List<String> lore, int amount, int slot, boolean glow) {
+        ConfigItem(final Material material, final PrimarySkillType skill, final int slot) {
+            this(material, "<yellow>" + WordUtils.capitalizeFully(skill.name()), List.of("<yellow><target>, click here to redeem!"), 1, slot, false);
+        }
+
+        ConfigItem(final Material material, final String name, final String lore, final int slot) {
+            this(material, name, List.of(lore), 1, slot, false);
+        }
+    }
+
+    @ConfigSerializable
+    record PartialConfigItem(Material material, List<String> lore, boolean glow) {
+        PartialConfigItem(final Material material) {
+            this(material, List.of("<gray>Click here to edit this config option!"), false);
+        }
     }
 }

@@ -1,87 +1,220 @@
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.MCMMOCredits;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.CommentedConfigurationNode;
+import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
+import org.spongepowered.configurate.serialize.SerializationException;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 
-public class Config<T> {
-    public static final Config<SettingsConfig> SETTINGS = new Config<>(SettingsConfig.class);
-    public static final Config<MessagesConfig> MESSAGES = new Config<>(MessagesConfig.class);
-    public static final Config<MenuConfig> MENU = new Config<>(MenuConfig.class);
+/**
+ * Interface which represents a configuration file.
+ */
+public interface Config {
+    /**
+     * Creates the HoconConfigurationLoader used by the configuration.
+     *
+     * @return the Loader to be used.
+     */
+    HoconConfigurationLoader createLoader();
 
-    private final Class<T> type;
-    private T config;
-    private CommentedConfigurationNode root;
-    private String title;
-    private HoconConfigurationLoader loader;
+    /**
+     * Loads the configuration.
+     */
+    void load();
 
-    public Config (Class<T> type) {
-        this.type = type;
+    /**
+     * Saves the configuration using the provided root.
+     *
+     * @param root The configuration root node to apply to our configuration.
+     */
+    void save(CommentedConfigurationNode root);
+
+    /**
+     * Saves the configuration using the existing root node.
+     */
+    default void save() {
+        this.save(this.rootNode());
     }
 
-    public void load(String title) {
-        try {
-            this.title = title;
-            this.root = this.configLoader().load();
-            this.config = this.root.get(this.type);
-            this.configLoader().save(this.root);
-        } catch (Exception e) {
-            e.printStackTrace();
+    /**
+     * Gets the current configuration object.
+     *
+     * @return the current configuration object.
+     */
+    BaseConfig config();
+
+    /**
+     * Gets the current root node of the configuration.
+     *
+     * @return the root node of the configuration.
+     */
+    CommentedConfigurationNode rootNode();
+
+    /**
+     * Gets the current list of all nodes represented by this configuration object.
+     *
+     * @return list of all nodes represented by this configuration object.
+     */
+    List<CommentedConfigurationNode> nodes();
+
+    /**
+     * Transforms a node's path to be a singular string separated by "."
+     * <p>
+     * Example Transformation: messages, general, prefix -> messages.general.prefix
+     *
+     * @param node node that provides the path to be transformed.
+     * @return node path that is joined by "."
+     */
+    default String joinedPath(final CommentedConfigurationNode node) {
+        return StringUtils.join(node.path().array(), ".");
+    }
+
+    /**
+     * Grabs all CommentedConfigurationNodes using the root node generated in the loading process.
+     *
+     * @param parent The configurations root node.
+     * @return list of all configuration nodes represented in the config.
+     */
+    //TODO can we reduce time complexity of this operation?
+    default List<CommentedConfigurationNode> nodesFromParent(CommentedConfigurationNode parent) {
+        List<CommentedConfigurationNode> nodes = new CopyOnWriteArrayList<>(parent.childrenMap().values());
+        while (nodes.stream().anyMatch(ConfigurationNode::isMap)) {
+            nodes.forEach(i -> {
+                if (i.isMap()) {
+                    nodes.addAll(i.childrenMap().values());
+                    nodes.remove(i);
+                }
+            });
         }
+        return nodes;
     }
 
-    public void save(CommentedConfigurationNode root) {
-        try {
-            this.configLoader().save(root);
-            this.root = root;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    /**
+     * Returns a boolean from the underlying configuration map.
+     *
+     * @param path string that the path contains. Unique enough to not worry about duplication.
+     * @param def  default value. Will log if the value is missing to let the user know to populate the value.
+     * @return boolean from the root configuration nodes children map, or the provided default value.
+     */
+    default boolean bool(String path, boolean def) {
+        return this.value(boolean.class, path, def);
     }
 
-    public CommentedConfigurationNode root() {
-        return this.root;
+    /**
+     * Returns a boolean from the underlying configuration map.
+     *
+     * @param path string that the path contains. Unique enough to not worry about duplication.
+     * @return boolean from the root configuration nodes children map, or the provided default value.
+     */
+    default boolean bool(String path) {
+        return this.value(boolean.class, path, false);
     }
 
-    public T config() {
-        return this.config;
+    /**
+     * Returns a String from the underlying configuration map.
+     *
+     * @param path string that the path contains. Unique enough to not worry about duplication.
+     * @param def  default value. Will log if the value is missing to let the user know to populate the value.
+     * @return String from the root configuration nodes children map, or the provided default value.
+     */
+    default String string(String path, String def) {
+        return this.value(String.class, path, def);
     }
 
-    public <K> K get(Class<K> type, Iterable<?> path) {
-        try {
-            return root.node(path).get(type);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-    
-    public Class<?> type() {
-        return type;
+    /**
+     * Returns a String from the underlying configuration map.
+     *
+     * @param path string that the path contains. Unique enough to not worry about duplication.
+     * @return String from the root configuration nodes children map, or an empty string.
+     */
+    default String string(String path) {
+        return this.value(String.class, path, "");
     }
 
-    private HoconConfigurationLoader createLoader() {
-        File file = new File(MCMMOCredits.path + title);
-        try {
-            if (file.getParentFile().mkdirs() && file.createNewFile()) {
-                Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created " + title + " file!");
+    /**
+     * Returns an int from the underlying configuration map.
+     *
+     * @param path string that the path contains. Unique enough to not worry about duplication.
+     * @param def  default value. Will log if the value is missing to let the user know to populate the value.
+     * @return String from the root configuration nodes children map, or the provided default value.
+     */
+    default int integer(String path, int def) {
+        return this.value(int.class, path, def);
+    }
+
+    /**
+     * Returns an int from the underlying configuration map.
+     *
+     * @param path string that the path contains. Unique enough to not worry about duplication.
+     * @return String from the root configuration nodes children map, or the provided default value.
+     */
+    default int integer(String path) {
+        return this.value(int.class, path, 0);
+    }
+
+    /**
+     * Accesses a configuration's node list to return a value from the node that best matches the provided path.
+     *
+     * @param type type of value to return.
+     * @param path configuration path where the value is retrieved from.
+     * @param def  default value to provide if value cannot be found.
+     * @param <V>  value type used to correctly retrieve value.
+     * @return value found at provided path.
+     */
+    default <V> V value(Class<V> type, String path, V def) {
+        for (CommentedConfigurationNode node : this.nodes()) {
+            if (this.joinedPath(node).contains(path)) {
+                try {
+                    return node.get(type);
+                } catch (SerializationException e) {
+                    e.printStackTrace();
+                }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-        HoconConfigurationLoader hcl = HoconConfigurationLoader.builder().defaultOptions(opts -> opts.serializers(build -> build.register(ItemStack.class, ItemStackSerializer.INSTANCE))).path(Paths.get(file.getPath())).prettyPrinting(true).build();
-        this.loader = hcl;
-        return hcl;
+        Bukkit.getLogger().log(Level.WARNING, "[MCMMOCredits] Config is missing value: {0}, Check your files!", path);
+        return def;
     }
 
-    private HoconConfigurationLoader configLoader() {
-        return loader != null ? loader : createLoader();
+    /**
+     * Modifies an existing value in the configuration. If path does not exist, does nothing.
+     *
+     * @param type  Type of the value we are setting in configuration.
+     * @param path  path of the node we are trying to modify.
+     * @param value value we are setting to the node.
+     * @param <V>   type of the value we are setting to configuration.
+     * @return if the modification was successful.
+     */
+    default <V> boolean modify(Class<V> type, String path, V value) {
+        if (value == null || value.toString().equalsIgnoreCase("cancel")) {
+            return false;
+        }
+        for (CommentedConfigurationNode node : this.nodes()) {
+            if (this.joinedPath(node).contains(path)) {
+                try {
+                    node.set(type, value);
+                    this.save();
+                    return true;
+                } catch (SerializationException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Sets a value to config. Returns true if successful.
+     *
+     * @param path  config path where we want to change value.
+     * @param value value used for modification of config.
+     * @return if the change was successful.
+     */
+    default boolean modify(String path, String value) {
+        return this.modify(String.class, path, value);
     }
 }
