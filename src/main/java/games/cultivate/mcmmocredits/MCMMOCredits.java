@@ -2,7 +2,6 @@ package games.cultivate.mcmmocredits;
 
 import cloud.commandframework.annotations.AnnotationParser;
 import cloud.commandframework.bukkit.CloudBukkitCapabilities;
-import cloud.commandframework.captions.CaptionRegistry;
 import cloud.commandframework.exceptions.CommandExecutionException;
 import cloud.commandframework.exceptions.InvalidCommandSenderException;
 import cloud.commandframework.exceptions.InvalidSyntaxException;
@@ -16,6 +15,7 @@ import com.google.common.base.CaseFormat;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import games.cultivate.mcmmocredits.commands.Credits;
+import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.data.Database;
@@ -25,6 +25,7 @@ import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.util.Listeners;
+import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -40,19 +41,16 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 /**
- * This class is responsible for startup/shutdown logic.
+ * Main class of the application. Handles startup and shutdown logic.
  */
 public final class MCMMOCredits extends JavaPlugin {
     private Injector injector;
     private GeneralConfig config;
 
     /**
-     * This handles all startup logic.
+     * Called when the application starts up. Handles injection, checks for required dependencies (Paper, MCMMO etc.), and loads configurations/commands.
      * <p>
-     * This includes creating any necessary instances and dependency checks.
-     * <p>
-     * This is also responsible for loading configurations,
-     * audiences, and registering our event listeners/commands.
+     * If debug is enabled in {@link GeneralConfig}, we also track the startup time of the application and print it to console.
      */
     @Override
     public void onEnable() {
@@ -70,23 +68,17 @@ public final class MCMMOCredits extends JavaPlugin {
         }
     }
 
+    /**
+     * Handles all startup loading logic for {@link Config} instances.
+     */
     public void loadConfiguration() {
         this.injector.getInstance(GeneralConfig.class).load();
         this.injector.getInstance(MenuConfig.class).load();
     }
 
     /**
-     * This handles all shutdown logic.
-     * <p>
-     * This includes shutting down the Database connection, and saving our Configs.
+     * Handles all logic required to check for required software (Paper, MCMMO). Registers {@link PlaceholderExpansion} if PlaceholderAPI is present.
      */
-    @Override
-    public void onDisable() {
-        this.injector.getInstance(GeneralConfig.class).save();
-        this.injector.getInstance(MenuConfig.class).save();
-        this.injector.getInstance(Database.class).disable();
-    }
-
     private void checkForDependencies() {
         try {
             Class.forName("com.destroystokyo.paper.MaterialSetTag");
@@ -107,6 +99,9 @@ public final class MCMMOCredits extends JavaPlugin {
         }
     }
 
+    /**
+     * Handles all logic required to enable/load commands.
+     */
     private void loadCommands() {
         PaperCommandManager<CommandSender> manager;
         try {
@@ -141,9 +136,16 @@ public final class MCMMOCredits extends JavaPlugin {
         MinecraftExceptionHandler<CommandSender> handler = new MinecraftExceptionHandler<>();
         EnumSet.allOf(ExceptionType.class).forEach(x -> handler.withHandler(x, this.buildError(x)));
         handler.apply(manager, AudienceProvider.nativeAudience());
+    }
 
-        //TODO caption system
-        CaptionRegistry<CommandSender> registry = manager.captionRegistry();
+    /**
+     * Called when the application shuts down. Saves all valuable data (configurations, database).
+     */
+    @Override
+    public void onDisable() {
+        this.injector.getInstance(GeneralConfig.class).save();
+        this.injector.getInstance(MenuConfig.class).save();
+        this.injector.getInstance(Database.class).disable();
     }
 
     private BiFunction<CommandSender, Exception, Component> buildError(final ExceptionType exType) {

@@ -9,6 +9,9 @@ import org.bukkit.entity.Player;
 
 import javax.inject.Inject;
 
+/**
+ * Factory which is used to create {@link Menu} instances.
+ */
 public final class MenuFactory {
     private final MenuConfig menus;
     private final InputStorage storage;
@@ -25,18 +28,36 @@ public final class MenuFactory {
         this.plugin = plugin;
     }
 
+    /**
+     * Creates a {@link MainMenu} using the provided {@link Player}.
+     *
+     * @param player {@link Player} to link to the {@link Menu} instance.
+     * @return the {@link Menu}
+     */
     public Menu createMainMenu(final Player player) {
         Menu menu = new MainMenu(this.menus, this.resolverFactory, player, this.plugin);
         menu.load();
         return menu;
     }
 
+    /**
+     * Creates a {@link ConfigMenu} using the provided {@link Player}.
+     *
+     * @param player {@link Player} to link to the {@link Menu} instance.
+     * @return the {@link Menu}
+     */
     public Menu createConfigMenu(final Player player) {
         Menu configMenu = new ConfigMenu(this.menus, this.resolverFactory, player, this.plugin, this.config, this.storage);
         configMenu.load();
         return configMenu;
     }
 
+    /**
+     * Creates a {@link RedeemMenu} using the provided {@link Player}.
+     *
+     * @param player {@link Player} to link to the {@link Menu} instance.
+     * @return the {@link Menu}
+     */
     public Menu createRedeemMenu(final Player player) {
         Menu redeemMenu = new RedeemMenu(this.menus, this.resolverFactory, player, this.plugin, this.config, this.storage);
         redeemMenu.load();

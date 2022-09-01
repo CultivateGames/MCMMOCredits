@@ -3,21 +3,29 @@ package games.cultivate.mcmmocredits.serializers;
 import broccolai.corn.paper.item.AbstractPaperItemBuilder;
 import broccolai.corn.paper.item.PaperItemBuilder;
 import broccolai.corn.paper.item.special.SkullBuilder;
+import games.cultivate.mcmmocredits.config.Config;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.serialize.TypeSerializer;
 
 import java.lang.reflect.Type;
 
+/**
+ * Class responsible for serializing and deserializing {@link ItemStack} from {@link Config}
+ */
 public final class ItemSerializer implements TypeSerializer<ItemStack> {
     public static final ItemSerializer INSTANCE = new ItemSerializer();
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ItemStack deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
         AbstractPaperItemBuilder<?, ?> builder = this.generateBuilder(node)
@@ -30,6 +38,9 @@ public final class ItemSerializer implements TypeSerializer<ItemStack> {
         return builder.build();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void serialize(final Type type, final ItemStack item, final ConfigurationNode node) throws SerializationException {
         AbstractPaperItemBuilder<?, ?> builder = this.generateBuilder(node);
@@ -43,6 +54,13 @@ public final class ItemSerializer implements TypeSerializer<ItemStack> {
         node.node("glow").set(!builder.enchants().isEmpty());
     }
 
+    /**
+     * Creates a {@link AbstractPaperItemBuilder}, based on whether the item might have {@link SkullMeta}
+     *
+     * @param node The {@link ConfigurationNode} to inspect.
+     * @return The correct {@link AbstractPaperItemBuilder}
+     * @throws SerializationException Thrown if checking {@link ConfigurationNode} for a {@link Material} fails.
+     */
     private AbstractPaperItemBuilder<?, ?> generateBuilder(final ConfigurationNode node) throws SerializationException {
         if (!node.node("skull").virtual()) {
             return SkullBuilder.ofPlayerHead().textures(node.node("skull").getString(""));

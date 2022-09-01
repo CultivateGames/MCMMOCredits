@@ -14,6 +14,9 @@ import org.bukkit.inventory.ItemStack;
 import org.incendo.interfaces.core.transform.TransformContext;
 import org.incendo.interfaces.paper.element.ItemStackElement;
 
+/**
+ * {@link Menu} instance where users will exchange Credits for levels applied towards {@link PrimarySkillType}.
+ */
 public final class RedeemMenu extends BaseMenu {
     private final InputStorage storage;
     private final GeneralConfig config;
@@ -24,6 +27,9 @@ public final class RedeemMenu extends BaseMenu {
         this.storage = storage;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void applySpecialItems() {
         this.transformations.add(TransformContext.of(3, (pane, view) -> {

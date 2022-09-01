@@ -1,5 +1,8 @@
 package games.cultivate.mcmmocredits.data;
 
+/**
+ * Enum used to hold SQL-based queries used throughout the application.
+ */
 enum SQLStatement {
     ADD_PLAYER("INSERT INTO `MCMMOCredits`(UUID, username, credits) VALUES(?,?,?);"),
     SET_CREDITS("UPDATE `MCMMOCredits` SET credits= ? WHERE `UUID`= ?;"),
@@ -18,6 +21,11 @@ enum SQLStatement {
         this.statement = statement;
     }
 
+    /**
+     * Used to obtain the query.
+     *
+     * @return the query.
+     */
     @Override
     public String toString() {
         return this.statement;

@@ -23,6 +23,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * {@link Database} which utilizes local JSON storage to store player data.
+ * <br>
+ * Usage of this database is not recommended due to IO speed. It will slow down as the database increases in size. It is provided in case a user does not want to use a SQL-based storage option, or the user wants a temporary data store.
+ */
 public final class JSONDatabase implements Database {
     private final Gson gson;
     private final File file;
@@ -52,11 +57,17 @@ public final class JSONDatabase implements Database {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void disable() {
         this.writeUsers();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void addPlayer(final UUID uuid, final String username, final int credits) {
         Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
@@ -65,11 +76,17 @@ public final class JSONDatabase implements Database {
         });
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public CompletableFuture<UUID> getUUID(final String username) {
         return CompletableFuture.supplyAsync(() -> this.findUserByUsername(username).map(JSONUser::uuid).orElse(new UUID(0, 0)));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean doesPlayerExist(final UUID uuid) {
         if (uuid == null || uuid.equals(new UUID(0, 0))) {
@@ -78,6 +95,9 @@ public final class JSONDatabase implements Database {
         return this.users.stream().anyMatch(u -> u.uuid().equals(uuid));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setUsername(final UUID uuid, final String username) {
         Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> this.findUserByUUID(uuid).ifPresent(user -> {
@@ -87,11 +107,17 @@ public final class JSONDatabase implements Database {
         }));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getUsername(final UUID uuid) {
         return this.findUserByUUID(uuid).map(JSONUser::username).orElse(null);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean setCredits(final UUID uuid, final int credits) {
         Optional<JSONUser> possibleUser = this.findUserByUUID(uuid);
@@ -105,28 +131,40 @@ public final class JSONDatabase implements Database {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getCredits(final UUID uuid) {
         return this.findUserByUUID(uuid).map(JSONUser::credits).orElse(0);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean addCredits(final UUID uuid, final int credits) {
         return this.setCredits(uuid, this.getCredits(uuid) + credits);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean takeCredits(final UUID uuid, final int credits) {
         return this.setCredits(uuid, Math.max(0, this.getCredits(uuid) - credits));
     }
 
+    /**
+     * Writes {@link JSONUser}s to the database.json file, stored as an array.
+     */
     private void writeUsers() {
         try (FileWriter fw = new FileWriter(this.file);
              JsonWriter jw = this.gson.newJsonWriter(fw)) {
             jw.beginArray();
             for (JSONUser user : this.users) {
                 jw.beginObject().name("uuid").value(user.uuid().toString())
-                        .name("name").value(user.username())
+                        .name("username").value(user.username())
                         .name("credits").value(user.credits()).endObject().flush();
             }
             jw.endArray();
@@ -135,10 +173,22 @@ public final class JSONDatabase implements Database {
         }
     }
 
+    /**
+     * Used to find a {@link JSONUser} in our database via a {@link UUID}
+     *
+     * @param uuid UUID of the {@link JSONUser} we want to find.
+     * @return Optional containing the {@link JSONUser} if they exist.
+     */
     private Optional<JSONUser> findUserByUUID(final UUID uuid) {
         return this.users.stream().filter(u -> u.uuid().equals(uuid)).findAny();
     }
 
+    /**
+     * Used to find a {@link JSONUser} in our database via a {@link String}-based username.
+     *
+     * @param username username of the {@link JSONUser} we want to find.
+     * @return Optional containing the {@link JSONUser} if they exist.
+     */
     private Optional<JSONUser> findUserByUsername(final String username) {
         return this.users.stream().filter(u -> u.username().equalsIgnoreCase(username)).findAny();
     }

@@ -5,7 +5,7 @@ import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 /**
- * Object that represents a specific configuration used to modify the plugin's settings and messages.
+ * Object that represents a general configuration used to modify the plugin's settings and messages.
  */
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
@@ -13,7 +13,7 @@ public final class GeneralConfig extends BaseConfig {
     private Settings settings = new Settings();
     private Messages messages = new Messages();
 
-   GeneralConfig() {
+    GeneralConfig() {
         super(GeneralConfig.class, "config.conf");
     }
 

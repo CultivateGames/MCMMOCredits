@@ -67,7 +67,7 @@ public final class Credits {
      * Usage: /credits balance Notch
      *
      * @param sender The {@link CommandSender} executing the command.
-     * @param user The username of the {@link Player} being checked.
+     * @param user   The username of the {@link Player} being checked.
      */
     @CommandDescription("Check someone else's MCMMO Credit balance.")
     @CommandMethod("balance <user>")
@@ -87,9 +87,9 @@ public final class Credits {
      * <p>
      * Usage: /credits add 100, /credits set 100, /credits take 100
      *
-     * @param player The {@link Player} being affected by credit balance modification.
+     * @param player    The {@link Player} being affected by credit balance modification.
      * @param operation How to modify the balance. Add or take credits from the credit balance, or set the balance to a specific amount.
-     * @param amount Amount of credits to modify the credit balance with.
+     * @param amount    Amount of credits to modify the credit balance with.
      */
     @CommandDescription("Modify your own MCMMO Credit balance.")
     @CommandMethod("<operation> <amount>")
@@ -108,11 +108,11 @@ public final class Credits {
      * <p>
      * Silent Flag Usage: /credits add 100 Notch --s, /credits set 100 Notch --s, /credits take 100 Notch --s
      *
-     * @param sender The {@link CommandSender} who executed the command.
+     * @param sender    The {@link CommandSender} who executed the command.
      * @param operation How to modify the balance. Add or take credits from the credit balance, or set the balance to a specific amount.
-     * @param amount Amount of credits to modify the credit balance with.
-     * @param user The username of the {@link Player} being modified.
-     * @param silent A "flag" indicating whether command feedback is enabled for the user. --s added to the end of the command means that the user will not see a message when their credit balance is modified.
+     * @param amount    Amount of credits to modify the credit balance with.
+     * @param user      The username of the {@link Player} being modified.
+     * @param silent    A "flag" indicating whether command feedback is enabled for the user. --s added to the end of the command means that the user will not see a message when their credit balance is modified.
      */
     @CommandDescription("Modify MCMMO Credits of a user")
     @CommandMethod("<operation> <amount> <user>")
@@ -143,7 +143,7 @@ public final class Credits {
      * Usage: /credits redeem 100 acrobatics. This will exchange 100 credits for +100 levels in Acrobatics.
      *
      * @param player The {@link Player} being affected by credit balance redemption.
-     * @param skill The {@link PrimarySkillType} being upgraded.
+     * @param skill  The {@link PrimarySkillType} being upgraded.
      * @param amount Amount of credits to exchange.
      */
     @CommandDescription("Redeem your own MCMMO Credits into a specific skill.")
@@ -163,9 +163,9 @@ public final class Credits {
      * Silent Flag Usage: /credits redeem 100 acrobatics Notch --s
      *
      * @param sender The {@link CommandSender} who executed the command.
-     * @param skill The {@link PrimarySkillType} being upgraded.
+     * @param skill  The {@link PrimarySkillType} being upgraded.
      * @param amount Amount of credits to exchange.
-     * @param user The username of the {@link Player} being modified.
+     * @param user   The username of the {@link Player} being modified.
      * @param silent A "flag" indicating whether command feedback is enabled for the user. --s added to the end of the command means that the user will not see a message when their credit balance is changed. Depending on MCMMO config settings, a user may see a broadcast in chat about leveling up a skill in MCMMO.
      * @see #selfRedeem(Player, PrimarySkillType, int)
      */
@@ -283,8 +283,8 @@ public final class Credits {
      * Performs a credit balance transaction.
      *
      * @param sender The {@link CommandSender} who executed the command.
-     * @param uuid {@link UUID} of the {@link Player} who is being modified.
-     * @param op String that represents the operation taking place. Add or take credits from the credit balance, or set the balance to a specific amount.
+     * @param uuid   {@link UUID} of the {@link Player} who is being modified.
+     * @param op     String that represents the operation taking place. Add or take credits from the credit balance, or set the balance to a specific amount.
      * @param amount Amount of credits to modify the balance with.
      * @return if the transaction was successful. If unsuccessful, it is likely due to a {@link Database} exception.
      */

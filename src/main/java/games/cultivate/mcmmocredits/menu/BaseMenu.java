@@ -19,6 +19,9 @@ import org.incendo.interfaces.paper.type.ChestInterface;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Object that represents all {@link Menu} types.
+ */
 public abstract class BaseMenu implements Menu {
     protected final List<TransformContext<ChestPane, PlayerViewer>> transformations;
     protected final MenuConfig menu;
@@ -39,8 +42,14 @@ public abstract class BaseMenu implements Menu {
         this.rows = menu.integer(path + ".info.size") / 9;
     }
 
+    /**
+     * Applies all extraneous items to the menu via {@link TransformContext}. These items typically perform an action.
+     */
     public abstract void applySpecialItems();
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ChestInterface chest() {
         if (this.chest == null) {
@@ -49,15 +58,29 @@ public abstract class BaseMenu implements Menu {
         return this.chest;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public PlayerViewer viewer() {
         return PlayerViewer.of(this.player);
     }
 
+    /**
+     * Runs a command synchronously for the linked {@link Player}. WARNING: This method is Paper only!
+     *
+     * @param command the command to execute.
+     */
     public void runSyncCommand(final String command) {
         Bukkit.getScheduler().getMainThreadExecutor(this.plugin).execute(() -> Bukkit.dispatchCommand(this.player, command));
     }
 
+    /**
+     * If enabled, applies the Navigation item to the menu via {@link TransformContext}. This item returns to the {@link MainMenu} when left-clicked.
+     *
+     * @see games.cultivate.mcmmocredits.config.MenuConfig
+     * @see MainMenu
+     */
     public void applyNavigationItem() {
         if (this.menu.bool("all.navigation")) {
             String path = "main.items.navigation";
@@ -73,6 +96,11 @@ public abstract class BaseMenu implements Menu {
         }
     }
 
+    /**
+     * If enabled, applies filler items to the menu via {@link TransformContext}. The items do nothing when clicked.
+     *
+     * @see games.cultivate.mcmmocredits.config.MenuConfig
+     */
     public void applyFillItems() {
         if (this.menu.bool("all.fill")) {
             ItemStack item = this.menu.item("main.items.fill", this.player, this.resolverFactory);
@@ -88,6 +116,9 @@ public abstract class BaseMenu implements Menu {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void load() {
         this.applySpecialItems();
