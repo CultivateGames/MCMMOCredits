@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.2.0"
+version = "0.2.1"
 description = "MCMMOCredits"
 
 plugins {
@@ -67,17 +67,28 @@ tasks {
     processResources {
         filteringCharset = Charsets.UTF_8.name()
     }
-
+    //TODO: investigate transitive deps
     shadowJar {
         minimize {
             exclude(dependency("com.github.ben-manes.caffeine:caffeine:3.0.3"))
         }
-        relocate("cloud.commandframework", "games.cultivate.mcmmocredits.relocate.cloud.commandframework")
-        relocate("org.incendo.interfaces", "games.cultivate.mcmmocredits.relocate.org.incendo.interfaces")
-        relocate("io.leangen", "games.cultivate.mcmmocredits.relocate.io.leangen")
-        relocate("com.google.inject", "games.cultivate.mcmmocredits.relocate.com.google.inject")
-        relocate("org.spongepowered", "games.cultivate.mcmmocredits.relocate.org.spongepowered")
-        relocate("com.typesafe", "games.cultivate.mcmmocredits.relocate.com.typesafe")
+        // https://github.com/PaperMC/paperweight-test-plugin/blob/shadow/build.gradle.kts
+        fun reloc(pkg: String) = relocate(pkg, "games.cultivate.mcmmocredits.relocate.$pkg")
+        reloc("broccolai.corn")
+        reloc("cloud.commandframework")
+        reloc("com.github")
+        reloc("com.google")
+        reloc("com.typesafe")
+        reloc("com.zaxxer")
+        reloc("io.leangen")
+        reloc("javax.annotation")
+        reloc("javax.inject")
+        reloc("org.aopalliance")
+        reloc("org.checkerframework")
+        reloc("org.jdbi")
+        reloc("org.incendo")
+        reloc("org.slf4j")
+        reloc("org.spongepowered")
 
         manifest {
             attributes(Pair("Main-Class", "games.cultivate.mcmmocredits.MCMMOCredits"))

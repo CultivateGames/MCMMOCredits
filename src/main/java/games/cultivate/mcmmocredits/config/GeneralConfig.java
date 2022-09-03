@@ -62,7 +62,7 @@ public final class GeneralConfig extends BaseConfig {
 
     @ConfigSerializable
     static class Messages {
-        @Comment("Output for command execution.Includes command-specific errors.")
+        @Comment("Output for command execution. Includes command-specific errors.")
         private CommandMessages commands = new CommandMessages();
         @Comment("Sender output for command exceptions.")
         private ExceptionMessages exceptions = new ExceptionMessages();
@@ -72,10 +72,10 @@ public final class GeneralConfig extends BaseConfig {
 
     @ConfigSerializable
     static class Settings {
-        @Comment("Options: sqlite, mysql, json.\n" + "NOTE: Changing DB type is not supported. JSON is included as a last resort.\n" + "JSON will slow as user size increases")
+        @Comment("Options: sqlite, mysql, json.\n" + "NOTE: Changing DB type live is not supported. JSON is included as a last resort.\n" + "JSON will slow as user size increases")
         @Setting("databaseType")
         private String databaseType = "sqlite";
-        @Comment("Toggles tab completion for Player based arguments.\n" + "Useful if you have other plugins which hide staff.")
+        @Comment("Toggles tab completion for player/username based arguments.\n" + "Useful if you have other plugins which hide staff.")
         @Setting("playerTabCompletion")
         private boolean playerTabCompletion = true;
         @Comment("Toggles sending a login message to the user.")
@@ -134,7 +134,7 @@ public final class GeneralConfig extends BaseConfig {
     static class GeneralMessages {
         @Comment("Prefix for all plugin messages.")
         private String prefix = "<hover:show_text:'<green><sender>: <sender_credits> Credits'><gold><bold>CREDITS</bold> ";
-        @Comment("Output for player joining.\n" + "Requires send-login-message: true.")
+        @Comment("Output for player joining.\n" + "Message is only sent if sendLoginMessage = true.")
         @Setting("loginMessage")
         private String loginMessage = "<hover:show_text:'<green>You have <target_credits> MCMMO Credits!'><yellow>Hover here to see how many MCMMO Credits you have!";
         @Comment("Output for adding new users to database.\n" + "Required database-add-message: true.")
@@ -149,7 +149,7 @@ public final class GeneralConfig extends BaseConfig {
     static class CommandMessages {
         @Comment("All output for /credits")
         private CreditsMessages credits = new CreditsMessages();
-        @Comment("All output for /modifycredits")
+        @Comment("All output for /credits add/set/take <amount>")
         @Setting("modifyCredits")
         private ModifyCreditsMessages modifyCredits = new ModifyCreditsMessages();
         @Comment("All output for /redeem")
@@ -158,66 +158,66 @@ public final class GeneralConfig extends BaseConfig {
 
     @ConfigSerializable
     static class CreditsMessages {
-        @Comment("Sender output for /credits.")
+        @Comment("Sender output for /credits balance.")
         @Setting("selfBalance")
         private String selfBalance = "<green>You have <sender_credits> MCMMO Credits!";
-        @Comment("Sender output for /credits <target>.")
+        @Comment("Sender output for /credits balance <target>.")
         @Setting("otherBalance")
         private String otherBalance = "<green><target> has <target_credits> MCMMO Credits.";
         @Comment("Sender output for /credits reload.")
         @Setting("reloadSuccessful")
         private String reloadSuccessful = "<green>The configuration file has been reloaded.";
-        @Comment("Sender output for /credits <setting> <change> success.")
+        @Comment("Sender output for a successful in-game config modification.")
         @Setting("settingChangeSuccessful")
         private String settingChangeSuccessful = "<green>You have changed <gray><setting> <green>to <gray><change>.";
-        @Comment("Sender output for /credits <setting> <change> failure.")
+        @Comment("Sender output for a failed in-game config modification.")
         @Setting("settingChangeFailure")
         private String settingChangeFailure = "<red>There was an error while changing settings, operation aborted.";
         @Comment("Sender prompt for /credits menu redeem prompt.")
         @Setting("menuRedeemPrompt")
         private String menuRedeemPrompt = "<gray>How many credits would you like to redeem into <green><skill>? <gray>You have <green><target_credits> Credits available.";
-        @Comment("Sender prompt for /credits menu settings/messages.")
+        @Comment("Sender prompt for /credits menu config.")
         @Setting("menuEditingPrompt")
         private String menuEditingPrompt = "<red>Enter the new value for <gray><setting>, or type 'cancel' to abort.";
     }
 
     @ConfigSerializable
     static class ModifyCreditsMessages {
-        @Comment("Sender output for /modifycredits add.")
+        @Comment("Sender output for /credits add <amount>.")
         @Setting("addSender")
         private String addSender = "<green>You have given <amount> Credits to <target>.";
-        @Comment("Sender output for /modifycredits modify.")
+        @Comment("Sender output for /credits set <amount>.")
         @Setting("setSender")
         private String setSender = "<yellow>You have set <target>'s Credits to <amount>.";
-        @Comment("Sender output for /modifycredits take.")
+        @Comment("Sender output for /credits take <amount>.")
         @Setting("takeSender")
         private String takeSender = "<red>You have taken <amount> Credits from <target>.";
-        @Comment("Receiver output for /modifycredits add.\n" + "Requires --s to be used.")
+        @Comment("Receiver output for /credits add <amount> <player>. This will not send if --s is used.")
         @Setting("addReceiver")
         private String addReceiver = "<green><amount> Credits have been added to your balance by <sender>. You now have <target_credits> Credits.";
-        @Comment("Receiver output for /modifycredits modify.\n" + "Requires --s to be used.")
+        @Comment("Receiver output for /credits set <amount> <player>. This will not send if --s is used.")
         @Setting("setReceiver")
         private String setReceiver = "<yellow>Your MCMMO Credit balance has been set to <amount> by <sender>.";
-        @Comment("Receiver output for /modifycredits take.\n" + "Requires --s to be used.")
+        @Comment("Receiver output for /credits take <amount> <player>. This will not send if --s is used.")
         @Setting("takeReceiver")
         private String takeReceiver = "<red>You had <amount> taken out of your Credit balance by <sender>. You now have <target_credits> Credits.";
     }
 
     @ConfigSerializable
     static class RedeemMessages {
-        @Comment("Sender output for /redeem failure.\n" + "Sent when skill cap would be exceeded.")
+        @Comment("Sender output for a failed credit redemption.\n" + "Sent when skill cap would be exceeded.")
         @Setting("skillCap")
         private String skillCap = "<red>You cannot redeem this many MCMMO Credits into <skill>, due to the Level Cap (<cap>).";
         @Comment("Sender output for /redeem failure.\n" + "Sent when user does not have enough credits.")
         @Setting("notEnoughCredits")
         private String notEnoughCredits = "<red>You do not have enough MCMMO Credits to do this!";
-        @Comment("Sender output for /redeem success.")
+        @Comment("Sender output for successful credit redemption.")
         @Setting("selfRedeem")
         private String selfRedeem = "<green>Redemption Successful! You have redeemed <amount> Credits into <skill>. You have <target_credits> Credits remaining.";
-        @Comment("Sender output for /redeem success,\n" + "when used on another player.\n" + "Requires --s flag to be used.")
+        @Comment("Sender output for successful credit redemption when used on another user.")
         @Setting("otherRedeemSender")
         private String otherRedeemSender = "<green>Redemption Successful! You have redeemed <amount> Credits into <skill> for <target>. They have <target_credits> Credits remaining.";
-        @Comment("Receiver output for /redeem success,\n" + "when used on another player.\n" + "Requires --s flag to be used.")
+        @Comment("Receiver output for successful credit redemption when used on another user.\n"+ "This will not send if --s is used.")
         @Setting("otherRedeemReceiver")
         private String otherRedeemReceiver = "<green>Redemption Successful! <sender> has redeemed <amount> Credits into <skill> for you! You have <target_credits> Credits remaining.";
     }

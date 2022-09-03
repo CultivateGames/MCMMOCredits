@@ -1,5 +1,5 @@
 name: MCMMOCredits
-version: '0.2.0'
+version: '0.2.1'
 main: games.cultivate.mcmmocredits.MCMMOCredits
 api-version: 1.19
 description: The essential MCMMO Credits plugin.

@@ -116,7 +116,7 @@ public final class Credits {
      */
     @CommandDescription("Modify your own MCMMO Credit balance.")
     @CommandMethod("<operation> <amount>")
-    @CommandPermission("mcmmocredits.admin.modify.self")
+    @CommandPermission("mcmmocredits.modify.self")
     public void modifySelfCredits(final Player player, final @Argument(suggestions = "ops") String operation, final @Argument @Range(min = "1") int amount) {
         String op = operation.toLowerCase();
         if (this.performCreditTransaction(player, player.getUniqueId(), op, amount)) {
@@ -139,7 +139,7 @@ public final class Credits {
      */
     @CommandDescription("Modify MCMMO Credits of a user")
     @CommandMethod("<operation> <amount> <user>")
-    @CommandPermission("mcmmocredits.admin.modify.other")
+    @CommandPermission("mcmmocredits.modify.other")
     public void modifyOtherCredits(final CommandSender sender, final @Argument(suggestions = "ops") String operation, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") String user, final @Flag("s") boolean silent) {
         this.database.getUUID(user).whenComplete((uuid, t) -> {
             if (!this.database.doesPlayerExist(uuid)) {
