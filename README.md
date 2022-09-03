@@ -8,7 +8,7 @@ This plugin currently requires a Minecraft server with the following installed: 
 ```<> = required argument, [] = optional argument, Command Alias: /mcmmocredits```
 | Command | Permission | Description |
 | --- | --- | --- |
-| ```/credits balance``` | mcmmocredits.balance.self | Check your own mcMMO Credit balance. | 
+| ```/credits balance``` | mcmmocredits.balance.self | Check your own mcMMO Credit balance. |
 | ```/credits balance [player]``` | mcmmocredits.balance.other | Check mcMMO Credit balance of another user. |
 | ```/credits add/set/take <amount>``` | mcmmocredits.modify.self | Modify your own mcMMO Credit balance. |
 | ```/credits add/set/take <amount> <player> [--s]``` | mcmmocredits.modify.other | Modify someone else's mcMMO Credit balance. |
@@ -42,20 +42,17 @@ The plugin can currently store player data using 3 database types: SQLite, MySQL
 **JSON is currently not recommended. The implementation has performance slowdowns with large datasets.**
 
 ## Placeholders
-
-### PlaceholderAPI
-All messages are able to parse external PlaceholderAPI placeholders. They will be parsed for the recipient of the message.
-%mcmmocredits_credits%: Returns the amount of mcMMO Credits a user currently has.
-
-### Local Placeholders
-If the information is available, then messages can be parsed for the following information:
-<sender>: Name of the command sender/executor.
-<target>: Name of the command target. If sender and target are the same, then either set of tags will work.
-<sender_credits>: Amount of credits the command sender/executor currently has.
-<target_credits>: Amount of credits the command recipient/target currently has.
-<skill>: Name of affected mcMMO skill, formatted. Ex. Acrobatics
-<cap>: Level cap of affected mcMMO skill
-<amount>: Amount of credits used within a transaction. This may be the amount of credits added to a balance, or the amount of credits redeemed into a mcMMO skill.
+```All messages are able to parse external PlaceholderAPI placeholders. They will be parsed for the recipient of the message.```
+| Name | Type | Description |
+| --- | --- | -- |
+| ```<sender>``` | Local | Name of the command sender/executor. |
+| ```<target>``` | Local | Name of the command target. If sender and target are the same, then either set of tags will work. |
+| ```<sender_credits>``` | Local | Amount of credits the command sender/executor currently has. |
+| ```<target_credits>``` | Local | Amount of credits the command recipient/target currently has. |
+| ```<skill>``` | Local  | Name of affected mcMMO skill, formatted. Ex. Acrobatics. |
+| ```<cap>``` | Local | Level cap of affected mcMMO skill. |
+| ```<amount>``` | Local | Amount of credits used within a transaction. This may be the amount of credits added to a balance, or the amount of credits redeemed into a mcMMO skill. |
+| ```%mcmmocredits_credits%``` | PlaceholderAPI | Returns the amount of mcMMO Credits a user currently has. |
 
 ## Hocon Configuration
 Basics about configuring within Hocon can be found here: https://docs.spongepowered.org/stable/en/server/getting-started/configuration/hocon.html
