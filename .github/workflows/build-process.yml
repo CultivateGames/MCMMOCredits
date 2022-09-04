@@ -20,7 +20,9 @@ jobs:
         uses: gradle/wrapper-validation-action@v1
 
       - name: Build Project
-        run: ./gradlew build
+        run: |
+          chmod +x gradlew
+          ./gradlew build --stacktrace
 
       - name: Release
         uses: "marvinpinto/action-automatic-releases@latest"
