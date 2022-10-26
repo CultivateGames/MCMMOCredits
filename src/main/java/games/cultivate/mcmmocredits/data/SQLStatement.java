@@ -27,16 +27,18 @@ package games.cultivate.mcmmocredits.data;
  * Enum used to hold SQL-based queries used throughout the application.
  */
 enum SQLStatement {
-    ADD_PLAYER("INSERT INTO `MCMMOCredits`(UUID, username, credits) VALUES(?,?,?);"),
+    ADD_PLAYER("INSERT INTO `MCMMOCredits`(UUID, username, credits, redeemed) VALUES(?,?,?,?);"),
     SET_CREDITS("UPDATE `MCMMOCredits` SET credits= ? WHERE `UUID`= ?;"),
     ADD_CREDITS("UPDATE `MCMMOCredits` SET credits = credits + ? WHERE `UUID`= ?;"),
+    ADD_REDEEMED("UPDATE `MCMMOCredits` SET redeemed = redeemed + ? WHERE `UUID`=?;"),
     TAKE_CREDITS("UPDATE `MCMMOCredits` SET credits = credits - ? WHERE `UUID`= ?;"),
     GET_CREDITS("SELECT `credits` FROM `MCMMOCredits` WHERE `UUID`= ? LIMIT 1;"),
+    GET_REDEEMED("SELECT `redeemed` FROM `MCMMOCredits` WHERE `UUID`=? LIMIT 1;"),
     SET_USERNAME("UPDATE `MCMMOCredits` SET username= ? WHERE `UUID`= ?;"),
     GET_USERNAME("SELECT `username` FROM `MCMMOCredits` WHERE `UUID`= ? LIMIT 1;"),
     GET_UUID("SELECT `UUID` FROM `MCMMOCredits` WHERE `username` LIKE ? LIMIT 1;"),
-    SQLITE_CREATE_TABLE("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTOINCREMENT, UUID VARCHAR NOT NULL, username VARCHAR NOT NULL, credits INT CHECK(credits >= 0));"),
-    MYSQL_CREATE_TABLE("CREATE TABLE IF NOT EXISTS `MCMMOCredits`(`id` int PRIMARY KEY AUTO_INCREMENT,`UUID` text NOT NULL,`username` text NOT NULL,`credits` int CHECK(credits >= 0));");
+    SQLITE_CREATE_TABLE("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTOINCREMENT, UUID VARCHAR NOT NULL, username VARCHAR NOT NULL, credits INT CHECK(credits >= 0), redeemed INT);"),
+    MYSQL_CREATE_TABLE("CREATE TABLE IF NOT EXISTS `MCMMOCredits`(`id` int PRIMARY KEY AUTO_INCREMENT,`UUID` text NOT NULL,`username` text NOT NULL,`credits` int CHECK(credits >= 0), `redeemed` int);");
 
     private final String statement;
 

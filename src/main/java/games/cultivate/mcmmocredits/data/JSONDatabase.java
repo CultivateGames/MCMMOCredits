@@ -64,7 +64,7 @@ public final class JSONDatabase implements Database {
         String fileName = "database.json";
         FileUtil.createFile(dir, fileName);
         this.file = dir.resolve(fileName).toFile();
-        JSONUser notch = new JSONUser(new UUID(0, 0), "Notch", 0);
+        JSONUser notch = new JSONUser(new UUID(0, 0), "Notch", 0, 0);
         if (this.file.length() == 0) {
             this.users = new ArrayList<>();
             this.users.add(notch);
@@ -92,9 +92,9 @@ public final class JSONDatabase implements Database {
      * {@inheritDoc}
      */
     @Override
-    public void addPlayer(final UUID uuid, final String username, final int credits) {
+    public void addPlayer(final UUID uuid, final String username, final int credits, final int redeemed) {
         Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
-            this.users.add(new JSONUser(uuid, username, credits));
+            this.users.add(new JSONUser(uuid, username, credits, redeemed));
             this.writeUsers();
         });
     }
@@ -125,7 +125,7 @@ public final class JSONDatabase implements Database {
     public void setUsername(final UUID uuid, final String username) {
         Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> this.findUserByUUID(uuid).ifPresent(user -> {
             this.users.remove(user);
-            this.users.add(new JSONUser(user.uuid(), username, user.credits()));
+            this.users.add(new JSONUser(user.uuid(), username, user.credits(), user.redeemed()));
             this.writeUsers();
         }));
     }
@@ -149,7 +149,7 @@ public final class JSONDatabase implements Database {
         }
         JSONUser user = possibleUser.orElseThrow();
         this.users.remove(user);
-        this.users.add(new JSONUser(user.uuid(), user.username(), credits));
+        this.users.add(new JSONUser(user.uuid(), user.username(), credits, user.redeemed()));
         this.writeUsers();
         return true;
     }
@@ -179,6 +179,30 @@ public final class JSONDatabase implements Database {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean addRedeemedCredits(final UUID uuid, final int credits) {
+        Optional<JSONUser> possibleUser = this.findUserByUUID(uuid);
+        if (credits < 0 || possibleUser.isEmpty()) {
+            return false;
+        }
+        JSONUser user = possibleUser.orElseThrow();
+        this.users.remove(user);
+        this.users.add(new JSONUser(user.uuid(), user.username(), user.credits(), credits));
+        this.writeUsers();
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getRedeemedCredits(final UUID uuid) {
+        return this.findUserByUUID(uuid).map(JSONUser::redeemed).orElse(0);
+    }
+
+    /**
      * Writes {@link JSONUser}s to the database.json file, stored as an array.
      */
     private void writeUsers() {
@@ -188,7 +212,8 @@ public final class JSONDatabase implements Database {
             for (JSONUser user : this.users) {
                 jw.beginObject().name("uuid").value(user.uuid().toString())
                         .name("username").value(user.username())
-                        .name("credits").value(user.credits()).endObject().flush();
+                        .name("credits").value(user.credits())
+                        .name("redeemed").value(user.redeemed()).endObject().flush();
             }
             jw.endArray();
         } catch (IOException e) {

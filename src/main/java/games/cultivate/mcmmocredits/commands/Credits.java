@@ -297,6 +297,7 @@ public final class Credits {
             profile.modifySkill(skill, currentLevel + amount);
             profile.save(true);
             this.database.takeCredits(uuid, amount);
+            this.database.addRedeemedCredits(uuid, amount);
             return Optional.empty();
         }
         return Optional.of("playerDoesNotExist");

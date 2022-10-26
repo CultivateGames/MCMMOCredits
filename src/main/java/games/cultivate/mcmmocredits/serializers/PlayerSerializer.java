@@ -25,7 +25,6 @@ package games.cultivate.mcmmocredits.serializers;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import games.cultivate.mcmmocredits.data.JSONDatabase;
 import games.cultivate.mcmmocredits.util.JSONUser;
@@ -42,10 +41,12 @@ public final class PlayerSerializer extends TypeAdapter<JSONUser> {
      */
     @Override
     public void write(final JsonWriter out, final JSONUser value) throws IOException {
-        out.beginObject().name("UUID").value(value.uuid().toString())
-                .name("name").value(value.username())
-                .name("credits").value(value.credits())
-                .endObject().flush();
+        out.beginObject();
+        out.name("UUID").value(value.uuid().toString());
+        out.name("name").value(value.username());
+        out.name("credits").value(value.credits());
+        out.name("redeemed").value(value.redeemed());
+        out.endObject();
     }
 
     /**
@@ -55,30 +56,20 @@ public final class PlayerSerializer extends TypeAdapter<JSONUser> {
     public JSONUser read(final JsonReader in) throws IOException {
         UUID uuid = new UUID(0, 0);
         String username = "";
-        String fieldName = "";
         int credits = 0;
+        int redeemed = 0;
         in.beginObject();
         while (in.hasNext()) {
-            JsonToken token = in.peek();
-            if (token.equals(JsonToken.NAME)) {
-                fieldName = in.nextName();
-            }
-            if (fieldName.equalsIgnoreCase("UUID")) {
-                in.peek();
-                uuid = UUID.fromString(in.nextString());
-            }
-
-            if (fieldName.equalsIgnoreCase("username")) {
-                in.peek();
-                username = in.nextString();
-            }
-
-            if (fieldName.equalsIgnoreCase("credits")) {
-                in.peek();
-                credits = in.nextInt();
+            switch (in.nextName().toLowerCase()) {
+                case "uuid" -> uuid = UUID.fromString(in.nextString());
+                case "username" -> username = in.nextString();
+                case "credits" -> credits = in.nextInt();
+                case "redeemed" -> redeemed = in.nextInt();
+                default -> { // do nothing
+                }
             }
         }
         in.endObject();
-        return new JSONUser(uuid, username, credits);
+        return new JSONUser(uuid, username, credits, redeemed);
     }
 }
