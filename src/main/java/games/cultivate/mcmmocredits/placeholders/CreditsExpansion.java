@@ -30,6 +30,7 @@ import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
+import java.util.UUID;
 
 /**
  * This is responsible for handling our registration with {@link PlaceholderAPI}
@@ -63,7 +64,7 @@ public final class CreditsExpansion extends PlaceholderExpansion {
      */
     @Override
     public @NotNull String getVersion() {
-        return "0.2.1-SNAPSHOT";
+        return "0.2.2-SNAPSHOT";
     }
 
     /**
@@ -79,8 +80,12 @@ public final class CreditsExpansion extends PlaceholderExpansion {
      */
     @Override
     public String onRequest(final OfflinePlayer player, final String identifier) {
+        UUID uuid = player.getUniqueId();
         if (identifier.equalsIgnoreCase("credits")) {
-            return this.database.getCredits(player.getUniqueId()) + "";
+            return this.database.getCredits(uuid) + "";
+        }
+        if (identifier.equalsIgnoreCase("redeemed")) {
+            return this.database.getRedeemedCredits(uuid) + "";
         }
         return null;
     }

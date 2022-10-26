@@ -34,7 +34,16 @@ import java.sql.PreparedStatement;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static games.cultivate.mcmmocredits.data.SQLStatement.*;
+import static games.cultivate.mcmmocredits.data.SQLStatement.ADD_CREDITS;
+import static games.cultivate.mcmmocredits.data.SQLStatement.ADD_PLAYER;
+import static games.cultivate.mcmmocredits.data.SQLStatement.ADD_REDEEMED;
+import static games.cultivate.mcmmocredits.data.SQLStatement.GET_CREDITS;
+import static games.cultivate.mcmmocredits.data.SQLStatement.GET_REDEEMED;
+import static games.cultivate.mcmmocredits.data.SQLStatement.GET_USERNAME;
+import static games.cultivate.mcmmocredits.data.SQLStatement.GET_UUID;
+import static games.cultivate.mcmmocredits.data.SQLStatement.SET_CREDITS;
+import static games.cultivate.mcmmocredits.data.SQLStatement.SET_USERNAME;
+import static games.cultivate.mcmmocredits.data.SQLStatement.TAKE_CREDITS;
 
 /**
  * Class used to represent a SQL-based {@link Database}.
@@ -64,8 +73,8 @@ public sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLit
      * {@inheritDoc}
      */
     @Override
-    public void addPlayer(final UUID uuid, final String username, final int credits) {
-        this.update(ADD_PLAYER, uuid.toString(), username, credits);
+    public void addPlayer(final UUID uuid, final String username, final int credits, final int redeemed) {
+        this.update(ADD_PLAYER, uuid.toString(), username, credits, redeemed);
     }
 
     /**
@@ -135,6 +144,23 @@ public sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLit
      * {@inheritDoc}
      */
     @Override
+    public boolean addRedeemedCredits(final UUID uuid, final int credits) {
+        return this.updateSync(ADD_REDEEMED, credits, uuid.toString());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getRedeemedCredits(final UUID uuid) {
+        Integer credits = this.query(Integer.class, GET_REDEEMED, uuid.toString());
+        return credits != null ? credits : 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int getCredits(final UUID uuid) {
         Integer credits = this.query(Integer.class, GET_CREDITS, uuid.toString());
         return credits != null ? credits : 0;
@@ -145,7 +171,7 @@ public sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLit
      *
      * @param statement {@link SQLStatement} we are using to update the database.
      * @param args      {@link Object}s we are populating a {@link PreparedStatement} with.
-     * @see #addPlayer(UUID, String, int)
+     * @see #addPlayer(UUID, String, int, int)
      */
     private void update(final SQLStatement statement, final Object... args) {
         Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> this.jdbi.useHandle(x -> x.execute(statement.toString(), args)));

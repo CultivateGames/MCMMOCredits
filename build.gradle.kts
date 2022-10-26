@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.2.1-SNAPSHOT"
+version = "0.2.2-SNAPSHOT"
 description = "MCMMOCredits"
 
 plugins {
@@ -35,8 +35,8 @@ dependencies {
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
         exclude(module = "paper-api")
     }
-    implementation("org.jdbi:jdbi3-core:3.32.0")
-    implementation("org.jdbi:jdbi3-sqlite:3.32.0")
+    implementation("org.jdbi:jdbi3-core:3.34.0")
+    implementation("org.jdbi:jdbi3-sqlite:3.34.0")
 
     compileOnly("me.clip:placeholderapi:2.11.2") {
         exclude(group = "net.kyori")
