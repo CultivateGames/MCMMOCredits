@@ -2,7 +2,7 @@
 A modern mcMMO Credits plugin.
 
 ## Requirements
-This plugin currently requires a Minecraft server with the following installed: Java 17, 1.19.2 Paper (and forks), mcMMO.
+This plugin currently requires a Minecraft server with the following installed: Java 17, 1.19.3 Paper (and forks), mcMMO.
 
 ## Commands
 ```<> = required argument, [] = optional argument, Command Alias: /mcmmocredits```
@@ -15,7 +15,7 @@ This plugin currently requires a Minecraft server with the following installed: 
 | ```/credits redeem <skill> <amount>``` | mcmmocredits.redeem.self | Redeem mcMMO Credits into a specific mcMMO Skill. |
 | ```/credits redeem <skill> <amount> <player> [--s]``` | mcmmocredits.redeem.other | Redeem mcMMO Credits into a specific mcMMO Skill for another user (works like a sudo) |
 | ```/credits menu main``` | mcmmocredits.menu.main | Opens the main menu. |
-| ```/credits menu config``` | mcmmocredits.menu.config | Opens the main menu. |
+| ```/credits menu config``` | mcmmocredits.menu.config | Opens the configuration menu. |
 | ```/credits menu redeem``` | mcmmocredits.menu.redeem | Opens a menu where players are able to exchange credits for levels in mcMMO skills. |
 | ```/credits reload``` | mcmmocredits.admin.reload | Reloads all configuration files. |
 
@@ -53,6 +53,7 @@ The plugin can currently store player data using 3 database types: SQLite, MySQL
 | ```<cap>``` | Local | Level cap of affected mcMMO skill. |
 | ```<amount>``` | Local | Amount of credits used within a transaction. This may be the amount of credits added to a balance, or the amount of credits redeemed into a mcMMO skill. |
 | ```%mcmmocredits_credits%``` | PlaceholderAPI | Returns the amount of mcMMO Credits a user currently has. |
+| ```%mcmmocredits_redeemed%``` | PlaceholderAPI | Returns the amount of mcMMO Credits a user has redeemed. |
 
 ## Hocon Configuration
 Basics about configuring within Hocon can be found here: https://docs.spongepowered.org/stable/en/server/getting-started/configuration/hocon.html
