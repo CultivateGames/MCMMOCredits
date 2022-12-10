@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.2.2"
+version = "0.2.3"
 description = "MCMMOCredits"
 
 plugins {
@@ -79,7 +79,7 @@ tasks {
         reloc("broccolai.corn")
         reloc("cloud.commandframework")
         reloc("com.github")
-        reloc("com.google")
+        //reloc("com.google")
         reloc("com.typesafe")
         reloc("com.zaxxer")
         reloc("io.leangen")
@@ -89,7 +89,7 @@ tasks {
         reloc("org.checkerframework")
         reloc("org.jdbi")
         reloc("org.incendo")
-        reloc("org.slf4j")
+        //reloc("org.slf4j")
         reloc("org.spongepowered")
 
         manifest {
