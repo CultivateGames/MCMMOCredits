@@ -64,7 +64,7 @@ public final class CreditsExpansion extends PlaceholderExpansion {
      */
     @Override
     public @NotNull String getVersion() {
-        return "0.2.2-SNAPSHOT";
+        return "0.2.2";
     }
 
     /**
