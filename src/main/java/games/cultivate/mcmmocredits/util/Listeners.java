@@ -71,7 +71,7 @@ public class Listeners implements Listener {
             UUID uuid = profile.getId();
             String username = profile.getName();
             if (!this.database.doesPlayerExist(uuid)) {
-                this.database.addPlayer(uuid, username, 0);
+                this.database.addPlayer(uuid, username, 0, 0);
                 if (this.config.bool("addPlayerNotification")) {
                     TagResolver resolver = this.resolverFactory.fromUsers(Bukkit.getConsoleSender(), username);
                     String content = this.config.string("addPlayerMessage", false);
