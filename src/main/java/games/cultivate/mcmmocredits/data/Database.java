@@ -23,6 +23,8 @@
 //
 package games.cultivate.mcmmocredits.data;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -41,6 +43,7 @@ public sealed interface Database permits SQLDatabase, JSONDatabase {
      * @param uuid     {@link UUID} of the player.
      * @param username Username of the player.
      * @param credits  Amount of credits to add to the player when their database entry is created (typically 0).
+     * @param redeemed Amount of credits redeemed historically.
      */
     void addPlayer(UUID uuid, String username, int credits, int redeemed);
 
@@ -74,7 +77,7 @@ public sealed interface Database permits SQLDatabase, JSONDatabase {
      * @param uuid {@link UUID} to search for player with.
      * @return the username if it exists.
      */
-    String getUsername(UUID uuid);
+    @Nullable String getUsername(UUID uuid);
 
     /**
      * Sets credit amount of player in our database. Finds user via UUID. This method runs synchronously.

@@ -33,6 +33,7 @@ import java.util.UUID;
  * @param uuid     {@link UUID} of the user.
  * @param username String representing the user's username.
  * @param credits  amount of credits the user currently has.
+ * @param redeemed amount of credits redeemed historically.
  */
 public record JSONUser(UUID uuid, String username, int credits, int redeemed) {
 

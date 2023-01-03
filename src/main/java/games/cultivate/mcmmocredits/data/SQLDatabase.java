@@ -28,22 +28,14 @@ import games.cultivate.mcmmocredits.MCMMOCredits;
 import org.bukkit.Bukkit;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.StatementException;
+import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.sql.PreparedStatement;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static games.cultivate.mcmmocredits.data.SQLStatement.ADD_CREDITS;
-import static games.cultivate.mcmmocredits.data.SQLStatement.ADD_PLAYER;
-import static games.cultivate.mcmmocredits.data.SQLStatement.ADD_REDEEMED;
-import static games.cultivate.mcmmocredits.data.SQLStatement.GET_CREDITS;
-import static games.cultivate.mcmmocredits.data.SQLStatement.GET_REDEEMED;
-import static games.cultivate.mcmmocredits.data.SQLStatement.GET_USERNAME;
-import static games.cultivate.mcmmocredits.data.SQLStatement.GET_UUID;
-import static games.cultivate.mcmmocredits.data.SQLStatement.SET_CREDITS;
-import static games.cultivate.mcmmocredits.data.SQLStatement.SET_USERNAME;
-import static games.cultivate.mcmmocredits.data.SQLStatement.TAKE_CREDITS;
+import static games.cultivate.mcmmocredits.data.SQLStatement.*;
 
 /**
  * Class used to represent a SQL-based {@link Database}.
@@ -111,9 +103,8 @@ public sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLit
      * {@inheritDoc}
      */
     @Override
-    public String getUsername(final UUID uuid) {
-        String content = this.query(String.class, GET_USERNAME, uuid.toString());
-        return content != null ? content : "";
+    public @Nullable String getUsername(final UUID uuid) {
+        return this.query(String.class, GET_USERNAME, uuid.toString());
     }
 
     /**
