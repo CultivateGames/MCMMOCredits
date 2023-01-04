@@ -29,7 +29,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Interface which represents all available database operations. All I/O should run asynchronously unless noted.
+ * Interface which represents all available database operations.
  */
 public sealed interface Database permits SQLDatabase, JSONDatabase {
     /**
@@ -80,7 +80,7 @@ public sealed interface Database permits SQLDatabase, JSONDatabase {
     @Nullable String getUsername(UUID uuid);
 
     /**
-     * Sets credit amount of player in our database. Finds user via UUID. This method runs synchronously.
+     * Sets credit amount of player in our database. Finds user via UUID.
      *
      * @param uuid    {@link UUID} to search for player with.
      * @param credits amount of credits to set the player's balance to.
@@ -89,7 +89,7 @@ public sealed interface Database permits SQLDatabase, JSONDatabase {
     boolean setCredits(UUID uuid, int credits);
 
     /**
-     * Gets credit balance for player in our database. Finds user via UUID. This method runs synchronously.
+     * Gets credit balance for player in our database. Finds user via UUID.
      *
      * @param uuid {@link UUID} to search for player with.
      * @return amount of credits the player currently has.
@@ -97,7 +97,7 @@ public sealed interface Database permits SQLDatabase, JSONDatabase {
     int getCredits(UUID uuid);
 
     /**
-     * Adds credit amount to existing credit balance of user in our database. Finds user via UUID. This method runs synchronously.
+     * Adds credit amount to existing credit balance of user in our database. Finds user via UUID.
      *
      * @param uuid    {@link UUID} to search for player with.
      * @param credits amount of credits to add to player.
@@ -106,7 +106,7 @@ public sealed interface Database permits SQLDatabase, JSONDatabase {
     boolean addCredits(UUID uuid, int credits);
 
     /**
-     * Takes credit amount from existing credit balance of user in our database. Finds user via UUID. This method runs synchronously.
+     * Takes credit amount from existing credit balance of user in our database. Finds user via UUID.
      *
      * @param uuid    {@link UUID} to search for player with.
      * @param credits amount of credits to add to player.
@@ -124,7 +124,7 @@ public sealed interface Database permits SQLDatabase, JSONDatabase {
     boolean addRedeemedCredits(UUID uuid, int credits);
 
     /**
-     * Gets "credits redeemed" statistic for player in our database. Finds user via UUID. This method runs synchronously.
+     * Gets "credits redeemed" statistic for player in our database. Finds user via UUID.
      *
      * @param uuid {@link UUID} to search for player with.
      * @return amount of credits the player currently has redeemed over their existence.
