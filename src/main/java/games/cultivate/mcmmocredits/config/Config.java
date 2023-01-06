@@ -25,13 +25,15 @@ package games.cultivate.mcmmocredits.config;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
-import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
 import org.spongepowered.configurate.serialize.SerializationException;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
 import java.util.logging.Level;
 
 /**
@@ -79,40 +81,31 @@ public interface Config {
     CommentedConfigurationNode rootNode();
 
     /**
-     * Gets the current list of all nodes represented by this configuration object.
+     * Gets the current map of all nodes represented by this configuration object.
      *
-     * @return list of all nodes represented by this configuration object.
+     * @return map of all nodes represented by this configuration object.
+     * @see Config#nodesFromParent(CommentedConfigurationNode)
      */
-    List<CommentedConfigurationNode> nodes();
+    Map<String, CommentedConfigurationNode> nodes();
 
     /**
-     * Transforms a node's path to be a singular string separated by "."
+     * Grabs all CommentedConfigurationNodes and their paths using the root node generated in the loading process.
      * <p>
-     * Example Transformation: messages, general, prefix -> messages.general.prefix
-     *
-     * @param node node that provides the path to be transformed.
-     * @return node path that is joined by "."
-     */
-    default String joinedPath(final CommentedConfigurationNode node) {
-        return StringUtils.join(node.path().array(), ".");
-    }
-
-    /**
-     * Grabs all CommentedConfigurationNodes using the root node generated in the loading process.
+     * Path is stored with a "." delimiter. For example, "messages.commands.credits.selfBalance"
      *
      * @param parent The configurations root node.
-     * @return list of all configuration nodes represented in the config.
+     * @return map of all configuration nodes and their paths represented in the config.
      */
-    //TODO can we reduce time complexity of this operation?
-    default List<CommentedConfigurationNode> nodesFromParent(CommentedConfigurationNode parent) {
-        List<CommentedConfigurationNode> nodes = new CopyOnWriteArrayList<>(parent.childrenMap().values());
-        while (nodes.stream().anyMatch(ConfigurationNode::isMap)) {
-            nodes.forEach(i -> {
-                if (i.isMap()) {
-                    nodes.addAll(i.childrenMap().values());
-                    nodes.remove(i);
-                }
-            });
+    default Map<String, CommentedConfigurationNode> nodesFromParent(CommentedConfigurationNode parent) {
+        Queue<CommentedConfigurationNode> queue = new LinkedList<>(parent.childrenMap().values());
+        Map<String, CommentedConfigurationNode> nodes = new HashMap<>();
+        while (!queue.isEmpty()) {
+            CommentedConfigurationNode node = queue.poll();
+            if (node.isMap()) {
+                queue.addAll(node.childrenMap().values());
+                continue;
+            }
+            nodes.put(StringUtils.join(node.path().array(), "."), node);
         }
         return nodes;
     }
@@ -181,7 +174,7 @@ public interface Config {
     }
 
     /**
-     * Accesses a configuration's node list to return a value from the node that best matches the provided path.
+     * Accesses a configuration's node map to return a value from the node that best matches the provided path.
      *
      * @param type type of value to return.
      * @param path configuration path where the value is retrieved from.
@@ -190,13 +183,12 @@ public interface Config {
      * @return value found at provided path.
      */
     default <V> V value(Class<V> type, String path, V def) {
-        for (CommentedConfigurationNode node : this.nodes()) {
-            if (this.joinedPath(node).contains(path)) {
-                try {
-                    return node.get(type);
-                } catch (SerializationException e) {
-                    e.printStackTrace();
-                }
+        CommentedConfigurationNode node = this.findNode(path);
+        if (node != null) {
+            try {
+                return node.get(type);
+            } catch (SerializationException e) {
+                e.printStackTrace();
             }
         }
         Bukkit.getLogger().log(Level.WARNING, "[MCMMOCredits] Config is missing value: {0}, Check your files!", path);
@@ -216,15 +208,14 @@ public interface Config {
         if (value == null || value.toString().equalsIgnoreCase("cancel")) {
             return false;
         }
-        for (CommentedConfigurationNode node : this.nodes()) {
-            if (this.joinedPath(node).contains(path)) {
-                try {
-                    node.set(type, value);
-                    this.save();
-                    return true;
-                } catch (SerializationException e) {
-                    e.printStackTrace();
-                }
+        CommentedConfigurationNode node = this.findNode(path);
+        if (node != null) {
+            try {
+                node.set(type, value);
+                this.save();
+                return true;
+            } catch (SerializationException e) {
+                e.printStackTrace();
             }
         }
         return false;
@@ -239,5 +230,15 @@ public interface Config {
      */
     default boolean modify(String path, String value) {
         return this.modify(String.class, path, value);
+    }
+
+    /**
+     * Finds the CommentedConfigurationNode which has a path that contains the string provided.
+     *
+     * @param string the string to check against.
+     * @return the associated node
+     */
+    private @Nullable CommentedConfigurationNode findNode(String string) {
+        return this.nodes().keySet().stream().filter(x -> x.contains(string)).findAny().map(this.nodes()::get).orElse(null);
     }
 }

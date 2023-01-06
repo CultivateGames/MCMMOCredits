@@ -34,8 +34,8 @@ import org.spongepowered.configurate.objectmapping.ObjectMapper;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Object represents all {@link Config} types.
@@ -47,13 +47,13 @@ public class BaseConfig implements Config {
     private transient BaseConfig conf;
     private transient CommentedConfigurationNode root;
     private transient HoconConfigurationLoader loader;
-    private transient List<CommentedConfigurationNode> nodeList;
+    private transient Map<String, CommentedConfigurationNode> nodeMap;
     private transient @Inject @Named("dir") Path dir;
 
     BaseConfig(final Class<? extends BaseConfig> type, final String fileName) {
         this.type = type;
         this.fileName = fileName;
-        this.nodeList = new ArrayList<>();
+        this.nodeMap = new HashMap<>();
     }
 
     /**
@@ -90,8 +90,8 @@ public class BaseConfig implements Config {
         try {
             this.loader.save(root);
             this.root = root;
-            this.nodeList = this.nodesFromParent(this.root);
-        } catch (Exception e) {
+            this.nodeMap = this.nodesFromParent(this.root);
+        } catch (ConfigurateException e) {
             e.printStackTrace();
         }
     }
@@ -116,7 +116,7 @@ public class BaseConfig implements Config {
      * {@inheritDoc}
      */
     @Override
-    public List<CommentedConfigurationNode> nodes() {
-        return this.nodeList;
+    public Map<String, CommentedConfigurationNode> nodes() {
+        return this.nodeMap;
     }
 }

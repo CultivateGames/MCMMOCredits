@@ -37,7 +37,8 @@ import org.bukkit.inventory.ItemStack;
 import org.incendo.interfaces.core.transform.TransformContext;
 import org.incendo.interfaces.paper.element.ItemStackElement;
 import org.incendo.interfaces.paper.pane.ChestPane;
-import org.spongepowered.configurate.CommentedConfigurationNode;
+
+import java.util.stream.Stream;
 
 /**
  * {@link Menu} allowing users to edit the configuration and have the changes applied from in-game via chat queue.
@@ -59,14 +60,11 @@ public final class ConfigMenu extends BaseMenu {
     public void applySpecialItems() {
         this.transformations.add(TransformContext.of(3, (pane, view) -> {
             int slot = 1;
-            for (CommentedConfigurationNode node : this.config.nodes()) {
-                String path = this.config.joinedPath(node);
-                if (!path.contains("mysql") && !path.contains("item") && !path.startsWith("database")) {
+            for (String path : this.config.nodes().keySet().stream().sorted().toList()) {
+                if (Stream.of("mysql", "item", "database").noneMatch(path::contains)) {
                     String display = path.substring(0, path.indexOf('.'));
-                    if (!display.startsWith("database")) {
-                        pane = this.createConfigTransform(pane, path, display, slot);
-                        slot++;
-                    }
+                    pane = this.createConfigTransform(pane, path, display, slot);
+                    slot++;
                 }
             }
             return pane;
