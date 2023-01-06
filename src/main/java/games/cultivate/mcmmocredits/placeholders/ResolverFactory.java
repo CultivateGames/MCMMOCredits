@@ -23,8 +23,8 @@
 //
 package games.cultivate.mcmmocredits.placeholders;
 
-import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.data.Database;
+import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -49,7 +49,7 @@ public final class ResolverFactory {
      * @return The resulting {@link TagResolver}
      */
     public TagResolver fromUsers(final CommandSender sender) {
-        return Resolver.builder(this.database).users(sender).build();
+        return this.builder().users(sender).build();
     }
 
     /**
@@ -60,22 +60,11 @@ public final class ResolverFactory {
      * @return The resulting {@link TagResolver}
      */
     public TagResolver fromUsers(final CommandSender sender, final String target) {
-        return Resolver.builder(this.database).users(sender, target).build();
+        return this.builder().users(sender, target).build();
     }
 
     /**
-     * Creates a {@link TagResolver} from a transaction impacting only one user.
-     *
-     * @param sender The {@link CommandSender}
-     * @param amount The amount of credits in the relevant transaction.
-     * @return The resulting {@link TagResolver}
-     */
-    public TagResolver fromTransaction(final CommandSender sender, final int amount) {
-        return Resolver.builder(this.database).users(sender).transaction(amount).build();
-    }
-
-    /**
-     * Creates a {@link TagResolver} from a transaction impacting multiple users.
+     * Creates a {@link TagResolver} from a credit transaction.
      *
      * @param sender The {@link CommandSender}
      * @param target Another user. Typically, a {@link Player}'s username.
@@ -83,32 +72,17 @@ public final class ResolverFactory {
      * @return The resulting {@link TagResolver}
      */
     public TagResolver fromTransaction(final CommandSender sender, final String target, final int amount) {
-        return Resolver.builder(this.database).users(sender, target).transaction(amount).build();
-    }
-
-    /**
-     * Creates a {@link TagResolver} from a credit redemption involving one user.
-     *
-     * @param sender The {@link CommandSender}. This is almost always a {@link Player}.
-     * @param skill  The affected {@link PrimarySkillType}.
-     * @param amount The amount of credits used in the transaction.
-     * @return The resulting {@link TagResolver}
-     */
-    public TagResolver fromRedemption(final CommandSender sender, final PrimarySkillType skill, final int amount) {
-        return Resolver.builder(this.database).users(sender).transaction(amount).skill(skill).build();
+        return this.builder().users(sender, target).transaction(amount).build();
     }
 
     /**
      * Creates a {@link TagResolver} from a credit redemption involving multiple users.
      *
-     * @param sender The {@link CommandSender}.
-     * @param target Another user. Typically, a {@link Player}'s username.
-     * @param skill  The affected {@link PrimarySkillType}.
-     * @param amount The amount of credits used in the transaction.
+     * @param e Instance of the {@link CreditRedemptionEvent} that is used to populate the resolver.
      * @return The resulting {@link TagResolver}
      */
-    public TagResolver fromRedemption(final CommandSender sender, final String target, final PrimarySkillType skill, final int amount) {
-        return Resolver.builder(this.database).users(sender, target).transaction(amount).skill(skill).build();
+    public TagResolver fromRedemption(final CreditRedemptionEvent e, final String target) {
+        return this.builder().users(e.initiator(), target).transaction(e.amount()).skill(e.skill()).build();
     }
 
     /**

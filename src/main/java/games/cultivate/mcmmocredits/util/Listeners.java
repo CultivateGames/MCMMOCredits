@@ -23,17 +23,24 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import com.destroystokyo.paper.profile.PlayerProfile;
+import com.gmail.nossr50.datatypes.player.PlayerProfile;
+import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import com.gmail.nossr50.mcMMO;
+import com.gmail.nossr50.util.player.UserManager;
 import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.data.Database;
+import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
+import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
 import games.cultivate.mcmmocredits.text.Text;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -67,7 +74,8 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerPreLogin(final AsyncPlayerPreLoginEvent e) {
         if (e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
-            PlayerProfile profile = e.getPlayerProfile();
+            //fully qualified import due to conflict.
+            com.destroystokyo.paper.profile.PlayerProfile profile = e.getPlayerProfile();
             UUID uuid = profile.getId();
             String username = profile.getName();
             if (!this.database.doesPlayerExist(uuid)) {
@@ -124,5 +132,95 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerQuit(final PlayerQuitEvent e) {
         this.storage.remove(e.getPlayer().getUniqueId());
+    }
+
+    /**
+     * Implements the credit transactions initiated by commands in the plugin.
+     * If external plugin event calls are not taking effect, change the {@link EventPriority} of your call as needed.
+     *
+     * @param e Instance of the {@link CreditTransactionEvent}
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void creditTransaction(final CreditTransactionEvent e) {
+        //Get information about the event.
+        UUID uuid = e.uuid();
+        int amount = e.amount();
+        CreditOperation operation = e.operation();
+        //Determine transaction status based on Database transaction.
+        boolean transactionStatus = switch (operation) {
+            case ADD -> this.database.addCredits(uuid, amount);
+            case SET -> this.database.setCredits(uuid, amount);
+            case TAKE -> this.database.takeCredits(uuid, amount);
+        };
+        CommandSender sender = e.initiator();
+        //If transaction is successful, make the resolver and send the message to sender.
+        if (transactionStatus) {
+            TagResolver resolver = this.resolverFactory.fromTransaction(sender, this.database.getUsername(uuid), amount);
+            String operationName = operation.name().toLowerCase();
+            Text.fromString(sender, this.config.string(operationName + "Sender"), resolver).send();
+            Player player = Bukkit.getPlayer(uuid);
+            //If the player isn't null and transaction is NOT silent, send the receiver message.
+            if (player != null && !e.isSilent()) {
+                Text.fromString(player, this.config.string(operationName + "Receiver"), resolver).send();
+            }
+            return;
+        }
+        Text.fromString(sender, this.config.string("notEnoughCredits"), this.resolverFactory.fromUsers(sender)).send();
+    }
+
+    /**
+     * Implements the credit redemption process initiated by the commands in the plugin.
+     * If external plugin event calls are not taking effect, change the {@link EventPriority} of your call as needed.
+     *
+     * @param e Instance of the {@link CreditRedemptionEvent}
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void creditRedemption(final CreditRedemptionEvent e) {
+        //Get information about the event.
+        UUID uuid = e.uuid();
+        int amount = e.amount();
+        PrimarySkillType skill = e.skill();
+        CommandSender sender = e.initiator();
+        TagResolver errorResolver = this.resolverFactory.fromRedemption(e, this.database.getUsername(uuid));
+        //Check if we have any record of the player.
+        if (!this.database.doesPlayerExist(uuid)) {
+            Text.fromString(sender, this.config.string("playerDoesNotExist"), errorResolver).send();
+            return;
+        }
+        //Check if the user has enough credits to redeem the amount specified.
+        if (this.database.getCredits(uuid) < amount) {
+            Text.fromString(sender, this.config.string("notEnoughCredits"), errorResolver).send();
+            return;
+        }
+        Player player = Bukkit.getPlayer(uuid);
+        PlayerProfile profile = player != null ? UserManager.getPlayer(player).getProfile() : mcMMO.getDatabaseManager().loadPlayerProfile(uuid);
+        if (!profile.isLoaded()) {
+            //send a message if loading mcmmo profile fails. This may need to be a new configuration message.
+            Text.fromString(sender, this.config.string("playerDoesNotExist"), errorResolver).send();
+            return;
+        }
+        int currentLevel = profile.getSkillLevel(skill);
+        if (currentLevel + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill)) {
+            Text.fromString(sender, this.config.string("skillCap"), errorResolver).send();
+            return;
+        }
+        //Take credits first in case of issue with code. Easier to restore credits than previous skill levels.
+        if (this.database.takeCredits(uuid, amount)) {
+            //Modify skill level if credit withdrawal is successful.
+            profile.modifySkill(skill, currentLevel + amount);
+            profile.save(true);
+            this.database.addRedeemedCredits(uuid, amount);
+            //Rebuild TagResolver as information has changed pertaining to users.
+            TagResolver resolver = this.resolverFactory.fromRedemption(e, this.database.getUsername(uuid));
+            //If the sender is equal to the recipient, send the message for self redemption and return.
+            if (sender instanceof Player p && p.getUniqueId().equals(uuid)) {
+                Text.fromString(sender, this.config.string("selfRedeem"), resolver).send();
+                return;
+            }
+            Text.fromString(sender, this.config.string("otherRedeemSender"), resolver).send();
+            if (!e.isSilent() && player != null) {
+                Text.fromString(player, this.config.string("otherRedeemReceiver"), resolver).send();
+            }
+        }
     }
 }
