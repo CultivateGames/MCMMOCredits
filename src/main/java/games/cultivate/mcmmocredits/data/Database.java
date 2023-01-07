@@ -32,6 +32,8 @@ import java.util.concurrent.CompletableFuture;
  * Interface which represents all available database operations.
  */
 public sealed interface Database permits SQLDatabase, JSONDatabase {
+    UUID ZERO_UUID = new UUID(0, 0);
+
     /**
      * Called when the server shuts down properly.
      */
@@ -117,7 +119,7 @@ public sealed interface Database permits SQLDatabase, JSONDatabase {
     /**
      * Adds specified amount to "credits redeemed" statistic.
      *
-     * @param uuid {@link UUID} to search for player with.
+     * @param uuid    {@link UUID} to search for player with.
      * @param credits amount of credits to add to statistic.
      * @return if the operation was successful.
      */

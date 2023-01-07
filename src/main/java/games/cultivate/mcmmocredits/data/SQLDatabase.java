@@ -41,7 +41,6 @@ import static games.cultivate.mcmmocredits.data.SQLStatement.*;
  * Class used to represent a SQL-based {@link Database}.
  */
 public sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLiteDatabase {
-    private static final UUID ZERO_UUID = new UUID(0, 0);
     private final MCMMOCredits plugin;
     protected HikariDataSource hikari;
     protected Jdbi jdbi;

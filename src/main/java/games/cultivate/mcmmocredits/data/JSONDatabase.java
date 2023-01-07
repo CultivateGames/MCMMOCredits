@@ -64,7 +64,7 @@ public final class JSONDatabase implements Database {
         String fileName = "database.json";
         FileUtil.createFile(dir, fileName);
         this.file = dir.resolve(fileName).toFile();
-        JSONUser notch = new JSONUser(new UUID(0, 0), "Notch", 0, 0);
+        JSONUser notch = new JSONUser(ZERO_UUID, "Notch", 0, 0);
         if (this.file.length() == 0) {
             this.users = new ArrayList<>();
             this.users.add(notch);
@@ -104,7 +104,7 @@ public final class JSONDatabase implements Database {
      */
     @Override
     public CompletableFuture<UUID> getUUID(final String username) {
-        return CompletableFuture.supplyAsync(() -> this.findUserByUsername(username).map(JSONUser::uuid).orElse(new UUID(0, 0)));
+        return CompletableFuture.supplyAsync(() -> this.findUserByUsername(username).map(JSONUser::uuid).orElse(ZERO_UUID));
     }
 
     /**
@@ -112,10 +112,10 @@ public final class JSONDatabase implements Database {
      */
     @Override
     public boolean doesPlayerExist(final UUID uuid) {
-        if (uuid == null || uuid.equals(new UUID(0, 0))) {
+        if (uuid == null || uuid.equals(ZERO_UUID)) {
             return false;
         }
-        return this.users.stream().anyMatch(u -> u.uuid().equals(uuid));
+        return this.findUserByUUID(uuid).isPresent();
     }
 
     /**
