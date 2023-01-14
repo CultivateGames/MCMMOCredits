@@ -24,8 +24,8 @@
 package games.cultivate.mcmmocredits.data;
 
 import com.zaxxer.hikari.HikariDataSource;
-import games.cultivate.mcmmocredits.MCMMOCredits;
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.StatementException;
 import org.jetbrains.annotations.Nullable;
@@ -34,19 +34,18 @@ import javax.inject.Inject;
 import java.sql.PreparedStatement;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-
 import static games.cultivate.mcmmocredits.data.SQLStatement.*;
 
 /**
  * Class used to represent a SQL-based {@link Database}.
  */
-public sealed class SQLDatabase implements Database permits MYSQLDatabase, SQLiteDatabase {
-    private final MCMMOCredits plugin;
+public class SQLDatabase implements Database {
+    private final JavaPlugin plugin;
     protected HikariDataSource hikari;
     protected Jdbi jdbi;
 
     @Inject
-    SQLDatabase(final MCMMOCredits plugin) {
+    SQLDatabase(final JavaPlugin plugin) {
         this.plugin = plugin;
     }
 

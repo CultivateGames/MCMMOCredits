@@ -3,7 +3,7 @@ version = "0.2.3"
 description = "MCMMOCredits"
 
 plugins {
-    id ("java-library")
+    id("java")
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("io.papermc.paperweight.userdev") version "1.3.11"
 }
@@ -37,8 +37,8 @@ dependencies {
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
         exclude(module = "paper-api")
     }
-    implementation("org.jdbi:jdbi3-core:3.35.0")
-    implementation("org.jdbi:jdbi3-sqlite:3.35.0")
+    implementation("org.jdbi:jdbi3-core:3.36.0")
+    implementation("org.jdbi:jdbi3-sqlite:3.36.0")
 
     compileOnly("me.clip:placeholderapi:2.11.2") {
         exclude(group = "net.kyori")

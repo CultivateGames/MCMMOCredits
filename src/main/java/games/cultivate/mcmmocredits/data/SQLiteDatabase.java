@@ -25,8 +25,8 @@ package games.cultivate.mcmmocredits.data;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.util.FileUtil;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlite3.SQLitePlugin;
 
@@ -40,7 +40,7 @@ import java.nio.file.Path;
 public final class SQLiteDatabase extends SQLDatabase {
 
     @Inject
-    public SQLiteDatabase(final MCMMOCredits plugin, final @Named("dir") Path dir) {
+    public SQLiteDatabase(final JavaPlugin plugin, final @Named("dir") Path dir) {
         super(plugin);
         HikariConfig config = new HikariConfig();
         config.setPoolName("MCMMOCredits SQLite");

@@ -26,11 +26,11 @@ package games.cultivate.mcmmocredits.data;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
-import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.serializers.PlayerSerializer;
 import games.cultivate.mcmmocredits.util.FileUtil;
-import games.cultivate.mcmmocredits.util.JSONUser;
+import games.cultivate.mcmmocredits.util.User;
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -51,33 +51,28 @@ import java.util.concurrent.CompletableFuture;
  * <br>
  * Usage of this database is not recommended due to IO speed. It will slow down as the database increases in size. It is provided in case a user does not want to use a SQL-based storage option, or the user wants a temporary data store.
  */
-public final class JSONDatabase implements Database {
+public class JSONDatabase implements Database {
     private final Gson gson;
     private final File file;
-    private final MCMMOCredits plugin;
-    private List<JSONUser> users;
+    private final JavaPlugin plugin;
+    private List<User> users;
 
     @Inject
-    JSONDatabase(final MCMMOCredits plugin, final @Named("dir") Path dir) {
+    JSONDatabase(final JavaPlugin plugin, final @Named("dir") Path dir) {
         this.plugin = plugin;
-        this.gson = new GsonBuilder().registerTypeAdapter(JSONUser.class, new PlayerSerializer()).create();
+        this.gson = new GsonBuilder().registerTypeAdapter(User.class, new PlayerSerializer()).create();
         String fileName = "database.json";
         FileUtil.createFile(dir, fileName);
         this.file = dir.resolve(fileName).toFile();
-        JSONUser notch = new JSONUser(ZERO_UUID, "Notch", 0, 0);
-        if (this.file.length() == 0) {
-            this.users = new ArrayList<>();
-            this.users.add(notch);
-            this.writeUsers();
-            return;
+        this.users = new ArrayList<>();
+        if (this.file.length() != 0) {
+            try {
+                this.users = new ArrayList<>(Arrays.asList(this.gson.fromJson(Files.readString(this.file.toPath()), User[].class)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        try {
-            this.users = new ArrayList<>(Arrays.asList(this.gson.fromJson(Files.readString(this.file.toPath()), JSONUser[].class)));
-            //Remove default user when we have existing data store.
-            this.users.remove(notch);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.writeUsers();
     }
 
     /**
@@ -94,7 +89,7 @@ public final class JSONDatabase implements Database {
     @Override
     public void addPlayer(final UUID uuid, final String username, final int credits, final int redeemed) {
         Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
-            this.users.add(new JSONUser(uuid, username, credits, redeemed));
+            this.users.add(new User(uuid, username, credits, redeemed));
             this.writeUsers();
         });
     }
@@ -104,7 +99,7 @@ public final class JSONDatabase implements Database {
      */
     @Override
     public CompletableFuture<UUID> getUUID(final String username) {
-        return CompletableFuture.supplyAsync(() -> this.findUserByUsername(username).map(JSONUser::uuid).orElse(ZERO_UUID));
+        return CompletableFuture.supplyAsync(() -> this.findUserByUsername(username).map(User::uuid).orElse(ZERO_UUID));
     }
 
     /**
@@ -125,7 +120,7 @@ public final class JSONDatabase implements Database {
     public void setUsername(final UUID uuid, final String username) {
         Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> this.findUserByUUID(uuid).ifPresent(user -> {
             this.users.remove(user);
-            this.users.add(new JSONUser(user.uuid(), username, user.credits(), user.redeemed()));
+            this.users.add(new User(user.uuid(), username, user.credits(), user.redeemed()));
             this.writeUsers();
         }));
     }
@@ -135,7 +130,7 @@ public final class JSONDatabase implements Database {
      */
     @Override
     public String getUsername(final UUID uuid) {
-        return this.findUserByUUID(uuid).map(JSONUser::username).orElse(null);
+        return this.findUserByUUID(uuid).map(User::username).orElse(null);
     }
 
     /**
@@ -143,13 +138,13 @@ public final class JSONDatabase implements Database {
      */
     @Override
     public boolean setCredits(final UUID uuid, final int credits) {
-        Optional<JSONUser> possibleUser = this.findUserByUUID(uuid);
+        Optional<User> possibleUser = this.findUserByUUID(uuid);
         if (credits < 0 || possibleUser.isEmpty()) {
             return false;
         }
-        JSONUser user = possibleUser.orElseThrow();
+        User user = possibleUser.orElseThrow();
         this.users.remove(user);
-        this.users.add(new JSONUser(user.uuid(), user.username(), credits, user.redeemed()));
+        this.users.add(new User(user.uuid(), user.username(), credits, user.redeemed()));
         this.writeUsers();
         return true;
     }
@@ -159,7 +154,7 @@ public final class JSONDatabase implements Database {
      */
     @Override
     public int getCredits(final UUID uuid) {
-        return this.findUserByUUID(uuid).map(JSONUser::credits).orElse(0);
+        return this.findUserByUUID(uuid).map(User::credits).orElse(0);
     }
 
     /**
@@ -183,13 +178,14 @@ public final class JSONDatabase implements Database {
      */
     @Override
     public boolean addRedeemedCredits(final UUID uuid, final int credits) {
-        Optional<JSONUser> possibleUser = this.findUserByUUID(uuid);
+        Optional<User> possibleUser = this.findUserByUUID(uuid);
         if (credits < 0 || possibleUser.isEmpty()) {
             return false;
         }
-        JSONUser user = possibleUser.orElseThrow();
+        User user = possibleUser.orElseThrow();
         this.users.remove(user);
-        this.users.add(new JSONUser(user.uuid(), user.username(), user.credits(), credits));
+        int redeemed = user.redeemed();
+        this.users.add(new User(user.uuid(), user.username(), user.credits(), credits + redeemed));
         this.writeUsers();
         return true;
     }
@@ -199,17 +195,17 @@ public final class JSONDatabase implements Database {
      */
     @Override
     public int getRedeemedCredits(final UUID uuid) {
-        return this.findUserByUUID(uuid).map(JSONUser::redeemed).orElse(0);
+        return this.findUserByUUID(uuid).map(User::redeemed).orElse(0);
     }
 
     /**
-     * Writes {@link JSONUser}s to the database.json file, stored as an array.
+     * Writes {@link User}s to the database.json file, stored as an array.
      */
     private void writeUsers() {
         try (FileWriter fw = new FileWriter(this.file);
              JsonWriter jw = this.gson.newJsonWriter(fw)) {
             jw.beginArray();
-            for (JSONUser user : this.users) {
+            for (User user : this.users) {
                 jw.beginObject().name("uuid").value(user.uuid().toString())
                         .name("username").value(user.username())
                         .name("credits").value(user.credits())
@@ -222,22 +218,22 @@ public final class JSONDatabase implements Database {
     }
 
     /**
-     * Used to find a {@link JSONUser} in our database via a {@link UUID}
+     * Used to find a {@link User} in our database via a {@link UUID}
      *
-     * @param uuid UUID of the {@link JSONUser} we want to find.
-     * @return Optional containing the {@link JSONUser} if they exist.
+     * @param uuid UUID of the {@link User} we want to find.
+     * @return Optional containing the {@link User} if they exist.
      */
-    private Optional<JSONUser> findUserByUUID(final UUID uuid) {
+    private Optional<User> findUserByUUID(final UUID uuid) {
         return this.users.stream().filter(u -> u.uuid().equals(uuid)).findAny();
     }
 
     /**
-     * Used to find a {@link JSONUser} in our database via a {@link String}-based username.
+     * Used to find a {@link User} in our database via a {@link String}-based username.
      *
-     * @param username username of the {@link JSONUser} we want to find.
-     * @return Optional containing the {@link JSONUser} if they exist.
+     * @param username username of the {@link User} we want to find.
+     * @return Optional containing the {@link User} if they exist.
      */
-    private Optional<JSONUser> findUserByUsername(final String username) {
+    private Optional<User> findUserByUsername(final String username) {
         return this.users.stream().filter(u -> u.username().equalsIgnoreCase(username)).findAny();
     }
 }

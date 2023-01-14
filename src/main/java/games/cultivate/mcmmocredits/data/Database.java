@@ -31,7 +31,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Interface which represents all available database operations.
  */
-public sealed interface Database permits SQLDatabase, JSONDatabase {
+public interface Database {
     UUID ZERO_UUID = new UUID(0, 0);
 
     /**

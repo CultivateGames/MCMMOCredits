@@ -27,20 +27,20 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import games.cultivate.mcmmocredits.data.JSONDatabase;
-import games.cultivate.mcmmocredits.util.JSONUser;
+import games.cultivate.mcmmocredits.util.User;
 
 import java.io.IOException;
 import java.util.UUID;
 
 /**
- * Class responsible for serializing and deserializing a {@link JSONUser} from {@link JSONDatabase}
+ * Class responsible for serializing and deserializing a {@link User} from {@link JSONDatabase}
  */
-public final class PlayerSerializer extends TypeAdapter<JSONUser> {
+public final class PlayerSerializer extends TypeAdapter<User> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public void write(final JsonWriter out, final JSONUser value) throws IOException {
+    public void write(final JsonWriter out, final User value) throws IOException {
         out.beginObject();
         out.name("UUID").value(value.uuid().toString());
         out.name("name").value(value.username());
@@ -53,7 +53,7 @@ public final class PlayerSerializer extends TypeAdapter<JSONUser> {
      * {@inheritDoc}
      */
     @Override
-    public JSONUser read(final JsonReader in) throws IOException {
+    public User read(final JsonReader in) throws IOException {
         UUID uuid = new UUID(0, 0);
         String username = "";
         int credits = 0;
@@ -70,6 +70,6 @@ public final class PlayerSerializer extends TypeAdapter<JSONUser> {
             }
         }
         in.endObject();
-        return new JSONUser(uuid, username, credits, redeemed);
+        return new User(uuid, username, credits, redeemed);
     }
 }
