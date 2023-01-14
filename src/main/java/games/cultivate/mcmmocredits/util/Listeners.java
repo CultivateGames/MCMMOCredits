@@ -28,7 +28,7 @@ import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.util.player.UserManager;
 import games.cultivate.mcmmocredits.config.GeneralConfig;
-import games.cultivate.mcmmocredits.data.Database;
+import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
@@ -47,6 +47,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import javax.inject.Inject;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -54,15 +55,15 @@ import java.util.UUID;
  */
 public class Listeners implements Listener {
     private final InputStorage storage;
-    private final Database database;
+    private final UserDAO dao;
     private final GeneralConfig config;
     private final ResolverFactory resolverFactory;
 
     @Inject
-    public Listeners(final GeneralConfig config, final InputStorage storage, final Database database, final ResolverFactory resolverFactory) {
+    public Listeners(final GeneralConfig config, final InputStorage storage, final UserDAO dao, final ResolverFactory resolverFactory) {
         this.config = config;
         this.storage = storage;
-        this.database = database;
+        this.dao = dao;
         this.resolverFactory = resolverFactory;
     }
 
@@ -78,16 +79,17 @@ public class Listeners implements Listener {
             com.destroystokyo.paper.profile.PlayerProfile profile = e.getPlayerProfile();
             UUID uuid = profile.getId();
             String username = profile.getName();
-            if (!this.database.doesPlayerExist(uuid)) {
-                this.database.addPlayer(uuid, username, 0, 0);
-                if (this.config.bool("addPlayerNotification")) {
-                    TagResolver resolver = this.resolverFactory.fromUsers(Bukkit.getConsoleSender(), username);
-                    String content = this.config.string("addPlayerMessage", false);
-                    Text.fromString(Bukkit.getConsoleSender(), content, resolver).send();
-                }
+            Optional<User> user = this.dao.getUser(uuid);
+            if (user.isPresent()) {
+                this.dao.setUsername(uuid, username);
                 return;
             }
-            this.database.setUsername(uuid, username);
+            this.dao.addUser(new User(uuid, username, 0, 0));
+            if (this.config.bool("addPlayerNotification")) {
+                TagResolver resolver = this.resolverFactory.fromUsers(Bukkit.getConsoleSender(), username);
+                String content = this.config.string("addPlayerMessage", false);
+                Text.fromString(Bukkit.getConsoleSender(), content, resolver).send();
+            }
         }
     }
 
@@ -141,27 +143,26 @@ public class Listeners implements Listener {
      * @param e Instance of the {@link CreditTransactionEvent}
      */
     @EventHandler(priority = EventPriority.HIGH)
-    public void creditTransaction(final CreditTransactionEvent e) {
+    public void performTransaction(final CreditTransactionEvent e) {
         //Get information about the event.
-        UUID uuid = e.uuid();
+        UUID uuid = e.user().uuid();
         int amount = e.amount();
         CreditOperation operation = e.operation();
         //Determine transaction status based on Database transaction.
         boolean transactionStatus = switch (operation) {
-            case ADD -> this.database.addCredits(uuid, amount);
-            case SET -> this.database.setCredits(uuid, amount);
-            case TAKE -> this.database.takeCredits(uuid, amount);
+            case ADD -> this.dao.addCredits(uuid, amount);
+            case SET -> this.dao.setCredits(uuid, amount);
+            case TAKE -> this.dao.takeCredits(uuid, amount);
         };
-        CommandSender sender = e.initiator();
+        CommandSender sender = e.sender();
         //If transaction is successful, make the resolver and send the message to sender.
         if (transactionStatus) {
-            TagResolver resolver = this.resolverFactory.fromTransaction(sender, this.database.getUsername(uuid), amount);
-            String operationName = operation.name().toLowerCase();
-            Text.fromString(sender, this.config.string(operationName + "Sender"), resolver).send();
+            TagResolver resolver = this.resolverFactory.fromTransaction(e);
+            Text.fromString(sender, this.config.string(operation + "Sender"), resolver).send();
             Player player = Bukkit.getPlayer(uuid);
             //If the player isn't null and transaction is NOT silent, send the receiver message.
             if (player != null && !e.isSilent()) {
-                Text.fromString(player, this.config.string(operationName + "Receiver"), resolver).send();
+                Text.fromString(player, this.config.string(operation + "Receiver"), resolver).send();
             }
             return;
         }
@@ -175,43 +176,38 @@ public class Listeners implements Listener {
      * @param e Instance of the {@link CreditRedemptionEvent}
      */
     @EventHandler(priority = EventPriority.HIGH)
-    public void creditRedemption(final CreditRedemptionEvent e) {
+    public void performRedemption(final CreditRedemptionEvent e) {
         //Get information about the event.
-        UUID uuid = e.uuid();
+        UUID uuid = e.user().uuid();
         int amount = e.amount();
-        PrimarySkillType skill = e.skill();
-        CommandSender sender = e.initiator();
-        TagResolver errorResolver = this.resolverFactory.fromRedemption(e, this.database.getUsername(uuid));
-        //Check if we have any record of the player.
-        if (!this.database.doesPlayerExist(uuid)) {
-            Text.fromString(sender, this.config.string("playerDoesNotExist"), errorResolver).send();
-            return;
-        }
+        CommandSender sender = e.sender();
+        TagResolver resolver = this.resolverFactory.fromRedemption(e);
         //Check if the user has enough credits to redeem the amount specified.
-        if (this.database.getCredits(uuid) < amount) {
-            Text.fromString(sender, this.config.string("notEnoughCredits"), errorResolver).send();
+        if (this.dao.getCredits(uuid) < amount) {
+            Text.fromString(sender, this.config.string("notEnoughCredits"), resolver).send();
             return;
         }
         Player player = Bukkit.getPlayer(uuid);
         PlayerProfile profile = player != null ? UserManager.getPlayer(player).getProfile() : mcMMO.getDatabaseManager().loadPlayerProfile(uuid);
         if (!profile.isLoaded()) {
             //send a message if loading mcmmo profile fails. This may need to be a new configuration message.
-            Text.fromString(sender, this.config.string("playerDoesNotExist"), errorResolver).send();
+            Text.fromString(sender, this.config.string("playerDoesNotExist"), resolver).send();
             return;
         }
+        PrimarySkillType skill = e.skill();
         int currentLevel = profile.getSkillLevel(skill);
         if (currentLevel + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill)) {
-            Text.fromString(sender, this.config.string("skillCap"), errorResolver).send();
+            Text.fromString(sender, this.config.string("skillCap"), resolver).send();
             return;
         }
         //Take credits first in case of issue with code. Easier to restore credits than previous skill levels.
-        if (this.database.takeCredits(uuid, amount)) {
+        if (this.dao.takeCredits(uuid, amount)) {
             //Modify skill level if credit withdrawal is successful.
             profile.modifySkill(skill, currentLevel + amount);
             profile.save(true);
-            this.database.addRedeemedCredits(uuid, amount);
+            this.dao.addRedeemedCredits(uuid, amount);
             //Rebuild TagResolver as information has changed pertaining to users.
-            TagResolver resolver = this.resolverFactory.fromRedemption(e, this.database.getUsername(uuid));
+            resolver = this.resolverFactory.fromRedemption(e);
             //If the sender is equal to the recipient, send the message for self redemption and return.
             if (sender instanceof Player p && p.getUniqueId().equals(uuid)) {
                 Text.fromString(sender, this.config.string("selfRedeem"), resolver).send();

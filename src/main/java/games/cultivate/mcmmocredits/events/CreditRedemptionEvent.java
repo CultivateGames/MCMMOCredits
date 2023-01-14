@@ -24,18 +24,17 @@
 package games.cultivate.mcmmocredits.events;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import games.cultivate.mcmmocredits.util.User;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.UUID;
-
 public final class CreditRedemptionEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
-    private final CommandSender initiator;
-    private final UUID uuid;
+    private final CommandSender sender;
+    private final User user;
     private final int amount;
     private final boolean silent;
     private final PrimarySkillType skill;
@@ -43,38 +42,38 @@ public final class CreditRedemptionEvent extends Event {
     /**
      * Initializes the event.
      *
-     * @param initiator The {@link CommandSender} who initiated the transaction.
-     * @param uuid {@link UUID} of the user who is
-     * @param skill {@link PrimarySkillType} that is being used for credit redemption.
-     * @param amount amount of Credits to use in the transaction.
-     * @param silent Whether the transaction should produce a message to be sent to the user.
+     * @param sender The {@link CommandSender} who initiated the transaction.
+     * @param user      {@link User} being impacted by the event.
+     * @param skill     {@link PrimarySkillType} that is being used for credit redemption.
+     * @param amount    amount of Credits to use in the transaction.
+     * @param silent    Whether the transaction should produce a message to be sent to the user.
      */
-    public CreditRedemptionEvent(final CommandSender initiator, final UUID uuid, final PrimarySkillType skill, final int amount, final boolean silent) {
-        this.initiator = initiator;
-        this.uuid = uuid;
+    public CreditRedemptionEvent(final CommandSender sender, final User user, final PrimarySkillType skill, final int amount, final boolean silent) {
+        this.sender = sender;
+        this.user = user;
         this.skill = skill;
         this.amount = amount;
         this.silent = silent;
     }
 
-    public CommandSender initiator() {
-        return initiator;
+    public CommandSender sender() {
+        return this.sender;
     }
 
-    public UUID uuid() {
-        return uuid;
+    public User user() {
+        return this.user;
     }
 
     public int amount() {
-        return amount;
+        return this.amount;
     }
 
     public boolean isSilent() {
-        return silent;
+        return this.silent;
     }
 
     public PrimarySkillType skill() {
-        return skill;
+        return this.skill;
     }
 
     @Override

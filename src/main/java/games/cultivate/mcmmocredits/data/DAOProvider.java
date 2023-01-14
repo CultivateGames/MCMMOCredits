@@ -21,13 +21,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.util;
+package games.cultivate.mcmmocredits.data;
 
-public enum CreditOperation {
-    ADD, SET, TAKE;
+public interface DAOProvider {
+    UserDAO provide();
 
-    @Override
-    public String toString() {
-        return this.name().toLowerCase();
-    }
+    void disable();
 }

@@ -26,7 +26,7 @@ package games.cultivate.mcmmocredits.data;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.util.FileUtil;
-import org.bukkit.plugin.java.JavaPlugin;
+import games.cultivate.mcmmocredits.util.Queries;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlite3.SQLitePlugin;
 
@@ -34,21 +34,30 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
 
-/**
- * {@link Database} instance that utilizes a SQLite database.
- */
-public final class SQLiteDatabase extends SQLDatabase {
+public class SQLiteProvider implements DAOProvider {
+    private final Queries queries = new Queries();
+    protected HikariDataSource hikari;
+    protected Jdbi jdbi;
+    private @Inject @Named("dir") Path dir;
 
-    @Inject
-    public SQLiteDatabase(final JavaPlugin plugin, final @Named("dir") Path dir) {
-        super(plugin);
+    @Override
+    public UserDAO provide() {
+        Path path = this.dir.resolve("database.db");
+        FileUtil.createFile(path);
         HikariConfig config = new HikariConfig();
         config.setPoolName("MCMMOCredits SQLite");
         config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
-        FileUtil.createFile(dir, "database.db");
-        config.addDataSourceProperty("url", "jdbc:sqlite:" + dir.resolve("database.db"));
+        config.addDataSourceProperty("url", "jdbc:sqlite:" + path);
         this.hikari = new HikariDataSource(config);
         this.jdbi = Jdbi.create(this.hikari).installPlugin(new SQLitePlugin());
-        this.jdbi.useHandle(x -> x.execute(SQLStatement.SQLITE_CREATE_TABLE.toString()));
+        this.jdbi.useHandle(x -> x.execute(this.queries.query("sqlite_create_table.sql")));
+        return this.jdbi.onDemand(UserDAO.class);
+    }
+
+    @Override
+    public void disable() {
+        if (this.hikari != null) {
+            this.hikari.close();
+        }
     }
 }

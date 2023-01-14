@@ -41,7 +41,7 @@ import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.data.Database;
+import games.cultivate.mcmmocredits.data.DAOProvider;
 import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.placeholders.CreditsExpansion;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
@@ -153,7 +153,6 @@ public final class MCMMOCredits extends JavaPlugin {
             }
             return List.of();
         });
-        manager.parserRegistry().registerSuggestionProvider("ops", (c, i) -> List.of("add", "set", "take"));
 
         AnnotationParser<CommandSender> parser = new AnnotationParser<>(manager, CommandSender.class, p -> SimpleCommandMeta.empty());
         parser.parse(this.injector.getInstance(Credits.class));
@@ -170,7 +169,7 @@ public final class MCMMOCredits extends JavaPlugin {
     public void onDisable() {
         this.injector.getInstance(GeneralConfig.class).save();
         this.injector.getInstance(MenuConfig.class).save();
-        this.injector.getInstance(Database.class).disable();
+        this.injector.getInstance(DAOProvider.class).disable();
     }
 
     private BiFunction<CommandSender, Exception, Component> buildError(final ExceptionType exType) {

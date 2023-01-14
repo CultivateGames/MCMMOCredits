@@ -31,31 +31,27 @@ import com.google.inject.name.Names;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.data.Database;
-import games.cultivate.mcmmocredits.data.JSONDatabase;
-import games.cultivate.mcmmocredits.data.MYSQLDatabase;
-import games.cultivate.mcmmocredits.data.SQLiteDatabase;
+import games.cultivate.mcmmocredits.data.MySQLProvider;
+import games.cultivate.mcmmocredits.data.SQLiteProvider;
+import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.menu.MenuFactory;
 import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
 import games.cultivate.mcmmocredits.util.InputStorage;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.nio.file.Path;
-import java.util.Map;
 
 /**
  * Class used to interface with {@link Guice}. Responsible for application-wide dependency injection.
  */
 public final class PluginModule extends AbstractModule {
     private final MCMMOCredits plugin;
-    private final Map<String, Class<? extends Database>> map;
-    private Database database;
     private MenuFactory factory;
     private ResolverFactory resolverFactory;
+    private UserDAO dao;
 
     public PluginModule(final MCMMOCredits plugin) {
         this.plugin = plugin;
-        this.map = Map.of("JSON", JSONDatabase.class, "MYSQL", MYSQLDatabase.class, "SQLITE", SQLiteDatabase.class);
     }
 
     /**
@@ -72,34 +68,40 @@ public final class PluginModule extends AbstractModule {
     }
 
     /**
-     * Provides the {@link Database} we are using for injection into constructors.
+     * Provides the {@link UserDAO} we are using for constructors.
      *
-     * @param config   {@link GeneralConfig} instance to grab the {@link Database} type we want to load.
-     * @param injector {@link Injector} instance to get the injected instance of the {@link Database}.
-     * @return the {@link Database}
-     * @see Database
+     * @param config {@link GeneralConfig} to grab the Database type we want.
+     * @return the {@link UserDAO}
      */
     @Provides
-    public Database provideDatabase(final GeneralConfig config, final Injector injector) {
-        if (this.database == null) {
-            //Load the config here to make sure db type is accessible.
+    public UserDAO provideDAO(final GeneralConfig config, final Injector injector) {
+        if (this.dao == null) {
+            //Load configuration to make sure we know the DB type.
             config.load();
-            this.database = injector.getInstance(this.map.get(config.string("databaseType", false).toUpperCase()));
+            String type = config.string("databaseType", false).toUpperCase();
+            if (type.equals("MYSQL")) {
+                this.dao = injector.getInstance(MySQLProvider.class).provide();
+                return this.dao;
+            }
+            if (type.equals("SQLITE")) {
+                this.dao = injector.getInstance(SQLiteProvider.class).provide();
+                return this.dao;
+            }
         }
-        return this.database;
+        return this.dao;
     }
 
     /**
      * Provides the {@link ResolverFactory} we are using for injection into constructors.
      *
-     * @param database {@link Database} to use for construction of the object.
+     * @param dao {@link UserDAO} to use for construction of the object.
      * @return the {@link ResolverFactory}
      * @see ResolverFactory
      */
     @Provides
-    public ResolverFactory provideResolverFactory(final Database database) {
+    public ResolverFactory provideResolverFactory(final UserDAO dao) {
         if (this.resolverFactory == null) {
-            this.resolverFactory = new ResolverFactory(database);
+            this.resolverFactory = new ResolverFactory(dao);
         }
         return this.resolverFactory;
     }

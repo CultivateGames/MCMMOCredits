@@ -23,12 +23,10 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import games.cultivate.mcmmocredits.data.JSONDatabase;
-
 import java.util.UUID;
 
 /**
- * Object representing a {@link JSONDatabase} entry.
+ * Object representing a user of the plugin.
  *
  * @param uuid     {@link UUID} of the user.
  * @param username String representing the user's username.

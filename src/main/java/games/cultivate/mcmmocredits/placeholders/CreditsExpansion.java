@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.placeholders;
 
-import games.cultivate.mcmmocredits.data.Database;
+import games.cultivate.mcmmocredits.data.UserDAO;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
@@ -36,11 +36,11 @@ import java.util.UUID;
  * This is responsible for handling our registration with {@link PlaceholderAPI}
  */
 public final class CreditsExpansion extends PlaceholderExpansion {
-    private final Database database;
+    private final UserDAO dao;
 
     @Inject
-    public CreditsExpansion(final Database database) {
-        this.database = database;
+    public CreditsExpansion(final UserDAO dao) {
+        this.dao = dao;
     }
 
     /**
@@ -82,10 +82,10 @@ public final class CreditsExpansion extends PlaceholderExpansion {
     public String onRequest(final OfflinePlayer player, final String identifier) {
         UUID uuid = player.getUniqueId();
         if (identifier.equalsIgnoreCase("credits")) {
-            return this.database.getCredits(uuid) + "";
+            return this.dao.getCredits(uuid) + "";
         }
         if (identifier.equalsIgnoreCase("redeemed")) {
-            return this.database.getRedeemedCredits(uuid) + "";
+            return this.dao.getRedeemedCredits(uuid) + "";
         }
         return null;
     }

@@ -24,12 +24,11 @@
 package games.cultivate.mcmmocredits.events;
 
 import games.cultivate.mcmmocredits.util.CreditOperation;
+import games.cultivate.mcmmocredits.util.User;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.UUID;
 
 /**
  * {@link Event} which represents a transaction involving MCMMO Credits. Can be used by external plugins to modify credit balances via a Listener.
@@ -37,8 +36,8 @@ import java.util.UUID;
 public final class CreditTransactionEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
-    private final CommandSender initiator;
-    private final UUID uuid;
+    private final CommandSender sender;
+    private final User user;
     private final CreditOperation operation;
     private final int amount;
     private final boolean silent;
@@ -46,26 +45,26 @@ public final class CreditTransactionEvent extends Event {
     /**
      * Initializes the event.
      *
-     * @param initiator The {@link CommandSender} who initiated the transaction.
-     * @param uuid {@link UUID} of the user who is
+     * @param sender The {@link CommandSender} who initiated the transaction.
+     * @param user      {@link User} being impacted by the event.
      * @param operation {@link CreditOperation} of the transaction we are about to execute.
-     * @param amount amount of Credits to use in the transaction.
-     * @param silent Whether the transaction should produce a message to be sent to the user.
+     * @param amount    amount of Credits to use in the transaction.
+     * @param silent    Whether the transaction should produce a message to be sent to the user.
      */
-    public CreditTransactionEvent(final CommandSender initiator, final UUID uuid, final CreditOperation operation, final int amount, final boolean silent) {
-        this.initiator = initiator;
-        this.uuid = uuid;
+    public CreditTransactionEvent(final CommandSender sender, final User user, final CreditOperation operation, final int amount, final boolean silent) {
+        this.sender = sender;
+        this.user = user;
         this.operation = operation;
         this.amount = amount;
         this.silent = silent;
     }
 
-    public CommandSender initiator() {
-        return this.initiator;
+    public CommandSender sender() {
+        return this.sender;
     }
 
-    public UUID uuid() {
-        return this.uuid;
+    public User user() {
+        return this.user;
     }
 
     public CreditOperation operation() {

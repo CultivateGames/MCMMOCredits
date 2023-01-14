@@ -37,21 +37,21 @@ import java.util.logging.Level;
  */
 public final class FileUtil {
     private FileUtil() {
+        throw new AssertionError("FileUtil cannot be instantiated!");
     }
 
     /**
      * Creates a file and associated directories if they do not exist.
      *
-     * @param dir      The {@link Path} to check for creation.
-     * @param fileName Name of the {@link File} to create.
+     * @param dir The {@link Path} to check for creation.
      */
-    public static void createFile(final Path dir, final String fileName) {
+    public static void createFile(final Path dir) {
         try {
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);
                 Bukkit.getLogger().log(Level.INFO, "[MCMMOCredits] Created file: {0}!", dir.getFileName());
             }
-            Files.createFile(dir.resolve(fileName));
+            Files.createFile(dir);
         } catch (FileAlreadyExistsException ignored) { //Ignore if file already exists.
         } catch (IOException e) {
             e.printStackTrace();

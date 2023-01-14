@@ -39,6 +39,7 @@ dependencies {
     }
     implementation("org.jdbi:jdbi3-core:3.36.0")
     implementation("org.jdbi:jdbi3-sqlite:3.36.0")
+    implementation("org.jdbi:jdbi3-sqlobject:3.36.0")
 
     compileOnly("me.clip:placeholderapi:2.11.2") {
         exclude(group = "net.kyori")

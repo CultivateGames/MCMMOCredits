@@ -24,7 +24,7 @@
 package games.cultivate.mcmmocredits.placeholders;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import games.cultivate.mcmmocredits.data.Database;
+import games.cultivate.mcmmocredits.data.UserDAO;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.PreProcess;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -33,7 +33,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.checkerframework.common.returnsreceiver.qual.This;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,22 +47,22 @@ public final class Resolver {
     /**
      * Generates new {@link Builder}s.
      *
-     * @param database An injected {@link Database} instance used to obtain player data for parsing.
+     * @param dao An injected {@link UserDAO} instance used to obtain player data for parsing.
      * @return The {@link Builder}
      */
-    public static Builder builder(final Database database) {
-        return new Builder(database);
+    public static Builder builder(final UserDAO dao) {
+        return new Builder(dao);
     }
 
     /**
      * Builder used to create {@link TagResolver} instances.
      */
     public static final class Builder {
-        private final Database database;
+        private final UserDAO dao;
         private final Map<String, PreProcess> placeholders;
 
-        public Builder(final Database database) {
-            this.database = database;
+        public Builder(final UserDAO dao) {
+            this.dao = dao;
             this.placeholders = new ConcurrentHashMap<>();
         }
 
@@ -103,9 +102,9 @@ public final class Resolver {
             tags.put("sender", sender.getName());
             tags.put("target", target);
             if (!target.equalsIgnoreCase("CONSOLE")) {
-                tags.put("target_credits", this.database.getCredits(this.database.getUUID(target).join()) + "");
+                tags.put("target_credits", this.dao.getCredits(this.dao.getUUID(target).join()) + "");
             }
-            String senderCredits = sender instanceof Player p ? this.database.getCredits(this.database.getUUID(p.getName()).join()) + "" : "0";
+            String senderCredits = sender instanceof Player p ? this.dao.getCredits(this.dao.getUUID(p.getName()).join()) + "" : "0";
             tags.put("sender_credits", senderCredits);
             return this.tags(tags);
         }
@@ -136,7 +135,6 @@ public final class Resolver {
          * @param skill The {@link PrimarySkillType}
          * @return The {@link Builder}
          */
-        @This
         @SuppressWarnings("deprecation")
         public Builder skill(final PrimarySkillType skill) {
             return this.tags(Map.of("skill", WordUtils.capitalizeFully(skill.name()), "cap", skill.getMaxLevel() + ""));
