@@ -61,11 +61,10 @@ public class BaseConfig implements Config {
      */
     @Override
     public HoconConfigurationLoader createLoader() {
-        Path path = this.dir.resolve(this.fileName);
-        FileUtil.createFile(path);
+        FileUtil.createFile(this.dir, fileName);
         return HoconConfigurationLoader.builder()
                 .defaultOptions(opts -> opts.serializers(build -> build.register(ItemStack.class, ItemSerializer.INSTANCE)))
-                .path(path).prettyPrinting(true).build();
+                .path(this.dir.resolve(this.fileName)).prettyPrinting(true).build();
     }
 
     /**

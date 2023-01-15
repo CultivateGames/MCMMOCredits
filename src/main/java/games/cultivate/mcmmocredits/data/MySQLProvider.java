@@ -64,7 +64,7 @@ public class MySQLProvider implements DAOProvider {
         hconfig.addDataSourceProperty("cacheServerConfiguration", "true");
         this.hikari = new HikariDataSource(hconfig);
         this.jdbi = Jdbi.create(this.hikari).installPlugins();
-        this.jdbi.useHandle(x -> x.execute(this.queries.query("mysql_create_table.sql")));
+        this.jdbi.useHandle(x -> x.execute(this.queries.query("mysqlcreate")));
         return this.jdbi.onDemand(UserDAO.class);
     }
 

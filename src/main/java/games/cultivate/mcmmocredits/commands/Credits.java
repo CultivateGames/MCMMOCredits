@@ -179,7 +179,7 @@ public final class Credits {
      * @see #selfRedeem(Player, PrimarySkillType, int)
      */
     @CommandDescription("Redeem MCMMO Credits into a specific skill for someone else")
-    @CommandMethod("redeem <amount> <skill> <user>")
+    @CommandMethod("redeem <amount> <skill> <username>")
     @CommandPermission("mcmmocredits.redeem.other")
     public void adminRedeem(final CommandSender sender, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
         if (sender instanceof Player p && username == null) {

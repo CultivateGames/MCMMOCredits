@@ -29,6 +29,7 @@ import games.cultivate.mcmmocredits.util.FileUtil;
 import games.cultivate.mcmmocredits.util.Queries;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlite3.SQLitePlugin;
+import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,14 +44,14 @@ public class SQLiteProvider implements DAOProvider {
     @Override
     public UserDAO provide() {
         Path path = this.dir.resolve("database.db");
-        FileUtil.createFile(path);
+        FileUtil.createFile(this.dir, "database.db");
         HikariConfig config = new HikariConfig();
         config.setPoolName("MCMMOCredits SQLite");
         config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
         config.addDataSourceProperty("url", "jdbc:sqlite:" + path);
         this.hikari = new HikariDataSource(config);
-        this.jdbi = Jdbi.create(this.hikari).installPlugin(new SQLitePlugin());
-        this.jdbi.useHandle(x -> x.execute(this.queries.query("sqlite_create_table.sql")));
+        this.jdbi = Jdbi.create(this.hikari).installPlugin(new SQLitePlugin()).installPlugin(new SqlObjectPlugin());
+        this.jdbi.useHandle(x -> x.execute(this.queries.query("sqlitecreate")));
         return this.jdbi.onDemand(UserDAO.class);
     }
 

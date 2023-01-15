@@ -33,7 +33,6 @@ import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 public interface UserDAO extends SqlObject {
     /**
@@ -67,15 +66,6 @@ public interface UserDAO extends SqlObject {
     default Optional<User> fromPlayer(Player player) {
         return this.getUser(player.getUniqueId());
     }
-
-    /**
-     * Gets UUID of a {@link User} through username.
-     *
-     * @param username username of Player that holds relevant UUID.
-     * @return {@link UUID} of player with specified username.
-     */
-    @SqlQuery("SELECT UUID FROM MCMMOCredits WHERE username LIKE :username LIMIT 1;")
-    CompletableFuture<UUID> getUUID(String username);
 
     /**
      * Sets username of an existing user in our database. Finds user via UUID.

@@ -33,6 +33,6 @@ public class Queries {
     private final ClasspathSqlLocator locator = ClasspathSqlLocator.create();
 
     public String query(final String name) {
-        return this.locator.locate("queries/" + name);
+        return this.locator.locate(this.getClass(), name);
     }
 }

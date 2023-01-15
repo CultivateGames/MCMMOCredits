@@ -97,15 +97,21 @@ public final class Resolver {
          * @param target Username of an action target to parse for.
          * @return The {@link Builder}
          */
+        //TODO: fix
         public Builder users(final CommandSender sender, final String target) {
             Map<String, String> tags = new ConcurrentHashMap<>();
-            tags.put("sender", sender.getName());
-            tags.put("target", target);
-            if (!target.equalsIgnoreCase("CONSOLE")) {
-                tags.put("target_credits", this.dao.getCredits(this.dao.getUUID(target).join()) + "");
+            this.dao.getUser(target).ifPresentOrElse(user -> {
+                tags.put("target", user.username());
+                tags.put("target_credits", user.credits() + "");
+            }, () -> tags.put("target", target));
+            if (sender instanceof Player player) {
+                this.dao.getUser(player.getName()).ifPresent(user -> {
+                    tags.put("sender", user.username());
+                    tags.put("sender_credits", user.credits() + "");
+                });
+                return this.tags(tags);
             }
-            String senderCredits = sender instanceof Player p ? this.dao.getCredits(this.dao.getUUID(p.getName()).join()) + "" : "0";
-            tags.put("sender_credits", senderCredits);
+            tags.put("sender", sender.getName());
             return this.tags(tags);
         }
 
