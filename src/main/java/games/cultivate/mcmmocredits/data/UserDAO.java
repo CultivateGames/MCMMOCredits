@@ -82,11 +82,12 @@ public interface UserDAO extends SqlObject {
      * @param sender the sender.
      * @return A user from the DAO, or a fake user which encapsulates the sender.
      */
-    default Optional<User> fromSender(CommandSender sender) {
+    default User fromSender(CommandSender sender) {
         if (sender instanceof Player player) {
-            return this.fromPlayer(player);
+            //We throw an exception here because we know the passed in player exists.
+            return this.fromPlayer(player).orElseThrow();
         }
-        return Optional.of(new User(ZERO_UUID, sender.getName(), 0, 0));
+        return new User(ZERO_UUID, sender.getName(), 0, 0);
     }
 
     /**

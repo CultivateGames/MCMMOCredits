@@ -51,6 +51,8 @@ import java.util.Optional;
 
 /**
  * This class is responsible for handling of all commands.
+ * <p>
+ * Instances in which we lazily throw NoValueFoundException exist because we know the Optional is not empty.
  */
 @CommandMethod("credits|mcmmocredits")
 public final class Credits {
@@ -58,15 +60,15 @@ public final class Credits {
     private final GeneralConfig config;
     private final UserDAO dao;
     private final MenuFactory menuFactory;
-    private final ResolverFactory resolverFactory;
+    private final ResolverFactory resolvers;
 
     @Inject
-    public Credits(final GeneralConfig config, final MenuConfig menus, final UserDAO dao, final MenuFactory factory, final ResolverFactory resolverFactory) {
+    public Credits(final GeneralConfig config, final MenuConfig menus, final UserDAO dao, final MenuFactory factory, final ResolverFactory resolvers) {
         this.config = config;
         this.menus = menus;
         this.dao = dao;
         this.menuFactory = factory;
-        this.resolverFactory = resolverFactory;
+        this.resolvers = resolvers;
     }
 
     /**
@@ -80,8 +82,10 @@ public final class Credits {
     @CommandMethod("balance")
     @CommandPermission("mcmmocredits.balance.self")
     public void checkCredits(final Player player) {
-        TagResolver resolver = this.resolverFactory.fromUsers(player);
-        Text.fromString(player, this.config.string("selfBalance"), resolver).send();
+        this.dao.fromPlayer(player).ifPresent(user -> {
+            TagResolver resolver = this.resolvers.fromSender(user);
+            Text.fromString(player, this.config.string("selfBalance"), resolver).send();
+        });
     }
 
     /**
@@ -96,10 +100,13 @@ public final class Credits {
     @CommandMethod("balance <username>")
     @CommandPermission("mcmmocredits.balance.other")
     public void otherCredits(final CommandSender sender, final @Argument(suggestions = "user") String username) {
-        this.dao.getUser(username).ifPresentOrElse(user -> {
-            TagResolver resolver = this.resolverFactory.fromUsers(sender, user.username());
+        User executor = this.dao.fromSender(sender);
+        Optional<User> user = this.dao.getUser(username);
+        if (user.isPresent()) {
+            TagResolver resolver = this.resolvers.fromUsers(executor, user.get());
             Text.fromString(sender, this.config.string("otherBalance"), resolver).send();
-        }, () -> Text.fromString(sender, this.config.string("playerDoesNotExist"), this.resolverFactory.fromUsers(sender)).send());
+        }
+        Text.fromString(sender, this.config.string("playerDoesNotExist"), this.resolvers.fakeTarget(executor, username)).send();
     }
 
     /**
@@ -114,8 +121,9 @@ public final class Credits {
     @CommandDescription("Modify your own MCMMO Credit balance.")
     @CommandMethod("<operation> <amount>")
     @CommandPermission("mcmmocredits.modify.self")
-    public void modifySelfCredits(final Player player, final @Argument CreditOperation operation, final @Argument @Range(min = "1") int amount) {
-        CreditTransactionEvent event = new CreditTransactionEvent(player, this.dao.fromPlayer(player).orElseThrow(), operation, amount, true);
+    public void modifySelfCredits(final Player player, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount) {
+        User user = this.dao.fromPlayer(player).orElseThrow();
+        CreditTransactionEvent event = new CreditTransactionEvent(player, user, operation, amount, true);
         Bukkit.getPluginManager().callEvent(event);
     }
 
@@ -136,10 +144,15 @@ public final class Credits {
     @CommandMethod("<operation> <amount> <username>")
     @CommandPermission("mcmmocredits.modify.other")
     public void modifyOtherCredits(final CommandSender sender, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
-        this.dao.getUser(username).ifPresentOrElse(user -> {
-            CreditTransactionEvent event = new CreditTransactionEvent(sender, user, operation, amount, silent);
+        Optional<User> user = this.dao.getUser(username);
+        if (user.isPresent()) {
+            CreditTransactionEvent event = new CreditTransactionEvent(sender, user.get(), operation, amount, silent);
             Bukkit.getPluginManager().callEvent(event);
-        }, () -> Text.fromString(sender, this.config.string("playerDoesNotExist"), this.resolverFactory.fromUsers(sender, username)).send());
+            return;
+        }
+        User executor = this.dao.fromSender(sender);
+        TagResolver resolver = this.resolvers.fakeTarget(executor, username);
+        Text.fromString(sender, this.config.string("playerDoesNotExist"), resolver).send();
     }
 
     /**
@@ -155,9 +168,10 @@ public final class Credits {
     @CommandMethod("redeem <amount> <skill>")
     @CommandPermission("mcmmocredits.redeem.self")
     public void selfRedeem(final Player player, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
-        CreditRedemptionEvent event = new CreditRedemptionEvent(player, this.dao.fromPlayer(player).orElseThrow(), skill, amount, true);
+        User user = this.dao.fromPlayer(player).orElseThrow();
+        CreditRedemptionEvent event = new CreditRedemptionEvent(player, user, skill, amount, true);
         if (this.isChildSkill(skill)) {
-            TagResolver resolver = this.resolverFactory.fromRedemption(event);
+            TagResolver resolver = this.resolvers.fromRedemption(user, event);
             Text.fromString(player, this.config.string("argumentParsing"), resolver).send();
             return;
         }
@@ -186,20 +200,21 @@ public final class Credits {
             this.selfRedeem(p, skill, amount);
             return;
         }
+        User executor = this.dao.fromSender(sender);
         Optional<User> user = this.dao.getUser(username);
         if (user.isPresent()) {
             CreditRedemptionEvent event = new CreditRedemptionEvent(sender, user.get(), skill, amount, silent);
             if (this.isChildSkill(skill)) {
                 //Argument parsing error because a child skill was used.
-                TagResolver resolver = this.resolverFactory.fromRedemption(event);
+                TagResolver resolver = this.resolvers.fromRedemption(executor, event);
                 Text.fromString(sender, this.config.string("argumentParsing"), resolver).send();
                 return;
             }
             Bukkit.getPluginManager().callEvent(event);
             return;
         }
-        //At this point, the user likely does not exist.
-        Text.fromString(sender, this.config.string("playerDoesNotExist"), this.resolverFactory.fromUsers(sender)).send();
+        TagResolver resolver = this.resolvers.fakeTarget(executor, username);
+        Text.fromString(sender, this.config.string("playerDoesNotExist"), resolver).send();
     }
 
     /**
@@ -213,7 +228,8 @@ public final class Credits {
     public void reloadCredits(final CommandSender sender) {
         this.config.load();
         this.menus.load();
-        Text.fromString(sender, this.config.string("reloadSuccessful"), this.resolverFactory.fromUsers(sender)).send();
+        User executor = this.dao.fromSender(sender);
+        Text.fromString(sender, this.config.string("reloadSuccessful"), this.resolvers.fromSender(executor)).send();
     }
 
     /**

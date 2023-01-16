@@ -57,14 +57,14 @@ public class Listeners implements Listener {
     private final InputStorage storage;
     private final UserDAO dao;
     private final GeneralConfig config;
-    private final ResolverFactory resolverFactory;
+    private final ResolverFactory resolvers;
 
     @Inject
-    public Listeners(final GeneralConfig config, final InputStorage storage, final UserDAO dao, final ResolverFactory resolverFactory) {
+    public Listeners(final GeneralConfig config, final InputStorage storage, final UserDAO dao, final ResolverFactory resolvers) {
         this.config = config;
         this.storage = storage;
         this.dao = dao;
-        this.resolverFactory = resolverFactory;
+        this.resolvers = resolvers;
     }
 
     /**
@@ -86,7 +86,8 @@ public class Listeners implements Listener {
             }
             this.dao.addUser(new User(uuid, username, 0, 0));
             if (this.config.bool("addPlayerNotification")) {
-                TagResolver resolver = this.resolverFactory.fromUsers(Bukkit.getConsoleSender(), username);
+                User console = this.dao.fromSender(Bukkit.getConsoleSender());
+                TagResolver resolver = this.resolvers.fakeTarget(console, username);
                 String content = this.config.string("addPlayerMessage", false);
                 Text.fromString(Bukkit.getConsoleSender(), content, resolver).send();
             }
@@ -102,7 +103,8 @@ public class Listeners implements Listener {
     public void onPlayerJoin(final PlayerJoinEvent e) {
         if (this.config.bool("sendLoginMessage")) {
             Player player = e.getPlayer();
-            Text.fromString(player, this.config.string("loginMessage"), this.resolverFactory.fromUsers(player)).send();
+            TagResolver resolver = this.resolvers.fromSender(this.dao.fromPlayer(player).orElseThrow());
+            Text.fromString(player, this.config.string("loginMessage"), resolver).send();
         }
     }
 
@@ -119,7 +121,8 @@ public class Listeners implements Listener {
             String completion = MiniMessage.miniMessage().serialize(e.message());
             if (completion.equalsIgnoreCase("cancel")) {
                 this.storage.remove(uuid);
-                Text.fromString(player, this.config.string("cancelPrompt"), this.resolverFactory.fromUsers(player)).send();
+                TagResolver resolver = this.resolvers.fromSender(this.dao.fromPlayer(player).orElseThrow());
+                Text.fromString(player, this.config.string("cancelPrompt"), resolver).send();
             }
             this.storage.complete(uuid, completion);
             e.setCancelled(true);
@@ -155,9 +158,9 @@ public class Listeners implements Listener {
             case TAKE -> this.dao.takeCredits(uuid, amount);
         };
         CommandSender sender = e.sender();
+        TagResolver resolver = this.resolvers.fromTransaction(this.dao.fromSender(sender), e);
         //If transaction is successful, make the resolver and send the message to sender.
         if (transactionStatus) {
-            TagResolver resolver = this.resolverFactory.fromTransaction(e);
             Text.fromString(sender, this.config.string(operation + "Sender"), resolver).send();
             Player player = Bukkit.getPlayer(uuid);
             //If the player isn't null and transaction is NOT silent, send the receiver message.
@@ -166,7 +169,7 @@ public class Listeners implements Listener {
             }
             return;
         }
-        Text.fromString(sender, this.config.string("notEnoughCredits"), this.resolverFactory.fromUsers(sender)).send();
+        Text.fromString(sender, this.config.string("notEnoughCredits"), resolver).send();
     }
 
     /**
@@ -177,12 +180,10 @@ public class Listeners implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void performRedemption(final CreditRedemptionEvent e) {
-        //Get information about the event.
         UUID uuid = e.user().uuid();
         int amount = e.amount();
         CommandSender sender = e.sender();
-        TagResolver resolver = this.resolverFactory.fromRedemption(e);
-        //Check if the user has enough credits to redeem the amount specified.
+        TagResolver resolver = this.resolvers.fromRedemption(this.dao.fromSender(sender), e);
         if (this.dao.getCredits(uuid) < amount) {
             Text.fromString(sender, this.config.string("notEnoughCredits"), resolver).send();
             return;
@@ -207,7 +208,7 @@ public class Listeners implements Listener {
             profile.save(true);
             this.dao.addRedeemedCredits(uuid, amount);
             //Rebuild TagResolver as information has changed pertaining to users.
-            resolver = this.resolverFactory.fromRedemption(e);
+            resolver = this.resolvers.fromRedemption(this.dao.fromSender(sender), e);
             //If the sender is equal to the recipient, send the message for self redemption and return.
             if (sender instanceof Player p && p.getUniqueId().equals(uuid)) {
                 Text.fromString(sender, this.config.string("selfRedeem"), resolver).send();

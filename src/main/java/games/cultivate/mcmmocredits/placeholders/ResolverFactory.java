@@ -26,21 +26,21 @@ package games.cultivate.mcmmocredits.placeholders;
 import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
+import games.cultivate.mcmmocredits.util.User;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import javax.inject.Inject;
+import java.util.UUID;
 
 /**
  * Factory used to create {@link TagResolver}s.
  */
 public final class ResolverFactory {
-    private final UserDAO dao;
 
     @Inject
-    public ResolverFactory(final UserDAO dao) {
-        this.dao = dao;
+    public ResolverFactory() {
     }
 
     /**
@@ -49,8 +49,8 @@ public final class ResolverFactory {
      * @param sender The {@link CommandSender}
      * @return The resulting {@link TagResolver}
      */
-    public TagResolver fromUsers(final CommandSender sender) {
-        return this.builder().users(sender).build();
+    public TagResolver fromSender(final User sender) {
+        return this.builder().sender(sender).build();
     }
 
     /**
@@ -60,8 +60,15 @@ public final class ResolverFactory {
      * @param target Another user. Typically, a {@link Player}'s username.
      * @return The resulting {@link TagResolver}
      */
-    public TagResolver fromUsers(final CommandSender sender, final String target) {
+    public TagResolver fromUsers(final User sender, final User target) {
         return this.builder().users(sender, target).build();
+    }
+
+    /**
+     * Used to create Placeholders when we have a target that does not exist.
+     */
+    public TagResolver fakeTarget(final User sender, final String target) {
+        return this.builder().users(sender, new User(new UUID(0, 0), target, 0, 0)).build();
     }
 
     /**
@@ -70,8 +77,8 @@ public final class ResolverFactory {
      * @param e Instance of the {@link CreditTransactionEvent} that is used to populate the resolver.
      * @return The resulting {@link TagResolver}
      */
-    public TagResolver fromTransaction(final CreditTransactionEvent e) {
-        return this.builder().users(e.sender(), e.user().username()).transaction(e.amount()).build();
+    public TagResolver fromTransaction(final User sender, final CreditTransactionEvent e) {
+        return this.builder().users(sender, e.user()).transaction(e.amount()).build();
     }
 
     /**
@@ -80,8 +87,8 @@ public final class ResolverFactory {
      * @param e Instance of the {@link CreditRedemptionEvent} that is used to populate the resolver.
      * @return The resulting {@link TagResolver}
      */
-    public TagResolver fromRedemption(final CreditRedemptionEvent e) {
-        return this.builder().users(e.sender(), e.user().username()).transaction(e.amount()).skill(e.skill()).build();
+    public TagResolver fromRedemption(final User sender, final CreditRedemptionEvent e) {
+        return this.builder().users(sender, e.user()).transaction(e.amount()).skill(e.skill()).build();
     }
 
     /**
@@ -90,6 +97,6 @@ public final class ResolverFactory {
      * @return The {@link Resolver.Builder}
      */
     public Resolver.Builder builder() {
-        return Resolver.builder(this.dao);
+        return Resolver.builder();
     }
 }

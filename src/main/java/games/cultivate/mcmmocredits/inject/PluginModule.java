@@ -47,7 +47,6 @@ import java.nio.file.Path;
 public final class PluginModule extends AbstractModule {
     private final MCMMOCredits plugin;
     private MenuFactory factory;
-    private ResolverFactory resolverFactory;
     private UserDAO dao;
 
     public PluginModule(final MCMMOCredits plugin) {
@@ -62,6 +61,7 @@ public final class PluginModule extends AbstractModule {
         this.bind(MCMMOCredits.class).toInstance(this.plugin);
         this.bind(JavaPlugin.class).toInstance(this.plugin);
         this.bind(Path.class).annotatedWith(Names.named("dir")).toInstance(this.plugin.getDataFolder().toPath());
+        this.bind(ResolverFactory.class).asEagerSingleton();
         this.bind(GeneralConfig.class).asEagerSingleton();
         this.bind(MenuConfig.class).asEagerSingleton();
         this.bind(InputStorage.class).asEagerSingleton();
@@ -90,21 +90,6 @@ public final class PluginModule extends AbstractModule {
             }
         }
         return this.dao;
-    }
-
-    /**
-     * Provides the {@link ResolverFactory} we are using for injection into constructors.
-     *
-     * @param dao {@link UserDAO} to use for construction of the object.
-     * @return the {@link ResolverFactory}
-     * @see ResolverFactory
-     */
-    @Provides
-    public ResolverFactory provideResolverFactory(final UserDAO dao) {
-        if (this.resolverFactory == null) {
-            this.resolverFactory = new ResolverFactory(dao);
-        }
-        return this.resolverFactory;
     }
 
     /**

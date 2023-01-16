@@ -23,6 +23,8 @@
 //
 package games.cultivate.mcmmocredits.util;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -34,5 +36,12 @@ import java.util.UUID;
  * @param redeemed amount of credits redeemed historically.
  */
 public record User(UUID uuid, String username, int credits, int redeemed) {
-
+    public Map<String, String> placeholders(final String prefix) {
+        Map<String, String> map = new HashMap<>();
+        map.put(prefix, this.username);
+        map.put(prefix + "_credits", this.credits + "");
+        map.put(prefix + "_uuid", this.uuid.toString());
+        map.put(prefix + "_redeemed", this.redeemed + "");
+        return map;
+    }
 }

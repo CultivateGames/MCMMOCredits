@@ -24,10 +24,11 @@
 package games.cultivate.mcmmocredits;
 
 import cloud.commandframework.annotations.AnnotationParser;
-import cloud.commandframework.bukkit.CloudBukkitCapabilities;
+import cloud.commandframework.exceptions.ArgumentParseException;
 import cloud.commandframework.exceptions.CommandExecutionException;
 import cloud.commandframework.exceptions.InvalidCommandSenderException;
 import cloud.commandframework.exceptions.InvalidSyntaxException;
+import cloud.commandframework.exceptions.NoPermissionException;
 import cloud.commandframework.execution.CommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.minecraft.extras.AudienceProvider;
@@ -42,6 +43,7 @@ import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.data.DAOProvider;
+import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.placeholders.CreditsExpansion;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
@@ -58,9 +60,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.interfaces.paper.PaperInterfaceListeners;
 
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 /**
@@ -69,6 +70,7 @@ import java.util.function.BiFunction;
 public final class MCMMOCredits extends JavaPlugin {
     private Injector injector;
     private GeneralConfig config;
+    private boolean isPaper;
 
     /**
      * Called when the application starts up. Handles injection, checks for required dependencies (Paper, MCMMO etc.),
@@ -85,8 +87,7 @@ public final class MCMMOCredits extends JavaPlugin {
         this.loadConfiguration();
         this.checkForDependencies();
         this.loadCommands();
-        Bukkit.getPluginManager().registerEvents(new PaperInterfaceListeners(this, 10L), this);
-        Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
+        this.registerListeners();
         long end = System.nanoTime();
         if (this.config.bool("debug")) {
             this.getSLF4JLogger().info("Plugin enabled! Startup took: {} s.", (double) (end - start) / 1000000000);
@@ -102,11 +103,14 @@ public final class MCMMOCredits extends JavaPlugin {
     }
 
     /**
-     * Handles all logic required to check for required software (Paper, MCMMO). Registers {@link PlaceholderExpansion} if PlaceholderAPI is present.
+     * Handles all logic required to check for required software (Paper, MCMMO).
+     * <p>
+     * Registers {@link PlaceholderExpansion} if PlaceholderAPI is present.
      */
     private void checkForDependencies() {
         try {
             Class.forName("com.destroystokyo.paper.MaterialSetTag");
+            this.isPaper = true;
         } catch (Exception e) {
             this.getSLF4JLogger().warn("Not using Paper, disabling plugin...");
             this.setEnabled(false);
@@ -118,7 +122,6 @@ public final class MCMMOCredits extends JavaPlugin {
             return;
         }
         this.getSLF4JLogger().info("mcMMO has been found! Continuing to load...");
-
         if (pluginManager.getPlugin("PlaceholderAPI") != null) {
             this.injector.getInstance(CreditsExpansion.class).register();
         }
@@ -135,13 +138,9 @@ public final class MCMMOCredits extends JavaPlugin {
             e.printStackTrace();
             return;
         }
-
-        if (manager.hasCapability(CloudBukkitCapabilities.BRIGADIER)) {
+        if (this.isPaper) {
             manager.registerBrigadier();
-            manager.brigadierManager().setNativeNumberSuggestions(false);
-        }
-
-        if (manager.hasCapability(CloudBukkitCapabilities.ASYNCHRONOUS_COMPLETION)) {
+            Objects.requireNonNull(manager.brigadierManager()).setNativeNumberSuggestions(false);
             manager.registerAsynchronousCompletions();
         }
         manager.parserRegistry().registerSuggestionProvider("user", (c, i) -> {
@@ -153,17 +152,20 @@ public final class MCMMOCredits extends JavaPlugin {
             }
             return List.of();
         });
-
         AnnotationParser<CommandSender> parser = new AnnotationParser<>(manager, CommandSender.class, p -> SimpleCommandMeta.empty());
         parser.parse(this.injector.getInstance(Credits.class));
-
         MinecraftExceptionHandler<CommandSender> handler = new MinecraftExceptionHandler<>();
         EnumSet.allOf(ExceptionType.class).forEach(x -> handler.withHandler(x, this.buildError(x)));
         handler.apply(manager, AudienceProvider.nativeAudience());
     }
 
+    private void registerListeners() {
+        Bukkit.getPluginManager().registerEvents(new PaperInterfaceListeners(this, 10L), this);
+        Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
+    }
+
     /**
-     * Called when the application shuts down. Saves all valuable data (configurations, database).
+     * Called when the application shuts down. Saves all valuable data.
      */
     @Override
     public void onDisable() {
@@ -178,18 +180,16 @@ public final class MCMMOCredits extends JavaPlugin {
             if (this.config.bool("debug") || ex instanceof CommandExecutionException) {
                 ex.printStackTrace();
             }
-            Resolver.Builder rb = this.injector.getInstance(ResolverFactory.class).builder().users(sender);
-            Map<String, String> tags = new HashMap<>();
-            switch (ex.getClass().getSimpleName()) {
-                case "ArgumentParseException" -> tags.put("argument_error", ex.getCause().getMessage());
-                case "InvalidSyntaxException" ->
-                        tags.put("correct_syntax", "/" + ((InvalidSyntaxException) ex).getCorrectSyntax());
-                case "InvalidCommandSenderException" ->
-                        tags.put("correct_sender", ((InvalidCommandSenderException) ex).getRequiredSender().getSimpleName());
-                default -> { //do nothing if no error
-                }
+            Resolver.Builder builder = this.injector.getInstance(ResolverFactory.class).builder();
+            builder.sender(this.injector.getInstance(UserDAO.class).fromSender(sender));
+            switch (exType) {
+                case NO_PERMISSION -> builder.exception((NoPermissionException) ex);
+                case INVALID_SENDER -> builder.exception((InvalidCommandSenderException) ex);
+                case INVALID_SYNTAX -> builder.exception((InvalidSyntaxException) ex);
+                case ARGUMENT_PARSING -> builder.exception((ArgumentParseException) ex);
+                case COMMAND_EXECUTION -> builder.exception((CommandExecutionException) ex);
             }
-            return Text.fromString(sender, this.config.string(path), rb.tags(tags).build()).toComponent();
+            return Text.fromString(sender, this.config.string(path), builder.build()).toComponent();
         };
     }
 }

@@ -23,17 +23,21 @@
 //
 package games.cultivate.mcmmocredits.placeholders;
 
+import cloud.commandframework.exceptions.ArgumentParseException;
+import cloud.commandframework.exceptions.CommandExecutionException;
+import cloud.commandframework.exceptions.InvalidCommandSenderException;
+import cloud.commandframework.exceptions.InvalidSyntaxException;
+import cloud.commandframework.exceptions.NoPermissionException;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import games.cultivate.mcmmocredits.data.UserDAO;
+import games.cultivate.mcmmocredits.util.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.PreProcess;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.apache.commons.lang.WordUtils;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -47,22 +51,19 @@ public final class Resolver {
     /**
      * Generates new {@link Builder}s.
      *
-     * @param dao An injected {@link UserDAO} instance used to obtain player data for parsing.
      * @return The {@link Builder}
      */
-    public static Builder builder(final UserDAO dao) {
-        return new Builder(dao);
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
      * Builder used to create {@link TagResolver} instances.
      */
     public static final class Builder {
-        private final UserDAO dao;
         private final Map<String, PreProcess> placeholders;
 
-        public Builder(final UserDAO dao) {
-            this.dao = dao;
+        public Builder() {
             this.placeholders = new ConcurrentHashMap<>();
         }
 
@@ -91,38 +92,31 @@ public final class Resolver {
         }
 
         /**
-         * Used to create {@link Placeholder}s for users involved within an action. Typically used for command-based transactions.
+         * Used to create {@link Placeholder} for users involved within an action.
+         * <p>
+         * Typically used for command-based transactions.
          *
-         * @param sender A {@link CommandSender} to parse for.
-         * @param target Username of an action target to parse for.
+         * @param sender A {@link User} to parse.
+         * @param target A recipient {@link User} to parse.
          * @return The {@link Builder}
          */
-        //TODO: fix
-        public Builder users(final CommandSender sender, final String target) {
-            Map<String, String> tags = new ConcurrentHashMap<>();
-            this.dao.getUser(target).ifPresentOrElse(user -> {
-                tags.put("target", user.username());
-                tags.put("target_credits", user.credits() + "");
-            }, () -> tags.put("target", target));
-            if (sender instanceof Player player) {
-                this.dao.getUser(player.getName()).ifPresent(user -> {
-                    tags.put("sender", user.username());
-                    tags.put("sender_credits", user.credits() + "");
-                });
-                return this.tags(tags);
-            }
-            tags.put("sender", sender.getName());
-            return this.tags(tags);
+        public Builder users(final User sender, final User target) {
+            Map<String, String> map = new HashMap<>();
+            map.putAll(sender.placeholders("sender"));
+            map.putAll(target.placeholders("target"));
+            return this.tags(map);
         }
 
         /**
-         * Used to parse for a singular user when there is no second party to parse for. This to ensure no ambiguity between sender and target tags.
+         * Used to create {@link Placeholder} for users involved within an action.
+         * <p>
+         * Typically used for command-based transactions.
          *
-         * @param sender A {@link CommandSender} to generate tags for.
+         * @param sender A {@link User} to parse.
          * @return The {@link Builder}
          */
-        public Builder users(final CommandSender sender) {
-            return this.users(sender, sender.getName());
+        public Builder sender(final User sender) {
+            return this.tags(sender.placeholders("sender"));
         }
 
         /**
@@ -143,7 +137,30 @@ public final class Resolver {
          */
         @SuppressWarnings("deprecation")
         public Builder skill(final PrimarySkillType skill) {
-            return this.tags(Map.of("skill", WordUtils.capitalizeFully(skill.name()), "cap", skill.getMaxLevel() + ""));
+            Map<String, String> map = new HashMap<>();
+            map.put("skill", WordUtils.capitalizeFully(skill.name()));
+            map.put("cap", skill.getMaxLevel() + "");
+            return this.tags(map);
+        }
+
+        public Builder exception(final ArgumentParseException ex) {
+            return this.tag("argument_error", ex.getCause().getMessage());
+        }
+
+        public Builder exception(final InvalidSyntaxException ex) {
+            return this.tag("correct_syntax", "/" + ex.getCorrectSyntax());
+        }
+
+        public Builder exception(final InvalidCommandSenderException ex) {
+            return this.tag("correct_sender", ex.getRequiredSender().getSimpleName());
+        }
+
+        public Builder exception(final NoPermissionException ex) {
+            return this.tag("required_permission", ex.getMissingPermission());
+        }
+
+        public Builder exception(final CommandExecutionException ex) {
+            return this.tag("command_context", String.valueOf(ex.getCommandContext()));
         }
 
         /**
