@@ -24,6 +24,7 @@
 package games.cultivate.mcmmocredits.data;
 
 import games.cultivate.mcmmocredits.util.User;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jdbi.v3.sqlobject.SqlObject;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
@@ -35,6 +36,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserDAO extends SqlObject {
+    UUID ZERO_UUID = new UUID(0, 0);
+
     /**
      * Adds a {@link User} to the database if they are not in the database.
      *
@@ -45,26 +48,45 @@ public interface UserDAO extends SqlObject {
 
     /**
      * Gets a full {@link User} through username. Optional is empty if the user doesn't exist.
+     *
+     * @param username username to apply to search.
+     * @return The user, or an empty optional.
      */
     @SqlQuery("SELECT * FROM MCMMOCREDITS WHERE username LIKE :username LIMIT 1;")
     @RegisterConstructorMapper(User.class)
     Optional<User> getUser(String username);
 
     /**
-     * Gets a full {@link User} through {@link UUID}. Optional is empty if the user doesn't exist.
+     * Gets a full {@link User} through username. Optional is empty if the user doesn't exist.
+     *
+     * @param uuid {@link UUID} to apply to search.
+     * @return The user, or an empty optional.
      */
     @SqlQuery("SELECT * FROM MCMMOCREDITS WHERE uuid = :uuid;")
     @RegisterConstructorMapper(User.class)
     Optional<User> getUser(UUID uuid);
 
     /**
-     * Returns a {@link User} from the provided {@link Player}
+     * Returns a {@link User} from the provided {@link Player}.
      *
      * @param player the player.
      * @return A user from the DAO.
      */
     default Optional<User> fromPlayer(Player player) {
         return this.getUser(player.getUniqueId());
+    }
+
+    /**
+     * Returns a {@link User} from the provided {@link CommandSender}.
+     *
+     * @param sender the sender.
+     * @return A user from the DAO, or a fake user which encapsulates the sender.
+     */
+    default Optional<User> fromSender(CommandSender sender) {
+        if (sender instanceof Player player) {
+            return this.fromPlayer(player);
+        }
+        return Optional.of(new User(ZERO_UUID, sender.getName(), 0, 0));
     }
 
     /**

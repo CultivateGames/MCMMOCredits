@@ -28,14 +28,14 @@ import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.config.GeneralConfig;
 import games.cultivate.mcmmocredits.util.Queries;
 import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import javax.inject.Inject;
 
-public class MySQLProvider implements DAOProvider {
+public final class MySQLProvider implements DAOProvider {
     private final GeneralConfig config;
     private final Queries queries = new Queries();
-    protected HikariDataSource hikari;
-    protected Jdbi jdbi;
+    private HikariDataSource hikari;
 
     @Inject
     MySQLProvider(final GeneralConfig config) {
@@ -44,15 +44,15 @@ public class MySQLProvider implements DAOProvider {
 
     @Override
     public UserDAO provide() {
-        int databasePort = config.integer("mysql.port", 3306);
-        String databaseHost = config.string("mysql.host");
-        String databaseName = config.string("mysql.name");
+        int databasePort = this.config.integer("mysql.port", 3306);
+        String databaseHost = this.config.string("mysql.host");
+        String databaseName = this.config.string("mysql.name");
         HikariConfig hconfig = new HikariConfig();
         hconfig.setPoolName("MCMMOCredits MySQL");
         hconfig.setJdbcUrl("jdbc:mysql://" + databaseHost + ":" + databasePort + "/" + databaseName);
-        hconfig.setUsername(config.string("mysql.username"));
-        hconfig.setPassword(config.string("mysql.password"));
-        hconfig.addDataSourceProperty("useSSL", config.bool("mysql.ssl"));
+        hconfig.setUsername(this.config.string("mysql.username"));
+        hconfig.setPassword(this.config.string("mysql.password"));
+        hconfig.addDataSourceProperty("useSSL", this.config.bool("mysql.ssl"));
         hconfig.addDataSourceProperty("maintainTimeStats", "false");
         hconfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
         hconfig.addDataSourceProperty("rewriteBatchedStatements", "true");
@@ -63,9 +63,9 @@ public class MySQLProvider implements DAOProvider {
         hconfig.addDataSourceProperty("cacheResultSetMetadata", "true");
         hconfig.addDataSourceProperty("cacheServerConfiguration", "true");
         this.hikari = new HikariDataSource(hconfig);
-        this.jdbi = Jdbi.create(this.hikari).installPlugins();
-        this.jdbi.useHandle(x -> x.execute(this.queries.query("mysqlcreate")));
-        return this.jdbi.onDemand(UserDAO.class);
+        Jdbi jdbi = Jdbi.create(this.hikari).installPlugin(new SqlObjectPlugin());
+        jdbi.useHandle(x -> x.execute(this.queries.query("mysqlcreate")));
+        return jdbi.onDemand(UserDAO.class);
     }
 
     @Override

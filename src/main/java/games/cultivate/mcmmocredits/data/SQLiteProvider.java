@@ -35,10 +35,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
 
-public class SQLiteProvider implements DAOProvider {
+public final class SQLiteProvider implements DAOProvider {
     private final Queries queries = new Queries();
-    protected HikariDataSource hikari;
-    protected Jdbi jdbi;
+    private HikariDataSource hikari;
     private @Inject @Named("dir") Path dir;
 
     @Override
@@ -50,9 +49,9 @@ public class SQLiteProvider implements DAOProvider {
         config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
         config.addDataSourceProperty("url", "jdbc:sqlite:" + path);
         this.hikari = new HikariDataSource(config);
-        this.jdbi = Jdbi.create(this.hikari).installPlugin(new SQLitePlugin()).installPlugin(new SqlObjectPlugin());
-        this.jdbi.useHandle(x -> x.execute(this.queries.query("sqlitecreate")));
-        return this.jdbi.onDemand(UserDAO.class);
+        Jdbi jdbi = Jdbi.create(this.hikari).installPlugin(new SQLitePlugin()).installPlugin(new SqlObjectPlugin());
+        jdbi.useHandle(x -> x.execute(this.queries.query("sqlitecreate")));
+        return jdbi.onDemand(UserDAO.class);
     }
 
     @Override

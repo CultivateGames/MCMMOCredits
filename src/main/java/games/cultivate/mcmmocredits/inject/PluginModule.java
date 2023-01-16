@@ -71,6 +71,7 @@ public final class PluginModule extends AbstractModule {
      * Provides the {@link UserDAO} we are using for constructors.
      *
      * @param config {@link GeneralConfig} to grab the Database type we want.
+     * @param injector The {@link Injector}. Used to create the DAO based on the config.
      * @return the {@link UserDAO}
      */
     @Provides
