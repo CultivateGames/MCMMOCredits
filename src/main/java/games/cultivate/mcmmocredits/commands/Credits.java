@@ -30,246 +30,218 @@ import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.specifier.Range;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import com.gmail.nossr50.util.skills.SkillTools;
-import games.cultivate.mcmmocredits.config.GeneralConfig;
+import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
+import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.menu.MenuFactory;
-import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
+import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
+import games.cultivate.mcmmocredits.user.CommandExecutor;
+import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.util.CreditOperation;
-import games.cultivate.mcmmocredits.util.User;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import org.incendo.interfaces.paper.PlayerViewer;
+import org.incendo.interfaces.paper.type.ChestInterface;
 
 import javax.inject.Inject;
 import java.util.Optional;
 
 /**
- * This class is responsible for handling of all commands.
- * <p>
- * Instances in which we lazily throw NoValueFoundException exist because we know the Optional is not empty.
+ * Handles all /credits commands. Alias: /mcmmocredits.
+ * We use duplicate code in some places to enforce unique perms.
  */
 @CommandMethod("credits|mcmmocredits")
 public final class Credits {
-    private final MenuConfig menus;
-    private final GeneralConfig config;
+    private final MenuConfig menuConfig;
+    private final MainConfig config;
     private final UserDAO dao;
-    private final MenuFactory menuFactory;
-    private final ResolverFactory resolvers;
+    private final MenuFactory factory;
 
+    /**
+     * Constructs the command object via injection.
+     *
+     * @param config     Instance of MainConfig. Used for messages and reload command.
+     * @param menuConfig Instance of MenuConfig. Used for reload command.
+     * @param dao        Instance of UserDAO. Used to obtain User info from command.
+     * @param factory    Instance of MenuFactory. Used to construct menus.
+     */
     @Inject
-    public Credits(final GeneralConfig config, final MenuConfig menus, final UserDAO dao, final MenuFactory factory, final ResolverFactory resolvers) {
+    public Credits(final MainConfig config, final MenuConfig menuConfig, final UserDAO dao, final MenuFactory factory) {
         this.config = config;
-        this.menus = menus;
+        this.menuConfig = menuConfig;
         this.dao = dao;
-        this.menuFactory = factory;
-        this.resolvers = resolvers;
+        this.factory = factory;
     }
 
     /**
-     * Command which allows the player to check their own credits. Cannot be executed by Console.
-     * <p>
-     * Usage: /credits balance
+     * /credits balance. Allows the user to check statistics (balance, redeemed).
      *
-     * @param player The {@link Player} executing the command.
+     * @param user Command executor. Must be an online player.
      */
-    @CommandDescription("Check your own MCMMO Credit balance.")
     @CommandMethod("balance")
     @CommandPermission("mcmmocredits.balance.self")
-    public void checkCredits(final Player player) {
-        this.dao.fromPlayer(player).ifPresent(user -> {
-            TagResolver resolver = this.resolvers.fromSender(user);
-            Text.fromString(player, this.config.string("selfBalance"), resolver).send();
-        });
+    public void balance(final User user) {
+        Text.forOneUser(user, this.config.string("balance")).send();
     }
 
     /**
-     * Command which allows a {@link CommandSender} to check credit balance of any user.
-     * <p>
-     * Usage: /credits balance Notch
+     * /credits balance username. Allows the user to check the statistics of someone else.
      *
-     * @param sender   The {@link CommandSender} executing the command.
-     * @param username The username of the {@link Player} being checked.
+     * @param executor Command executor. Can be from Console.
+     * @param username Username of the {@link User} being actioned.
      */
-    @CommandDescription("Check someone else's MCMMO Credit balance.")
     @CommandMethod("balance <username>")
     @CommandPermission("mcmmocredits.balance.other")
-    public void otherCredits(final CommandSender sender, final @Argument(suggestions = "user") String username) {
-        User executor = this.dao.fromSender(sender);
-        Optional<User> user = this.dao.getUser(username);
-        if (user.isPresent()) {
-            TagResolver resolver = this.resolvers.fromUsers(executor, user.get());
-            Text.fromString(sender, this.config.string("otherBalance"), resolver).send();
+    public void balanceOther(final CommandExecutor executor, final @Argument(suggestions = "user") String username) {
+        Optional<User> optionalUser = this.dao.getUser(username);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            Text.fromString(executor, this.config.string("balance-other"), executor.resolver().with(user)).send();
+            return;
         }
-        Text.fromString(sender, this.config.string("playerDoesNotExist"), this.resolvers.fakeTarget(executor, username)).send();
+        this.playerUnknownError(executor, username);
     }
 
     /**
-     * Command which allows a player to modify their own credit balance.
-     * <p>
-     * Usage: /credits add 100, /credits set 100, /credits take 100
+     * /credits add|set|take number. Allows a user to modify their own credit balance.
      *
-     * @param player    The {@link Player} being affected by credit balance modification.
-     * @param operation How to modify the balance. Add or take credits from the credit balance, or set the balance to a specific amount.
-     * @param amount    Amount of credits to modify the credit balance with.
+     * @param user      Command executor. Must be an online player.
+     * @param operation Operation that is performed on the balance.
+     * @param amount    Amount of credits affected by transaction.
      */
     @CommandDescription("Modify your own MCMMO Credit balance.")
     @CommandMethod("<operation> <amount>")
     @CommandPermission("mcmmocredits.modify.self")
-    public void modifySelfCredits(final Player player, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount) {
-        User user = this.dao.fromPlayer(player).orElseThrow();
-        CreditTransactionEvent event = new CreditTransactionEvent(player, user, operation, amount, true);
+    public void modify(final User user, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount) {
+        CreditTransactionEvent event = new CreditTransactionEvent(user, operation, amount, true);
         Bukkit.getPluginManager().callEvent(event);
     }
 
     /**
-     * Command that allows a {@link CommandSender} to modify the credit balance of a {@link Player}.
-     * <p>
-     * Usage: /credits add 100 Notch, /credits set 100 Notch, /credits take 100 Notch
-     * <p>
-     * Silent Flag Usage: /credits add 100 Notch --s, /credits set 100 Notch --s, /credits take 100 Notch --s
+     * /credits add|set|take number username [--s]. Allows a user to modify someone else's balance.
      *
-     * @param sender    The {@link CommandSender} who executed the command.
-     * @param operation How to modify the balance. Add or take credits from the credit balance, or set the balance to a specific amount.
-     * @param amount    Amount of credits to modify the credit balance with.
-     * @param username  The username of the {@link Player} being modified.
-     * @param silent    A "flag" indicating whether command feedback is enabled for the user. --s added to the end of the command means that the user will not see a message when their credit balance is modified.
+     * @param executor  Command executor. Can be from Console.
+     * @param operation Operation that is performed on the balance.
+     * @param amount    Amount of credits affected by transaction.
+     * @param username  Username of the {@link User} being actioned.
+     * @param silent    If command should be "silent". User will not get feedback upon completion if true.
      */
     @CommandDescription("Modify MCMMO Credits of a user")
     @CommandMethod("<operation> <amount> <username>")
     @CommandPermission("mcmmocredits.modify.other")
-    public void modifyOtherCredits(final CommandSender sender, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
-        Optional<User> user = this.dao.getUser(username);
-        if (user.isPresent()) {
-            CreditTransactionEvent event = new CreditTransactionEvent(sender, user.get(), operation, amount, silent);
+    public void modifyOther(final CommandExecutor executor, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
+        Optional<User> optionalUser = this.dao.getUser(username);
+        if (optionalUser.isPresent()) {
+            CreditTransactionEvent event = new CreditTransactionEvent(executor.sender(), optionalUser.get().uuid(), operation, amount, silent);
             Bukkit.getPluginManager().callEvent(event);
             return;
         }
-        User executor = this.dao.fromSender(sender);
-        TagResolver resolver = this.resolvers.fakeTarget(executor, username);
-        Text.fromString(sender, this.config.string("playerDoesNotExist"), resolver).send();
+        this.playerUnknownError(executor, username);
     }
 
     /**
-     * Command which allows a {@link Player} to exchange their credits for +1 level in a {@link PrimarySkillType}.
-     * <p>
-     * Usage: /credits redeem 100 acrobatics. This will exchange 100 credits for +100 levels in Acrobatics.
+     * /credits redeem amount skill. Allows a user to redeem credits for MCMMO Skill levels.
      *
-     * @param player The {@link Player} being affected by credit balance redemption.
-     * @param skill  The {@link PrimarySkillType} being upgraded.
-     * @param amount Amount of credits to exchange.
+     * @param user   Command executor. Must be an online player.
+     * @param skill  The skill being actioned.
+     * @param amount Amount of credits affected by transaction.
      */
-    @CommandDescription("Redeem your own MCMMO Credits into a specific skill.")
     @CommandMethod("redeem <amount> <skill>")
     @CommandPermission("mcmmocredits.redeem.self")
-    public void selfRedeem(final Player player, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
-        User user = this.dao.fromPlayer(player).orElseThrow();
-        CreditRedemptionEvent event = new CreditRedemptionEvent(player, user, skill, amount, true);
-        if (this.isChildSkill(skill)) {
-            TagResolver resolver = this.resolvers.fromRedemption(user, event);
-            Text.fromString(player, this.config.string("argumentParsing"), resolver).send();
-            return;
-        }
+    public void redeem(final User user, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
+        CreditRedemptionEvent event = new CreditRedemptionEvent(user.player(), user.uuid(), skill, amount, true);
         Bukkit.getPluginManager().callEvent(event);
     }
 
     /**
-     * Command that allows a {@link CommandSender} to sudo a {@link Player} for a credit exchange into a {@link PrimarySkillType}.
-     * <p>
-     * Usage: /credits redeem 100 acrobatics Notch. Command exchanges 100 credits for +100 levels in Acrobatics for Notch.
-     * <p>
-     * Silent Flag Usage: /credits redeem 100 acrobatics Notch --s
+     * /credits redeem amount skill username [--s]. Allows a user to redeem credits.
      *
-     * @param sender   The {@link CommandSender} who executed the command.
-     * @param skill    The {@link PrimarySkillType} being upgraded.
-     * @param amount   Amount of credits to exchange.
-     * @param username The username of the {@link Player} being modified.
-     * @param silent   A "flag" indicating whether command feedback is enabled for the user. --s added to the end of the command means that the user will not see a message when their credit balance is changed. Depending on MCMMO config settings, a user may see a broadcast in chat about leveling up a skill in MCMMO.
-     * @see #selfRedeem(Player, PrimarySkillType, int)
+     * @param executor Command executor. Can be from Console.
+     * @param skill    The skill being actioned.
+     * @param amount   Amount of credits affected by transaction.
+     * @param username Username of the {@link User} being actioned.
+     * @param silent   If command should be "silent". User will not get feedback upon completion if true.
      */
-    @CommandDescription("Redeem MCMMO Credits into a specific skill for someone else")
     @CommandMethod("redeem <amount> <skill> <username>")
     @CommandPermission("mcmmocredits.redeem.other")
-    public void adminRedeem(final CommandSender sender, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
-        if (sender instanceof Player p && username == null) {
-            this.selfRedeem(p, skill, amount);
-            return;
-        }
-        User executor = this.dao.fromSender(sender);
-        Optional<User> user = this.dao.getUser(username);
-        if (user.isPresent()) {
-            CreditRedemptionEvent event = new CreditRedemptionEvent(sender, user.get(), skill, amount, silent);
-            if (this.isChildSkill(skill)) {
-                //Argument parsing error because a child skill was used.
-                TagResolver resolver = this.resolvers.fromRedemption(executor, event);
-                Text.fromString(sender, this.config.string("argumentParsing"), resolver).send();
-                return;
-            }
+    public void redeemOther(final CommandExecutor executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
+        Optional<User> optionalUser = this.dao.getUser(username);
+        if (optionalUser.isPresent()) {
+            CreditRedemptionEvent event = new CreditRedemptionEvent(executor.sender(), optionalUser.get().uuid(), skill, amount, silent);
             Bukkit.getPluginManager().callEvent(event);
             return;
         }
-        TagResolver resolver = this.resolvers.fakeTarget(executor, username);
-        Text.fromString(sender, this.config.string("playerDoesNotExist"), resolver).send();
+        this.playerUnknownError(executor, username);
     }
 
     /**
-     * Command which will reload configuration files. Does not support changes to Database.
+     * /credits reload. Reloads the configuration files with any changes applied.
      *
-     * @param sender The {@link CommandSender} who executed the command.
+     * @param executor Command executor. Can be from Console.
      */
-    @CommandDescription("Reloads all configuration files provided by the plugin.")
     @CommandMethod("reload")
-    @CommandPermission("mcmmocredits.admin.reload")
-    public void reloadCredits(final CommandSender sender) {
+    @CommandPermission("mcmmocredits.admin")
+    public void reload(final CommandExecutor executor) {
         this.config.load();
-        this.menus.load();
-        User executor = this.dao.fromSender(sender);
-        Text.fromString(sender, this.config.string("reloadSuccessful"), this.resolvers.fromSender(executor)).send();
+        this.menuConfig.load();
+        Text.forOneUser(executor, this.config.string("reload")).send();
     }
 
     /**
-     * Command which allows a {@link Player} to open the Main Menu.
+     * /credits menu main. Allows user to open the Main Menu.
      *
-     * @param player The {@link Player} who executed the command and will see the menu.
+     * @param user Command executor. Must be an online player.
      */
-    @CommandDescription("Opens the Main Menu")
     @CommandMethod("menu main")
     @CommandPermission("mcmmocredits.menu.main")
-    public void openMenu(final Player player) {
-        this.menuFactory.createMainMenu(player).open();
+    public void mainMenu(final User user) {
+        this.handleMenu(user, "main");
     }
 
     /**
-     * Command which allows a {@link Player} to open the Edit Configuration Menu.
+     * /credits menu config. Allows user to open the Configuration Menu.
      *
-     * @param player The {@link Player} who executed the command and will see the menu.
+     * @param user Command executor. Must be an online player.
      */
-    @CommandDescription("Opens the Edit Configuration Menu")
     @CommandMethod("menu config")
     @CommandPermission("mcmmocredits.menu.config")
-    public void openConfigMenu(final Player player) {
-        this.menuFactory.createConfigMenu(player).open();
+    public void configMenu(final User user) {
+        this.handleMenu(user, "config");
     }
 
     /**
-     * Command which allows a {@link Player} to open the Credit Redemption Menu.
+     * /credits menu redeem. Allows user to open the Redeem Menu.
      *
-     * @param player The {@link Player} who executed the command and will see the menu.
+     * @param user Command executor. Must be an online player.
      */
-    @CommandDescription("Opens the Credit Redemption Menu")
     @CommandMethod("menu redeem")
     @CommandPermission("mcmmocredits.menu.redeem")
-    public void openRedeemMenu(final Player player) {
-        this.menuFactory.createRedeemMenu(player).open();
+    public void redeemMenu(final User user) {
+        this.handleMenu(user, "redeem");
     }
 
-    //This method is wrapped in case the methodology of checking child skills changes.
-    private boolean isChildSkill(final PrimarySkillType skill) {
-        return SkillTools.isChildSkill(skill);
+    /**
+     * Displays a {@link Menu} to a User.
+     *
+     * @param user The executor of the command.
+     * @param type Menu Type from command input.
+     */
+    private void handleMenu(final User user, final String type) {
+        ChestInterface chest = this.factory.buildMenu(user, type);
+        chest.open(PlayerViewer.of(user.player()));
+    }
+
+    /**
+     * Sends a message when a user is unknown.
+     *
+     * @param executor Command executor. Can be from Console.
+     * @param username Username of unknown user.
+     */
+    private void playerUnknownError(final CommandExecutor executor, final String username) {
+        Resolver resolver = executor.resolver().toBuilder().username(username).build();
+        Text.fromString(executor, this.config.string("player-unknown"), resolver).send();
     }
 }

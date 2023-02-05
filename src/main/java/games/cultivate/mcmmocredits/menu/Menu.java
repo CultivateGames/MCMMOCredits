@@ -23,44 +23,41 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import org.bukkit.entity.Player;
+import games.cultivate.mcmmocredits.config.MenuConfig.MenuProperties;
+import games.cultivate.mcmmocredits.text.Text;
+import games.cultivate.mcmmocredits.user.User;
+import net.kyori.adventure.text.Component;
+import org.incendo.interfaces.core.click.ClickHandler;
+import org.incendo.interfaces.core.transform.TransformContext;
 import org.incendo.interfaces.paper.PlayerViewer;
+import org.incendo.interfaces.paper.pane.ChestPane;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
-/**
- * Interface which represents all Menus.
- */
-public interface Menu {
-    /**
-     * Opens a menu for the {@link PlayerViewer}
-     */
-    default void open() {
-        this.chest().open(this.viewer());
+import java.util.List;
+
+public final class Menu {
+    private final MenuProperties properties;
+    private final List<Item> items;
+
+    public Menu(final MenuProperties properties, final List<Item> items) {
+        this.properties = properties;
+        this.items = items;
     }
 
-    /**
-     * Closes a menu for the {@link PlayerViewer}
-     */
-    default void close() {
-        this.viewer().close();
+    public List<Item> items() {
+        return this.items;
     }
 
-    /**
-     * Loads the menu.
-     */
-    void load();
+    public Item findFirstOfType(final ItemType type) {
+        return this.items.stream().filter(x -> x.type() == type).findFirst().orElseThrow();
+    }
 
-    /**
-     * Provides the backing {@link ChestInterface} of a menu.
-     *
-     * @return the {@link ChestInterface}
-     */
-    ChestInterface chest();
+    public int slots() {
+        return this.properties.slots();
+    }
 
-    /**
-     * Provides the backing {@link PlayerViewer} of a menu. Typically derived from a {@link Player}
-     *
-     * @return the {@link PlayerViewer}
-     */
-    PlayerViewer viewer();
+    public ChestInterface createInterface(final List<TransformContext<ChestPane, PlayerViewer>> context, final User user) {
+        Component title = Text.forOneUser(user, this.properties.title()).toComponent();
+        return new ChestInterface(this.properties.slots() / 9, title, context, List.of(), true, 10, ClickHandler.cancel());
+    }
 }

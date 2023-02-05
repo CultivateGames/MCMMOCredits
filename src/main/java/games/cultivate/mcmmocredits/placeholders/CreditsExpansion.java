@@ -24,16 +24,17 @@
 package games.cultivate.mcmmocredits.placeholders;
 
 import games.cultivate.mcmmocredits.data.UserDAO;
+import games.cultivate.mcmmocredits.user.User;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
-import java.util.UUID;
+import java.util.Optional;
 
 /**
- * This is responsible for handling our registration with {@link PlaceholderAPI}
+ * Handles registration with {@link PlaceholderAPI}
  */
 public final class CreditsExpansion extends PlaceholderExpansion {
     private final UserDAO dao;
@@ -43,50 +44,44 @@ public final class CreditsExpansion extends PlaceholderExpansion {
         this.dao = dao;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @NotNull String getAuthor() {
         return "Cultivate Games";
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @NotNull String getIdentifier() {
         return "mcmmocredits";
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @NotNull String getVersion() {
-        return "0.2.4-SNAPSHOT";
+        return "0.3.0-SNAPSHOT";
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean persist() {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public String onRequest(final OfflinePlayer player, final String identifier) {
-        UUID uuid = player.getUniqueId();
-        if (identifier.equalsIgnoreCase("credits")) {
-            return this.dao.getCredits(uuid) + "";
+    public String onRequest(final OfflinePlayer player, final @NotNull String identifier) {
+        Optional<User> optionalUser = this.dao.getUser(player.getName());
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            if (identifier.equalsIgnoreCase("credits")) {
+                return user.credits() + "";
+            }
+            if (identifier.equalsIgnoreCase("redeemed")) {
+                return user.redeemed() + "";
+            }
+            if (identifier.equalsIgnoreCase("username")) {
+                return user.username();
+            }
+            if (identifier.equalsIgnoreCase("uuid")) {
+                return user.uuid().toString();
+            }
         }
-        if (identifier.equalsIgnoreCase("redeemed")) {
-            return this.dao.getRedeemedCredits(uuid) + "";
-        }
-        return null;
+        return 0 + "";
     }
 }

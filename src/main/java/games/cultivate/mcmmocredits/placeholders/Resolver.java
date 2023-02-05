@@ -23,13 +23,8 @@
 //
 package games.cultivate.mcmmocredits.placeholders;
 
-import cloud.commandframework.exceptions.ArgumentParseException;
-import cloud.commandframework.exceptions.CommandExecutionException;
-import cloud.commandframework.exceptions.InvalidCommandSenderException;
-import cloud.commandframework.exceptions.InvalidSyntaxException;
-import cloud.commandframework.exceptions.NoPermissionException;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import games.cultivate.mcmmocredits.util.User;
+import games.cultivate.mcmmocredits.user.CommandExecutor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.PreProcess;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -39,13 +34,22 @@ import org.apache.commons.lang.WordUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Object used to build a {@link TagResolver} to parse placeholders within {@link Component}s.
  */
 public final class Resolver {
-    private Resolver() {
+    //The Tag Resolver is mutable because we want to attach other Resolvers to it.
+    private TagResolver tagResolver;
+    private final Map<String, PreProcess> placeholders;
+
+    private Resolver(final Map<String, PreProcess> placeholders) {
+        this.placeholders = placeholders;
+        TagResolver.Builder builder = TagResolver.builder();
+        for (Map.Entry<String, PreProcess> entry : this.placeholders.entrySet()) {
+            builder = builder.tag(entry.getKey(), entry.getValue());
+        }
+        this.tagResolver = builder.build();
     }
 
     /**
@@ -54,7 +58,31 @@ public final class Resolver {
      * @return The {@link Builder}
      */
     public static Builder builder() {
-        return new Builder();
+        return new Builder(new HashMap<>());
+    }
+
+    public static Resolver fromRedeem(final CommandExecutor user, final PrimarySkillType skill, final int amount) {
+        return user.resolver().toBuilder().skill(skill).transaction(amount).build();
+    }
+
+    public static Resolver fromRedeemSudo(final CommandExecutor sender, final CommandExecutor target, final PrimarySkillType skillType, final int amount) {
+        return Resolver.builder().users(sender, target).skill(skillType).transaction(amount).build();
+    }
+
+    public Resolver.Builder toBuilder() {
+        return new Builder(this.placeholders);
+    }
+
+    public TagResolver resolver() {
+        return this.tagResolver;
+    }
+
+    public Resolver with(final CommandExecutor user) {
+        return this.toBuilder().user(user, "target").build();
+    }
+
+    public void addResolver(final String key, final String value) {
+        this.tagResolver = TagResolver.resolver(this.tagResolver, TagResolver.resolver(key, Tag.preProcessParsed(value)));
     }
 
     /**
@@ -63,8 +91,8 @@ public final class Resolver {
     public static final class Builder {
         private final Map<String, PreProcess> placeholders;
 
-        public Builder() {
-            this.placeholders = new ConcurrentHashMap<>();
+        private Builder(final Map<String, PreProcess> placeholders) {
+            this.placeholders = placeholders;
         }
 
         /**
@@ -86,8 +114,8 @@ public final class Resolver {
          * @return the {@link Builder}
          * @see #tag(String, String)
          */
-        public Builder tags(final Map<String, String> tags) {
-            tags.forEach((k, v) -> this.placeholders.put(k, Tag.preProcessParsed(v)));
+        public Builder tags(final Map<String, PreProcess> tags) {
+            this.placeholders.putAll(tags);
             return this;
         }
 
@@ -96,27 +124,20 @@ public final class Resolver {
          * <p>
          * Typically used for command-based transactions.
          *
-         * @param sender A {@link User} to parse.
-         * @param target A recipient {@link User} to parse.
+         * @param sender A {@link CommandExecutor} to parse.
+         * @param target A recipient {@link CommandExecutor} to parse.
          * @return The {@link Builder}
          */
-        public Builder users(final User sender, final User target) {
-            Map<String, String> map = new HashMap<>();
-            map.putAll(sender.placeholders("sender"));
-            map.putAll(target.placeholders("target"));
-            return this.tags(map);
+        public Builder users(final CommandExecutor sender, final CommandExecutor target) {
+            return this.tags(sender.placeholders("sender")).tags(target.placeholders("target"));
         }
 
-        /**
-         * Used to create {@link Placeholder} for users involved within an action.
-         * <p>
-         * Typically used for command-based transactions.
-         *
-         * @param sender A {@link User} to parse.
-         * @return The {@link Builder}
-         */
-        public Builder sender(final User sender) {
-            return this.tags(sender.placeholders("sender"));
+        public Builder user(final CommandExecutor user, final String prefix) {
+            return this.tags(user.placeholders(prefix));
+        }
+
+        public Builder username(final String username) {
+            return this.tag("target_username", username);
         }
 
         /**
@@ -137,43 +158,17 @@ public final class Resolver {
          */
         @SuppressWarnings("deprecation")
         public Builder skill(final PrimarySkillType skill) {
-            Map<String, String> map = new HashMap<>();
-            map.put("skill", WordUtils.capitalizeFully(skill.name()));
-            map.put("cap", skill.getMaxLevel() + "");
-            return this.tags(map);
-        }
-
-        public Builder exception(final ArgumentParseException ex) {
-            return this.tag("argument_error", ex.getCause().getMessage());
-        }
-
-        public Builder exception(final InvalidSyntaxException ex) {
-            return this.tag("correct_syntax", "/" + ex.getCorrectSyntax());
-        }
-
-        public Builder exception(final InvalidCommandSenderException ex) {
-            return this.tag("correct_sender", ex.getRequiredSender().getSimpleName());
-        }
-
-        public Builder exception(final NoPermissionException ex) {
-            return this.tag("required_permission", ex.getMissingPermission());
-        }
-
-        public Builder exception(final CommandExecutionException ex) {
-            return this.tag("command_context", String.valueOf(ex.getCommandContext()));
+            String formattedSkill = WordUtils.capitalizeFully(skill.name());
+            return this.tag("skill", formattedSkill).tag("cap", skill.getMaxLevel() + "");
         }
 
         /**
-         * Builds a {@link TagResolver} based on information stored within this {@link Builder}
+         * Builds a {@link Resolver} based on information stored within this {@link Builder}
          *
-         * @return A {@link TagResolver} containing {@link Tag}s derived from the internal placeholder map.
+         * @return A {@link Resolver} containing a {@link TagResolver} derived from the construction.
          */
-        public TagResolver build() {
-            TagResolver.Builder builder = TagResolver.builder();
-            for (Map.Entry<String, PreProcess> entry : this.placeholders.entrySet()) {
-                builder = builder.tag(entry.getKey(), entry.getValue());
-            }
-            return builder.build();
+        public Resolver build() {
+            return new Resolver(this.placeholders);
         }
     }
 }

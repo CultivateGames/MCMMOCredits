@@ -23,60 +23,59 @@
 //
 package games.cultivate.mcmmocredits.events;
 
+import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.util.CreditOperation;
-import games.cultivate.mcmmocredits.util.User;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.UUID;
+
 /**
- * {@link Event} which represents a transaction involving MCMMO Credits. Can be used by external plugins to modify credit balances via a Listener.
+ * Event that is fired when a {@link CreditOperation} is triggered. Does not capture results.
+ * Plugins that want to modify this event will have to use EventPriority.MONITOR.
  */
 public final class CreditTransactionEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
     private final CommandSender sender;
-    private final User user;
+    private final UUID uuid;
     private final CreditOperation operation;
     private final int amount;
     private final boolean silent;
 
     /**
-     * Initializes the event.
+     * Constructs the event.
      *
-     * @param sender The {@link CommandSender} who initiated the transaction.
-     * @param user      {@link User} being impacted by the event.
-     * @param operation {@link CreditOperation} of the transaction we are about to execute.
-     * @param amount    amount of Credits to use in the transaction.
-     * @param silent    Whether the transaction should produce a message to be sent to the user.
+     * @param sender    Command executor. Can be from Console.
+     * @param uuid      UUID of the {@link User} being actioned.
+     * @param operation The type of transaction taking place.
+     * @param amount    Amount of credits affected by transaction.
+     * @param silent    If command should be "silent". User will not get feedback upon completion if true.
      */
-    public CreditTransactionEvent(final CommandSender sender, final User user, final CreditOperation operation, final int amount, final boolean silent) {
+    public CreditTransactionEvent(final CommandSender sender, final UUID uuid, final CreditOperation operation, final int amount, final boolean silent) {
         this.sender = sender;
-        this.user = user;
+        this.uuid = uuid;
         this.operation = operation;
         this.amount = amount;
         this.silent = silent;
     }
 
-    public CommandSender sender() {
-        return this.sender;
+    /**
+     * Constructs the event using a {@link User} instead of the Bukkit equivalents.
+     *
+     * @param user      Command Executor. Must be an online player.
+     * @param operation The type of transaction occurring.
+     * @param amount    Amount of credits affected by transaction.
+     * @param silent    If command should be "silent". User will not get feedback upon completion if true.
+     */
+    public CreditTransactionEvent(final User user, final CreditOperation operation, final int amount, final boolean silent) {
+        this(user.player(), user.uuid(), operation, amount, silent);
     }
 
-    public User user() {
-        return this.user;
-    }
-
-    public CreditOperation operation() {
-        return this.operation;
-    }
-
-    public int amount() {
-        return this.amount;
-    }
-
-    public boolean isSilent() {
-        return this.silent;
+    public static HandlerList getHandlerList() {
+        return HANDLERS;
     }
 
     @Override
@@ -84,7 +83,48 @@ public final class CreditTransactionEvent extends Event {
         return HANDLERS;
     }
 
-    public static HandlerList getHandlerList() {
-        return HANDLERS;
+    /**
+     * Returns the Bukkit CommandSender.
+     *
+     * @return The CommandSender.
+     */
+    public CommandSender sender() {
+        return this.sender;
+    }
+
+    /**
+     * Returns the target's UUID.
+     *
+     * @return The UUID.
+     */
+    public UUID uuid() {
+        return this.uuid;
+    }
+
+    /**
+     * Returns the type of transaction occurring.
+     *
+     * @return The transaction type.
+     */
+    public CreditOperation operation() {
+        return this.operation;
+    }
+
+    /**
+     * Returns the amount of credits used in the transaction.
+     *
+     * @return The amount of credits.
+     */
+    public int amount() {
+        return this.amount;
+    }
+
+    /**
+     * Returns if the transaction is silent.
+     *
+     * @return Silence of the transaction.
+     */
+    public boolean isSilent() {
+        return this.silent;
     }
 }

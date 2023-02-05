@@ -23,18 +23,28 @@
 //
 package games.cultivate.mcmmocredits.util;
 
+import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import com.gmail.nossr50.util.skills.SkillTools;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
-/**
- * Utility class for interacting with {@link File}s.
- */
-public final class FileUtil {
-    private FileUtil() {
-        throw new AssertionError("FileUtil cannot be instantiated!");
+public final class Util {
+    private static final List<String> MCMMO_SKILLS = SkillTools.NON_CHILD_SKILLS.stream()
+            .map(PrimarySkillType::name)
+            .map(String::toLowerCase)
+            .toList();
+
+    private Util() {
+        throw new AssertionError("Util cannot be instantiated!");
+    }
+
+    public static List<String> getSkillNames() {
+        return MCMMO_SKILLS;
     }
 
     /**

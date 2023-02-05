@@ -24,90 +24,85 @@
 package games.cultivate.mcmmocredits.inject;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Provides;
-import com.google.inject.name.Names;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.GeneralConfig;
+import games.cultivate.mcmmocredits.config.Config;
+import games.cultivate.mcmmocredits.config.MainConfig;
+import games.cultivate.mcmmocredits.config.MainConfig.DatabaseProperties;
+import games.cultivate.mcmmocredits.config.MainConfig.DatabaseType;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.data.MySQLProvider;
-import games.cultivate.mcmmocredits.data.SQLiteProvider;
+import games.cultivate.mcmmocredits.data.DAOProvider;
 import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.menu.MenuFactory;
-import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
 import games.cultivate.mcmmocredits.util.InputStorage;
+import games.cultivate.mcmmocredits.util.PluginPath;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.slf4j.Logger;
 
 import java.nio.file.Path;
 
 /**
- * Class used to interface with {@link Guice}. Responsible for application-wide dependency injection.
+ * Adds bindings to Guice.
  */
+//TODO: increase usage of bound Logger.
 public final class PluginModule extends AbstractModule {
     private final MCMMOCredits plugin;
-    private MenuFactory factory;
     private UserDAO dao;
+    private MenuFactory factory;
 
+    /**
+     * Constructs the Guice Module.
+     *
+     * @param plugin Instance of the plugin. Used to bind a Logger and Path.
+     */
     public PluginModule(final MCMMOCredits plugin) {
         this.plugin = plugin;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void configure() {
         this.bind(MCMMOCredits.class).toInstance(this.plugin);
         this.bind(JavaPlugin.class).toInstance(this.plugin);
-        this.bind(Path.class).annotatedWith(Names.named("dir")).toInstance(this.plugin.getDataFolder().toPath());
-        this.bind(ResolverFactory.class).asEagerSingleton();
-        this.bind(GeneralConfig.class).asEagerSingleton();
+        this.bind(Logger.class).toInstance(this.plugin.getSLF4JLogger());
+        this.bind(Path.class).annotatedWith(PluginPath.class).toInstance(this.plugin.getDataFolder().toPath());
+        this.bind(MainConfig.class).asEagerSingleton();
         this.bind(MenuConfig.class).asEagerSingleton();
         this.bind(InputStorage.class).asEagerSingleton();
+        this.bind(DAOProvider.class).asEagerSingleton();
     }
 
     /**
-     * Provides the {@link UserDAO} we are using for constructors.
+     * Provides the MenuFactory. Required due to passing in multiple injected objects needed to construct Menus.
      *
-     * @param config {@link GeneralConfig} to grab the Database type we want.
-     * @param injector The {@link Injector}. Used to create the DAO based on the config.
-     * @return the {@link UserDAO}
+     * @param menuConfig Instance of the MenuConfig.
+     * @param config     Instance of the MainConfig.
+     * @param storage    Instance of the InputStorage.
+     * @param plugin     Instance of the plugin.
+     * @return The MenuFactory.
      */
     @Provides
-    public UserDAO provideDAO(final GeneralConfig config, final Injector injector) {
-        if (this.dao == null) {
-            //Load configuration to make sure we know the DB type.
-            config.load();
-            String type = config.string("databaseType", false).toUpperCase();
-            if (type.equals("MYSQL")) {
-                this.dao = injector.getInstance(MySQLProvider.class).provide();
-                return this.dao;
-            }
-            if (type.equals("SQLITE")) {
-                this.dao = injector.getInstance(SQLiteProvider.class).provide();
-                return this.dao;
-            }
-        }
-        return this.dao;
-    }
-
-    /**
-     * Provides the {@link MenuFactory} we are using for injection into constructors.
-     *
-     * @param menus           {@link MenuConfig} to use for construction of the object.
-     * @param resolverFactory {@link ResolverFactory} to use for construction of the object.
-     * @param config          {@link GeneralConfig} to use for construction of the object.
-     * @param storage         {@link InputStorage} to use for construction of the object.
-     * @param plugin          {@link MCMMOCredits} to use for construction of the object
-     * @return the {@link MenuFactory}
-     * @see MenuFactory
-     */
-    @Provides
-    public MenuFactory provideMenuFactory(final MenuConfig menus, final ResolverFactory resolverFactory, final GeneralConfig config, final InputStorage storage, final MCMMOCredits plugin) {
+    public MenuFactory provideFactory(final MenuConfig menuConfig, final MainConfig config, final InputStorage storage, final MCMMOCredits plugin) {
         if (this.factory == null) {
-            this.factory = new MenuFactory(menus, resolverFactory, config, storage, plugin);
+            this.factory = new MenuFactory(menuConfig, config, storage, plugin);
         }
         return this.factory;
+    }
+
+    /**
+     * Provides the UserDAO. Required since DB type is determined by {@link Config}.
+     *
+     * @param config   Config that stores the {@link DatabaseType}.
+     * @param provider The DAOProvider. Loads database based on configuration.
+     * @return The UserDAO.
+     */
+    @Provides
+    public UserDAO provideDAO(final MainConfig config, final DAOProvider provider) {
+        if (this.dao == null) {
+            config.load();
+            DatabaseType type = config.getDatabaseType();
+            DatabaseProperties properties = config.getDatabaseProperties();
+            this.dao = type == MainConfig.DatabaseType.SQLITE ? provider.provideSQLite() : provider.provideSQL(properties);
+        }
+        return this.dao;
     }
 }

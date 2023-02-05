@@ -23,25 +23,25 @@
 //
 package games.cultivate.mcmmocredits.text;
 
-import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
+import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.user.CommandExecutor;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.entity.Player;
 
 /**
  * Object which represents any messaging we send to users.
  */
 public final class Text {
+    private static final Component NO_ITALICS = Component.empty().decoration(TextDecoration.ITALIC, false);
     private final Audience audience;
-    private final TagResolver resolver;
+    private final Resolver resolver;
     private String content;
 
-    private Text(final Audience audience, final String content, final TagResolver resolver) {
+    private Text(final Audience audience, final String content, final Resolver resolver) {
         this.audience = audience;
         this.content = content;
         this.resolver = resolver;
@@ -55,20 +55,16 @@ public final class Text {
      * @param resolver TagResolver to use for parsing.
      * @return a populated Text object.
      */
-    public static Text fromString(final Audience audience, final String content, final TagResolver resolver) {
+    public static Text fromString(final Audience audience, final String content, final Resolver resolver) {
         return new Text(audience, content, resolver);
     }
 
-    /**
-     * Utility method to parse a {@link Component} for {@link PlaceholderAPI} placeholders.
-     *
-     * @param player    {@link Player} to parse placeholders against.
-     * @param component Existing {@link Component} to scan for parseable placeholders.
-     * @param factory   An injected {@link ResolverFactory} to parse local placeholders.
-     * @return The modified {@link Component}.
-     */
-    public static Component parseComponent(final Player player, final Component component, final ResolverFactory factory) {
-        return Text.fromString(player, PlainTextComponentSerializer.plainText().serialize(component), factory.fromUsers(player)).toComponent();
+    public static Text fromString(final CommandExecutor executor, final String content, final Resolver resolver) {
+        return Text.fromString(executor.sender(), content, resolver);
+    }
+
+    public static Text forOneUser(final CommandExecutor executor, final String content) {
+        return Text.fromString(executor, content, executor.resolver());
     }
 
     /**
@@ -80,7 +76,7 @@ public final class Text {
         if (this.audience instanceof Player player) {
             this.content = PlaceholderAPI.setPlaceholders(player, this.content);
         }
-        return Component.empty().decoration(TextDecoration.ITALIC, false).append(MiniMessage.miniMessage().deserialize(this.content, this.resolver));
+        return NO_ITALICS.append(MiniMessage.miniMessage().deserialize(this.content, this.resolver.resolver()));
     }
 
     /**

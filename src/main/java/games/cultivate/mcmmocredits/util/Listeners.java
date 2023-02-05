@@ -27,15 +27,17 @@ import com.gmail.nossr50.datatypes.player.PlayerProfile;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.util.player.UserManager;
-import games.cultivate.mcmmocredits.config.GeneralConfig;
+import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
-import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
+import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
+import games.cultivate.mcmmocredits.user.CommandExecutor;
+import games.cultivate.mcmmocredits.user.Console;
+import games.cultivate.mcmmocredits.user.User;
 import io.papermc.paper.event.player.AsyncChatEvent;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -56,15 +58,13 @@ import java.util.UUID;
 public class Listeners implements Listener {
     private final InputStorage storage;
     private final UserDAO dao;
-    private final GeneralConfig config;
-    private final ResolverFactory resolvers;
+    private final MainConfig config;
 
     @Inject
-    public Listeners(final GeneralConfig config, final InputStorage storage, final UserDAO dao, final ResolverFactory resolvers) {
+    public Listeners(final MainConfig config, final InputStorage storage, final UserDAO dao) {
         this.config = config;
         this.storage = storage;
         this.dao = dao;
-        this.resolvers = resolvers;
     }
 
     /**
@@ -75,8 +75,7 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerPreLogin(final AsyncPlayerPreLoginEvent e) {
         if (e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
-            //fully qualified import due to conflict.
-            com.destroystokyo.paper.profile.PlayerProfile profile = e.getPlayerProfile();
+            var profile = e.getPlayerProfile();
             UUID uuid = profile.getId();
             String username = profile.getName();
             Optional<User> user = this.dao.getUser(uuid);
@@ -85,11 +84,8 @@ public class Listeners implements Listener {
                 return;
             }
             this.dao.addUser(new User(uuid, username, 0, 0));
-            if (this.config.bool("addPlayerNotification")) {
-                User console = this.dao.fromSender(Bukkit.getConsoleSender());
-                TagResolver resolver = this.resolvers.fakeTarget(console, username);
-                String content = this.config.string("addPlayerMessage", false);
-                Text.fromString(Bukkit.getConsoleSender(), content, resolver).send();
+            if (this.config.bool("settings", "add-user-message")) {
+                Text.forOneUser(Console.INSTANCE, this.config.string("add-user")).send();
             }
         }
     }
@@ -101,10 +97,9 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(final PlayerJoinEvent e) {
-        if (this.config.bool("sendLoginMessage")) {
-            Player player = e.getPlayer();
-            TagResolver resolver = this.resolvers.fromSender(this.dao.fromPlayer(player).orElseThrow());
-            Text.fromString(player, this.config.string("loginMessage"), resolver).send();
+        if (this.config.bool("settings", "send-login-message")) {
+            User user = this.dao.forceUser(e.getPlayer().getUniqueId());
+            Text.forOneUser(user, this.config.string("login-message")).send();
         }
     }
 
@@ -115,14 +110,13 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerChat(final AsyncChatEvent e) {
-        Player player = e.getPlayer();
-        UUID uuid = player.getUniqueId();
+        UUID uuid = e.getPlayer().getUniqueId();
         if (this.storage.contains(uuid)) {
-            String completion = MiniMessage.miniMessage().serialize(e.message());
+            String completion = PlainTextComponentSerializer.plainText().serialize(e.message());
             if (completion.equalsIgnoreCase("cancel")) {
                 this.storage.remove(uuid);
-                TagResolver resolver = this.resolvers.fromSender(this.dao.fromPlayer(player).orElseThrow());
-                Text.fromString(player, this.config.string("cancelPrompt"), resolver).send();
+                User user = this.dao.forceUser(uuid);
+                Text.forOneUser(user, this.config.string("cancel-prompt")).send();
             }
             this.storage.complete(uuid, completion);
             e.setCancelled(true);
@@ -147,29 +141,26 @@ public class Listeners implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void performTransaction(final CreditTransactionEvent e) {
-        //Get information about the event.
-        UUID uuid = e.user().uuid();
+        UUID uuid = e.uuid();
         int amount = e.amount();
         CreditOperation operation = e.operation();
-        //Determine transaction status based on Database transaction.
         boolean transactionStatus = switch (operation) {
             case ADD -> this.dao.addCredits(uuid, amount);
             case SET -> this.dao.setCredits(uuid, amount);
             case TAKE -> this.dao.takeCredits(uuid, amount);
         };
         CommandSender sender = e.sender();
-        TagResolver resolver = this.resolvers.fromTransaction(this.dao.fromSender(sender), e);
-        //If transaction is successful, make the resolver and send the message to sender.
-        if (transactionStatus) {
-            Text.fromString(sender, this.config.string(operation + "Sender"), resolver).send();
-            Player player = Bukkit.getPlayer(uuid);
-            //If the player isn't null and transaction is NOT silent, send the receiver message.
-            if (player != null && !e.isSilent()) {
-                Text.fromString(player, this.config.string(operation + "Receiver"), resolver).send();
-            }
+        Resolver resolver = this.updateTransactionResolver(sender, uuid, amount);
+        if (!transactionStatus) {
+            Text.fromString(sender, this.config.string("not-enough-credits"), resolver).send();
             return;
         }
-        Text.fromString(sender, this.config.string("notEnoughCredits"), resolver).send();
+        String content = "credits-" + operation;
+        Text.fromString(sender, this.config.string(content), resolver).send();
+        Player player = Bukkit.getPlayer(uuid);
+        if (player != null && !e.isSilent()) {
+            Text.fromString(player, this.config.string(content + "-user"), resolver).send();
+        }
     }
 
     /**
@@ -178,46 +169,50 @@ public class Listeners implements Listener {
      *
      * @param e Instance of the {@link CreditRedemptionEvent}
      */
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void performRedemption(final CreditRedemptionEvent e) {
-        UUID uuid = e.user().uuid();
+        UUID uuid = e.uuid();
         int amount = e.amount();
         CommandSender sender = e.sender();
-        TagResolver resolver = this.resolvers.fromRedemption(this.dao.fromSender(sender), e);
+        PrimarySkillType skill = e.skill();
+        Resolver resolver = this.updateRedeemResolver(sender, uuid, skill, amount);
         if (this.dao.getCredits(uuid) < amount) {
-            Text.fromString(sender, this.config.string("notEnoughCredits"), resolver).send();
+            Text.fromString(sender, this.config.string("not-enough-credits"), resolver).send();
             return;
         }
         Player player = Bukkit.getPlayer(uuid);
         PlayerProfile profile = player != null ? UserManager.getPlayer(player).getProfile() : mcMMO.getDatabaseManager().loadPlayerProfile(uuid);
         if (!profile.isLoaded()) {
-            //send a message if loading mcmmo profile fails. This may need to be a new configuration message.
-            Text.fromString(sender, this.config.string("playerDoesNotExist"), resolver).send();
+            Text.fromString(sender, this.config.string("mcmmo-profile-fail"), resolver).send();
             return;
         }
-        PrimarySkillType skill = e.skill();
         int currentLevel = profile.getSkillLevel(skill);
         if (currentLevel + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill)) {
-            Text.fromString(sender, this.config.string("skillCap"), resolver).send();
+            Text.fromString(sender, this.config.string("mcmmo-skill-cap"), resolver).send();
             return;
         }
-        //Take credits first in case of issue with code. Easier to restore credits than previous skill levels.
-        if (this.dao.takeCredits(uuid, amount)) {
-            //Modify skill level if credit withdrawal is successful.
-            profile.modifySkill(skill, currentLevel + amount);
-            profile.save(true);
-            this.dao.addRedeemedCredits(uuid, amount);
-            //Rebuild TagResolver as information has changed pertaining to users.
-            resolver = this.resolvers.fromRedemption(this.dao.fromSender(sender), e);
-            //If the sender is equal to the recipient, send the message for self redemption and return.
-            if (sender instanceof Player p && p.getUniqueId().equals(uuid)) {
-                Text.fromString(sender, this.config.string("selfRedeem"), resolver).send();
-                return;
-            }
-            Text.fromString(sender, this.config.string("otherRedeemSender"), resolver).send();
-            if (!e.isSilent() && player != null) {
-                Text.fromString(player, this.config.string("otherRedeemReceiver"), resolver).send();
-            }
+        this.dao.redeemCredits(uuid, amount);
+        profile.modifySkill(skill, currentLevel + amount);
+        profile.save(true);
+        resolver = this.updateRedeemResolver(sender, uuid, skill, amount);
+        if (sender instanceof Player p && p.getUniqueId().equals(uuid)) {
+            Text.fromString(sender, this.config.string("redeem"), resolver).send();
+            return;
         }
+        Text.fromString(sender, this.config.string("redeem-sudo"), resolver).send();
+        if (!e.isSilent() && player != null) {
+            Text.fromString(player, this.config.string("redeem-sudo-user"), resolver).send();
+        }
+    }
+
+    private Resolver updateRedeemResolver(final CommandSender sender, final UUID uuid, final PrimarySkillType skill, final int amount) {
+        CommandExecutor executor = this.dao.fromSender(sender);
+        return Resolver.fromRedeemSudo(executor, this.dao.forceUser(uuid), skill, amount);
+    }
+
+    private Resolver updateTransactionResolver(final CommandSender sender, final UUID uuid, final int amount) {
+        CommandExecutor executor = this.dao.fromSender(sender);
+        User target = this.dao.getUser(uuid).orElseThrow();
+        return Resolver.builder().transaction(amount).users(executor, target).build();
     }
 }
