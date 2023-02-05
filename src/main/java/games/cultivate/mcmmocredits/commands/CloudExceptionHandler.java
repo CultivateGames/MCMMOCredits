@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2022 Alexander Söderberg & Contributors
+// Copyright (c) 2023 Cultivate Games
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -50,6 +50,7 @@ import java.util.List;
  * Exception handler that modifies how Cloud exceptions send messages.
  * @see Credits
  */
+//https://github.com/Incendo/cloud/blob/master/cloud-minecraft/cloud-minecraft-extras/src/main/java/cloud/commandframework/minecraft/extras/MinecraftExceptionHandler.java
 public final class CloudExceptionHandler {
     private final MainConfig config;
     private final CommandManager<CommandExecutor> manager;

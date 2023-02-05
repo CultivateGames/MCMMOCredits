@@ -28,6 +28,7 @@ import org.jdbi.v3.core.locator.ClasspathSqlLocator;
 /**
  * Utility class to load locally saved SQL queries.
  */
+//https://github.com/broccolai/tickets/blob/rewrite/everything/core/src/main/java/love/broccolai/tickets/core/utilities/QueriesLocator.java
 public final class Queries {
     private final ClasspathSqlLocator locator = ClasspathSqlLocator.create();
 
