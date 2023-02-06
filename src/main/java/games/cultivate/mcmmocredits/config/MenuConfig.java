@@ -105,7 +105,7 @@ public class MenuConfig extends Config {
      */
     @ConfigSerializable
     static class ConfigMenu {
-        private MenuProperties properties = new MenuProperties("<dark_gray>Edit Your Configuration...", 45, false, false);
+        private MenuProperties properties = new MenuProperties("<dark_gray>Edit Your Configuration...", 54, false, false);
         private Items items = new Items();
 
         @ConfigSerializable
@@ -113,7 +113,7 @@ public class MenuConfig extends Config {
             private Item messages = this.configItem(Material.WRITABLE_BOOK, ItemType.EDIT_MESSAGE);
             private Item settings = this.configItem(Material.REDSTONE, ItemType.EDIT_SETTING);
             private Item fill = FILLER_ITEM;
-            private Item navigation = NAVIGATION_ITEM.toBuilder().slot(45).build();
+            private Item navigation = NAVIGATION_ITEM.toBuilder().slot(49).build();
 
             private Item configItem(final Material material, final ItemType type) {
                 List<String> lore = List.of("<gray>Click here to edit this config option!");

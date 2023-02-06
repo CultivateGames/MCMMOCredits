@@ -78,7 +78,7 @@ public final class Resolver {
      * @param amount Amount of credits used in the transaction.
      * @return A new Resolver.
      */
-    public static Resolver fromRedeemSudo(final CommandExecutor sender, final CommandExecutor target, final PrimarySkillType skill, final int amount) {
+    public static Resolver fromRedemption(final CommandExecutor sender, final CommandExecutor target, final PrimarySkillType skill, final int amount) {
         return Resolver.builder().users(sender, target).skill(skill).transaction(amount).build();
     }
 

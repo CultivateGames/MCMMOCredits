@@ -214,7 +214,7 @@ public class Listeners implements Listener {
      */
     private Resolver updateRedeemResolver(final CommandSender sender, final UUID uuid, final PrimarySkillType skill, final int amount) {
         CommandExecutor executor = this.dao.fromSender(sender);
-        return Resolver.fromRedeemSudo(executor, this.dao.forceUser(uuid), skill, amount);
+        return Resolver.fromRedemption(executor, this.dao.forceUser(uuid), skill, amount);
     }
 
     /**
