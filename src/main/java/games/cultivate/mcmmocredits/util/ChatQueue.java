@@ -30,19 +30,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
- * Object which represents a Chat Queue. Stores the {@link UUID} of a user, and a {@link CompletableFuture} representing the response status of the user as a {@link Map}.
+ * Represents a Chat Queue. Uses a map of User UUIDs and Completable Futures to transport chat messages.
  */
-public final class InputStorage {
+public final class ChatQueue {
     private final Map<UUID, CompletableFuture<String>> map;
 
-    public InputStorage() {
+    public ChatQueue() {
         this.map = new ConcurrentHashMap<>();
     }
 
     /**
-     * Removes an entry associated with the provided {@link UUID} if it exists.
+     * Removes an entry using the UUID.
      *
-     * @param uuid The {@link UUID} of the associated user to remove from the underlying map.
+     * @param uuid The UUID to remove.
      */
     public void remove(final UUID uuid) {
         if (this.contains(uuid)) {
@@ -52,17 +52,19 @@ public final class InputStorage {
     }
 
     /**
-     * Indicates if an entry exists in the underlying {@link Map}
+     * Checks if a UUID is contained within the ChatQueue.
      *
-     * @param uuid The {@link UUID} of the associated user to search for.
-     * @return Whether the entry exists for the provided {@link UUID}
+     * @param uuid The UUID to check.
+     * @return If the map contains the UUID.
      */
     public boolean contains(final UUID uuid) {
         return this.map.containsKey(uuid);
     }
 
     /**
-     * @param uuid The {@link UUID} of the associated user.
+     * Adds the UUID to the ChatQueue, overwriting any existing entries.
+     *
+     * @param uuid The UUID to add.
      */
     public void add(final UUID uuid) {
         this.remove(uuid);
@@ -70,11 +72,10 @@ public final class InputStorage {
     }
 
     /**
-     * Performs the provided {@link Consumer} using data from the completed {@link CompletableFuture} associated with the {@link UUID}.
-     * Attempts to add the entry if it doesn't exist, and removes the entry after the action is completed.
+     * Applies an action to an existing map entry.
      *
-     * @param uuid   The {@link UUID} of the associated user.
-     * @param action Action to perform after {@link CompletableFuture} is completed with data.
+     * @param uuid   The UUID to add.
+     * @param action The action to apply to the map entry's value.
      */
     public void act(final UUID uuid, final Consumer<? super String> action) {
         this.add(uuid);
@@ -82,10 +83,10 @@ public final class InputStorage {
     }
 
     /**
-     * Completes the {@link CompletableFuture} associated with the provided {@link UUID}
+     * Completes a {@link CompletableFuture} provided by the map.
      *
-     * @param uuid       The {@link UUID} of the associated user.
-     * @param completion String used to complete the {@link CompletableFuture}
+     * @param uuid       The UUID of the map entry to complete.
+     * @param completion The completion.
      */
     public void complete(final UUID uuid, final String completion) {
         if (this.contains(uuid)) {

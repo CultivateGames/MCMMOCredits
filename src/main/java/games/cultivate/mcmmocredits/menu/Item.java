@@ -75,7 +75,7 @@ public final class Item {
     }
 
     /**
-     * Returns a new instance of the Item Builder.
+     * Creates a new instance of the Item Builder.
      *
      * @return New Instance of the Item Builder.
      */

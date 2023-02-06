@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Class responsible for serializing and deserializing {@link Item} from {@link Config}
+ * Handles serialization/deserialization of {@link Item} from {@link Config}
  */
 public final class ItemSerializer implements TypeSerializer<Item> {
     public static final ItemSerializer INSTANCE = new ItemSerializer();

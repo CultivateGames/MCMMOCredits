@@ -23,6 +23,7 @@
 //
 package games.cultivate.mcmmocredits.serializers;
 
+import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.MenuConfig.MenuProperties;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.ItemType;
@@ -35,7 +36,10 @@ import org.spongepowered.configurate.serialize.TypeSerializer;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ * Handles serialization/deserialization of {@link Menu} from {@link Config}.
+ * The Menu deserialized here is incomplete and is transferred to the MenuFactory.
+ */
 public final class MenuSerializer implements TypeSerializer<Menu> {
     public static final MenuSerializer INSTANCE = new MenuSerializer();
 

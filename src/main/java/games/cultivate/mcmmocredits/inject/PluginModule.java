@@ -34,7 +34,7 @@ import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.data.DAOProvider;
 import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.menu.MenuFactory;
-import games.cultivate.mcmmocredits.util.InputStorage;
+import games.cultivate.mcmmocredits.util.ChatQueue;
 import games.cultivate.mcmmocredits.util.PluginPath;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
@@ -67,7 +67,7 @@ public final class PluginModule extends AbstractModule {
         this.bind(Path.class).annotatedWith(PluginPath.class).toInstance(this.plugin.getDataFolder().toPath());
         this.bind(MainConfig.class).asEagerSingleton();
         this.bind(MenuConfig.class).asEagerSingleton();
-        this.bind(InputStorage.class).asEagerSingleton();
+        this.bind(ChatQueue.class).asEagerSingleton();
         this.bind(DAOProvider.class).asEagerSingleton();
     }
 
@@ -76,12 +76,12 @@ public final class PluginModule extends AbstractModule {
      *
      * @param menuConfig Instance of the MenuConfig.
      * @param config     Instance of the MainConfig.
-     * @param storage    Instance of the InputStorage.
+     * @param storage    Instance of the ChatQueue.
      * @param plugin     Instance of the plugin.
      * @return The MenuFactory.
      */
     @Provides
-    public MenuFactory provideFactory(final MenuConfig menuConfig, final MainConfig config, final InputStorage storage, final MCMMOCredits plugin) {
+    public MenuFactory provideFactory(final MenuConfig menuConfig, final MainConfig config, final ChatQueue storage, final MCMMOCredits plugin) {
         if (this.factory == null) {
             this.factory = new MenuFactory(menuConfig, config, storage, plugin);
         }

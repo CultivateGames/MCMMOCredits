@@ -51,7 +51,7 @@ import java.util.Optional;
 
 /**
  * Handles all /credits commands. Alias: /mcmmocredits.
- * We use duplicate code in some places to enforce unique perms.
+ * We use duplicate code in some places to enforce unique permissions.
  */
 @CommandMethod("credits|mcmmocredits")
 public final class Credits {

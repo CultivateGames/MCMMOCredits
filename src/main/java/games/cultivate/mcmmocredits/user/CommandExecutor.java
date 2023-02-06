@@ -34,12 +34,23 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Represents any entity that can execute a command. Typically a User or Console.
+ */
 public abstract class CommandExecutor {
     private final UUID uuid;
     private final String username;
     private final int credits;
     private final int redeemed;
 
+    /**
+     * Constructs the object.
+     *
+     * @param uuid     The UUID of the executor.
+     * @param username The username of the executor.
+     * @param credits  The default credit balance of the executor.
+     * @param redeemed The default redeemed statistic of the executor.
+     */
     CommandExecutor(final UUID uuid, final String username, final int credits, final int redeemed) {
         this.uuid = uuid;
         this.username = username;
@@ -47,6 +58,12 @@ public abstract class CommandExecutor {
         this.redeemed = redeemed;
     }
 
+    /**
+     * Builds placeholders for a {@link Resolver}.
+     *
+     * @param prefix Prefix for the placeholders.
+     * @return A map of placeholders.
+     */
     public Map<String, PreProcess> placeholders(final String prefix) {
         Map<String, String> map = new HashMap<>();
         map.put(prefix, this.username);
@@ -56,31 +73,76 @@ public abstract class CommandExecutor {
         return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> Tag.preProcessParsed(x.getValue())));
     }
 
+    /**
+     * Gets a built Resolver for the executor.
+     *
+     * @return A built Resolver.
+     */
     public Resolver resolver() {
         return Resolver.builder().user(this, "sender").build();
     }
 
+    /**
+     * Gets the UUID of the executor.
+     *
+     * @return the UUID.
+     */
     public UUID uuid() {
         return this.uuid;
     }
 
+    /**
+     * Gets the username of the executor.
+     *
+     * @return the username.
+     */
     public String username() {
         return this.username;
     }
 
+    /**
+     * Gets the current credit balance of the executor.
+     *
+     * @return the credit balance.
+     */
     public int credits() {
         return this.credits;
     }
 
+    /**
+     * Gets the current redemption statistic of the executor.
+     *
+     * @return the redeemed statistic.
+     */
     public int redeemed() {
         return this.redeemed;
     }
 
+    /**
+     * Determines if the CommandExecutor is a {@link Player}
+     *
+     * @return if this is a Player.
+     */
     public abstract boolean isPlayer();
 
+    /**
+     * Determines if the CommandExecutor is an instance of Console.
+     *
+     * @return if this is Console.
+     */
     public abstract boolean isConsole();
 
+    /**
+     * Gets the Bukkit CommandSender from this CommandExecutor.
+     *
+     * @return the CommandSender.
+     */
     public abstract CommandSender sender();
 
+    /**
+     * Gets the Bukkit Player from this CommandExecutor.
+     *
+     * @return the Player.
+     */
     public abstract Player player();
 }

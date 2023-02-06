@@ -33,7 +33,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 
 /**
- * Object which represents any messaging we send to users.
+ * Represents a Message, a tuple of Audience, Resolver and the content as a String.
  */
 public final class Text {
     private static final Component NO_ITALICS = Component.empty().decoration(TextDecoration.ITALIC, false);
@@ -41,6 +41,13 @@ public final class Text {
     private final Resolver resolver;
     private String content;
 
+    /**
+     * Constructs the object.
+     *
+     * @param audience recipient of the message.
+     * @param content  content of the message.
+     * @param resolver Resolver to use for parsing.
+     */
     private Text(final Audience audience, final String content, final Resolver resolver) {
         this.audience = audience;
         this.content = content;
@@ -48,17 +55,25 @@ public final class Text {
     }
 
     /**
-     * Creates a Text object from an existing String.
+     * Static factory to create a Text.
      *
      * @param audience recipient of the message.
      * @param content  content of the message.
-     * @param resolver TagResolver to use for parsing.
-     * @return a populated Text object.
+     * @param resolver Resolver to use for parsing.
+     * @return a new Text.
      */
     public static Text fromString(final Audience audience, final String content, final Resolver resolver) {
         return new Text(audience, content, resolver);
     }
 
+    /**
+     * Static factory to create a Text using a {@link CommandExecutor}.
+     *
+     * @param executor recipient of the message.
+     * @param content  content of the message.
+     * @param resolver Resolver to use for parsing.
+     * @return a new Text.
+     */
     public static Text fromString(final CommandExecutor executor, final String content, final Resolver resolver) {
         return Text.fromString(executor.sender(), content, resolver);
     }
@@ -68,9 +83,9 @@ public final class Text {
     }
 
     /**
-     * Method that mutates the current {@link Text} object into a {@link Component}. Parses external placeholders, filters unwanted italics from the text and deserializes {@link MiniMessage} tags.
+     * Converts a Text to a Component. Placeholders are parsed and italics are removed in this stage.
      *
-     * @return A {@link Component} that is ready to send to the {@link Audience}
+     * @return A finished Component.
      */
     public Component toComponent() {
         if (this.audience instanceof Player player) {
@@ -80,7 +95,7 @@ public final class Text {
     }
 
     /**
-     * Sends the {@link Text} to the attached {@link Audience}. Transforms the object into a {@link Component} and then sends it.
+     * Sends the Text to the audience. Converts the Text to {@link Component} and sends it to the {@link Audience}.
      */
     public void send() {
         this.audience.sendMessage(this.toComponent());

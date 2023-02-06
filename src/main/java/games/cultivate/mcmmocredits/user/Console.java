@@ -29,6 +29,9 @@ import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
+/**
+ * CommandExecutor which is an instance of console. Separated from the DAO/Database layer.
+ */
 public final class Console extends CommandExecutor {
     public static final Console INSTANCE = new Console();
 

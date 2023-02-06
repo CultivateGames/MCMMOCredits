@@ -56,12 +56,12 @@ import java.util.UUID;
  * Event Handlers used to manage the database, and input storage.
  */
 public class Listeners implements Listener {
-    private final InputStorage storage;
+    private final ChatQueue storage;
     private final UserDAO dao;
     private final MainConfig config;
 
     @Inject
-    public Listeners(final MainConfig config, final InputStorage storage, final UserDAO dao) {
+    public Listeners(final MainConfig config, final ChatQueue storage, final UserDAO dao) {
         this.config = config;
         this.storage = storage;
         this.dao = dao;
@@ -70,7 +70,7 @@ public class Listeners implements Listener {
     /**
      * Add users to MCMMO Credits database, and updates username for existing records.
      *
-     * @param e Instance of {@link AsyncPlayerPreLoginEvent}
+     * @param e The event.
      */
     @EventHandler
     public void onPlayerPreLogin(final AsyncPlayerPreLoginEvent e) {
@@ -91,9 +91,9 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Send login message to user if it is enabled.
+     * Sends login message to user if enable in configuration.
      *
-     * @param e Instance of the {@link PlayerJoinEvent}
+     * @param e The event.
      */
     @EventHandler
     public void onPlayerJoin(final PlayerJoinEvent e) {
@@ -104,9 +104,9 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Capture player's chat if the user is part of {@link InputStorage}
+     * Captures chat of a user if their {@link UUID} is in the {@link ChatQueue}.
      *
-     * @param e Instance of the {@link AsyncChatEvent}
+     * @param e The event.
      */
     @EventHandler
     public void onPlayerChat(final AsyncChatEvent e) {
@@ -124,9 +124,9 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Removes the user from the {@link InputStorage} if they are being tracked.
+     * Removes all users from the {@link ChatQueue} if present.
      *
-     * @param e Instance of the {@link PlayerQuitEvent}.
+     * @param e The event.
      */
     @EventHandler
     public void onPlayerQuit(final PlayerQuitEvent e) {
@@ -134,10 +134,9 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Implements the credit transactions initiated by commands in the plugin.
-     * If external plugin event calls are not taking effect, change the {@link EventPriority} of your call as needed.
+     * Performs Credit Transaction with information derived from the event.
      *
-     * @param e Instance of the {@link CreditTransactionEvent}
+     * @param e The event.
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void performTransaction(final CreditTransactionEvent e) {
@@ -164,10 +163,9 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Implements the credit redemption process initiated by the commands in the plugin.
-     * If external plugin event calls are not taking effect, change the {@link EventPriority} of your call as needed.
+     * Performs Credit Redemption with information derived from the event.
      *
-     * @param e Instance of the {@link CreditRedemptionEvent}
+     * @param e The event.
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void performRedemption(final CreditRedemptionEvent e) {
@@ -205,11 +203,28 @@ public class Listeners implements Listener {
         }
     }
 
+    /**
+     * Updates the Resolver used for message parsing as the information changes during event processing.
+     *
+     * @param sender CommandSender from event.
+     * @param uuid   UUID from event.
+     * @param skill  MCMMO skill from event.
+     * @param amount amount of credits from event.
+     * @return The updated resolver.
+     */
     private Resolver updateRedeemResolver(final CommandSender sender, final UUID uuid, final PrimarySkillType skill, final int amount) {
         CommandExecutor executor = this.dao.fromSender(sender);
         return Resolver.fromRedeemSudo(executor, this.dao.forceUser(uuid), skill, amount);
     }
 
+    /**
+     * Updates the Resolver used for message parsing as the information changes during event processing.
+     *
+     * @param sender CommandSender from event.
+     * @param uuid   UUID from event.
+     * @param amount amount of credits from event.
+     * @return The updated resolver.
+     */
     private Resolver updateTransactionResolver(final CommandSender sender, final UUID uuid, final int amount) {
         CommandExecutor executor = this.dao.fromSender(sender);
         User target = this.dao.getUser(uuid).orElseThrow();

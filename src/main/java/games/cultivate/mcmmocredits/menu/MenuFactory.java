@@ -26,9 +26,10 @@ package games.cultivate.mcmmocredits.menu;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
+import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.user.User;
-import games.cultivate.mcmmocredits.util.InputStorage;
+import games.cultivate.mcmmocredits.util.ChatQueue;
 import org.incendo.interfaces.core.transform.TransformContext;
 import org.incendo.interfaces.paper.PlayerViewer;
 import org.incendo.interfaces.paper.pane.ChestPane;
@@ -49,28 +50,54 @@ public final class MenuFactory {
     private static final int REDEEM_PRIORITY = 1;
     private static final int COMMAND_PRIORITY = 2;
     private final MenuConfig menus;
-    private final InputStorage storage;
+    private final ChatQueue storage;
     private final MainConfig config;
     private final MCMMOCredits plugin;
 
+    /**
+     * Constructs the object.
+     *
+     * @param menus   Instance of the MenuConfig.
+     * @param config  Instance of the MainConfig.
+     * @param storage Instance of the ChatQueue.
+     * @param plugin  Instance of the plugin.
+     * @see PluginModule#provideFactory(MenuConfig, MainConfig, ChatQueue, MCMMOCredits)
+     */
     @Inject
-    public MenuFactory(final MenuConfig menus, final MainConfig config, final InputStorage storage, final MCMMOCredits plugin) {
+    public MenuFactory(final MenuConfig menus, final MainConfig config, final ChatQueue storage, final MCMMOCredits plugin) {
         this.menus = menus;
         this.config = config;
         this.storage = storage;
         this.plugin = plugin;
     }
 
+    /**
+     * Builds the Menu.
+     *
+     * @param user User who requested the Menu.
+     * @param path Node path where the menu is located.
+     * @return A built ChestInterface
+     * @see Menu
+     */
     public ChestInterface buildMenu(final User user, final String path) {
         Menu menu = this.menus.getMenu(path.toLowerCase());
         if (path.contains("config")) {
             this.addConfigItems(menu);
         }
-        this.applyFill(menu, path);
+        if (menu.properties().fill()) {
+            this.applyFill(menu, path);
+        }
         List<TransformContext<ChestPane, PlayerViewer>> transforms = menu.items().stream().map(x -> this.getTransform(x, user.resolver()).context()).toList();
         return menu.createInterface(transforms, user);
     }
 
+    /**
+     * Gets a MenuTransform based on the Item's {@link ItemType}.
+     *
+     * @param item     The item that needs a MenuTransform.
+     * @param resolver The resolver to parse the item with.
+     * @return A MenuTransform.
+     */
     private MenuTransform getTransform(final Item item, final Resolver resolver) {
         return switch (item.type()) {
             case FILL -> this.emptyTransform(item, resolver);
@@ -80,14 +107,25 @@ public final class MenuFactory {
         };
     }
 
+    /**
+     * Applies all Fill items to the current Menu.
+     *
+     * @param menu The Menu.
+     * @param path Node path of the menu.
+     */
     private void applyFill(final Menu menu, final String path) {
-        Set<Integer> allSlots = IntStream.range(0, menu.slots()).boxed().collect(Collectors.toSet());
+        Set<Integer> allSlots = IntStream.range(0, menu.properties().slots()).boxed().collect(Collectors.toSet());
         Set<Integer> itemSlots = menu.items().stream().map(Item::slot).collect(Collectors.toSet());
         allSlots.removeAll(itemSlots);
         Item fill = this.menus.getItem(path, "items", "fill");
         allSlots.forEach(x -> menu.items().add(fill.toBuilder().slot(x).build()));
     }
 
+    /**
+     * Applies all required Configuration items to the current Menu.
+     *
+     * @param menu The current Menu.
+     */
     private void addConfigItems(final Menu menu) {
         List<String> keys = this.config.filterKeys("mysql", "database");
         menu.items().removeIf(x -> x.slot() >= 0 && x.slot() <= keys.size());
@@ -99,6 +137,13 @@ public final class MenuFactory {
         }
     }
 
+    /**
+     * Builds the Configuration item transform.
+     *
+     * @param item     The current item.
+     * @param resolver The resolver to parse the item with.
+     * @return The built MenuTransform.
+     */
     private MenuTransform configTransform(final Item item, final Resolver resolver) {
         return MenuTransform.builder()
                 .item(item)
@@ -108,6 +153,13 @@ public final class MenuFactory {
                 .build();
     }
 
+    /**
+     * Builds the Fill item transformation.
+     *
+     * @param item     The current item.
+     * @param resolver The resolver to parse the item with.
+     * @return The built MenuTransform.
+     */
     private MenuTransform emptyTransform(final Item item, final Resolver resolver) {
         return MenuTransform.builder()
                 .item(item)
@@ -116,6 +168,13 @@ public final class MenuFactory {
                 .build();
     }
 
+    /**
+     * Builds the Redemption item transformation.
+     *
+     * @param item     The current item.
+     * @param resolver The resolver to parse the item with.
+     * @return The built MenuTransform.
+     */
     private MenuTransform redeemTransform(final Item item, final Resolver resolver) {
         return MenuTransform.builder()
                 .item(item)
@@ -125,6 +184,13 @@ public final class MenuFactory {
                 .build();
     }
 
+    /**
+     * Builds the Command item transformation.
+     *
+     * @param item     The current item.
+     * @param resolver The resolver to parse the item with.
+     * @return The built MenuTransform.
+     */
     private MenuTransform commandTransform(final Item item, final Resolver resolver) {
         String command = "credits menu " + item.type().toString().split("_")[0].toLowerCase();
         return MenuTransform.builder()

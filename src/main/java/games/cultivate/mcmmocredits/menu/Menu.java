@@ -23,7 +23,9 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
+import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.MenuConfig.MenuProperties;
+import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.Component;
@@ -34,28 +36,41 @@ import org.incendo.interfaces.paper.pane.ChestPane;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
-public final class Menu {
-    private final MenuProperties properties;
-    private final List<Item> items;
-
-    public Menu(final MenuProperties properties, final List<Item> items) {
-        this.properties = properties;
-        this.items = items;
-    }
-
-    public List<Item> items() {
-        return this.items;
-    }
-
+/**
+ * Representation of a GUI created by the plugin.
+ * <p>
+ * When constructed, we only have a list of items serialized from a {@link Config}.
+ * This object is passed to the {@link MenuFactory} to apply transformations to the serialized items.
+ * It is then built using {@link Menu#createInterface(List, User)}
+ *
+ * @param properties Common menu properties.
+ * @param items      List of Items obtained through serialization.
+ * @see MenuSerializer
+ * @see MenuFactory
+ * @see MenuTransform
+ */
+public record Menu(MenuProperties properties, List<Item> items) {
+    /**
+     * Gets an item based on its type, or throws a {@link NoSuchElementException}.
+     *
+     * @param type The ItemType to search for.
+     * @return The first Item matching the provided type.
+     */
     public Item findFirstOfType(final ItemType type) {
         return this.items.stream().filter(x -> x.type() == type).findFirst().orElseThrow();
     }
 
-    public int slots() {
-        return this.properties.slots();
-    }
-
+    /**
+     * Transforms the Menu into a completed ChestInterface that is ready to view.
+     *
+     * @param context List of {@link TransformContext} created via {@link MenuTransform} instances.
+     * @param user    User to parse the Menu's title against.
+     * @return The built ChestInterface.
+     * @see MenuFactory
+     * @see MenuTransform
+     */
     public ChestInterface createInterface(final List<TransformContext<ChestPane, PlayerViewer>> context, final User user) {
         Component title = Text.forOneUser(user, this.properties.title()).toComponent();
         return new ChestInterface(this.properties.slots() / 9, title, context, List.of(), true, 10, ClickHandler.cancel());

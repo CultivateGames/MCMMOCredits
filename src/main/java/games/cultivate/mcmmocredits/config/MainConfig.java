@@ -145,7 +145,7 @@ public class MainConfig extends Config {
      * @see DAOProvider
      */
     public enum DatabaseType {
-        MYSQL, SQLITE;
+        MYSQL, SQLITE
     }
 
     /**

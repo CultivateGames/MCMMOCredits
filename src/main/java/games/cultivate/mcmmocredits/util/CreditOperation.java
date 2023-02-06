@@ -23,6 +23,9 @@
 //
 package games.cultivate.mcmmocredits.util;
 
+/**
+ * Represents different credit transactions in /credits modify add|set|take
+ */
 public enum CreditOperation {
     ADD, SET, TAKE;
 

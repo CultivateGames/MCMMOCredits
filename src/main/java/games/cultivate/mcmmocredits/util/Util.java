@@ -31,20 +31,29 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Utility class for methods with no clear association.
+ */
 public final class Util {
-    private static final List<String> MCMMO_SKILLS = SkillTools.NON_CHILD_SKILLS.stream()
-            .map(PrimarySkillType::name)
-            .map(String::toLowerCase)
-            .toList();
+    private static List<String> skills = new ArrayList<>();
 
     private Util() {
         throw new AssertionError("Util cannot be instantiated!");
     }
 
+    /**
+     * Returns a list of non-child skill names from MCMMO, formatted.
+     *
+     * @return A List of formatted non-child skills name.
+     */
     public static List<String> getSkillNames() {
-        return MCMMO_SKILLS;
+        if (skills.isEmpty()) {
+            skills = SkillTools.NON_CHILD_SKILLS.stream().map(PrimarySkillType::name).map(String::toLowerCase).toList();
+        }
+        return skills;
     }
 
     /**

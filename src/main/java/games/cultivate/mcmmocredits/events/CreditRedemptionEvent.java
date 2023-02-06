@@ -62,6 +62,7 @@ public final class CreditRedemptionEvent extends Event {
         this.silent = silent;
     }
 
+    @SuppressWarnings("unused")
     public static HandlerList getHandlerList() {
         return HANDLERS;
     }

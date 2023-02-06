@@ -23,12 +23,16 @@
 //
 package games.cultivate.mcmmocredits.user;
 
+import games.cultivate.mcmmocredits.data.UserDAO;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
+/**
+ * Command Executor which is a Player. Interacted with through the {@link UserDAO}
+ */
 public final class User extends CommandExecutor {
 
    public User(final UUID uuid, final String username, final int credits, final int redeemed) {

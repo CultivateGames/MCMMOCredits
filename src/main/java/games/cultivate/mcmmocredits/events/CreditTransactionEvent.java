@@ -74,6 +74,7 @@ public final class CreditTransactionEvent extends Event {
         this(user.player(), user.uuid(), operation, amount, silent);
     }
 
+    @SuppressWarnings("unused")
     public static HandlerList getHandlerList() {
         return HANDLERS;
     }

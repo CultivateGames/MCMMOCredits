@@ -25,10 +25,10 @@ package games.cultivate.mcmmocredits.placeholders;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
-import net.kyori.adventure.text.Component;
+import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.PreProcess;
 import net.kyori.adventure.text.minimessage.tag.Tag;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.apache.commons.lang.WordUtils;
 
@@ -36,13 +36,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Object used to build a {@link TagResolver} to parse placeholders within {@link Component}s.
+ * A resolver for internal and external placeholders.
+ *
+ * @see PlaceholderAPI
+ * @see MiniMessage
  */
 public final class Resolver {
+    private final Map<String, PreProcess> placeholders;
     //The Tag Resolver is mutable because we want to attach other Resolvers to it.
     private TagResolver tagResolver;
-    private final Map<String, PreProcess> placeholders;
 
+    /**
+     * Constructs the object. Stores an underlying {@link TagResolver} and the placeholder map.
+     *
+     * @param placeholders placeholder map of String keys and {@link PreProcess} values.
+     */
     private Resolver(final Map<String, PreProcess> placeholders) {
         this.placeholders = placeholders;
         TagResolver.Builder builder = TagResolver.builder();
@@ -61,46 +69,80 @@ public final class Resolver {
         return new Builder(new HashMap<>());
     }
 
-    public static Resolver fromRedeem(final CommandExecutor user, final PrimarySkillType skill, final int amount) {
-        return user.resolver().toBuilder().skill(skill).transaction(amount).build();
+    /**
+     * Utility method to build a Resolver used in a Credit Redemption.
+     *
+     * @param sender Command executor. Can be from Console.
+     * @param target Target of the credit redemption.
+     * @param skill  Skill used in the credit redemption.
+     * @param amount Amount of credits used in the transaction.
+     * @return A new Resolver.
+     */
+    public static Resolver fromRedeemSudo(final CommandExecutor sender, final CommandExecutor target, final PrimarySkillType skill, final int amount) {
+        return Resolver.builder().users(sender, target).skill(skill).transaction(amount).build();
     }
 
-    public static Resolver fromRedeemSudo(final CommandExecutor sender, final CommandExecutor target, final PrimarySkillType skillType, final int amount) {
-        return Resolver.builder().users(sender, target).skill(skillType).transaction(amount).build();
-    }
-
+    /**
+     * Constructs a new Resolver Builder while preserving properties.
+     *
+     * @return A new Resolver Builder.
+     */
     public Resolver.Builder toBuilder() {
         return new Builder(this.placeholders);
     }
 
+    /**
+     * Gets the underlying TagResolver.
+     *
+     * @return The TagResolver.
+     */
     public TagResolver resolver() {
         return this.tagResolver;
     }
 
+    /**
+     * Adds another CommandExecutor to the Resolver as the target.
+     *
+     * @param user The target.
+     * @return An updated Resolver.
+     */
     public Resolver with(final CommandExecutor user) {
         return this.toBuilder().user(user, "target").build();
     }
 
+    /**
+     * Adds a new {@link TagResolver} to the underlying TagResolver without building a new Resolver.
+     *
+     * @param key   Key of the placeholder. Example: "target_username"
+     * @param value Value of the placeholder. Example: Notch
+     */
     public void addResolver(final String key, final String value) {
+        this.toBuilder().tag(key, value).build();
         this.tagResolver = TagResolver.resolver(this.tagResolver, TagResolver.resolver(key, Tag.preProcessParsed(value)));
     }
 
     /**
-     * Builder used to create {@link TagResolver} instances.
+     * Builder for Resolver objects.
      */
     public static final class Builder {
         private final Map<String, PreProcess> placeholders;
 
+        /**
+         * Constructs the object using the provided placeholder map.
+         *
+         * @param placeholders The placeholder map.
+         * @see Resolver#Resolver(Map)
+         */
         private Builder(final Map<String, PreProcess> placeholders) {
             this.placeholders = placeholders;
         }
 
         /**
-         * Used to add a tag to the resulting {@link TagResolver}.
+         * Adds a placeholder to the Builder.
          *
-         * @param key   name of the {@link Placeholder}. If the tag is {@code <sender>}, then the name is "sender".
-         * @param value The value used to parse the {@link Placeholder}.
-         * @return the {@link Builder}
+         * @param key   Key of the placeholder.
+         * @param value Value of the placeholder.
+         * @return The updated Builder.
          */
         public Builder tag(final String key, final String value) {
             this.placeholders.put(key, Tag.preProcessParsed(value));
@@ -108,11 +150,10 @@ public final class Resolver {
         }
 
         /**
-         * Used to add a Map of String pairs to the resulting {@link TagResolver}.
+         * Adds multiple placeholders to the Builder.
          *
-         * @param tags map containing strings used to create {@link Tag}.
-         * @return the {@link Builder}
-         * @see #tag(String, String)
+         * @param tags The placeholder map.
+         * @return The updated Builder.
          */
         public Builder tags(final Map<String, PreProcess> tags) {
             this.placeholders.putAll(tags);
@@ -120,41 +161,53 @@ public final class Resolver {
         }
 
         /**
-         * Used to create {@link Placeholder} for users involved within an action.
-         * <p>
-         * Typically used for command-based transactions.
+         * Adds a user to the placeholder map.
          *
-         * @param sender A {@link CommandExecutor} to parse.
-         * @param target A recipient {@link CommandExecutor} to parse.
-         * @return The {@link Builder}
+         * @param user   The user to add.
+         * @param prefix The prefix of the user's placeholders.
+         * @return The updated Builder.
+         * @see CommandExecutor#placeholders(String)
+         */
+        public Builder user(final CommandExecutor user, final String prefix) {
+            return this.tags(user.placeholders(prefix));
+        }
+
+        /**
+         * Adds a "sender" and "target" user to the placeholder map.
+         *
+         * @param sender Command executor. May be Console.
+         * @param target The target user.
+         * @return The updated Builder.
          */
         public Builder users(final CommandExecutor sender, final CommandExecutor target) {
             return this.tags(sender.placeholders("sender")).tags(target.placeholders("target"));
         }
 
-        public Builder user(final CommandExecutor user, final String prefix) {
-            return this.tags(user.placeholders(prefix));
-        }
-
+        /**
+         * Adds just a username to the placeholder map. Used when a User doesn't exist.
+         *
+         * @param username The username.
+         * @return The updated Builder.
+         */
         public Builder username(final String username) {
             return this.tag("target_username", username);
         }
 
         /**
-         * Used to parse for transaction specific information.
+         * Adds the amount of credits used in a transaction to the placeholder map.
          *
-         * @param amount Amount of credits used for a transaction.
-         * @return The {@link Builder}
+         * @param amount Amount of credits.
+         * @return The updated Builder.
          */
         public Builder transaction(final int amount) {
             return this.tag("amount", amount + "");
         }
 
         /**
-         * Used to parse information about a {@link PrimarySkillType} related to a transaction.
+         * Adds a MCMMO Skill used in a credit redemption to the placeholder map.
          *
-         * @param skill The {@link PrimarySkillType}
-         * @return The {@link Builder}
+         * @param skill The MCMMO Skill.
+         * @return The updated Builder.
          */
         @SuppressWarnings("deprecation")
         public Builder skill(final PrimarySkillType skill) {
@@ -163,9 +216,9 @@ public final class Resolver {
         }
 
         /**
-         * Builds a {@link Resolver} based on information stored within this {@link Builder}
+         * Builds the Resolver with the current placeholder map.
          *
-         * @return A {@link Resolver} containing a {@link TagResolver} derived from the construction.
+         * @return A new Resolver.
          */
         public Resolver build() {
             return new Resolver(this.placeholders);

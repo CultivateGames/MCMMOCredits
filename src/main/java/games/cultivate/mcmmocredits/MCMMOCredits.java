@@ -44,7 +44,6 @@ import games.cultivate.mcmmocredits.placeholders.CreditsExpansion;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.util.Listeners;
 import io.leangen.geantyref.TypeToken;
-import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -65,13 +64,6 @@ public final class MCMMOCredits extends JavaPlugin {
     private MainConfig config;
     private Logger pluginLogger;
 
-    /**
-     * Called when the application starts up. Handles injection, checks for required dependencies (Paper, MCMMO etc.),
-     * and loads configurations/commands.
-     * <p>
-     * If debug is enabled in {@link MainConfig}, we also track the startup time of the application
-     * and print it to console.
-     */
     @Override
     public void onEnable() {
         long start = System.nanoTime();
@@ -89,7 +81,7 @@ public final class MCMMOCredits extends JavaPlugin {
     }
 
     /**
-     * Handles all startup loading logic for {@link Config} instances.
+     * Loads injected instances of {@link Config}
      */
     public void loadConfiguration() {
         this.injector.getInstance(MainConfig.class).load();
@@ -97,9 +89,9 @@ public final class MCMMOCredits extends JavaPlugin {
     }
 
     /**
-     * Handles all logic required to check for required software (Paper, MCMMO).
-     * <p>
-     * Registers {@link PlaceholderExpansion} if PlaceholderAPI is present.
+     * Checks that all required software is present. Registers our Placeholder expansion if PlaceholderAPI is present.
+     *
+     * @see CreditsExpansion
      */
     private void checkForDependencies() {
         if (!PaperUtils.isPaper()) {
@@ -119,7 +111,9 @@ public final class MCMMOCredits extends JavaPlugin {
     }
 
     /**
-     * Handles all logic required to enable/load commands.
+     * Loads the Cloud Command Manager and our commands.
+     *
+     * @see CloudExceptionHandler
      */
     private void loadCommands() {
         PaperCommandManager<CommandExecutor> manager;
@@ -148,14 +142,14 @@ public final class MCMMOCredits extends JavaPlugin {
         new CloudExceptionHandler(this.config, manager).apply();
     }
 
+    /**
+     * Registers all required Event Listeners.
+     */
     private void registerListeners() {
         Bukkit.getPluginManager().registerEvents(new PaperInterfaceListeners(this, 10L), this);
         Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
     }
 
-    /**
-     * Called when the application shuts down. Saves all valuable data.
-     */
     @Override
     public void onDisable() {
         this.injector.getInstance(MainConfig.class).save();
@@ -163,6 +157,12 @@ public final class MCMMOCredits extends JavaPlugin {
         this.injector.getInstance(DAOProvider.class).disable();
     }
 
+    /**
+     * Executes commands using the main thread executor as a workaround to Cloud.
+     *
+     * @param player  The player who dispatches the command.
+     * @param command The command.
+     */
     public void executeCommand(final Player player, final String command) {
         Bukkit.getScheduler().getMainThreadExecutor(this).execute(() -> Bukkit.dispatchCommand(player, command));
     }

@@ -48,6 +48,7 @@ import java.util.List;
 
 /**
  * Exception handler that modifies how Cloud exceptions send messages.
+ *
  * @see Credits
  */
 //https://github.com/Incendo/cloud/blob/master/cloud-minecraft/cloud-minecraft-extras/src/main/java/cloud/commandframework/minecraft/extras/MinecraftExceptionHandler.java
@@ -59,7 +60,7 @@ public final class CloudExceptionHandler {
     /**
      * Constructs the object.
      *
-     * @param config Injected instance of MainConfig. Used to grab exception messages.
+     * @param config  Injected instance of MainConfig. Used to grab exception messages.
      * @param manager The Command Manager. Registers exception handlers and modifies the caption registry.
      */
     public CloudExceptionHandler(final MainConfig config, final CommandManager<CommandExecutor> manager) {
@@ -82,10 +83,10 @@ public final class CloudExceptionHandler {
      * Registers the Exception Handlers, and creates the Caption Registry.
      */
     public void apply() {
-        this.manager.registerExceptionHandler(InvalidSyntaxException.class, (c, e) -> this.act(c, "invalid-syntax", "correct_syntax", "/" + e.getCorrectSyntax()));
-        this.manager.registerExceptionHandler(InvalidCommandSenderException.class, (c, e) -> this.act(c, "invalid-sender", "correct_sender", e.getRequiredSender().getSimpleName()));
-        this.manager.registerExceptionHandler(NoPermissionException.class, (c, e) -> this.act(c, "no-permission", "permission", e.getMissingPermission()));
-        this.manager.registerExceptionHandler(CommandExecutionException.class, (c, e) -> this.act(c, "command-execution", "command_context", String.valueOf(e.getCommandContext())));
+        this.manager.registerExceptionHandler(InvalidSyntaxException.class, (c, e) -> this.sendError(c, "invalid-syntax", "correct_syntax", "/" + e.getCorrectSyntax()));
+        this.manager.registerExceptionHandler(InvalidCommandSenderException.class, (c, e) -> this.sendError(c, "invalid-sender", "correct_sender", e.getRequiredSender().getSimpleName()));
+        this.manager.registerExceptionHandler(NoPermissionException.class, (c, e) -> this.sendError(c, "no-permission", "permission", e.getMissingPermission()));
+        this.manager.registerExceptionHandler(CommandExecutionException.class, (c, e) -> this.sendError(c, "command-execution", "command_context", String.valueOf(e.getCommandContext())));
         this.manager.registerExceptionHandler(ArgumentParseException.class, (c, e) -> Text.fromString(c, this.config.string("argument-parsing"), this.attachParseException(c, e)).send());
         this.manager.captionVariableReplacementHandler(new CaptionFormatter());
         CaptionRegistry<CommandExecutor> registry = this.manager.captionRegistry();
@@ -98,15 +99,38 @@ public final class CloudExceptionHandler {
         }
     }
 
-    private void act(final CommandExecutor executor, final String path, final String key, final String value) {
+    /**
+     * Sends a message to the user based on an exception.
+     *
+     * @param executor Command executor. Can be from Console.
+     * @param path     path of the message being sent.
+     * @param key      key of a placeholder being added to the resolver.
+     * @param value    value of a placeholder being added to the resolver.
+     */
+    private void sendError(final CommandExecutor executor, final String path, final String key, final String value) {
         Resolver resolver = this.attachException(executor, key, value);
         Text.fromString(executor, this.config.string(path), resolver).send();
     }
 
+    /**
+     * Attach a new tag built from an exception to a Resolver.
+     *
+     * @param executor Command executor. Can be from Console.
+     * @param key      key of a placeholder being added to the resolver.
+     * @param value    value of a placeholder being added to the resolver.
+     * @return The new Resolver.
+     */
     private Resolver attachException(final CommandExecutor executor, final String key, final String value) {
         return executor.resolver().toBuilder().tag(key, value).build();
     }
 
+    /**
+     * Attaches a new tag built from an exception to a Resolver, but parses external placeholders first.
+     *
+     * @param executor Command executor. Can be Console.
+     * @param ex The ArgumentParseException.
+     * @return The new Resolver.
+     */
     private Resolver attachParseException(final CommandExecutor executor, final ArgumentParseException ex) {
         String value = ex.getCause().getMessage();
         if (executor instanceof Player player) {
@@ -115,6 +139,9 @@ public final class CloudExceptionHandler {
         return this.attachException(executor, "argument_error", value);
     }
 
+    /**
+     * Formatter of Cloud captions that uses <> instead of {} for consistency.
+     */
     private static final class CaptionFormatter implements CaptionVariableReplacementHandler {
         @Override
         public @NotNull String replaceVariables(final @NotNull String string, @NotNull final CaptionVariable... variables) {

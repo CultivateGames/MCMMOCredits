@@ -31,7 +31,7 @@ import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import games.cultivate.mcmmocredits.text.Text;
-import games.cultivate.mcmmocredits.util.InputStorage;
+import games.cultivate.mcmmocredits.util.ChatQueue;
 import games.cultivate.mcmmocredits.util.PluginPath;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
@@ -290,12 +290,12 @@ public class Config {
     /**
      * Modifies a configuration option using in-game chat output.
      *
-     * @param storage  Instance of InputStorage. Used to transport chat.
+     * @param storage  Instance of ChatQueue. Used to transport chat.
      * @param player   The user who instantiated the modification.
      * @param resolver Resolver used for chat messages.
      * @param path     Node path used to locate the value.
      */
-    public void modifyInGame(final InputStorage storage, final Player player, final Resolver resolver, final Object... path) {
+    public void modifyInGame(final ChatQueue storage, final Player player, final Resolver resolver, final Object... path) {
         resolver.addResolver("setting", this.translateNode(path));
         Text.fromString(player, this.string("edit-config-prompt"), resolver).send();
         storage.act(player.getUniqueId(), i -> {
