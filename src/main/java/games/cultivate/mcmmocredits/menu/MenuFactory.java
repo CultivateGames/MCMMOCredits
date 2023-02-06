@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2022 Cultivate Games
+// Copyright (c) 2023 Cultivate Games
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,66 +24,184 @@
 package games.cultivate.mcmmocredits.menu;
 
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.GeneralConfig;
+import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
-import games.cultivate.mcmmocredits.util.InputStorage;
-import org.bukkit.entity.Player;
+import games.cultivate.mcmmocredits.inject.PluginModule;
+import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.util.ChatQueue;
+import org.incendo.interfaces.core.transform.TransformContext;
+import org.incendo.interfaces.paper.PlayerViewer;
+import org.incendo.interfaces.paper.pane.ChestPane;
+import org.incendo.interfaces.paper.type.ChestInterface;
 
 import javax.inject.Inject;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Factory which is used to create {@link Menu} instances.
  */
 public final class MenuFactory {
+    private static final int CONFIG_PRIORITY = 0;
+    private static final int EMPTY_PRIORITY = 3;
+    private static final int REDEEM_PRIORITY = 1;
+    private static final int COMMAND_PRIORITY = 2;
     private final MenuConfig menus;
-    private final InputStorage storage;
-    private final GeneralConfig config;
-    private final ResolverFactory resolverFactory;
+    private final ChatQueue queue;
+    private final MainConfig config;
     private final MCMMOCredits plugin;
 
+    /**
+     * Constructs the object.
+     *
+     * @param menus  Instance of the MenuConfig.
+     * @param config Instance of the MainConfig.
+     * @param queue  Instance of the ChatQueue.
+     * @param plugin Instance of the plugin.
+     * @see PluginModule#provideFactory(MenuConfig, MainConfig, ChatQueue, MCMMOCredits)
+     */
     @Inject
-    public MenuFactory(final MenuConfig menus, final ResolverFactory resolverFactory, final GeneralConfig config, final InputStorage storage, final MCMMOCredits plugin) {
+    public MenuFactory(final MenuConfig menus, final MainConfig config, final ChatQueue queue, final MCMMOCredits plugin) {
         this.menus = menus;
-        this.resolverFactory = resolverFactory;
         this.config = config;
-        this.storage = storage;
+        this.queue = queue;
         this.plugin = plugin;
     }
 
     /**
-     * Creates a {@link MainMenu} using the provided {@link Player}.
+     * Builds the Menu.
      *
-     * @param player {@link Player} to link to the {@link Menu} instance.
-     * @return the {@link Menu}
+     * @param user User who requested the Menu.
+     * @param path Node path where the menu is located.
+     * @return A built ChestInterface
+     * @see Menu
      */
-    public Menu createMainMenu(final Player player) {
-        Menu menu = new MainMenu(this.menus, this.resolverFactory, player, this.plugin);
-        menu.load();
-        return menu;
+    public ChestInterface buildMenu(final User user, final String path) {
+        Menu menu = this.menus.getMenu(path.toLowerCase());
+        if (path.contains("config")) {
+            this.addConfigItems(menu);
+        }
+        if (path.contains("main")) {
+            menu.checkPermission(user, "mcmmocredits.menu.config", ItemType.CONFIG_MENU);
+            menu.checkPermission(user, "mcmmocredits.menu.redeem", ItemType.REDEEM_MENU);
+        }
+        if (menu.properties().fill()) {
+            this.applyFill(menu, path);
+        }
+        List<TransformContext<ChestPane, PlayerViewer>> transforms = menu.items().stream().map(x -> this.getTransform(x, user.resolver()).context()).toList();
+        return menu.createInterface(user, transforms);
     }
 
     /**
-     * Creates a {@link ConfigMenu} using the provided {@link Player}.
+     * Gets a MenuTransform based on the Item's {@link ItemType}.
      *
-     * @param player {@link Player} to link to the {@link Menu} instance.
-     * @return the {@link Menu}
+     * @param item     The item that needs a MenuTransform.
+     * @param resolver The resolver to parse the item with.
+     * @return A MenuTransform.
      */
-    public Menu createConfigMenu(final Player player) {
-        Menu configMenu = new ConfigMenu(this.menus, this.resolverFactory, player, this.plugin, this.config, this.storage);
-        configMenu.load();
-        return configMenu;
+    private MenuTransform getTransform(final Item item, final Resolver resolver) {
+        return switch (item.type()) {
+            case FILL -> this.emptyTransform(item, resolver);
+            case REDEEM -> this.redeemTransform(item, resolver);
+            case MAIN_MENU, CONFIG_MENU, REDEEM_MENU -> this.commandTransform(item, resolver);
+            case EDIT_SETTING, EDIT_MESSAGE -> this.configTransform(item, resolver);
+        };
     }
 
     /**
-     * Creates a {@link RedeemMenu} using the provided {@link Player}.
+     * Applies all Fill items to the current Menu.
      *
-     * @param player {@link Player} to link to the {@link Menu} instance.
-     * @return the {@link Menu}
+     * @param menu The Menu.
+     * @param path Node path of the menu.
      */
-    public Menu createRedeemMenu(final Player player) {
-        Menu redeemMenu = new RedeemMenu(this.menus, this.resolverFactory, player, this.plugin, this.config, this.storage);
-        redeemMenu.load();
-        return redeemMenu;
+    private void applyFill(final Menu menu, final String path) {
+        Set<Integer> allSlots = IntStream.range(0, menu.properties().slots()).boxed().collect(Collectors.toSet());
+        Set<Integer> itemSlots = menu.items().stream().map(Item::slot).collect(Collectors.toSet());
+        allSlots.removeAll(itemSlots);
+        Item fill = this.menus.getItem(path, "items", "fill");
+        allSlots.forEach(x -> menu.items().add(fill.toBuilder().slot(x).build()));
+    }
+
+    /**
+     * Applies all required Configuration items to the current Menu.
+     *
+     * @param menu The current Menu.
+     */
+    private void addConfigItems(final Menu menu) {
+        List<String> keys = this.config.filterKeys("mysql", "database");
+        menu.items().removeIf(x -> x.slot() >= 0 && x.slot() <= keys.size());
+        for (int i = 0; i < keys.size(); i++) {
+            String string = keys.get(i);
+            ItemType type = string.contains(".") ? ItemType.EDIT_SETTING : ItemType.EDIT_MESSAGE;
+            Item item = menu.findFirstOfType(type);
+            menu.items().add(item.toBuilder().name(string).slot(i).build());
+        }
+    }
+
+    /**
+     * Builds the Configuration item transform.
+     *
+     * @param item     The current item.
+     * @param resolver The resolver to parse the item with.
+     * @return The built MenuTransform.
+     */
+    private MenuTransform configTransform(final Item item, final Resolver resolver) {
+        return MenuTransform.builder()
+                .item(item)
+                .resolver(resolver)
+                .priority(CONFIG_PRIORITY)
+                .configClick(this.config, this.queue, (Object[]) item.name().split("\\."))
+                .build();
+    }
+
+    /**
+     * Builds the Fill item transformation.
+     *
+     * @param item     The current item.
+     * @param resolver The resolver to parse the item with.
+     * @return The built MenuTransform.
+     */
+    private MenuTransform emptyTransform(final Item item, final Resolver resolver) {
+        return MenuTransform.builder()
+                .item(item)
+                .resolver(resolver)
+                .priority(EMPTY_PRIORITY)
+                .build();
+    }
+
+    /**
+     * Builds the Redemption item transformation.
+     *
+     * @param item     The current item.
+     * @param resolver The resolver to parse the item with.
+     * @return The built MenuTransform.
+     */
+    private MenuTransform redeemTransform(final Item item, final Resolver resolver) {
+        return MenuTransform.builder()
+                .item(item)
+                .resolver(resolver)
+                .priority(REDEEM_PRIORITY)
+                .redeemClick(this.queue, this.config.string("redeem-prompt"), this.plugin)
+                .build();
+    }
+
+    /**
+     * Builds the Command item transformation.
+     *
+     * @param item     The current item.
+     * @param resolver The resolver to parse the item with.
+     * @return The built MenuTransform.
+     */
+    private MenuTransform commandTransform(final Item item, final Resolver resolver) {
+        String command = "credits menu " + item.type().toString().split("_")[0].toLowerCase();
+        return MenuTransform.builder()
+                .item(item)
+                .resolver(resolver)
+                .priority(COMMAND_PRIORITY)
+                .commandClick(command, this.plugin)
+                .build();
     }
 }

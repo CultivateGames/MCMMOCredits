@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2022 Cultivate Games
+// Copyright (c) 2023 Cultivate Games
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,44 +23,69 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import org.bukkit.entity.Player;
+import games.cultivate.mcmmocredits.config.Config;
+import games.cultivate.mcmmocredits.config.MenuConfig.MenuProperties;
+import games.cultivate.mcmmocredits.serializers.MenuSerializer;
+import games.cultivate.mcmmocredits.text.Text;
+import games.cultivate.mcmmocredits.user.User;
+import net.kyori.adventure.text.Component;
+import org.incendo.interfaces.core.click.ClickHandler;
+import org.incendo.interfaces.core.transform.TransformContext;
 import org.incendo.interfaces.paper.PlayerViewer;
+import org.incendo.interfaces.paper.pane.ChestPane;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
+import java.util.List;
+import java.util.NoSuchElementException;
+
 /**
- * Interface which represents all Menus.
+ * Representation of a GUI created by the plugin.
+ * <p>
+ * When constructed, we only have a list of items serialized from a {@link Config}.
+ * This object is passed to the {@link MenuFactory} to apply transformations to the serialized items.
+ * It is then built using {@link Menu#createInterface(User, List)}
+ *
+ * @param properties Common menu properties.
+ * @param items      List of Items obtained through serialization.
+ * @see MenuSerializer
+ * @see MenuFactory
+ * @see MenuTransform
  */
-public interface Menu {
+public record Menu(MenuProperties properties, List<Item> items) {
     /**
-     * Opens a menu for the {@link PlayerViewer}
+     * Gets an item based on its type, or throws a {@link NoSuchElementException}.
+     *
+     * @param type The ItemType to search for.
+     * @return The first Item matching the provided type.
      */
-    default void open() {
-        this.chest().open(this.viewer());
+    public Item findFirstOfType(final ItemType type) {
+        return this.items.stream().filter(x -> x.type() == type).findFirst().orElseThrow();
     }
 
     /**
-     * Closes a menu for the {@link PlayerViewer}
+     * Checks if the provided user has the provided permission, and removes the provided item type based on the result.
+     *
+     * @param user       The User who will be viewing the menu.
+     * @param type       The ItemType for removal.
+     * @param permission The permission to check.
      */
-    default void close() {
-        this.viewer().close();
+    public void checkPermission(final User user, final String permission, final ItemType type) {
+        if (!user.player().hasPermission(permission)) {
+            this.items.removeIf(x -> x.type() == type);
+        }
     }
 
     /**
-     * Loads the menu.
-     */
-    void load();
-
-    /**
-     * Provides the backing {@link ChestInterface} of a menu.
+     * Transforms the Menu into a completed ChestInterface that is ready to view.
      *
-     * @return the {@link ChestInterface}
+     * @param context List of {@link TransformContext} created via {@link MenuTransform} instances.
+     * @param user    User to parse the Menu's title against.
+     * @return The built ChestInterface.
+     * @see MenuFactory
+     * @see MenuTransform
      */
-    ChestInterface chest();
-
-    /**
-     * Provides the backing {@link PlayerViewer} of a menu. Typically derived from a {@link Player}
-     *
-     * @return the {@link PlayerViewer}
-     */
-    PlayerViewer viewer();
+    public ChestInterface createInterface(final User user, final List<TransformContext<ChestPane, PlayerViewer>> context) {
+        Component title = Text.forOneUser(user, this.properties.title()).toComponent();
+        return new ChestInterface(this.properties.slots() / 9, title, context, List.of(), true, 10, ClickHandler.cancel());
+    }
 }

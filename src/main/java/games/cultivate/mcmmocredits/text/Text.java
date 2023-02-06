@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2022 Cultivate Games
+// Copyright (c) 2023 Cultivate Games
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,68 +23,79 @@
 //
 package games.cultivate.mcmmocredits.text;
 
-import games.cultivate.mcmmocredits.placeholders.ResolverFactory;
+import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.user.CommandExecutor;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.entity.Player;
 
 /**
- * Object which represents any messaging we send to users.
+ * Represents a Message, a tuple of Audience, Resolver and the content as a String.
  */
 public final class Text {
+    private static final Component NO_ITALICS = Component.empty().decoration(TextDecoration.ITALIC, false);
     private final Audience audience;
-    private final TagResolver resolver;
+    private final Resolver resolver;
     private String content;
 
-    private Text(final Audience audience, final String content, final TagResolver resolver) {
+    /**
+     * Constructs the object.
+     *
+     * @param audience recipient of the message.
+     * @param content  content of the message.
+     * @param resolver Resolver to use for parsing.
+     */
+    private Text(final Audience audience, final String content, final Resolver resolver) {
         this.audience = audience;
         this.content = content;
         this.resolver = resolver;
     }
 
     /**
-     * Creates a Text object from an existing String.
+     * Static factory to create a Text.
      *
      * @param audience recipient of the message.
      * @param content  content of the message.
-     * @param resolver TagResolver to use for parsing.
-     * @return a populated Text object.
+     * @param resolver Resolver to use for parsing.
+     * @return a new Text.
      */
-    public static Text fromString(final Audience audience, final String content, final TagResolver resolver) {
+    public static Text fromString(final Audience audience, final String content, final Resolver resolver) {
         return new Text(audience, content, resolver);
     }
 
     /**
-     * Utility method to parse a {@link Component} for {@link PlaceholderAPI} placeholders.
+     * Static factory to create a Text using a {@link CommandExecutor}.
      *
-     * @param player    {@link Player} to parse placeholders against.
-     * @param component Existing {@link Component} to scan for parseable placeholders.
-     * @param factory   An injected {@link ResolverFactory} to parse local placeholders.
-     * @return The modified {@link Component}.
+     * @param executor recipient of the message.
+     * @param content  content of the message.
+     * @param resolver Resolver to use for parsing.
+     * @return a new Text.
      */
-    public static Component parseComponent(final Player player, final Component component, final ResolverFactory factory) {
-        return Text.fromString(player, PlainTextComponentSerializer.plainText().serialize(component), factory.fromUsers(player)).toComponent();
+    public static Text fromString(final CommandExecutor executor, final String content, final Resolver resolver) {
+        return Text.fromString(executor.sender(), content, resolver);
+    }
+
+    public static Text forOneUser(final CommandExecutor executor, final String content) {
+        return Text.fromString(executor, content, executor.resolver());
     }
 
     /**
-     * Method that mutates the current {@link Text} object into a {@link Component}. Parses external placeholders, filters unwanted italics from the text and deserializes {@link MiniMessage} tags.
+     * Converts a Text to a Component. Placeholders are parsed and italics are removed in this stage.
      *
-     * @return A {@link Component} that is ready to send to the {@link Audience}
+     * @return A finished Component.
      */
     public Component toComponent() {
         if (this.audience instanceof Player player) {
             this.content = PlaceholderAPI.setPlaceholders(player, this.content);
         }
-        return Component.empty().decoration(TextDecoration.ITALIC, false).append(MiniMessage.miniMessage().deserialize(this.content, this.resolver));
+        return NO_ITALICS.append(MiniMessage.miniMessage().deserialize(this.content, this.resolver.resolver()));
     }
 
     /**
-     * Sends the {@link Text} to the attached {@link Audience}. Transforms the object into a {@link Component} and then sends it.
+     * Sends the Text to the audience. Converts the Text to {@link Component} and sends it to the {@link Audience}.
      */
     public void send() {
         this.audience.sendMessage(this.toComponent());

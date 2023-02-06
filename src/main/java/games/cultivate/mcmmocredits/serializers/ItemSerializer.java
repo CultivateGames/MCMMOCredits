@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2022 Cultivate Games
+// Copyright (c) 2023 Cultivate Games
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,71 +23,86 @@
 //
 package games.cultivate.mcmmocredits.serializers;
 
-import broccolai.corn.paper.item.AbstractPaperItemBuilder;
-import broccolai.corn.paper.item.PaperItemBuilder;
-import broccolai.corn.paper.item.special.SkullBuilder;
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
 import games.cultivate.mcmmocredits.config.Config;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
+import games.cultivate.mcmmocredits.menu.Item;
+import games.cultivate.mcmmocredits.menu.ItemType;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.serialize.TypeSerializer;
 
 import java.lang.reflect.Type;
+import java.util.List;
+import java.util.UUID;
 
 /**
- * Class responsible for serializing and deserializing {@link ItemStack} from {@link Config}
+ * Handles serialization/deserialization of {@link Item} from {@link Config}
  */
-public final class ItemSerializer implements TypeSerializer<ItemStack> {
+public final class ItemSerializer implements TypeSerializer<Item> {
     public static final ItemSerializer INSTANCE = new ItemSerializer();
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public ItemStack deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
-        AbstractPaperItemBuilder<?, ?> builder = this.generateBuilder(node)
-                .amount(node.node("amount").getInt(1))
-                .name(Component.text(node.node("name").getString("")))
-                .lore(node.node("lore").getList(String.class).stream().map(i -> Component.text(i).asComponent()).toList());
+    public Item deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
+        String name = node.node("name").getString("");
+        List<String> lore = node.node("lore").getList(String.class);
+        int slot = node.node("slot").getInt();
+        Material material = node.node("material").get(Material.class, Material.STONE);
+        int amount = node.node("amount").getInt(1);
+
+        Item.Builder builder = Item.builder().name(name).lore(lore).slot(slot);
+        ItemStack item = new ItemStack(material, amount);
+
+        ItemMeta meta = item.getItemMeta();
         if (node.node("glow").getBoolean(false)) {
-            builder = builder.addEnchant(Enchantment.ARROW_INFINITE, 10).addFlag(ItemFlag.HIDE_ENCHANTS);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
         }
-        return builder.build();
+        String texture = node.node("texture").getString("");
+        if (material != Material.PLAYER_HEAD || texture.isEmpty()) {
+            item.setItemMeta(meta);
+        } else {
+            SkullMeta skullMeta = (SkullMeta) meta;
+            PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+            profile.setProperty(new ProfileProperty("textures", texture));
+            skullMeta.setPlayerProfile(profile);
+            item.setItemMeta(skullMeta);
+        }
+        builder.item(item);
+        String data = (String) node.key();
+        ItemType itemType = ItemType.value(data);
+        if (itemType != ItemType.REDEEM) {
+           return builder.item(item).type(itemType).build();
+        }
+        return builder.item(item).type(itemType).data(data.toUpperCase()).build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void serialize(final Type type, final ItemStack item, final ConfigurationNode node) throws SerializationException {
-        AbstractPaperItemBuilder<?, ?> builder = this.generateBuilder(node);
-        if (builder instanceof SkullBuilder sb) {
-            node.node("skull").set(sb.textures().get(0).getValue());
+    public void serialize(final Type type, final Item item, final ConfigurationNode node) throws SerializationException {
+        node.node("name").set(item.name());
+        node.node("lore").setList(String.class, item.lore());
+        node.node("slot").set(item.slot());
+        ItemStack stack = item.stack();
+        node.node("material").set(stack.getType());
+        node.node("amount").set(stack.getAmount());
+        String texture = "";
+        if (stack.getItemMeta() instanceof SkullMeta skullMeta) {
+            PlayerProfile profile = skullMeta.getPlayerProfile();
+            for (ProfileProperty x : profile.getProperties()) {
+                if (x.getName().equals("textures")) {
+                    texture = x.getValue();
+                    break;
+                }
+            }
         }
-        node.node("material").set(builder.material());
-        node.node("amount").set(builder.amount());
-        node.node("name").set(MiniMessage.miniMessage().serialize(builder.name()));
-        node.node("lore").setList(String.class, builder.lore().stream().map(i -> MiniMessage.miniMessage().serialize(i)).toList());
-        node.node("glow").set(!builder.enchants().isEmpty());
-    }
-
-    /**
-     * Creates a {@link AbstractPaperItemBuilder}, based on whether the item might have {@link SkullMeta}
-     *
-     * @param node The {@link ConfigurationNode} to inspect.
-     * @return The correct {@link AbstractPaperItemBuilder}
-     * @throws SerializationException Thrown if checking {@link ConfigurationNode} for a {@link Material} fails.
-     */
-    private AbstractPaperItemBuilder<?, ?> generateBuilder(final ConfigurationNode node) throws SerializationException {
-        if (!node.node("skull").virtual()) {
-            return SkullBuilder.ofPlayerHead().textures(node.node("skull").getString(""));
-        }
-        return PaperItemBuilder.ofType(node.node("material").get(Material.class, Material.AIR));
+        node.node("texture").set(texture);
+        node.node("glow").set(!stack.getEnchantments().isEmpty());
     }
 }

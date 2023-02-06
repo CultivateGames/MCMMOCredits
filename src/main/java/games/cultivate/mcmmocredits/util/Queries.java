@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2022 Cultivate Games
+// Copyright (c) 2023 Cultivate Games
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,17 +23,16 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import games.cultivate.mcmmocredits.data.JSONDatabase;
-
-import java.util.UUID;
+import org.jdbi.v3.core.locator.ClasspathSqlLocator;
 
 /**
- * Object representing a {@link JSONDatabase} entry.
- *
- * @param uuid     {@link UUID} of the user.
- * @param username String representing the user's username.
- * @param credits  amount of credits the user currently has.
+ * Utility class which loads locally saved SQL queries.
  */
-public record JSONUser(UUID uuid, String username, int credits, int redeemed) {
+//https://github.com/broccolai/tickets/blob/rewrite/everything/core/src/main/java/love/broccolai/tickets/core/utilities/QueriesLocator.java
+public final class Queries {
+    private final ClasspathSqlLocator locator = ClasspathSqlLocator.create();
 
+    public String query(final String name) {
+        return this.locator.locate(this.getClass(), name);
+    }
 }

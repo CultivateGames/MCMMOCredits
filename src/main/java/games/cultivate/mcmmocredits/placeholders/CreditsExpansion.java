@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2022 Cultivate Games
+// Copyright (c) 2023 Cultivate Games
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,70 +23,65 @@
 //
 package games.cultivate.mcmmocredits.placeholders;
 
-import games.cultivate.mcmmocredits.data.Database;
+import games.cultivate.mcmmocredits.data.UserDAO;
+import games.cultivate.mcmmocredits.user.User;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
-import java.util.UUID;
+import java.util.Optional;
 
 /**
- * This is responsible for handling our registration with {@link PlaceholderAPI}
+ * Handles registration with {@link PlaceholderAPI}
  */
 public final class CreditsExpansion extends PlaceholderExpansion {
-    private final Database database;
+    private final UserDAO dao;
 
     @Inject
-    public CreditsExpansion(final Database database) {
-        this.database = database;
+    public CreditsExpansion(final UserDAO dao) {
+        this.dao = dao;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @NotNull String getAuthor() {
         return "Cultivate Games";
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @NotNull String getIdentifier() {
         return "mcmmocredits";
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @NotNull String getVersion() {
-        return "0.2.3";
+        return "0.3.0-SNAPSHOT";
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean persist() {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public String onRequest(final OfflinePlayer player, final String identifier) {
-        UUID uuid = player.getUniqueId();
-        if (identifier.equalsIgnoreCase("credits")) {
-            return this.database.getCredits(uuid) + "";
+    public String onRequest(final OfflinePlayer player, final @NotNull String identifier) {
+        Optional<User> optionalUser = this.dao.getUser(player.getName());
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            if (identifier.equalsIgnoreCase("credits")) {
+                return user.credits() + "";
+            }
+            if (identifier.equalsIgnoreCase("redeemed")) {
+                return user.redeemed() + "";
+            }
+            if (identifier.equalsIgnoreCase("username")) {
+                return user.username();
+            }
+            if (identifier.equalsIgnoreCase("uuid")) {
+                return user.uuid().toString();
+            }
         }
-        if (identifier.equalsIgnoreCase("redeemed")) {
-            return this.database.getRedeemedCredits(uuid) + "";
-        }
-        return null;
+        return 0 + "";
     }
 }

@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2022 Cultivate Games
+// Copyright (c) 2023 Cultivate Games
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,221 +23,285 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import org.apache.commons.lang.StringUtils;
+import games.cultivate.mcmmocredits.config.MainConfig.DatabaseProperties;
+import games.cultivate.mcmmocredits.config.MainConfig.DatabaseType;
+import games.cultivate.mcmmocredits.menu.Item;
+import games.cultivate.mcmmocredits.menu.Menu;
+import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.serializers.ItemSerializer;
+import games.cultivate.mcmmocredits.serializers.MenuSerializer;
+import games.cultivate.mcmmocredits.text.Text;
+import games.cultivate.mcmmocredits.util.ChatQueue;
+import games.cultivate.mcmmocredits.util.PluginPath;
+import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.CommentedConfigurationNode;
-import org.spongepowered.configurate.ConfigurationNode;
-import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
+import org.spongepowered.configurate.ConfigurateException;
+import org.spongepowered.configurate.loader.HeaderMode;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.ObjectMapper;
 import org.spongepowered.configurate.serialize.SerializationException;
+import org.spongepowered.configurate.util.NamingSchemes;
+import org.spongepowered.configurate.yaml.NodeStyle;
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
+import javax.inject.Inject;
+import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.Level;
+import java.util.Queue;
 
 /**
- * Interface which represents a configuration file.
+ * Represents a Configuration file.
  */
-public interface Config {
+public class Config {
+    private final transient Class<? extends Config> type;
+    private final transient String fileName;
+    private final transient String header;
+    private transient YamlConfigurationLoader loader;
+    private transient CommentedConfigurationNode root;
+    private transient List<String> paths;
+    @Inject
+    @PluginPath
+    private transient Path dir;
+
     /**
-     * Creates the HoconConfigurationLoader used by the configuration.
+     * Constructs the object with properties of the file.
      *
-     * @return the Loader to be used.
+     * @param type     Class of the config. Must be annotated with @{@link ConfigSerializable}
+     * @param fileName Name of the config.
+     * @param header   Header printed to the
      */
-    HoconConfigurationLoader createLoader();
-
-    /**
-     * Loads the configuration.
-     */
-    void load();
-
-    /**
-     * Saves the configuration using the provided root.
-     *
-     * @param root The configuration root node to apply to our configuration.
-     */
-    void save(CommentedConfigurationNode root);
-
-    /**
-     * Saves the configuration using the existing root node.
-     */
-    default void save() {
-        this.save(this.rootNode());
+    protected Config(final Class<? extends Config> type, final String fileName, final String header) {
+        this.type = type;
+        this.fileName = fileName;
+        this.header = header;
     }
 
     /**
-     * Gets the current configuration object.
+     * Builds the Configuration Loader. Creates the file if missing.
      *
-     * @return the current configuration object.
+     * @return The Loader.
      */
-    BaseConfig config();
-
-    /**
-     * Gets the current root node of the configuration.
-     *
-     * @return the root node of the configuration.
-     */
-    CommentedConfigurationNode rootNode();
-
-    /**
-     * Gets the current list of all nodes represented by this configuration object.
-     *
-     * @return list of all nodes represented by this configuration object.
-     */
-    List<CommentedConfigurationNode> nodes();
-
-    /**
-     * Transforms a node's path to be a singular string separated by "."
-     * <p>
-     * Example Transformation: messages, general, prefix -> messages.general.prefix
-     *
-     * @param node node that provides the path to be transformed.
-     * @return node path that is joined by "."
-     */
-    default String joinedPath(final CommentedConfigurationNode node) {
-        return StringUtils.join(node.path().array(), ".");
+    private YamlConfigurationLoader createLoader() {
+        Util.createFile(this.dir, this.fileName);
+        return YamlConfigurationLoader.builder()
+                .defaultOptions(opts -> opts.header(this.header).serializers(build -> {
+                    build.register(Item.class, ItemSerializer.INSTANCE);
+                    build.register(Menu.class, MenuSerializer.INSTANCE);
+                })).path(this.dir.resolve(this.fileName))
+                .headerMode(HeaderMode.PRESET)
+                .indent(2)
+                .nodeStyle(NodeStyle.BLOCK).build();
     }
 
     /**
-     * Grabs all CommentedConfigurationNodes using the root node generated in the loading process.
-     *
-     * @param parent The configurations root node.
-     * @return list of all configuration nodes represented in the config.
+     * Loads the configuration and list of possible node paths from file. Supports re-loading.
      */
-    //TODO can we reduce time complexity of this operation?
-    default List<CommentedConfigurationNode> nodesFromParent(CommentedConfigurationNode parent) {
-        List<CommentedConfigurationNode> nodes = new CopyOnWriteArrayList<>(parent.childrenMap().values());
-        while (nodes.stream().anyMatch(ConfigurationNode::isMap)) {
-            nodes.forEach(i -> {
-                if (i.isMap()) {
-                    nodes.addAll(i.childrenMap().values());
-                    nodes.remove(i);
-                }
-            });
-        }
-        return nodes;
-    }
-
-    /**
-     * Returns a boolean from the underlying configuration map.
-     *
-     * @param path string that the path contains. Unique enough to not worry about duplication.
-     * @param def  default value. Will log if the value is missing to let the user know to populate the value.
-     * @return boolean from the root configuration nodes children map, or the provided default value.
-     */
-    default boolean bool(String path, boolean def) {
-        return this.value(boolean.class, path, def);
-    }
-
-    /**
-     * Returns a boolean from the underlying configuration map.
-     *
-     * @param path string that the path contains. Unique enough to not worry about duplication.
-     * @return boolean from the root configuration nodes children map, or the provided default value.
-     */
-    default boolean bool(String path) {
-        return this.value(boolean.class, path, false);
-    }
-
-    /**
-     * Returns a String from the underlying configuration map.
-     *
-     * @param path string that the path contains. Unique enough to not worry about duplication.
-     * @param def  default value. Will log if the value is missing to let the user know to populate the value.
-     * @return String from the root configuration nodes children map, or the provided default value.
-     */
-    default String string(String path, String def) {
-        return this.value(String.class, path, def);
-    }
-
-    /**
-     * Returns a String from the underlying configuration map.
-     *
-     * @param path string that the path contains. Unique enough to not worry about duplication.
-     * @return String from the root configuration nodes children map, or an empty string.
-     */
-    default String string(String path) {
-        return this.value(String.class, path, "");
-    }
-
-    /**
-     * Returns an int from the underlying configuration map.
-     *
-     * @param path string that the path contains. Unique enough to not worry about duplication.
-     * @param def  default value. Will log if the value is missing to let the user know to populate the value.
-     * @return String from the root configuration nodes children map, or the provided default value.
-     */
-    default int integer(String path, int def) {
-        return this.value(int.class, path, def);
-    }
-
-    /**
-     * Returns an int from the underlying configuration map.
-     *
-     * @param path string that the path contains. Unique enough to not worry about duplication.
-     * @return String from the root configuration nodes children map, or the provided default value.
-     */
-    default int integer(String path) {
-        return this.value(int.class, path, 0);
-    }
-
-    /**
-     * Accesses a configuration's node list to return a value from the node that best matches the provided path.
-     *
-     * @param type type of value to return.
-     * @param path configuration path where the value is retrieved from.
-     * @param def  default value to provide if value cannot be found.
-     * @param <V>  value type used to correctly retrieve value.
-     * @return value found at provided path.
-     */
-    default <V> V value(Class<V> type, String path, V def) {
-        for (CommentedConfigurationNode node : this.nodes()) {
-            if (this.joinedPath(node).contains(path)) {
-                try {
-                    return node.get(type);
-                } catch (SerializationException e) {
-                    e.printStackTrace();
+    public void load() {
+        this.loader = this.createLoader();
+        try {
+            this.root = this.loader.load();
+            ObjectMapper.Factory factory = ObjectMapper.factoryBuilder().defaultNamingScheme(NamingSchemes.LOWER_CASE_DASHED).build();
+            factory.get(this.type).load(this.root);
+            this.save();
+            Queue<CommentedConfigurationNode> queue = new ArrayDeque<>(this.root.childrenMap().values());
+            List<String> sorted = new LinkedList<>();
+            while (!queue.isEmpty()) {
+                CommentedConfigurationNode node = queue.poll();
+                if (node.isMap()) {
+                    queue.addAll(node.childrenMap().values());
+                } else {
+                    sorted.add(this.translateNode(node.path().array()));
                 }
             }
+            this.paths = sorted;
+        } catch (ConfigurateException e) {
+            e.printStackTrace();
         }
-        Bukkit.getLogger().log(Level.WARNING, "[MCMMOCredits] Config is missing value: {0}, Check your files!", path);
+    }
+
+    /**
+     * Saves the configuration using the current root node.
+     */
+    public void save() {
+        this.save(this.root);
+    }
+
+    /**
+     * Saves the configuration using the provided root node.
+     *
+     * @param root The root node.
+     */
+    private void save(final CommentedConfigurationNode root) {
+        try {
+            this.loader.save(root);
+            this.root = root;
+        } catch (ConfigurateException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Returns a ConfigurationNode linked to the provided path.
+     *
+     * @param path Node path of the new node.
+     * @return A new node.
+     */
+    public CommentedConfigurationNode node(final Object... path) {
+        return this.root.node(path);
+    }
+
+    /**
+     * Modifies the configuration.
+     *
+     * @param value The value to apply.
+     * @param path  Node path used to locate the value.
+     * @param <T>   Type of the value.
+     * @return If the operation was successful.
+     */
+    private <T> boolean modify(@NotNull final T value, final Object... path) {
+        try {
+            this.root.node(path).set(value);
+            this.save();
+            return true;
+        } catch (SerializationException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Gets a value from the configuration at the provided path.
+     *
+     * @param type Class of the value.
+     * @param def  Default value used if value is missing.
+     * @param path Node path where the value is found.
+     * @param <T>  Type of the value.
+     * @return The value.
+     */
+    private <T> T value(final Class<T> type, final T def, final Object... path) {
+        try {
+            return this.root.node(path).get(type);
+        } catch (SerializationException e) {
+            e.printStackTrace();
+        }
+        String log = "[MCMMOCredits] Config is missing value: " + this.translateNode(path);
+        Bukkit.getLogger().warning(log);
         return def;
     }
 
     /**
-     * Modifies an existing value in the configuration. If path does not exist, does nothing.
+     * Gets a boolean from the configuration.
      *
-     * @param type  Type of the value we are setting in configuration.
-     * @param path  path of the node we are trying to modify.
-     * @param value value we are setting to the node.
-     * @param <V>   type of the value we are setting to configuration.
-     * @return if the modification was successful.
+     * @param path Node path where the value is found.
+     * @return The value.
      */
-    default <V> boolean modify(Class<V> type, String path, V value) {
-        if (value == null || value.toString().equalsIgnoreCase("cancel")) {
-            return false;
-        }
-        for (CommentedConfigurationNode node : this.nodes()) {
-            if (this.joinedPath(node).contains(path)) {
-                try {
-                    node.set(type, value);
-                    this.save();
-                    return true;
-                } catch (SerializationException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return false;
+    public boolean bool(final Object... path) {
+        return this.value(boolean.class, false, path);
     }
 
     /**
-     * Sets a value to config. Returns true if successful.
+     * Gets a String from the configuration, with the prefix prepended.
      *
-     * @param path  config path where we want to change value.
-     * @param value value used for modification of config.
-     * @return if the change was successful.
+     * @param path Node path where the value is found.
+     * @return The value.
      */
-    default boolean modify(String path, String value) {
-        return this.modify(String.class, path, value);
+    public String string(final Object... path) {
+        return this.value(String.class, "", "prefix") + this.value(String.class, "", path);
+    }
+
+    /**
+     * Gets a Menu from the configuration.
+     *
+     * @param path Node path where the value is found.
+     * @return The value.
+     */
+    public Menu getMenu(final Object... path) {
+        return this.value(Menu.class, null, path);
+    }
+
+    /**
+     * Gets an Item from the configuration.
+     *
+     * @param path Node path where the value is found.
+     * @return The value.
+     */
+    public Item getItem(final Object... path) {
+        return this.value(Item.class, null, path);
+    }
+
+    /**
+     * Gets the DatabaseProperties object from the configuration.
+     *
+     * @return The value.
+     */
+    public DatabaseProperties getDatabaseProperties() {
+        DatabaseProperties opts = new DatabaseProperties("127.0.0.1", "database", "root", "passw0rd+", 3306, true);
+        return this.value(DatabaseProperties.class, opts, "settings", "mysql");
+    }
+
+    /**
+     * Gets the Database type from the configuration.
+     *
+     * @return The value.
+     */
+    public DatabaseType getDatabaseType() {
+        try {
+            return this.node("settings", "database-type").get(DatabaseType.class);
+        } catch (SerializationException e) {
+            e.printStackTrace();
+        }
+        return DatabaseType.SQLITE;
+    }
+
+    /**
+     * Filters available node paths against provided String array.
+     *
+     * @param keys Strings to filter against.
+     * @return Filtered node path list.
+     */
+    public List<String> filterKeys(final String... keys) {
+        List<String> sorted = new ArrayList<>(this.paths);
+        sorted.removeIf(x -> Arrays.stream(keys).anyMatch(x::contains));
+        return sorted;
+    }
+
+    /**
+     * Translates node paths into Strings. Example: "settings", "add-player-message" -> "settings.add-player-message".
+     *
+     * @param path The node path.
+     * @return String representing the node path.
+     */
+    private String translateNode(final Object... path) {
+        StringBuilder sb = new StringBuilder();
+        for (Object obj : path) {
+            sb.append(obj).append(".");
+        }
+        sb.deleteCharAt(sb.lastIndexOf("."));
+        return sb.toString();
+    }
+
+    /**
+     * Modifies a configuration option using in-game chat output.
+     *
+     * @param queue    Instance of ChatQueue. Used to transport chat.
+     * @param player   The user who instantiated the modification.
+     * @param resolver Resolver used for chat messages.
+     * @param path     Node path used to locate the value.
+     */
+    public void modifyInGame(final ChatQueue queue, final Player player, final Resolver resolver, final Object... path) {
+        resolver.addResolver("setting", this.translateNode(path));
+        Text.fromString(player, this.string("edit-config-prompt"), resolver).send();
+        queue.act(player.getUniqueId(), i -> {
+            boolean status = this.modify(i, path);
+            resolver.addResolver("change", i);
+            Text.fromString(player, this.string(status ? "edit-config" : "edit-config-fail"), resolver).send();
+        });
     }
 }
