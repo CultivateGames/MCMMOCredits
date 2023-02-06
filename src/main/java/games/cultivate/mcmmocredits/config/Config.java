@@ -290,15 +290,15 @@ public class Config {
     /**
      * Modifies a configuration option using in-game chat output.
      *
-     * @param storage  Instance of ChatQueue. Used to transport chat.
+     * @param queue    Instance of ChatQueue. Used to transport chat.
      * @param player   The user who instantiated the modification.
      * @param resolver Resolver used for chat messages.
      * @param path     Node path used to locate the value.
      */
-    public void modifyInGame(final ChatQueue storage, final Player player, final Resolver resolver, final Object... path) {
+    public void modifyInGame(final ChatQueue queue, final Player player, final Resolver resolver, final Object... path) {
         resolver.addResolver("setting", this.translateNode(path));
         Text.fromString(player, this.string("edit-config-prompt"), resolver).send();
-        storage.act(player.getUniqueId(), i -> {
+        queue.act(player.getUniqueId(), i -> {
             boolean status = this.modify(i, path);
             resolver.addResolver("change", i);
             Text.fromString(player, this.string(status ? "edit-config" : "edit-config-fail"), resolver).send();

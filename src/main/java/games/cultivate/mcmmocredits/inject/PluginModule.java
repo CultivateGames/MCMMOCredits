@@ -76,14 +76,14 @@ public final class PluginModule extends AbstractModule {
      *
      * @param menuConfig Instance of the MenuConfig.
      * @param config     Instance of the MainConfig.
-     * @param storage    Instance of the ChatQueue.
+     * @param queue      Instance of the ChatQueue.
      * @param plugin     Instance of the plugin.
      * @return The MenuFactory.
      */
     @Provides
-    public MenuFactory provideFactory(final MenuConfig menuConfig, final MainConfig config, final ChatQueue storage, final MCMMOCredits plugin) {
+    public MenuFactory provideFactory(final MenuConfig menuConfig, final MainConfig config, final ChatQueue queue, final MCMMOCredits plugin) {
         if (this.factory == null) {
-            this.factory = new MenuFactory(menuConfig, config, storage, plugin);
+            this.factory = new MenuFactory(menuConfig, config, queue, plugin);
         }
         return this.factory;
     }

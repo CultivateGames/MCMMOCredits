@@ -56,14 +56,14 @@ import java.util.UUID;
  * Event Handlers used to manage the database, and input storage.
  */
 public class Listeners implements Listener {
-    private final ChatQueue storage;
+    private final ChatQueue queue;
     private final UserDAO dao;
     private final MainConfig config;
 
     @Inject
-    public Listeners(final MainConfig config, final ChatQueue storage, final UserDAO dao) {
+    public Listeners(final MainConfig config, final ChatQueue queue, final UserDAO dao) {
         this.config = config;
-        this.storage = storage;
+        this.queue = queue;
         this.dao = dao;
     }
 
@@ -111,14 +111,14 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerChat(final AsyncChatEvent e) {
         UUID uuid = e.getPlayer().getUniqueId();
-        if (this.storage.contains(uuid)) {
+        if (this.queue.contains(uuid)) {
             String completion = PlainTextComponentSerializer.plainText().serialize(e.message());
             if (completion.equalsIgnoreCase("cancel")) {
-                this.storage.remove(uuid);
+                this.queue.remove(uuid);
                 User user = this.dao.forceUser(uuid);
                 Text.forOneUser(user, this.config.string("cancel-prompt")).send();
             }
-            this.storage.complete(uuid, completion);
+            this.queue.complete(uuid, completion);
             e.setCancelled(true);
         }
     }
@@ -130,7 +130,7 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerQuit(final PlayerQuitEvent e) {
-        this.storage.remove(e.getPlayer().getUniqueId());
+        this.queue.remove(e.getPlayer().getUniqueId());
     }
 
     /**

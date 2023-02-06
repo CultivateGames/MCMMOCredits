@@ -50,24 +50,24 @@ public final class MenuFactory {
     private static final int REDEEM_PRIORITY = 1;
     private static final int COMMAND_PRIORITY = 2;
     private final MenuConfig menus;
-    private final ChatQueue storage;
+    private final ChatQueue queue;
     private final MainConfig config;
     private final MCMMOCredits plugin;
 
     /**
      * Constructs the object.
      *
-     * @param menus   Instance of the MenuConfig.
-     * @param config  Instance of the MainConfig.
-     * @param storage Instance of the ChatQueue.
-     * @param plugin  Instance of the plugin.
+     * @param menus  Instance of the MenuConfig.
+     * @param config Instance of the MainConfig.
+     * @param queue  Instance of the ChatQueue.
+     * @param plugin Instance of the plugin.
      * @see PluginModule#provideFactory(MenuConfig, MainConfig, ChatQueue, MCMMOCredits)
      */
     @Inject
-    public MenuFactory(final MenuConfig menus, final MainConfig config, final ChatQueue storage, final MCMMOCredits plugin) {
+    public MenuFactory(final MenuConfig menus, final MainConfig config, final ChatQueue queue, final MCMMOCredits plugin) {
         this.menus = menus;
         this.config = config;
-        this.storage = storage;
+        this.queue = queue;
         this.plugin = plugin;
     }
 
@@ -84,11 +84,15 @@ public final class MenuFactory {
         if (path.contains("config")) {
             this.addConfigItems(menu);
         }
+        if (path.contains("main")) {
+            menu.checkPermission(user, "mcmmocredits.menu.config", ItemType.CONFIG_MENU);
+            menu.checkPermission(user, "mcmmocredits.menu.redeem", ItemType.REDEEM_MENU);
+        }
         if (menu.properties().fill()) {
             this.applyFill(menu, path);
         }
         List<TransformContext<ChestPane, PlayerViewer>> transforms = menu.items().stream().map(x -> this.getTransform(x, user.resolver()).context()).toList();
-        return menu.createInterface(transforms, user);
+        return menu.createInterface(user, transforms);
     }
 
     /**
@@ -149,7 +153,7 @@ public final class MenuFactory {
                 .item(item)
                 .resolver(resolver)
                 .priority(CONFIG_PRIORITY)
-                .configClick(this.config, this.storage, (Object[]) item.name().split("\\."))
+                .configClick(this.config, this.queue, (Object[]) item.name().split("\\."))
                 .build();
     }
 
@@ -180,7 +184,7 @@ public final class MenuFactory {
                 .item(item)
                 .resolver(resolver)
                 .priority(REDEEM_PRIORITY)
-                .redeemClick(this.storage, this.config.string("redeem-prompt"), this.plugin)
+                .redeemClick(this.queue, this.config.string("redeem-prompt"), this.plugin)
                 .build();
     }
 

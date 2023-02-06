@@ -135,18 +135,18 @@ public final class MenuTransform {
         /**
          * Builds a Redemption Menu Item click. Used to redeem credits via GUI.
          *
-         * @param storage Instance of ChatQueue to transport chat messages.
+         * @param queue   Instance of ChatQueue to transport chat messages.
          * @param content Redemption chat prompt.
          * @param plugin  Instance of the plugin to execute the redeem command.
          * @return The updated Builder.
          */
-        public Builder redeemClick(final ChatQueue storage, final String content, final MCMMOCredits plugin) {
+        public Builder redeemClick(final ChatQueue queue, final String content, final MCMMOCredits plugin) {
             String skill = this.item.data();
             this.handler = this.closeInventory().andThen(click -> {
                 Player player = click.viewer().player();
                 this.resolver.addResolver("skill", WordUtils.capitalizeFully(skill));
                 Text.fromString(player, content, this.resolver).send();
-                storage.act(player.getUniqueId(), i -> {
+                queue.act(player.getUniqueId(), i -> {
                     String command = "credits redeem " + Integer.parseInt(i) + " " + skill.toLowerCase();
                     plugin.executeCommand(player, command);
                 });
@@ -157,13 +157,13 @@ public final class MenuTransform {
         /**
          * Builds a Config Menu item click. Used to edit config via GUI.
          *
-         * @param config  The config to modify.
-         * @param storage Instance of ChatQueue to transport chat messages.
-         * @param path    The node path being modified.
+         * @param config The config to modify.
+         * @param queue  Instance of ChatQueue to transport chat messages.
+         * @param path   The node path being modified.
          * @return The updated Builder.
          */
-        public Builder configClick(final Config config, final ChatQueue storage, final Object... path) {
-            this.handler = this.closeInventory().andThen(click -> config.modifyInGame(storage, click.viewer().player(), this.resolver, path));
+        public Builder configClick(final Config config, final ChatQueue queue, final Object... path) {
+            this.handler = this.closeInventory().andThen(click -> config.modifyInGame(queue, click.viewer().player(), this.resolver, path));
             return this;
         }
 

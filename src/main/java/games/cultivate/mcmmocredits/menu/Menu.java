@@ -43,7 +43,7 @@ import java.util.NoSuchElementException;
  * <p>
  * When constructed, we only have a list of items serialized from a {@link Config}.
  * This object is passed to the {@link MenuFactory} to apply transformations to the serialized items.
- * It is then built using {@link Menu#createInterface(List, User)}
+ * It is then built using {@link Menu#createInterface(User, List)}
  *
  * @param properties Common menu properties.
  * @param items      List of Items obtained through serialization.
@@ -63,6 +63,19 @@ public record Menu(MenuProperties properties, List<Item> items) {
     }
 
     /**
+     * Checks if the provided user has the provided permission, and removes the provided item type based on the result.
+     *
+     * @param user       The User who will be viewing the menu.
+     * @param type       The ItemType for removal.
+     * @param permission The permission to check.
+     */
+    public void checkPermission(final User user, final String permission, final ItemType type) {
+        if (!user.player().hasPermission(permission)) {
+            this.items.removeIf(x -> x.type() == type);
+        }
+    }
+
+    /**
      * Transforms the Menu into a completed ChestInterface that is ready to view.
      *
      * @param context List of {@link TransformContext} created via {@link MenuTransform} instances.
@@ -71,7 +84,7 @@ public record Menu(MenuProperties properties, List<Item> items) {
      * @see MenuFactory
      * @see MenuTransform
      */
-    public ChestInterface createInterface(final List<TransformContext<ChestPane, PlayerViewer>> context, final User user) {
+    public ChestInterface createInterface(final User user, final List<TransformContext<ChestPane, PlayerViewer>> context) {
         Component title = Text.forOneUser(user, this.properties.title()).toComponent();
         return new ChestInterface(this.properties.slots() / 9, title, context, List.of(), true, 10, ClickHandler.cancel());
     }
