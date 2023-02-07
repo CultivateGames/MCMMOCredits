@@ -78,6 +78,13 @@ public final class Text {
         return Text.fromString(executor.sender(), content, resolver);
     }
 
+    /**
+     * Static factory where the Resolver for the object is derived from the CommandExecutor.
+     *
+     * @param executor recipient of the message.
+     * @param content  content of the message.
+     * @return a new Text.
+     */
     public static Text forOneUser(final CommandExecutor executor, final String content) {
         return Text.fromString(executor, content, executor.resolver());
     }

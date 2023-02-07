@@ -190,7 +190,7 @@ public final class Resolver {
          * @return The updated Builder.
          */
         public Builder username(final String username) {
-            return this.tag("target_username", username);
+            return this.tag("target", username);
         }
 
         /**

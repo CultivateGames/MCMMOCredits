@@ -1,0 +1,231 @@
+# MCMMO Credits v0.3.0 Configuration
+# Repository: https://github.com/CultivateGames/MCMMOCredits
+# Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
+config:
+  properties:
+    title: <dark_gray>Edit Your Configuration...
+    slots: 54
+    fill: false
+    navigation: false
+  items:
+    messages:
+      name: ''
+      lore:
+      - <gray>Click here to edit this config option!
+      slot: -1
+      material: WRITABLE_BOOK
+      amount: 1
+      texture: ''
+      glow: false
+    settings:
+      name: ''
+      lore:
+      - <gray>Click here to edit this config option!
+      slot: -1
+      material: REDSTONE
+      amount: 1
+      texture: ''
+      glow: false
+    fill:
+      name: ''
+      lore:
+      - ''
+      slot: 0
+      material: BLACK_STAINED_GLASS_PANE
+      amount: 1
+      texture: ''
+      glow: false
+    navigation:
+      name: <red>Previous Menu
+      lore:
+      - <gray>Left Click to go back!
+      slot: 49
+      material: COMPASS
+      amount: 1
+      texture: ''
+      glow: false
+main:
+  properties:
+    title: <#ff253c><bold>MCMMO Credits
+    slots: 54
+    fill: false
+    navigation: false
+  items:
+    config:
+      name: <#FF253C>Edit Config
+      lore:
+      - <gray>Left Click to edit config!
+      slot: 11
+      material: DIAMOND
+      amount: 1
+      texture: ''
+      glow: false
+    redemption:
+      name: <green>Redeem MCMMO Credits!
+      lore:
+      - <gray>Left Click to redeem Credits!
+      slot: 15
+      material: EMERALD
+      amount: 1
+      texture: ''
+      glow: false
+    fill:
+      name: ''
+      lore:
+      - ''
+      slot: 0
+      material: BLACK_STAINED_GLASS_PANE
+      amount: 1
+      texture: ''
+      glow: false
+    navigation:
+      name: <red>Previous Menu
+      lore:
+      - <gray>Left Click to go back!
+      slot: 40
+      material: COMPASS
+      amount: 1
+      texture: ''
+      glow: false
+redeem:
+  properties:
+    title: <dark_gray>Redeem Your Credits...
+    slots: 45
+    fill: false
+    navigation: false
+  items:
+    acrobatics:
+      name: <yellow>Acrobatics
+      lore:
+      - <yellow><sender>, click here to redeem!
+      slot: 10
+      material: NETHERITE_BOOTS
+      amount: 1
+      texture: ''
+      glow: false
+    alchemy:
+      name: <yellow>Alchemy
+      lore:
+      - <yellow><sender>, click here to redeem!
+      slot: 11
+      material: BREWING_STAND
+      amount: 1
+      texture: ''
+      glow: false
+    archery:
+      name: <yellow>Archery
+      lore:
+      - <yellow><sender>, click here to redeem!
+      slot: 12
+      material: BOW
+      amount: 1
+      texture: ''
+      glow: false
+    axes:
+      name: <yellow>Axes
+      lore:
+      - <yellow><sender>, click here to redeem!
+      slot: 13
+      material: NETHERITE_AXE
+      amount: 1
+      texture: ''
+      glow: false
+    excavation:
+      name: <yellow>Excavation
+      lore:
+      - <yellow><sender>, click here to redeem!
+      slot: 14
+      material: NETHERITE_SHOVEL
+      amount: 1
+      texture: ''
+      glow: false
+    fishing:
+      name: <yellow>Fishing
+      lore:
+      - <yellow><sender>, click here to redeem!
+      slot: 15
+      material: FISHING_ROD
+      amount: 1
+      texture: ''
+      glow: false
+    herbalism:
+      name: <yellow>Herbalism
+      lore:
+      - <yellow><sender>, click here to redeem!
+      slot: 16
+      material: SUGAR_CANE
+      amount: 1
+      texture: ''
+      glow: false
+    mining:
+      name: <yellow>Mining
+      lore:
+      - <yellow><sender>, click here to redeem!
+      slot: 19
+      material: NETHERITE_PICKAXE
+      amount: 1
+      texture: ''
+      glow: false
+    repair:
+      name: <yellow>Repair
+      lore:
+      - <yellow><sender>, click here to redeem!
+      slot: 20
+      material: ANVIL
+      amount: 1
+      texture: ''
+      glow: false
+    swords:
+      name: <yellow>Swords
+      lore:
+      - <yellow><sender>, click here to redeem!
+      slot: 21
+      material: NETHERITE_SWORD
+      amount: 1
+      texture: ''
+      glow: false
+    taming:
+      name: <yellow>Taming
+      lore:
+      - <yellow><sender>, click here to redeem!
+      slot: 23
+      material: LEAD
+      amount: 1
+      texture: ''
+      glow: false
+    unarmed:
+      name: <yellow>Unarmed
+      lore:
+      - <yellow><sender>, click here to redeem!
+      slot: 24
+      material: CARROT_ON_A_STICK
+      amount: 1
+      texture: ''
+      glow: false
+    woodcutting:
+      name: <yellow>Woodcutting
+      lore:
+      - <yellow><sender>, click here to redeem!
+      slot: 25
+      material: OAK_LOG
+      amount: 1
+      texture: ''
+      glow: false
+    fill:
+      name: ''
+      lore:
+      - ''
+      slot: 0
+      material: BLACK_STAINED_GLASS_PANE
+      amount: 1
+      texture: ''
+      glow: false
+    navigation:
+      name: <red>Previous Menu
+      lore:
+      - <gray>Left Click to go back!
+      slot: 40
+      material: COMPASS
+      amount: 1
+      texture: ''
+      glow: false
