@@ -62,25 +62,27 @@ import java.util.Queue;
 public class Config {
     private final transient Class<? extends Config> type;
     private final transient String fileName;
-    private final transient String header;
     private transient YamlConfigurationLoader loader;
     private transient CommentedConfigurationNode root;
     private transient List<String> paths;
     @Inject
     @PluginPath
     private transient Path dir;
+    private static final String HEADER = """
+            MCMMO Credits v0.3.0 Configuration
+            Repository: https://github.com/CultivateGames/MCMMOCredits
+            Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
+            """;
 
     /**
      * Constructs the object with properties of the file.
      *
      * @param type     Class of the config. Must be annotated with @{@link ConfigSerializable}
      * @param fileName Name of the config.
-     * @param header   Header printed to the
      */
-    protected Config(final Class<? extends Config> type, final String fileName, final String header) {
+    protected Config(final Class<? extends Config> type, final String fileName) {
         this.type = type;
         this.fileName = fileName;
-        this.header = header;
     }
 
     /**
@@ -91,7 +93,7 @@ public class Config {
     private YamlConfigurationLoader createLoader() {
         Util.createFile(this.dir, this.fileName);
         return YamlConfigurationLoader.builder()
-                .defaultOptions(opts -> opts.header(this.header).serializers(build -> {
+                .defaultOptions(opts -> opts.header(HEADER).serializers(build -> {
                     build.register(Item.class, ItemSerializer.INSTANCE);
                     build.register(Menu.class, MenuSerializer.INSTANCE);
                 })).path(this.dir.resolve(this.fileName))

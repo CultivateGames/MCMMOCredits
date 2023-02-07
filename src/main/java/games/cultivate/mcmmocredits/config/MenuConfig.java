@@ -41,25 +41,6 @@ import java.util.List;
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
 public class MenuConfig extends Config {
-    private static final String HEADER = """
-            Repository: https://github.com/CultivateGames/MCMMOCredits
-            Item Name and Lore can parse MiniMessage and PlaceholderAPI. Info: https://docs.adventure.kyori.net/minimessage/index.html
-                        
-            Properties:
-            title: Title of the inventory.
-            slot: Number of slots in the menu. This can be 9, 18, 27, 36, 45, or 54. Must also be large enough to fit all items.
-            fill: Whether to fill empty spots in menu with filler item stacks.
-            navigation: Whether to add a navigation button in menu. Goes back to main menu (/credits menu main).
-                        
-            Items:
-            fill: Customizes the filler item. Only shows if enabled. Slot is unused.
-            navigation: Customizes the navigation item. Only shows if enabled.
-            main.config: Customizes item that takes you to Edit Config GUI.
-            main.redemption: Customizes item that takes you to Redemption GUI.
-            config.messages: Customizes item that shows in Edit Config GUI for editable messages. Amount + Slot are unused.
-            config.settings: Customizes item that shows in Edit Config GUI for editable settings. Amount + Slot are unused.
-            redeem: Customizes item that shows for each skill in the Redemption GUI.
-            """;
     private static final Item FILLER_ITEM = Item.of(Material.BLACK_STAINED_GLASS_PANE);
     private static final Item NAVIGATION_ITEM = commandItem(Material.COMPASS, "<red>Previous Menu", "<gray>Left Click to go back!", ItemType.MAIN_MENU, 40);
     private ConfigMenu config = new ConfigMenu();
@@ -70,7 +51,7 @@ public class MenuConfig extends Config {
      * Constructs the configuration.
      */
     MenuConfig() {
-        super(MenuConfig.class, "menus.yml", HEADER);
+        super(MenuConfig.class, "menus.yml");
     }
 
     private static Item commandItem(final Material material, final String name, final String lore, final ItemType type, final int slot) {

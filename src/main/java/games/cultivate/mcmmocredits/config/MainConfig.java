@@ -32,64 +32,6 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
 public class MainConfig extends Config {
-    private static final String HEADER = """
-            Repository: https://github.com/CultivateGames/MCMMOCredits
-                        
-            Argument Parse Failure Messages:
-            Messages prepended with "argument-parse" are strings used in the <argument_error> tag.
-            The message sent when parsing fails is "argument-parsing". It should include the <argument_error> tag.
-            You can format the <argument_error> tag in "argument-parsing" to apply formatting to all argument keys!
-                        
-            Messages:
-            All messages support MiniMessage and Placeholder API placeholders.
-            prefix: prefix for all plugin messages.
-            add-user: Output for adding user to database.
-            argument-parse-failure-no-input-provided: Output when no input was provided to command.
-            argument-parse-failure-boolean: Output when invalid boolean was provided to command.
-            argument-parse-failure-enum: Output when value is not inside of an enum for command.
-            argument-parse-failure-flag-unknown-flag: Output when a command flag is unknown.
-            argument-parse-failure-flag-duplicate-flag: Output when a duplicate flag is used in a command.
-            argument-parse-failure-flag-no-flag-started: Output when a flag is not started properly.
-            argument-parse-failure-flag-missing-argument: Output when a flag is used but a command argument is missing.
-            argument-parse-failure-number: Output when an invalid number is provided to command.
-            argument-parse-failure-player: Output when a Player cannot be parsed in a command.
-            argument-parse-failure-string: Output when an invalid string is provided to command.
-            argument-parsing: Outputs the actual argument parsing message. All other keys are templates.
-            balance: Output for /credits balance
-            balance-other: Output for /credits balance <user>
-            cancel-prompt: Output when cancelling chat input.
-            command-execution: Output for general command errors.
-            credits-add: Output for /credits add <amount> <player>.
-            credits-add-user: Receiver output for /credits add <amount> <player>. Disable with --s flag.
-            credits-set: Output for /credits set <amount> <player>.
-            credits-set-user: Receiver output for /credits set <amount> <player>. Disable with --s flag.
-            credits-take: Output for /credits take <amount> <player>.
-            credits-take-user: Receiver output for /credits take <amount> <player>. Disable with --s flag.
-            edit-config: Output for successfully editing config via GUI.
-            edit-config-fail: Output for failing to edit config via GUI due to error.
-            edit-config-prompt: Prompt for editing config via GUI.
-            invalid-sender: Output for command error where sender is invalid.
-            invalid-syntax: Output for command error where command is typed incorrectly.
-            login-message: Output when a player joins the server.
-            mcmmo-profile-fail: Output when a redemption fails because a player's mcMMO profile is not loaded.
-            mcmmo-skill-cap: Output when a redemption is cancelled from a skill's cap level being exceeded.
-            no-permission: Output when a player has no permission to execute a command.
-            not-enough-credits: Output when a player does not have enough credits for an operation.
-            player-unknown: Output when a player does not exist in our data.
-            redeem: Output for /credits redeem <amount> <skill>
-            redeem-prompt: Prompt for redeeming credits via GUI.
-            redeem-sudo: Sender output for /credits redeem <amount> <skill> <user>
-            redeem-sudo-user: Receiver output for /credits redeem <amount> <skill> <user>. Disable with --s flag.
-            reload: Output when reloading configuration files.
-                       
-            Settings:
-            add-user-message: boolean that toggles console message sent when user is added to database.
-            database-type: Database type to use. Supported: SQLITE, MYSQL. Data is not transferred between types.
-            debug: boolean that toggles debug messages to be sent during plugin operations.
-            send-login-message: boolean that toggles login message for users.
-            user-tab-complete: boolean that toggles tab completion for player-based command arguments. Requires restart to change.
-            mysql.*: Connection settings for a MySQL database.
-            """;
     private String prefix = "<hover:show_text:'<green><sender>: <sender_credits> Credits'><gold><bold>CREDITS</bold> ";
     private String addUser = "<target> has been added to the database!";
     private String argumentParseFailureNoInputWasProvided = "No input was provided";
@@ -121,7 +63,7 @@ public class MainConfig extends Config {
     private String loginMessage = "<hover:show_text:'<green>You have <sender_credits> MCMMO Credits!'><yellow>Hover to see your MCMMO Credit balance!";
     private String mcmmoProfileFail = "The mcMMO Profile for <target> is not loaded! Aborting operation...";
     private String mcmmoSkillCap = "<red>You cannot redeem this many MCMMO Credits into <skill>, due to the Level Cap (<cap>).";
-    private String noPermission = "<hover:show_text:'<red>Required permission: <required_permission>'><red>You do not have permission to do this!";
+    private String noPermission = "<hover:show_text:'<red>Required permission: <permission>'><red>You do not have permission to do this!";
     private String notEnoughCredits = "<red>You do not have enough MCMMO Credits to do this!";
     private String playerUnknown = "<red>This player does not exist in our database!";
     private String redeem = "<green>Redemption Successful! You have redeemed <amount> Credits into <skill>. You have <target_credits> Credits remaining.";
@@ -136,7 +78,7 @@ public class MainConfig extends Config {
      * Constructs the configuration.
      */
     MainConfig() {
-        super(MainConfig.class, "config.yml", HEADER);
+        super(MainConfig.class, "config.yml");
     }
 
     /**

@@ -157,7 +157,7 @@ public final class Credits {
     }
 
     /**
-     * /credits redeem amount skill username [--s]. Allows a user to redeem credits.
+     * /credits redeem amount skill username [--s]. Allows a user to redeem credits for someone else.
      *
      * @param executor Command executor. Can be from Console.
      * @param skill    The skill being actioned.
