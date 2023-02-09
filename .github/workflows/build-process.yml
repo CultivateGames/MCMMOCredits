@@ -24,6 +24,13 @@ jobs:
           chmod +x gradlew
           ./gradlew build --stacktrace
 
+      - name: Publish
+        if: ${{ runner.os == 'Linux' && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        run: "./gradlew publish"
+        env:
+          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
+          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
+
       - name: Release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:

@@ -1,22 +1,28 @@
 group = "games.cultivate"
-version = "0.3.0"
+version = "0.3.1"
 description = "MCMMOCredits"
 
 plugins {
-    id("java")
+    id("java-library")
+    id("maven-publish")
+    id("signing")
     id("xyz.jpenilla.run-paper") version "2.0.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("io.papermc.paperweight.userdev") version "1.3.11"
+    id("net.kyori.indra") version "3.0.1"
+    id("net.kyori.indra.publishing") version "3.0.1"
+    id("net.kyori.indra.publishing.sonatype") version "3.0.1"
 }
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    withJavadocJar()
+    withSourcesJar()
 }
 
 repositories {
     mavenCentral()
     maven("https://papermc.io/repo/repository/maven-public/")
-    maven("https://oss.sonatype.org/content/repositories/snapshots/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://nexus.neetgames.com/repository/maven-releases/")
 }
@@ -48,6 +54,35 @@ dependencies {
     }
 }
 
+indra {
+    mitLicense()
+
+    javaVersions {
+        minimumToolchain(17)
+        target(17)
+    }
+
+    github("CultivateGames", "MCMMOCredits") {
+        ci(true)
+    }
+
+    configurePublications {
+        pom {
+            developers {
+                developer {
+                    id.set("CultivateGames")
+                    email.set("admin@cultivate.games")
+                }
+            }
+        }
+    }
+}
+
+indraSonatype {
+    useAlternateSonatypeOSSHost("s01")
+}
+
+
 tasks {
     assemble {
         dependsOn(reobfJar)
@@ -78,7 +113,6 @@ tasks {
         fun reloc(pkg: String) = relocate(pkg, "games.cultivate.mcmmocredits.relocate.$pkg")
         reloc("cloud.commandframework")
         reloc("com.github")
-        //reloc("com.google")
         reloc("com.typesafe")
         reloc("com.zaxxer")
         reloc("io.leangen")
@@ -88,7 +122,6 @@ tasks {
         reloc("org.checkerframework")
         reloc("org.jdbi")
         reloc("org.incendo")
-        //reloc("org.slf4j")
         reloc("org.spongepowered")
 
         manifest {
