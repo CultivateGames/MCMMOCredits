@@ -140,7 +140,7 @@ public final class CloudExceptionHandler {
     }
 
     /**
-     * Formatter of Cloud captions that uses <> instead of {} for consistency.
+     * Formatter of Cloud captions that uses {@literal <>} instead of {} for consistency.
      */
     private static final class CaptionFormatter implements CaptionVariableReplacementHandler {
         @Override
