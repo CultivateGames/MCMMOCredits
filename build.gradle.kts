@@ -10,9 +10,6 @@ plugins {
     id("xyz.jpenilla.run-paper") version "2.0.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("io.papermc.paperweight.userdev") version "1.3.11"
-    id("net.kyori.indra") version "3.0.1"
-    id("net.kyori.indra.publishing") version "3.0.1"
-    id("net.kyori.indra.publishing.sonatype") version "3.0.1"
 }
 
 repositories {
@@ -48,37 +45,62 @@ dependencies {
         exclude("com.sk89q.worldedit")
     }
 }
-indra {
-    mitLicense()
 
-    javaVersions {
-        minimumToolchain(17)
-        target(17)
-    }
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
 
-    github("CultivateGames", "MCMMOCredits") {
-        ci(true)
-    }
-    configurePublications {
-        pom {
-            developers {
-                developer {
-                    id.set("CultivateGames")
-                    email.set("admin@cultivate.games")
+publishing {
+    publications {
+        create<MavenPublication>("MCMMOCredits") {
+            from(components["java"])
+            pom {
+                name.set("MCMMOCredits")
+                description.set("MCMMOCredits")
+                url.set("https://github.com/CultivateGames/MCMMOCredits")
+                licenses {
+                    license {
+                        name.set("The MIT License")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
                 }
-            }
-            withXml {
-                asNode().appendNode("configuration")
-                    .appendNode("gpgArguments")
-                    .appendNode("arg", "--pinentry-mode")
-                    .appendNode("arg", "loopback")
+                developers {
+                    developer {
+                        id.set("CultivateGames")
+                        email.set("admin@cultivate.games")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:https://github.com/CultivateGames/MCMMOCredits.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/CultivateGames/MCMMOCredits.git")
+                    url.set("https://github.com/CultivateGames/MCMMOCredits")
+                    ciManagement {
+                        system.set("Github Actions")
+                        url.set("https://github.com/CultivateGames/MCMMOCredits/actions")
+                    }
+                }
             }
         }
     }
 }
 
-indraSonatype {
-    useAlternateSonatypeOSSHost("s01")
+repositories {
+    maven {
+        name = "OSSRH"
+        url = uri("https://s01.oss.sonatype.org/service/local/")
+        credentials {
+            username = System.getenv("MAVEN_USERNAME")
+            password = System.getenv("MAVEN_PASSWORD")
+        }
+    }
+}
+
+signing {
+    val signingKey: String? by project
+    val signingPassword: String? by project
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign(publishing.publications["MCMMOCredits"])
 }
 
 tasks {
@@ -88,7 +110,6 @@ tasks {
 
     compileJava {
         options.encoding = Charsets.UTF_8.name()
-        options.release.set(17)
         options.compilerArgs.add("-parameters")
     }
 
