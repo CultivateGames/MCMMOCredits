@@ -88,8 +88,10 @@ publishing {
             name = "OSSRH"
             url = uri("https://s01.oss.sonatype.org/service/local/")
             credentials {
-                username = System.getenv("MAVEN_USERNAME")
-                password = System.getenv("MAVEN_PASSWORD")
+                val sonatypeUsername: String? by project
+                val sonatypePassword: String? by project
+                username = sonatypeUsername
+                password = sonatypePassword
             }
         }
     }
