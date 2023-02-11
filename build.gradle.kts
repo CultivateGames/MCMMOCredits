@@ -5,12 +5,11 @@ description = "MCMMOCredits"
 plugins {
     id("java-library")
     id("maven-publish")
+    id("signing")
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
     id("xyz.jpenilla.run-paper") version "2.0.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("io.papermc.paperweight.userdev") version "1.3.11"
-    id("net.kyori.indra") version "3.0.1"
-    id("net.kyori.indra.publishing") version "3.0.1"
-    id("net.kyori.indra.publishing.sonatype") version "3.0.1"
 }
 
 java {
@@ -53,32 +52,32 @@ dependencies {
     }
 }
 
-indra {
-    mitLicense()
+apply<SigningPlugin>()
+configure<SigningExtension> {
+    val key = System.getenv("SIGNING_KEY") ?: return@configure
+    val password = System.getenv("SIGNING_PASSPHRASE") ?: return@configure
+    val publishing: PublishingExtension by project
 
-    javaVersions {
-        minimumToolchain(17)
-        target(17)
-    }
+    useInMemoryPgpKeys(key, password)
+    sign(publishing.publications)
+}
 
-    github("CultivateGames", "MCMMOCredits") {
-        ci(true)
-    }
-
-    configurePublications {
-        pom {
-            developers {
-                developer {
-                    id.set("CultivateGames")
-                    email.set("admin@cultivate.games")
-                }
-            }
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
         }
     }
 }
 
-indraSonatype {
-    useAlternateSonatypeOSSHost("s01")
+nexusPublishing {
+    repositories {
+        create("myNexus") {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            username.set(System.getenv("SONATYPE_USERNAME"))
+            password.set(System.getenv("SONATYPE_PASSWORD"))
+        }
+    }
 }
 
 
