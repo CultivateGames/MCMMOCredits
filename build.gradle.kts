@@ -10,6 +10,9 @@ plugins {
     id("xyz.jpenilla.run-paper") version "2.0.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("io.papermc.paperweight.userdev") version "1.3.11"
+    id("net.kyori.indra") version "3.0.1"
+    id("net.kyori.indra.publishing") version "3.0.1"
+    id("net.kyori.indra.publishing.sonatype") version "3.0.1"
 }
 
 java {
@@ -62,24 +65,33 @@ configure<SigningExtension> {
     sign(publishing.publications)
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
+indra {
+    mitLicense()
+
+    javaVersions {
+        minimumToolchain(17)
+        target(17)
+    }
+
+    github("CultivateGames", "MCMMOCredits") {
+        ci(true)
+    }
+
+    configurePublications {
+        pom {
+            developers {
+                developer {
+                    id.set("CultivateGames")
+                    email.set("admin@cultivate.games")
+                }
+            }
         }
     }
 }
 
-nexusPublishing {
-    repositories {
-        create("myNexus") {
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-        }
-    }
+indraSonatype {
+    useAlternateSonatypeOSSHost("s01")
 }
-
-
 tasks {
     assemble {
         dependsOn(reobfJar)
