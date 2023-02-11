@@ -78,6 +78,9 @@ indra {
     }
 
     configurePublications {
+        pom.withXml {
+            asNode().appendNode("configuration").appendNode("gpgArguments","")
+        }
         pom {
             developers {
                 developer {
