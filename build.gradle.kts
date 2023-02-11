@@ -15,12 +15,6 @@ plugins {
     id("net.kyori.indra.publishing.sonatype") version "3.0.1"
 }
 
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
-    withJavadocJar()
-    withSourcesJar()
-}
-
 repositories {
     mavenCentral()
     maven("https://papermc.io/repo/repository/maven-public/")
@@ -54,17 +48,6 @@ dependencies {
         exclude("com.sk89q.worldedit")
     }
 }
-
-apply<SigningPlugin>()
-configure<SigningExtension> {
-    val key = System.getenv("SIGNING_KEY") ?: return@configure
-    val password = System.getenv("SIGNING_PASSPHRASE") ?: return@configure
-    val publishing: PublishingExtension by project
-
-    useInMemoryPgpKeys(key, password)
-    sign(publishing.publications)
-}
-
 indra {
     mitLicense()
 
@@ -76,17 +59,19 @@ indra {
     github("CultivateGames", "MCMMOCredits") {
         ci(true)
     }
-
     configurePublications {
-        pom.withXml {
-            asNode().appendNode("configuration").appendNode("gpgArguments","")
-        }
         pom {
             developers {
                 developer {
                     id.set("CultivateGames")
                     email.set("admin@cultivate.games")
                 }
+            }
+            withXml {
+                asNode().appendNode("configuration")
+                    .appendNode("gpgArguments")
+                    .appendNode("arg", "--pinentry-mode")
+                    .appendNode("arg", "loopback")
             }
         }
     }
@@ -95,6 +80,7 @@ indra {
 indraSonatype {
     useAlternateSonatypeOSSHost("s01")
 }
+
 tasks {
     assemble {
         dependsOn(reobfJar)
