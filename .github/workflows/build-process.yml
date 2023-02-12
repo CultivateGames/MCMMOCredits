@@ -38,6 +38,7 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-          title: "MCMMO Credits Release"
+          title: "${{ github.ref_name }}"
           files: |
             build/libs/*.jar
+
