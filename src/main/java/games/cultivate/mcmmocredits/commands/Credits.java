@@ -116,7 +116,7 @@ public final class Credits {
     @CommandMethod("<operation> <amount>")
     @CommandPermission("mcmmocredits.modify.self")
     public void modify(final User user, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount) {
-        CreditTransactionEvent event = new CreditTransactionEvent(user, operation, amount, true);
+        CreditTransactionEvent event = new CreditTransactionEvent(user.player(), user.uuid(), operation, amount, true, false);
         Bukkit.getPluginManager().callEvent(event);
     }
 
@@ -135,7 +135,7 @@ public final class Credits {
     public void modifyOther(final CommandExecutor executor, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
         Optional<User> optionalUser = this.dao.getUser(username);
         if (optionalUser.isPresent()) {
-            CreditTransactionEvent event = new CreditTransactionEvent(executor.sender(), optionalUser.get().uuid(), operation, amount, silent);
+            CreditTransactionEvent event = new CreditTransactionEvent(executor.sender(), optionalUser.get().uuid(), operation, amount, silent, false);
             Bukkit.getPluginManager().callEvent(event);
             return;
         }
@@ -152,7 +152,7 @@ public final class Credits {
     @CommandMethod("redeem <amount> <skill>")
     @CommandPermission("mcmmocredits.redeem.self")
     public void redeem(final User user, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
-        CreditRedemptionEvent event = new CreditRedemptionEvent(user.player(), user.uuid(), skill, amount, true);
+        CreditRedemptionEvent event = new CreditRedemptionEvent(user.player(), user.uuid(), skill, amount, true, false);
         Bukkit.getPluginManager().callEvent(event);
     }
 
@@ -170,7 +170,7 @@ public final class Credits {
     public void redeemOther(final CommandExecutor executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
         Optional<User> optionalUser = this.dao.getUser(username);
         if (optionalUser.isPresent()) {
-            CreditRedemptionEvent event = new CreditRedemptionEvent(executor.sender(), optionalUser.get().uuid(), skill, amount, silent);
+            CreditRedemptionEvent event = new CreditRedemptionEvent(executor.sender(), optionalUser.get().uuid(), skill, amount, silent, false);
             Bukkit.getPluginManager().callEvent(event);
             return;
         }

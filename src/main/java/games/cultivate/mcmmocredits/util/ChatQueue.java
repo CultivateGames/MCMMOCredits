@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
- * Represents a Chat Queue. Uses a map of User UUIDs and Completable Futures to transport chat messages.
+ * Represents an opinionated Chat Queue. Uses a map of User UUIDs and Completable Futures to transport chat messages.
  */
 public final class ChatQueue {
     private final Map<UUID, CompletableFuture<String>> map;

@@ -1,14 +1,14 @@
 group = "games.cultivate"
-version = "0.3.2"
+version = "0.3.3"
 description = "MCMMOCredits"
 
 plugins {
     id("java-library")
     id("maven-publish")
     id("signing")
-    id("xyz.jpenilla.run-paper") version "2.0.0"
+    id("xyz.jpenilla.run-paper") version "2.0.1"
     id("com.github.johnrengelman.shadow") version "7.1.2"
-    id("io.papermc.paperweight.userdev") version "1.3.11"
+    id("io.papermc.paperweight.userdev") version "1.5.0"
 }
 
 repositories {
@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    paperDevBundle("1.19.3-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("1.19.3-R0.1-SNAPSHOT")
     implementation("cloud.commandframework:cloud-annotations:1.8.0")
     implementation("cloud.commandframework:cloud-paper:1.8.0")
 
@@ -54,6 +54,18 @@ publishing {
     publications {
         create<MavenPublication>("MCMMOCredits") {
             from(components["java"])
+            repositories {
+                maven {
+                    name = "OSSRH"
+                    url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+                    credentials {
+                        val sonatypeUsername: String? by project
+                        val sonatypePassword: String? by project
+                        username = sonatypeUsername
+                        password = sonatypePassword
+                    }
+                }
+            }
             pom {
                 name.set("MCMMOCredits")
                 description.set("MCMMOCredits")
@@ -79,18 +91,6 @@ publishing {
                         url.set("https://github.com/CultivateGames/MCMMOCredits/actions")
                     }
                 }
-            }
-        }
-    }
-    repositories {
-        maven {
-            name = "OSSRH"
-            url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                val sonatypeUsername: String? by project
-                val sonatypePassword: String? by project
-                username = sonatypeUsername
-                password = sonatypePassword
             }
         }
     }
@@ -125,6 +125,7 @@ tasks {
     }
     //TODO: investigate transitive deps
     shadowJar {
+        archiveClassifier.set("")
         minimize {
             exclude(dependency("com.github.ben-manes.caffeine:caffeine:3.0.3"))
         }

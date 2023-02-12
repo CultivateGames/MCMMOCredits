@@ -26,6 +26,7 @@ package games.cultivate.mcmmocredits.events;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.user.User;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
@@ -42,24 +43,39 @@ public final class CreditRedemptionEvent extends Event {
     private final CommandSender sender;
     private final UUID uuid;
     private final int amount;
-    private final boolean silent;
+    private final boolean userSilent;
+    private final boolean senderSilent;
     private final PrimarySkillType skill;
 
     /**
      * Constructs the event
      *
-     * @param sender Command executor. Can be from Console.
-     * @param uuid   UUID of the {@link User} being actioned.
-     * @param skill  The skill being actioned.
-     * @param amount Amount of credits affected by transaction.
-     * @param silent If command should be "silent". User will not get feedback upon completion if true.
+     * @param sender       Command executor. Can be from Console.
+     * @param uuid         UUID of the {@link User} being actioned.
+     * @param skill        The skill being actioned.
+     * @param amount       Amount of credits affected by transaction.
+     * @param userSilent   If the event should be "silent" for the user. No feedback is sent if true.
+     * @param senderSilent If the event should be "silent" for the sender. Only feedback related to an error will be sent.
      */
-    public CreditRedemptionEvent(final CommandSender sender, final UUID uuid, final PrimarySkillType skill, final int amount, final boolean silent) {
+    public CreditRedemptionEvent(final CommandSender sender, final UUID uuid, final PrimarySkillType skill, final int amount, final boolean userSilent, final boolean senderSilent) {
         this.sender = sender;
         this.uuid = uuid;
         this.skill = skill;
         this.amount = amount;
-        this.silent = silent;
+        this.userSilent = userSilent;
+        this.senderSilent = senderSilent;
+    }
+
+    /**
+     * Constructs the Event in an API friendly manner, disabling command executor feedback.
+     *
+     * @param player Command Executor. Must be an online player.
+     * @param skill  The skill being actioned.
+     * @param amount Amount of credits affected by transaction.
+     */
+    @SuppressWarnings("unused")
+    public CreditRedemptionEvent(final Player player, final PrimarySkillType skill, final int amount, final boolean silent) {
+        this(player, player.getUniqueId(), skill, amount, silent, true);
     }
 
     @SuppressWarnings("unused")
@@ -100,12 +116,21 @@ public final class CreditRedemptionEvent extends Event {
     }
 
     /**
-     * Returns if the transaction is silent.
+     * Returns if the transaction is silent for the recipient.
      *
-     * @return Silence of the transaction.
+     * @return if the transaction is silent.
      */
-    public boolean isSilent() {
-        return this.silent;
+    public boolean silentForUser() {
+        return this.userSilent;
+    }
+
+    /**
+     * Returns if the transaction is silent for the sender.
+     *
+     * @return if the transaction is silent.
+     */
+    public boolean silentForSender() {
+        return this.senderSilent;
     }
 
     /**

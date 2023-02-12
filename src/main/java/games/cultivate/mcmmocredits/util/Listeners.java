@@ -155,9 +155,11 @@ public class Listeners implements Listener {
             return;
         }
         String content = "credits-" + operation;
-        Text.fromString(sender, this.config.string(content), resolver).send();
+        if (!e.silentForSender()) {
+            Text.fromString(sender, this.config.string(content), resolver).send();
+        }
         Player player = Bukkit.getPlayer(uuid);
-        if (player != null && !e.isSilent()) {
+        if (player != null && !e.silentForUser()) {
             Text.fromString(player, this.config.string(content + "-user"), resolver).send();
         }
     }
@@ -193,12 +195,14 @@ public class Listeners implements Listener {
         profile.modifySkill(skill, currentLevel + amount);
         profile.save(true);
         resolver = this.updateRedeemResolver(sender, uuid, skill, amount);
-        if (sender instanceof Player p && p.getUniqueId().equals(uuid)) {
-            Text.fromString(sender, this.config.string("redeem"), resolver).send();
-            return;
+        if (!e.silentForSender()) {
+            if (sender instanceof Player p && p.getUniqueId().equals(uuid)) {
+                Text.fromString(sender, this.config.string("redeem"), resolver).send();
+                return;
+            }
+            Text.fromString(sender, this.config.string("redeem-sudo"), resolver).send();
         }
-        Text.fromString(sender, this.config.string("redeem-sudo"), resolver).send();
-        if (!e.isSilent() && player != null) {
+        if (!e.silentForUser() && player != null) {
             Text.fromString(player, this.config.string("redeem-sudo-user"), resolver).send();
         }
     }

@@ -26,6 +26,7 @@ package games.cultivate.mcmmocredits.events;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.util.CreditOperation;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
@@ -43,35 +44,38 @@ public final class CreditTransactionEvent extends Event {
     private final UUID uuid;
     private final CreditOperation operation;
     private final int amount;
-    private final boolean silent;
+    private final boolean userSilent;
+    private final boolean senderSilent;
 
     /**
      * Constructs the event.
      *
-     * @param sender    Command executor. Can be from Console.
-     * @param uuid      UUID of the {@link User} being actioned.
-     * @param operation The type of transaction taking place.
-     * @param amount    Amount of credits affected by transaction.
-     * @param silent    If command should be "silent". User will not get feedback upon completion if true.
+     * @param sender       Command executor. Can be from Console.
+     * @param uuid         UUID of the {@link User} being actioned.
+     * @param operation    The type of transaction taking place.
+     * @param amount       Amount of credits affected by transaction.
+     * @param userSilent   If the event should be "silent" for the user. No feedback is sent if true.
+     * @param senderSilent If the event should be "silent" for the sender. Only feedback related to an error will be sent.
      */
-    public CreditTransactionEvent(final CommandSender sender, final UUID uuid, final CreditOperation operation, final int amount, final boolean silent) {
+    public CreditTransactionEvent(final CommandSender sender, final UUID uuid, final CreditOperation operation, final int amount, final boolean userSilent, final boolean senderSilent) {
         this.sender = sender;
         this.uuid = uuid;
         this.operation = operation;
         this.amount = amount;
-        this.silent = silent;
+        this.userSilent = userSilent;
+        this.senderSilent = senderSilent;
     }
 
     /**
-     * Constructs the event using a {@link User} instead of the Bukkit equivalents.
+     * Constructs the Event in an API friendly manner, disabling command executor feedback.
      *
-     * @param user      Command Executor. Must be an online player.
+     * @param player    Command Executor. Must be an online player.
      * @param operation The type of transaction occurring.
      * @param amount    Amount of credits affected by transaction.
-     * @param silent    If command should be "silent". User will not get feedback upon completion if true.
      */
-    public CreditTransactionEvent(final User user, final CreditOperation operation, final int amount, final boolean silent) {
-        this(user.player(), user.uuid(), operation, amount, silent);
+    @SuppressWarnings("unused")
+    public CreditTransactionEvent(final Player player, final CreditOperation operation, final int amount, final boolean silent) {
+        this(player, player.getUniqueId(), operation, amount, silent, true);
     }
 
     @SuppressWarnings("unused")
@@ -121,11 +125,19 @@ public final class CreditTransactionEvent extends Event {
     }
 
     /**
-     * Returns if the transaction is silent.
+     * Returns if the transaction is silent for the recipient.
      *
-     * @return Silence of the transaction.
+     * @return if the transaction is silent.
      */
-    public boolean isSilent() {
-        return this.silent;
+    public boolean silentForUser() {
+        return this.userSilent;
+    }
+    /**
+     * Returns if the transaction is silent for the sender.
+     *
+     * @return if the transaction is silent.
+     */
+    public boolean silentForSender() {
+        return this.senderSilent;
     }
 }
