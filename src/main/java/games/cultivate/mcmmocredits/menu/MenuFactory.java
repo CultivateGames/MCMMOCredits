@@ -23,16 +23,9 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.inject.PluginModule;
-import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.user.User;
-import games.cultivate.mcmmocredits.util.ChatQueue;
-import org.incendo.interfaces.core.transform.TransformContext;
-import org.incendo.interfaces.paper.PlayerViewer;
-import org.incendo.interfaces.paper.pane.ChestPane;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
 import javax.inject.Inject;
@@ -45,30 +38,22 @@ import java.util.stream.IntStream;
  * Factory which is used to create {@link Menu} instances.
  */
 public final class MenuFactory {
-    private static final int CONFIG_PRIORITY = 0;
-    private static final int EMPTY_PRIORITY = 3;
-    private static final int REDEEM_PRIORITY = 1;
-    private static final int COMMAND_PRIORITY = 2;
-    private final MenuConfig menus;
-    private final ChatQueue queue;
+    private final MenuConfig menuConfig;
+    private final ClickFactory clickFactory;
     private final MainConfig config;
-    private final MCMMOCredits plugin;
 
     /**
      * Constructs the object.
      *
-     * @param menus  Instance of the MenuConfig.
-     * @param config Instance of the MainConfig.
-     * @param queue  Instance of the ChatQueue.
-     * @param plugin Instance of the plugin.
-     * @see PluginModule#provideFactory(MenuConfig, MainConfig, ChatQueue, MCMMOCredits)
+     * @param menuConfig   Instance of the MenuConfig.
+     * @param config       Instance of the MainConfig.
+     * @param clickFactory Instance of the ClickFactory.
      */
     @Inject
-    public MenuFactory(final MenuConfig menus, final MainConfig config, final ChatQueue queue, final MCMMOCredits plugin) {
-        this.menus = menus;
+    public MenuFactory(final MenuConfig menuConfig, final MainConfig config, final ClickFactory clickFactory) {
+        this.menuConfig = menuConfig;
         this.config = config;
-        this.queue = queue;
-        this.plugin = plugin;
+        this.clickFactory = clickFactory;
     }
 
     /**
@@ -80,35 +65,32 @@ public final class MenuFactory {
      * @see Menu
      */
     public ChestInterface buildMenu(final User user, final String path) {
-        Menu menu = this.menus.getMenu(path.toLowerCase());
+        Menu menu = this.menuConfig.getMenu(path.toLowerCase());
         if (path.contains("config")) {
             this.addConfigItems(menu);
         }
         if (path.contains("main")) {
-            menu.checkPermission(user, "mcmmocredits.menu.config", ItemType.CONFIG_MENU);
-            menu.checkPermission(user, "mcmmocredits.menu.redeem", ItemType.REDEEM_MENU);
+            this.addMainMenuItem(menu, user, "config");
+            this.addMainMenuItem(menu, user, "redeem");
         }
         if (menu.properties().fill()) {
             this.applyFill(menu, path);
         }
-        List<TransformContext<ChestPane, PlayerViewer>> transforms = menu.items().stream().map(x -> this.getTransform(x, user.resolver()).context()).toList();
-        return menu.createInterface(user, transforms);
+        return menu.createInterface(user, this.clickFactory);
     }
 
     /**
-     * Gets a MenuTransform based on the Item's {@link ItemType}.
+     * Adds items to Main Menu if the user has permission to access the menus.
      *
-     * @param item     The item that needs a MenuTransform.
-     * @param resolver The resolver to parse the item with.
-     * @return A MenuTransform.
+     * @param menu The Menu.
+     * @param user The user viewing the menu.
+     * @param type The type of menu to check against. (config, redeem etc.)
      */
-    private MenuTransform getTransform(final Item item, final Resolver resolver) {
-        return switch (item.type()) {
-            case FILL -> this.emptyTransform(item, resolver);
-            case REDEEM -> this.redeemTransform(item, resolver);
-            case MAIN_MENU, CONFIG_MENU, REDEEM_MENU -> this.commandTransform(item, resolver);
-            case EDIT_SETTING, EDIT_MESSAGE -> this.configTransform(item, resolver);
-        };
+    private void addMainMenuItem(final Menu menu, final User user, final String type) {
+        if (user.player().hasPermission("mcmmocredits.menu." + type)) {
+            Item item = this.menuConfig.getItem("main", "items", type);
+            menu.items().add(item);
+        }
     }
 
     /**
@@ -121,7 +103,7 @@ public final class MenuFactory {
         Set<Integer> allSlots = IntStream.range(0, menu.properties().slots()).boxed().collect(Collectors.toSet());
         Set<Integer> itemSlots = menu.items().stream().map(Item::slot).collect(Collectors.toSet());
         allSlots.removeAll(itemSlots);
-        Item fill = this.menus.getItem(path, "items", "fill");
+        Item fill = this.menuConfig.getItem(path, "items", "fill");
         allSlots.forEach(x -> menu.items().add(fill.toBuilder().slot(x).build()));
     }
 
@@ -133,75 +115,15 @@ public final class MenuFactory {
     private void addConfigItems(final Menu menu) {
         List<String> keys = this.config.filterKeys("mysql", "database");
         menu.items().removeIf(x -> x.slot() >= 0 && x.slot() <= keys.size());
-        for (int i = 0; i < keys.size(); i++) {
-            String string = keys.get(i);
-            ItemType type = string.contains(".") ? ItemType.EDIT_SETTING : ItemType.EDIT_MESSAGE;
-            Item item = menu.findFirstOfType(type);
-            menu.items().add(item.toBuilder().name(string).slot(i).build());
+        int x = 0;
+        for (String key : keys) {
+            String type = key.contains("settings") ? "settings" : "messages";
+            menu.items().add(this.prepareConfigItem(type, key, x));
+            x++;
         }
     }
 
-    /**
-     * Builds the Configuration item transform.
-     *
-     * @param item     The current item.
-     * @param resolver The resolver to parse the item with.
-     * @return The built MenuTransform.
-     */
-    private MenuTransform configTransform(final Item item, final Resolver resolver) {
-        return MenuTransform.builder()
-                .item(item)
-                .resolver(resolver)
-                .priority(CONFIG_PRIORITY)
-                .configClick(this.config, this.queue, (Object[]) item.name().split("\\."))
-                .build();
-    }
-
-    /**
-     * Builds the Fill item transformation.
-     *
-     * @param item     The current item.
-     * @param resolver The resolver to parse the item with.
-     * @return The built MenuTransform.
-     */
-    private MenuTransform emptyTransform(final Item item, final Resolver resolver) {
-        return MenuTransform.builder()
-                .item(item)
-                .resolver(resolver)
-                .priority(EMPTY_PRIORITY)
-                .build();
-    }
-
-    /**
-     * Builds the Redemption item transformation.
-     *
-     * @param item     The current item.
-     * @param resolver The resolver to parse the item with.
-     * @return The built MenuTransform.
-     */
-    private MenuTransform redeemTransform(final Item item, final Resolver resolver) {
-        return MenuTransform.builder()
-                .item(item)
-                .resolver(resolver)
-                .priority(REDEEM_PRIORITY)
-                .redeemClick(this.queue, this.config.string("redeem-prompt"), this.plugin)
-                .build();
-    }
-
-    /**
-     * Builds the Command item transformation.
-     *
-     * @param item     The current item.
-     * @param resolver The resolver to parse the item with.
-     * @return The built MenuTransform.
-     */
-    private MenuTransform commandTransform(final Item item, final Resolver resolver) {
-        String command = "credits menu " + item.type().toString().split("_")[0].toLowerCase();
-        return MenuTransform.builder()
-                .item(item)
-                .resolver(resolver)
-                .priority(COMMAND_PRIORITY)
-                .commandClick(command, this.plugin)
-                .build();
+    private Item prepareConfigItem(final String type, final String name, final int slot) {
+        return this.menuConfig.getItem("config", "items", type).toBuilder().name(name).slot(slot).build();
     }
 }

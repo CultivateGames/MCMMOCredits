@@ -25,8 +25,8 @@ package games.cultivate.mcmmocredits.serializers;
 
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.MenuConfig.MenuProperties;
+import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
-import games.cultivate.mcmmocredits.menu.ItemType;
 import games.cultivate.mcmmocredits.menu.Menu;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.configurate.ConfigurationNode;
@@ -47,13 +47,12 @@ public final class MenuSerializer implements TypeSerializer<Menu> {
     public Menu deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
         MenuProperties properties = node.node("properties").get(MenuProperties.class);
         List<Item> items = new ArrayList<>();
-        for (var entry : node.node("items").childrenMap().entrySet()) {
-            Item item = entry.getValue().get(Item.class);
-            ItemType itemType = item.type();
-            if (itemType == ItemType.FILL || itemType == ItemType.MAIN_MENU) {
-                continue;
+        for (ConfigurationNode entry : node.node("items").childrenMap().values()) {
+            Item item = entry.get(Item.class);
+            ClickTypes itemType = item.clickType();
+            if (itemType != ClickTypes.FILL && itemType != ClickTypes.COMMAND) {
+                items.add(item);
             }
-            items.add(item);
         }
         if (properties.navigation()) {
             items.add(node.node("items", "navigation").get(Item.class));

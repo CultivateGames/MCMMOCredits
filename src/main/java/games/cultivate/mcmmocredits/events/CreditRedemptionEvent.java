@@ -69,13 +69,14 @@ public final class CreditRedemptionEvent extends Event {
     /**
      * Constructs the Event in an API friendly manner, disabling command executor feedback.
      *
-     * @param player Command Executor. Must be an online player.
-     * @param skill  The skill being actioned.
-     * @param amount Amount of credits affected by transaction.
+     * @param player     Command Executor. Must be an online player.
+     * @param skill      The skill being actioned.
+     * @param amount     Amount of credits affected by transaction.
+     * @param userSilent If the event should be "silent" for the user. No feedback is sent if true.
      */
     @SuppressWarnings("unused")
-    public CreditRedemptionEvent(final Player player, final PrimarySkillType skill, final int amount, final boolean silent) {
-        this(player, player.getUniqueId(), skill, amount, silent, true);
+    public CreditRedemptionEvent(final Player player, final PrimarySkillType skill, final int amount, final boolean userSilent) {
+        this(player, player.getUniqueId(), skill, amount, userSilent, true);
     }
 
     @SuppressWarnings("unused")

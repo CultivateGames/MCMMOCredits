@@ -25,17 +25,15 @@ package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.config.MainConfig.DatabaseProperties;
 import games.cultivate.mcmmocredits.config.MainConfig.DatabaseType;
+import games.cultivate.mcmmocredits.inject.PluginPath;
+import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
-import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.serializers.ClickTypeSerializer;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
-import games.cultivate.mcmmocredits.text.Text;
-import games.cultivate.mcmmocredits.util.ChatQueue;
-import games.cultivate.mcmmocredits.util.PluginPath;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
@@ -69,7 +67,7 @@ public class Config {
     @PluginPath
     private transient Path dir;
     private static final String HEADER = """
-            MCMMO Credits v0.3.0 Configuration
+            MCMMO Credits v0.3.4-SNAPSHOT Configuration
             Repository: https://github.com/CultivateGames/MCMMOCredits
             Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
             """;
@@ -96,6 +94,7 @@ public class Config {
                 .defaultOptions(opts -> opts.header(HEADER).serializers(build -> {
                     build.register(Item.class, ItemSerializer.INSTANCE);
                     build.register(Menu.class, MenuSerializer.INSTANCE);
+                    build.register(ClickTypes.class, ClickTypeSerializer.INSTANCE);
                 })).path(this.dir.resolve(this.fileName))
                 .headerMode(HeaderMode.PRESET)
                 .indent(2)
@@ -167,7 +166,7 @@ public class Config {
      * @param <T>   Type of the value.
      * @return If the operation was successful.
      */
-    private <T> boolean modify(@NotNull final T value, final Object... path) {
+    public <T> boolean modify(@NotNull final T value, final Object... path) {
         try {
             this.root.node(path).set(value);
             this.save();
@@ -280,30 +279,12 @@ public class Config {
      * @param path The node path.
      * @return String representing the node path.
      */
-    private String translateNode(final Object... path) {
+    public String translateNode(final Object... path) {
         StringBuilder sb = new StringBuilder();
         for (Object obj : path) {
             sb.append(obj).append(".");
         }
         sb.deleteCharAt(sb.lastIndexOf("."));
         return sb.toString();
-    }
-
-    /**
-     * Modifies a configuration option using in-game chat output.
-     *
-     * @param queue    Instance of ChatQueue. Used to transport chat.
-     * @param player   The user who instantiated the modification.
-     * @param resolver Resolver used for chat messages.
-     * @param path     Node path used to locate the value.
-     */
-    public void modifyInGame(final ChatQueue queue, final Player player, final Resolver resolver, final Object... path) {
-        resolver.addResolver("setting", this.translateNode(path));
-        Text.fromString(player, this.string("edit-config-prompt"), resolver).send();
-        queue.act(player.getUniqueId(), i -> {
-            boolean status = this.modify(i, path);
-            resolver.addResolver("change", i);
-            Text.fromString(player, this.string(status ? "edit-config" : "edit-config-fail"), resolver).send();
-        });
     }
 }

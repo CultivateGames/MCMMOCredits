@@ -33,9 +33,9 @@ import games.cultivate.mcmmocredits.config.MainConfig.DatabaseType;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.data.DAOProvider;
 import games.cultivate.mcmmocredits.data.UserDAO;
+import games.cultivate.mcmmocredits.menu.ClickFactory;
 import games.cultivate.mcmmocredits.menu.MenuFactory;
 import games.cultivate.mcmmocredits.util.ChatQueue;
-import games.cultivate.mcmmocredits.util.PluginPath;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
 
@@ -49,6 +49,7 @@ public final class PluginModule extends AbstractModule {
     private final MCMMOCredits plugin;
     private UserDAO dao;
     private MenuFactory factory;
+    private ClickFactory clickFactory;
 
     /**
      * Constructs the Guice Module.
@@ -74,18 +75,25 @@ public final class PluginModule extends AbstractModule {
     /**
      * Provides the MenuFactory. Required due to passing in multiple injected objects needed to construct Menus.
      *
-     * @param menuConfig Instance of the MenuConfig.
-     * @param config     Instance of the MainConfig.
-     * @param queue      Instance of the ChatQueue.
-     * @param plugin     Instance of the plugin.
+     * @param menuConfig   Instance of the MenuConfig.
+     * @param config       Instance of the MainConfig.
+     * @param clickFactory Instance of the ClickFactory.
      * @return The MenuFactory.
      */
     @Provides
-    public MenuFactory provideFactory(final MenuConfig menuConfig, final MainConfig config, final ChatQueue queue, final MCMMOCredits plugin) {
+    public MenuFactory provideFactory(final MenuConfig menuConfig, final MainConfig config, final ClickFactory clickFactory) {
         if (this.factory == null) {
-            this.factory = new MenuFactory(menuConfig, config, queue, plugin);
+            this.factory = new MenuFactory(menuConfig, config, clickFactory);
         }
         return this.factory;
+    }
+
+    @Provides
+    public ClickFactory provideClickFactory(final MainConfig config, final ChatQueue queue, final MCMMOCredits plugin) {
+        if (this.clickFactory == null) {
+            this.clickFactory = new ClickFactory(queue, config, plugin);
+        }
+        return this.clickFactory;
     }
 
     /**

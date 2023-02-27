@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.3.3"
+version = "0.3.4-SNAPSHOT"
 description = "MCMMOCredits"
 
 plugins {
@@ -8,7 +8,7 @@ plugins {
     id("signing")
     id("xyz.jpenilla.run-paper") version "2.0.1"
     id("com.github.johnrengelman.shadow") version "7.1.2"
-    id("io.papermc.paperweight.userdev") version "1.5.0"
+    id("io.papermc.paperweight.userdev") version "1.5.1"
 }
 
 repositories {
@@ -20,8 +20,8 @@ repositories {
 
 dependencies {
     paperweight.paperDevBundle("1.19.3-R0.1-SNAPSHOT")
-    implementation("cloud.commandframework:cloud-annotations:1.8.0")
-    implementation("cloud.commandframework:cloud-paper:1.8.0")
+    implementation("cloud.commandframework:cloud-annotations:1.8.1")
+    implementation("cloud.commandframework:cloud-paper:1.8.1")
 
     implementation("org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT")
 
@@ -31,9 +31,9 @@ dependencies {
 
     implementation("com.google.inject:guice:5.1.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.jdbi:jdbi3-core:3.36.0")
-    implementation("org.jdbi:jdbi3-sqlite:3.36.0")
-    implementation("org.jdbi:jdbi3-sqlobject:3.36.0")
+    implementation("org.jdbi:jdbi3-core:3.37.1")
+    implementation("org.jdbi:jdbi3-sqlite:3.37.1")
+    implementation("org.jdbi:jdbi3-sqlobject:3.37.1")
 
     compileOnly("me.clip:placeholderapi:2.11.2") {
         exclude(group = "net.kyori")
@@ -48,12 +48,16 @@ dependencies {
 java {
     withSourcesJar()
     withJavadocJar()
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
 publishing {
     publications {
         create<MavenPublication>("MCMMOCredits") {
             from(components["java"])
+            afterEvaluate {
+                artifactId = tasks.jar.get().archiveBaseName.get()
+            }
             repositories {
                 maven {
                     name = "OSSRH"

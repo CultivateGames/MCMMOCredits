@@ -156,14 +156,4 @@ public final class MCMMOCredits extends JavaPlugin {
         this.injector.getInstance(MenuConfig.class).save();
         this.injector.getInstance(DAOProvider.class).disable();
     }
-
-    /**
-     * Executes commands using the main thread executor as a workaround to Cloud.
-     *
-     * @param player  The player who dispatches the command.
-     * @param command The command.
-     */
-    public void executeCommand(final Player player, final String command) {
-        Bukkit.getScheduler().getMainThreadExecutor(this).execute(() -> Bukkit.dispatchCommand(player, command));
-    }
 }

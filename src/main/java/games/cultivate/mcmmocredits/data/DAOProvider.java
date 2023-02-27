@@ -26,7 +26,7 @@ package games.cultivate.mcmmocredits.data;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.config.MainConfig.DatabaseProperties;
-import games.cultivate.mcmmocredits.util.PluginPath;
+import games.cultivate.mcmmocredits.inject.PluginPath;
 import games.cultivate.mcmmocredits.util.Queries;
 import games.cultivate.mcmmocredits.util.Util;
 import org.jdbi.v3.core.Jdbi;

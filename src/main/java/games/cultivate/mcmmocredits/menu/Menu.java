@@ -36,56 +36,31 @@ import org.incendo.interfaces.paper.pane.ChestPane;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 /**
  * Representation of a GUI created by the plugin.
  * <p>
  * When constructed, we only have a list of items serialized from a {@link Config}.
  * This object is passed to the {@link MenuFactory} to apply transformations to the serialized items.
- * It is then built using {@link Menu#createInterface(User, List)}
+ * It is then built using the createInterface method.
  *
  * @param properties Common menu properties.
  * @param items      List of Items obtained through serialization.
  * @see MenuSerializer
  * @see MenuFactory
- * @see MenuTransform
  */
 public record Menu(MenuProperties properties, List<Item> items) {
     /**
-     * Gets an item based on its type, or throws a {@link NoSuchElementException}.
-     *
-     * @param type The ItemType to search for.
-     * @return The first Item matching the provided type.
-     */
-    public Item findFirstOfType(final ItemType type) {
-        return this.items.stream().filter(x -> x.type() == type).findFirst().orElseThrow();
-    }
-
-    /**
-     * Checks if the provided user has the provided permission, and removes the provided item type based on the result.
-     *
-     * @param user       The User who will be viewing the menu.
-     * @param type       The ItemType for removal.
-     * @param permission The permission to check.
-     */
-    public void checkPermission(final User user, final String permission, final ItemType type) {
-        if (!user.player().hasPermission(permission)) {
-            this.items.removeIf(x -> x.type() == type);
-        }
-    }
-
-    /**
      * Transforms the Menu into a completed ChestInterface that is ready to view.
      *
-     * @param context List of {@link TransformContext} created via {@link MenuTransform} instances.
-     * @param user    User to parse the Menu's title against.
+     * @param user         User to parse the Menu's title against.
+     * @param clickFactory Instance of the ClickFactory.
      * @return The built ChestInterface.
      * @see MenuFactory
-     * @see MenuTransform
      */
-    public ChestInterface createInterface(final User user, final List<TransformContext<ChestPane, PlayerViewer>> context) {
+    public ChestInterface createInterface(final User user, final ClickFactory clickFactory) {
         Component title = Text.forOneUser(user, this.properties.title()).toComponent();
-        return new ChestInterface(this.properties.slots() / 9, title, context, List.of(), true, 10, ClickHandler.cancel());
+        List<TransformContext<ChestPane, PlayerViewer>> transforms = this.items().stream().map(x -> x.context(clickFactory, user.resolver())).toList();
+        return new ChestInterface(this.properties.slots() / 9, title, transforms, List.of(), true, 10, ClickHandler.cancel());
     }
 }

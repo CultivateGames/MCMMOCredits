@@ -24,8 +24,8 @@
 package games.cultivate.mcmmocredits.config;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
-import games.cultivate.mcmmocredits.menu.ItemType;
 import games.cultivate.mcmmocredits.menu.Menu;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Material;
@@ -42,7 +42,7 @@ import java.util.List;
 @SuppressWarnings({"FieldMayBeFinal, unused"})
 public class MenuConfig extends Config {
     private static final Item FILLER_ITEM = Item.of(Material.BLACK_STAINED_GLASS_PANE);
-    private static final Item NAVIGATION_ITEM = commandItem(Material.COMPASS, "<red>Previous Menu", "<gray>Left Click to go back!", ItemType.MAIN_MENU, 40);
+    private static final Item NAVIGATION_ITEM = commandItem(Material.COMPASS, "<red>Previous Menu", "<gray>Left Click to go back!", "credits menu main", 40);
     private ConfigMenu config = new ConfigMenu();
     private MainMenu main = new MainMenu();
     private RedeemMenu redeem = new RedeemMenu();
@@ -54,13 +54,14 @@ public class MenuConfig extends Config {
         super(MenuConfig.class, "menus.yml");
     }
 
-    private static Item commandItem(final Material material, final String name, final String lore, final ItemType type, final int slot) {
+    private static Item commandItem(final Material material, final String name, final String lore, final String command, final int slot) {
         return Item.builder()
                 .item(new ItemStack(material, 1))
                 .name(name)
                 .lore(List.of(lore))
                 .slot(slot)
-                .type(type)
+                .type(ClickTypes.COMMAND)
+                .data(command)
                 .build();
     }
 
@@ -74,8 +75,8 @@ public class MenuConfig extends Config {
 
         @ConfigSerializable
         static class Items {
-            private Item config = commandItem(Material.DIAMOND, "<#FF253C>Edit Config", "<gray>Left Click to edit config!", ItemType.CONFIG_MENU, 11);
-            private Item redemption = commandItem(Material.EMERALD, "<green>Redeem MCMMO Credits!", "<gray>Left Click to redeem Credits!", ItemType.REDEEM_MENU, 15);
+            private Item config = commandItem(Material.DIAMOND, "<#FF253C>Edit Config", "<gray>Left Click to edit config!", "credits menu config", 11);
+            private Item redeem = commandItem(Material.EMERALD, "<green>Redeem MCMMO Credits!", "<gray>Left Click to redeem Credits!", "credits menu redeem", 15);
             private Item fill = FILLER_ITEM;
             private Item navigation = NAVIGATION_ITEM;
         }
@@ -91,12 +92,12 @@ public class MenuConfig extends Config {
 
         @ConfigSerializable
         static class Items {
-            private Item messages = this.configItem(Material.WRITABLE_BOOK, ItemType.EDIT_MESSAGE);
-            private Item settings = this.configItem(Material.REDSTONE, ItemType.EDIT_SETTING);
+            private Item messages = this.configItem(Material.WRITABLE_BOOK, ClickTypes.EDIT_MESSAGE);
+            private Item settings = this.configItem(Material.REDSTONE, ClickTypes.EDIT_SETTING);
             private Item fill = FILLER_ITEM;
             private Item navigation = NAVIGATION_ITEM.toBuilder().slot(49).build();
 
-            private Item configItem(final Material material, final ItemType type) {
+            private Item configItem(final Material material, final ClickTypes type) {
                 List<String> lore = List.of("<gray>Click here to edit this config option!");
                 return Item.builder().item(new ItemStack(material, 1)).slot(-1).type(type).lore(lore).build();
             }
@@ -133,7 +134,7 @@ public class MenuConfig extends Config {
                 ItemStack item = new ItemStack(material, 1);
                 String name = "<yellow>" + WordUtils.capitalizeFully(skill.name());
                 List<String> lore = List.of("<yellow><sender>, click here to redeem!");
-                return Item.builder().item(item).name(name).lore(lore).type(ItemType.REDEEM).slot(slot).build();
+                return Item.builder().item(item).name(name).lore(lore).type(ClickTypes.REDEEM).slot(slot).build();
             }
         }
     }
