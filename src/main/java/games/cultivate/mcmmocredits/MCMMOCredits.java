@@ -63,15 +63,17 @@ public final class MCMMOCredits extends JavaPlugin {
     private Injector injector;
     private MainConfig config;
     private Logger pluginLogger;
+    private static MCMMOCreditsAPI creditsAPI;
 
     @Override
     public void onEnable() {
         long start = System.nanoTime();
-        this.injector = Guice.createInjector(new PluginModule(this));
+        injector = Guice.createInjector(new PluginModule(this));
+        creditsAPI = this.injector.getInstance(MCMMOCreditsAPI.class);
         this.config = this.injector.getInstance(MainConfig.class);
         this.pluginLogger = this.injector.getInstance(Logger.class);
-        this.loadConfiguration();
         this.checkForDependencies();
+        this.loadConfiguration();
         this.loadCommands();
         this.registerListeners();
         long end = System.nanoTime();
@@ -157,13 +159,8 @@ public final class MCMMOCredits extends JavaPlugin {
         this.injector.getInstance(DAOProvider.class).disable();
     }
 
-    /**
-     * Executes commands using the main thread executor as a workaround to Cloud.
-     *
-     * @param player  The player who dispatches the command.
-     * @param command The command.
-     */
-    public void executeCommand(final Player player, final String command) {
-        Bukkit.getScheduler().getMainThreadExecutor(this).execute(() -> Bukkit.dispatchCommand(player, command));
+    @SuppressWarnings("unused")
+    public static MCMMOCreditsAPI getAPI() {
+        return creditsAPI;
     }
 }

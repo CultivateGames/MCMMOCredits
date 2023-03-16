@@ -24,7 +24,6 @@
 package games.cultivate.mcmmocredits.commands;
 
 import cloud.commandframework.annotations.Argument;
-import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.Flag;
@@ -112,7 +111,6 @@ public final class Credits {
      * @param operation Operation that is performed on the balance.
      * @param amount    Amount of credits affected by transaction.
      */
-    @CommandDescription("Modify your own MCMMO Credit balance.")
     @CommandMethod("<operation> <amount>")
     @CommandPermission("mcmmocredits.modify.self")
     public void modify(final User user, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount) {
@@ -129,7 +127,6 @@ public final class Credits {
      * @param username  Username of the {@link User} being actioned.
      * @param silent    If command should be "silent". User will not get feedback upon completion if true.
      */
-    @CommandDescription("Modify MCMMO Credits of a user")
     @CommandMethod("<operation> <amount> <username>")
     @CommandPermission("mcmmocredits.modify.other")
     public void modifyOther(final CommandExecutor executor, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {

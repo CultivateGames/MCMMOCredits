@@ -24,13 +24,16 @@
 package games.cultivate.mcmmocredits.menu;
 
 import games.cultivate.mcmmocredits.placeholders.Resolver;
-import games.cultivate.mcmmocredits.text.Text;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+import org.incendo.interfaces.core.click.ClickContext;
+import org.incendo.interfaces.core.click.ClickHandler;
+import org.incendo.interfaces.core.transform.TransformContext;
 import org.incendo.interfaces.core.util.Vector2;
-import org.incendo.interfaces.paper.utils.PaperUtils;
+import org.incendo.interfaces.paper.PlayerViewer;
+import org.incendo.interfaces.paper.element.ItemStackElement;
+import org.incendo.interfaces.paper.pane.ChestPane;
 
 import java.util.List;
 
@@ -38,30 +41,27 @@ import java.util.List;
  * An {@link ItemStack} used within a {@link Menu}.
  */
 public final class Item {
-    private final ItemType type;
+    private final ClickTypes type;
     private final ItemStack stack;
-    private final String name;
-    private final List<String> lore;
-    private final Vector2 vector;
+    private final ItemProperties properties;
+    private final int slot;
     private final String data;
 
     /**
      * Constructs the object.
      *
-     * @param stack  The representative ItemStack. Updated with refreshing name/lore.
-     * @param name   Item name string. Refreshes to parse placeholders.
-     * @param lore   Item lore as strings. Refreshes to parse placeholders.
-     * @param type   Item Type that determines what type of {@link MenuTransform} is applied.
-     * @param vector Location data. Converts to slot.
-     * @param data   Optional String data. Can carry information needed in other parts of Menu construction.
+     * @param stack      The representative ItemStack. Updated with refreshing name/lore.
+     * @param properties Updatable properties of the item.
+     * @param type       Item ClickTypes that determines what type of click is applied.
+     * @param slot       Location of item in the inventory.
+     * @param data       String data used to construct the click. For example, could represent a command or skill type.
      */
-    private Item(final ItemStack stack, final String name, final List<String> lore, final ItemType type, final Vector2 vector, final String data) {
+    private Item(final ItemStack stack, final ItemProperties properties, final ClickTypes type, final String data, final int slot) {
         this.stack = stack;
-        this.name = name;
-        this.lore = lore;
+        this.properties = properties;
         this.type = type;
-        this.vector = vector;
         this.data = data;
+        this.slot = slot;
     }
 
     /**
@@ -89,7 +89,7 @@ public final class Item {
      * @return New instance of the Item Builder with preserved properties.
      */
     public Item.Builder toBuilder() {
-        return Item.builder().item(this.stack).name(this.name).lore(this.lore).type(this.type).vector(this.vector);
+        return Item.builder().item(this.stack).properties(this.properties).type(this.type).slot(this.slot).data(this.data);
     }
 
     /**
@@ -97,7 +97,7 @@ public final class Item {
      *
      * @return The ItemType.
      */
-    public ItemType type() {
+    public ClickTypes clickType() {
         return this.type;
     }
 
@@ -116,7 +116,7 @@ public final class Item {
      * @return The Item's name.
      */
     public String name() {
-        return this.name;
+        return this.properties.name();
     }
 
     /**
@@ -125,7 +125,16 @@ public final class Item {
      * @return The Item's lore.
      */
     public List<String> lore() {
-        return this.lore;
+        return this.properties.lore();
+    }
+
+    /**
+     * Get the ItemProperties.
+     *
+     * @return The ItemProperties.
+     */
+    public ItemProperties properties() {
+        return this.properties;
     }
 
     /**
@@ -134,7 +143,7 @@ public final class Item {
      * @return The Item's slot
      */
     public int slot() {
-        return PaperUtils.gridToSlot(this.vector);
+        return this.slot;
     }
 
     /**
@@ -146,66 +155,33 @@ public final class Item {
         return this.data;
     }
 
-    /**
-     * Gets the horizontal location of the {@link Vector2}.
-     *
-     * @return The X location within a {@link Menu} grid.
-     */
-    public int getX() {
-        return this.vector.x();
-    }
-
-    /**
-     * Gets the vertical location of the {@link Vector2}.
-     *
-     * @return The Y location within a {@link Menu} grid.
-     */
-    public int getY() {
-        return this.vector.y();
-    }
-
-    /**
-     * Updates the item's name and lore with the provided Player and Resolver.
-     *
-     * @param player   The user to update the item against.
-     * @param resolver The resolver to update the item against.
-     * @return The updated Item as a Bukkit ItemStack.
-     */
-    public ItemStack update(final Player player, final Resolver resolver) {
-        Component display = Text.fromString(player, this.name, resolver).toComponent();
-        List<Component> displayLore = this.lore.stream().map(x -> Text.fromString(player, x, resolver).toComponent()).toList();
-        ItemStack stackCopy = new ItemStack(this.stack);
-        stackCopy.editMeta(meta -> {
-            if (!this.name.isEmpty()) {
-                meta.displayName(display);
-            }
-            if (this.lore.stream().noneMatch(String::isEmpty)) {
-                meta.lore(displayLore);
-            }
-        });
-        return stackCopy;
+    public TransformContext<ChestPane, PlayerViewer> context(final ClickFactory clickFactory, final Resolver resolver) {
+        String info = this.type.name().startsWith("EDIT_") ? this.name() : this.data;
+        ClickHandler<ChestPane, InventoryClickEvent, PlayerViewer, ClickContext<ChestPane, InventoryClickEvent, PlayerViewer>> handler = clickFactory.getClick(this.type, info, resolver);
+        return TransformContext.of(0, ((pane, view) -> {
+            ItemStack menuItem = this.properties.apply(this.stack, view.viewer().player(), resolver);
+            return pane.element(ItemStackElement.of(menuItem, handler), this.slot % 9, this.slot / 9);
+        }));
     }
 
     /**
      * Builder class for {@link Item}.
      */
     public static final class Builder {
-        private ItemType type;
+        private ClickTypes type;
         private ItemStack item;
-        private String name;
-        private List<String> lore;
-        private Vector2 vector;
+        private ItemProperties properties;
+        private int slot;
         private String data;
 
         /**
          * Constructs the Builder with sane defaults.
          */
         private Builder() {
-            this.type = ItemType.FILL;
+            this.type = ClickTypes.FILL;
             this.item = new ItemStack(Material.STONE, 1);
-            this.name = "";
-            this.lore = List.of("");
-            this.vector = Vector2.at(0, 0);
+            this.properties = ItemProperties.empty();
+            this.slot = 0;
             this.data = "";
         }
 
@@ -215,7 +191,7 @@ public final class Item {
          * @param type The ItemType.
          * @return The updated Builder.
          */
-        public Builder type(final ItemType type) {
+        public Builder type(final ClickTypes type) {
             this.type = type;
             return this;
         }
@@ -238,7 +214,7 @@ public final class Item {
          * @return The updated Builder.
          */
         public Builder name(final String name) {
-            this.name = name;
+            this.properties = new ItemProperties(name, this.properties.lore());
             return this;
         }
 
@@ -249,7 +225,12 @@ public final class Item {
          * @return The updated Builder.
          */
         public Builder lore(final List<String> lore) {
-            this.lore = lore;
+            this.properties = new ItemProperties(this.properties.name(), lore);
+            return this;
+        }
+
+        public Builder properties(final ItemProperties properties) {
+            this.properties = properties;
             return this;
         }
 
@@ -260,18 +241,7 @@ public final class Item {
          * @return The updated Builder.
          */
         public Builder slot(final int slot) {
-            this.vector = PaperUtils.slotToGrid(slot);
-            return this;
-        }
-
-        /**
-         * Sets the Item's location data.
-         *
-         * @param vector The location data.
-         * @return The updated Builder.
-         */
-        public Builder vector(final Vector2 vector) {
-            this.vector = vector;
+            this.slot = slot;
             return this;
         }
 
@@ -292,7 +262,7 @@ public final class Item {
          * @return A new Item instance.
          */
         public Item build() {
-            return new Item(this.item, this.name, this.lore, this.type, this.vector, this.data);
+            return new Item(this.item, this.properties, this.type, this.data, this.slot);
         }
     }
 }

@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.util;
+package games.cultivate.mcmmocredits.inject;
 
 import javax.inject.Qualifier;
 import java.lang.annotation.Retention;

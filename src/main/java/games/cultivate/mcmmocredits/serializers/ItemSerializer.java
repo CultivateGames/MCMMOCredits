@@ -26,8 +26,8 @@ package games.cultivate.mcmmocredits.serializers;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import games.cultivate.mcmmocredits.config.Config;
+import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
-import games.cultivate.mcmmocredits.menu.ItemType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -75,13 +75,15 @@ public final class ItemSerializer implements TypeSerializer<Item> {
             skullMeta.setPlayerProfile(profile);
             item.setItemMeta(skullMeta);
         }
-        builder.item(item);
-        String data = (String) node.key();
-        ItemType itemType = ItemType.value(data);
-        if (itemType != ItemType.REDEEM) {
-           return builder.item(item).type(itemType).build();
-        }
-        return builder.item(item).type(itemType).data(data.toUpperCase()).build();
+        ClickTypes clickType = node.get(ClickTypes.class, ClickTypes.FILL);
+        String data = switch (clickType) {
+            case COMMAND -> node.node("command").getString("");
+            case EDIT_MESSAGE -> "messages";
+            case EDIT_SETTING -> "settings";
+            case REDEEM -> ((String) node.key()).toUpperCase();
+            case FILL -> "fill";
+        };
+        return builder.item(item).type(clickType).data(data).build();
     }
 
     @Override
@@ -104,5 +106,9 @@ public final class ItemSerializer implements TypeSerializer<Item> {
         }
         node.node("texture").set(texture);
         node.node("glow").set(!stack.getEnchantments().isEmpty());
+        ClickTypes clickType = item.clickType();
+        if (clickType == ClickTypes.COMMAND) {
+            node.node("command").set(item.data());
+        }
     }
 }

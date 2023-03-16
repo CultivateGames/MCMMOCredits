@@ -69,13 +69,14 @@ public final class CreditTransactionEvent extends Event {
     /**
      * Constructs the Event in an API friendly manner, disabling command executor feedback.
      *
-     * @param player    Command Executor. Must be an online player.
-     * @param operation The type of transaction occurring.
-     * @param amount    Amount of credits affected by transaction.
+     * @param player     Command Executor. Must be an online player.
+     * @param operation  The type of transaction occurring.
+     * @param amount     Amount of credits affected by transaction.
+     * @param userSilent If the event should be "silent" for the user. No feedback is sent if true.
      */
     @SuppressWarnings("unused")
-    public CreditTransactionEvent(final Player player, final CreditOperation operation, final int amount, final boolean silent) {
-        this(player, player.getUniqueId(), operation, amount, silent, true);
+    public CreditTransactionEvent(final Player player, final CreditOperation operation, final int amount, final boolean userSilent) {
+        this(player, player.getUniqueId(), operation, amount, userSilent, true);
     }
 
     @SuppressWarnings("unused")
@@ -132,6 +133,7 @@ public final class CreditTransactionEvent extends Event {
     public boolean silentForUser() {
         return this.userSilent;
     }
+
     /**
      * Returns if the transaction is silent for the sender.
      *
