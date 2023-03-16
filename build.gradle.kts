@@ -19,9 +19,9 @@ repositories {
 }
 
 dependencies {
-    paperweight.paperDevBundle("1.19.3-R0.1-SNAPSHOT")
-    implementation("cloud.commandframework:cloud-annotations:1.8.1")
-    implementation("cloud.commandframework:cloud-paper:1.8.1")
+    paperweight.paperDevBundle("1.19.4-R0.1-SNAPSHOT")
+    implementation("cloud.commandframework:cloud-annotations:1.8.2")
+    implementation("cloud.commandframework:cloud-paper:1.8.2")
 
     implementation("org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT")
 
@@ -34,6 +34,11 @@ dependencies {
     implementation("org.jdbi:jdbi3-core:3.37.1")
     implementation("org.jdbi:jdbi3-sqlite:3.37.1")
     implementation("org.jdbi:jdbi3-sqlobject:3.37.1")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+    testImplementation("org.jdbi:jdbi3-testing:3.37.1")
+    testImplementation("com.h2database:h2:2.1.214")
+
 
     compileOnly("me.clip:placeholderapi:2.11.2") {
         exclude(group = "net.kyori")
@@ -112,6 +117,12 @@ tasks {
         dependsOn(reobfJar)
     }
 
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
+    }
     compileJava {
         options.encoding = Charsets.UTF_8.name()
         options.compilerArgs.add("-parameters")
