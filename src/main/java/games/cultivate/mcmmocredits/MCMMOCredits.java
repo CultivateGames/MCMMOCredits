@@ -69,9 +69,9 @@ public final class MCMMOCredits extends JavaPlugin {
     public void onEnable() {
         long start = System.nanoTime();
         injector = Guice.createInjector(new PluginModule(this));
-        creditsAPI = injector.getInstance(MCMMOCreditsAPI.class);
-        this.config = injector.getInstance(MainConfig.class);
-        this.pluginLogger = injector.getInstance(Logger.class);
+        creditsAPI = this.injector.getInstance(MCMMOCreditsAPI.class);
+        this.config = this.injector.getInstance(MainConfig.class);
+        this.pluginLogger = this.injector.getInstance(Logger.class);
         this.checkForDependencies();
         this.loadConfiguration();
         this.loadCommands();
@@ -86,8 +86,8 @@ public final class MCMMOCredits extends JavaPlugin {
      * Loads injected instances of {@link Config}
      */
     public void loadConfiguration() {
-        injector.getInstance(MainConfig.class).load();
-        injector.getInstance(MenuConfig.class).load();
+        this.injector.getInstance(MainConfig.class).load();
+        this.injector.getInstance(MenuConfig.class).load();
     }
 
     /**
@@ -108,7 +108,7 @@ public final class MCMMOCredits extends JavaPlugin {
         }
         this.pluginLogger.info("mcMMO has been found! Continuing to load...");
         if (pluginManager.getPlugin("PlaceholderAPI") != null) {
-            injector.getInstance(CreditsExpansion.class).register();
+            this.injector.getInstance(CreditsExpansion.class).register();
         }
     }
 
@@ -119,7 +119,7 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     private void loadCommands() {
         PaperCommandManager<CommandExecutor> manager;
-        Function<CommandSender, CommandExecutor> forwardsMapper = x -> injector.getInstance(UserDAO.class).fromSender(x);
+        Function<CommandSender, CommandExecutor> forwardsMapper = x -> this.injector.getInstance(UserDAO.class).fromSender(x);
         try {
             manager = new PaperCommandManager<>(this, CommandExecutionCoordinator.simpleCoordinator(), forwardsMapper, CommandExecutor::sender);
         } catch (Exception e) {
@@ -140,7 +140,7 @@ public final class MCMMOCredits extends JavaPlugin {
         });
         parser.registerSuggestionProvider("menus", (c, i) -> List.of("main", "config", "redeem"));
         AnnotationParser<CommandExecutor> annotationParser = new AnnotationParser<>(manager, CommandExecutor.class, p -> SimpleCommandMeta.empty());
-        annotationParser.parse(injector.getInstance(Credits.class));
+        annotationParser.parse(this.injector.getInstance(Credits.class));
         new CloudExceptionHandler(this.config, manager).apply();
     }
 
@@ -149,16 +149,17 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     private void registerListeners() {
         Bukkit.getPluginManager().registerEvents(new PaperInterfaceListeners(this, 10L), this);
-        Bukkit.getPluginManager().registerEvents(injector.getInstance(Listeners.class), this);
+        Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
     }
 
     @Override
     public void onDisable() {
-        injector.getInstance(MainConfig.class).save();
-        injector.getInstance(MenuConfig.class).save();
-        injector.getInstance(DAOProvider.class).disable();
+        this.injector.getInstance(MainConfig.class).save();
+        this.injector.getInstance(MenuConfig.class).save();
+        this.injector.getInstance(DAOProvider.class).disable();
     }
 
+    @SuppressWarnings("unused")
     public static MCMMOCreditsAPI getAPI() {
         return creditsAPI;
     }
