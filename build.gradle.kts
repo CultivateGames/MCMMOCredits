@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.3.4-SNAPSHOT"
+version = "0.3.4"
 description = "MCMMOCredits"
 
 plugins {
@@ -136,7 +136,7 @@ tasks {
         filteringCharset = Charsets.UTF_8.name()
     }
     runServer {
-        minecraftVersion("1.19.3")
+        minecraftVersion("1.19.4")
     }
     //TODO: investigate transitive deps
     shadowJar {

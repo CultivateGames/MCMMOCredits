@@ -67,7 +67,7 @@ public class Config {
     @PluginPath
     private transient Path dir;
     private static final String HEADER = """
-            MCMMO Credits v0.3.4-SNAPSHOT Configuration
+            MCMMO Credits v0.3.4 Configuration
             Repository: https://github.com/CultivateGames/MCMMOCredits
             Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
             """;
