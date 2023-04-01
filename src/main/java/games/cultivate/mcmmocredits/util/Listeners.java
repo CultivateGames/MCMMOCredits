@@ -44,9 +44,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.incendo.interfaces.paper.view.ChestView;
 
 import javax.inject.Inject;
 import java.util.Optional;
@@ -138,7 +141,7 @@ public class Listeners implements Listener {
      *
      * @param e The event.
      */
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void performTransaction(final CreditTransactionEvent e) {
         UUID uuid = e.uuid();
         int amount = e.amount();
@@ -204,6 +207,36 @@ public class Listeners implements Listener {
         }
         if (!e.silentForUser() && player != null) {
             Text.fromString(player, this.config.string("redeem-sudo-user"), resolver).send();
+        }
+    }
+
+    /**
+     * Cancels shift-clicking inside of Interfaces due to a bug in the library.
+     * Can be removed if <a href="https://github.com/Incendo/interfaces/issues/69">this</a> is patched.
+     * <p></p>
+     * Note: The current solution will likely affect any Inventory that is a {@link ChestView}
+     *
+     * @param e The event.
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onInventoryClick(final InventoryClickEvent e) {
+        if (e.getInventory().getHolder() instanceof ChestView && e.isShiftClick()) {
+            e.setCancelled(true);
+        }
+    }
+
+    /**
+     * Cancels dragging inside of Interfaces due to a bug in the library.
+     * Can be removed if <a href="https://github.com/Incendo/interfaces/issues/69">this</a> is patched.
+     * <p></p>
+     * Note: The current solution will likely affect any Inventory that is a {@link ChestView}
+     *
+     * @param e The event.
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onInventoryDrag(final InventoryDragEvent e) {
+        if (e.getInventory().getHolder() instanceof ChestView) {
+            e.setCancelled(true);
         }
     }
 
