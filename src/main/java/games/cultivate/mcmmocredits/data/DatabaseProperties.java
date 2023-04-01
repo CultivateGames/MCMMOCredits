@@ -21,18 +21,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.util;
+package games.cultivate.mcmmocredits.data;
 
-import org.jdbi.v3.core.locator.ClasspathSqlLocator;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
- * Utility class which loads locally saved SQL queries.
+ * Properties used in creation of the Database.
+ *
+ * @param host     Host of the Database. Typically, an IP address.
+ * @param name     Name of the Database.
+ * @param user     Name of the Database user.
+ * @param password Password for the Database user.
+ * @param port     Port where the Database instance is located.
+ * @param ssl      If useSSL is used in the connection URL.
+ * @see DAOProvider
  */
-//https://github.com/broccolai/tickets/blob/rewrite/everything/core/src/main/java/love/broccolai/tickets/core/utilities/QueriesLocator.java
-public final class Queries {
-    private final ClasspathSqlLocator locator = ClasspathSqlLocator.create();
-
-    public String query(final String name) {
-        return this.locator.locate(this.getClass(), name);
-    }
+@ConfigSerializable
+public record DatabaseProperties(String host, String name, String user, String password, int port, boolean ssl) {
 }

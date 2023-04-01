@@ -25,9 +25,7 @@ package games.cultivate.mcmmocredits.data;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import games.cultivate.mcmmocredits.config.MainConfig.DatabaseProperties;
 import games.cultivate.mcmmocredits.inject.PluginPath;
-import games.cultivate.mcmmocredits.util.Queries;
 import games.cultivate.mcmmocredits.util.Util;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlite3.SQLitePlugin;
@@ -47,56 +45,74 @@ public final class DAOProvider {
     private Path dir;
 
     /**
-     * Provides instance of UserDAO if Database type is MySQL.
+     * Provides instance of the UserDAO.
      *
-     * @param properties Properties used to build the MySQL connection.
-     * @return Instance of UserDAO.
+     * @param type       DatabaseType of the database.
+     * @param properties DatabaseProperties of the database. Used if type is MySQL.
+     * @return Instance of the UserDAO.
      */
-    public UserDAO provideSQL(final DatabaseProperties properties) {
-        int databasePort = properties.port();
-        String databaseHost = properties.host();
-        String databaseName = properties.name();
-        HikariConfig hconfig = new HikariConfig();
-        hconfig.setPoolName("MCMMOCredits MySQL");
-        hconfig.setJdbcUrl("jdbc:mysql://" + databaseHost + ":" + databasePort + "/" + databaseName);
-        hconfig.setUsername(properties.user());
-        hconfig.setPassword(properties.password());
-        hconfig.addDataSourceProperty("useSSL", properties.ssl());
-        hconfig.addDataSourceProperty("maintainTimeStats", "false");
-        hconfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-        hconfig.addDataSourceProperty("rewriteBatchedStatements", "true");
-        hconfig.addDataSourceProperty("cachePrepStmts", "true");
-        hconfig.addDataSourceProperty("prepStmtCacheSize", "250");
-        hconfig.addDataSourceProperty("useServerPrepStmts", "true");
-        hconfig.addDataSourceProperty("useLocalSessionState", "true");
-        hconfig.addDataSourceProperty("cacheResultSetMetadata", "true");
-        hconfig.addDataSourceProperty("cacheServerConfiguration", "true");
-        this.hikari = new HikariDataSource(hconfig);
-        Jdbi jdbi = Jdbi.create(this.hikari).installPlugin(new SqlObjectPlugin());
-        jdbi.useHandle(x -> x.execute(this.queries.query("CREATE-TABLE-MYSQL")));
+    public UserDAO provide(final DatabaseType type, final DatabaseProperties properties) {
+        HikariConfig config = createHikariConfig(type, properties);
+        Jdbi jdbi = createJdbi(config, type);
         return jdbi.onDemand(UserDAO.class);
     }
 
     /**
-     * Provides instance of UserDAO if Database type is SQLite.
+     * Creates the Hikari Config used to init the connection pool.
      *
-     * @return Instance of UserDAO.
+     * @param type       DatabaseType of the database.
+     * @param properties DatabaseProperties of the database. Used if type is MySQL.
+     * @return A HikariConfig.
      */
-    public UserDAO provideSQLite() {
-        Path path = this.dir.resolve("database.db");
-        Util.createFile(this.dir, "database.db");
+    private HikariConfig createHikariConfig(final DatabaseType type, final DatabaseProperties properties) {
         HikariConfig config = new HikariConfig();
-        config.setPoolName("MCMMOCredits SQLite");
-        config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
-        config.addDataSourceProperty("url", "jdbc:sqlite:" + path);
-        this.hikari = new HikariDataSource(config);
-        Jdbi jdbi = Jdbi.create(this.hikari).installPlugin(new SQLitePlugin()).installPlugin(new SqlObjectPlugin());
-        jdbi.useHandle(x -> x.execute(this.queries.query("CREATE-TABLE-SQLITE")));
-        return jdbi.onDemand(UserDAO.class);
+        if (type == DatabaseType.MYSQL) {
+            config.setPoolName("MCMMOCredits MySQL");
+            config.setJdbcUrl("jdbc:mysql://" + properties.host() + ":" + properties.port() + "/" + properties.name());
+            config.setUsername(properties.user());
+            config.setPassword(properties.password());
+            config.addDataSourceProperty("useSSL", properties.ssl());
+            config.addDataSourceProperty("maintainTimeStats", "false");
+            config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+            config.addDataSourceProperty("rewriteBatchedStatements", "true");
+            config.addDataSourceProperty("cachePrepStmts", "true");
+            config.addDataSourceProperty("prepStmtCacheSize", "250");
+            config.addDataSourceProperty("useServerPrepStmts", "true");
+            config.addDataSourceProperty("useLocalSessionState", "true");
+            config.addDataSourceProperty("cacheResultSetMetadata", "true");
+            config.addDataSourceProperty("cacheServerConfiguration", "true");
+        } else {
+            Path path = dir.resolve("database.db");
+            Util.createFile(dir, "database.db");
+            config.setPoolName("MCMMOCredits SQLite");
+            config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
+            config.addDataSourceProperty("url", "jdbc:sqlite:" + path);
+        }
+        return config;
     }
 
     /**
-     * Disables the DAO. If called, the DAO will no longer be functional until it is re-provided.
+     * Creates the JDBI instance used to access the {@link UserDAO}
+     *
+     * @param config HikariConfig used to init the connection pool.
+     * @param type   DatabaseType of the database.
+     * @return An instance of JDBI.
+     */
+    private Jdbi createJdbi(final HikariConfig config, final DatabaseType type) {
+        this.hikari = new HikariDataSource(config);
+        Jdbi jdbi;
+        if (type == DatabaseType.MYSQL) {
+            jdbi = Jdbi.create(this.hikari).installPlugin(new SqlObjectPlugin());
+            jdbi.useHandle(x -> x.execute(this.queries.query("CREATE-TABLE-MYSQL")));
+        } else {
+            jdbi = Jdbi.create(this.hikari).installPlugin(new SQLitePlugin()).installPlugin(new SqlObjectPlugin());
+            jdbi.useHandle(x -> x.execute(this.queries.query("CREATE-TABLE-SQLITE")));
+        }
+        return jdbi;
+    }
+
+    /**
+     * Disables the connection pool. Called when the server is shutting down.
      */
     public void disable() {
         if (this.hikari != null) {

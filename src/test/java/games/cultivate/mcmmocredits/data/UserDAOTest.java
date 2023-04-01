@@ -1,7 +1,6 @@
 package games.cultivate.mcmmocredits.data;
 
 import games.cultivate.mcmmocredits.user.User;
-import games.cultivate.mcmmocredits.util.Queries;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.reflect.ConstructorMapper;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;

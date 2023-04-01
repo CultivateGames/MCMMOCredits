@@ -1,4 +1,4 @@
-package games.cultivate.mcmmocredits.util;
+package games.cultivate.mcmmocredits.data;
 
 import org.junit.jupiter.api.Test;
 

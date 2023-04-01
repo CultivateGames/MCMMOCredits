@@ -28,10 +28,9 @@ import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.config.MainConfig.DatabaseProperties;
-import games.cultivate.mcmmocredits.config.MainConfig.DatabaseType;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.data.DAOProvider;
+import games.cultivate.mcmmocredits.data.DatabaseType;
 import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.menu.ClickFactory;
 import games.cultivate.mcmmocredits.menu.MenuFactory;
@@ -88,6 +87,14 @@ public final class PluginModule extends AbstractModule {
         return this.factory;
     }
 
+    /**
+     * Provides the ClickFactory. Required since we are passing in the configuration.
+     *
+     * @param config Instance of the MainConfig.
+     * @param queue Instance of the ChatQueue.
+     * @param plugin Instance of the plugin.
+     * @return The ClickFactory.
+     */
     @Provides
     public ClickFactory provideClickFactory(final MainConfig config, final ChatQueue queue, final MCMMOCredits plugin) {
         if (this.clickFactory == null) {
@@ -107,9 +114,7 @@ public final class PluginModule extends AbstractModule {
     public UserDAO provideDAO(final MainConfig config, final DAOProvider provider) {
         if (this.dao == null) {
             config.load();
-            DatabaseType type = config.getDatabaseType();
-            DatabaseProperties properties = config.getDatabaseProperties();
-            this.dao = type == MainConfig.DatabaseType.SQLITE ? provider.provideSQLite() : provider.provideSQL(properties);
+            this.dao = provider.provide(config.getDatabaseType(), config.getDatabaseProperties());
         }
         return this.dao;
     }

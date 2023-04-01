@@ -23,8 +23,8 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.config.MainConfig.DatabaseProperties;
-import games.cultivate.mcmmocredits.config.MainConfig.DatabaseType;
+import games.cultivate.mcmmocredits.data.DatabaseProperties;
+import games.cultivate.mcmmocredits.data.DatabaseType;
 import games.cultivate.mcmmocredits.inject.PluginPath;
 import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
@@ -216,6 +216,17 @@ public class Config {
     public String string(final Object... path) {
         return this.value(String.class, "", "prefix") + this.value(String.class, "", path);
     }
+
+    /**
+     * Gets a String from the configuration.
+     *
+     * @param path Node path where the value is found.
+     * @return The value.
+     */
+    public String rawString(final Object... path) {
+        return this.value(String.class, "", path);
+    }
+
 
     /**
      * Gets a Menu from the configuration.
