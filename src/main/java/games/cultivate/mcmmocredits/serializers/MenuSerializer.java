@@ -24,7 +24,7 @@
 package games.cultivate.mcmmocredits.serializers;
 
 import games.cultivate.mcmmocredits.config.Config;
-import games.cultivate.mcmmocredits.config.MenuConfig.MenuProperties;
+import games.cultivate.mcmmocredits.menu.MenuProperties;
 import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;

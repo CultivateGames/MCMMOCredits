@@ -24,7 +24,6 @@
 package games.cultivate.mcmmocredits.menu;
 
 import games.cultivate.mcmmocredits.config.Config;
-import games.cultivate.mcmmocredits.config.MenuConfig.MenuProperties;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.user.User;

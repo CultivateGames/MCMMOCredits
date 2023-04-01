@@ -27,10 +27,10 @@ import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
+import games.cultivate.mcmmocredits.menu.MenuProperties;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.util.List;
@@ -137,17 +137,5 @@ public class MenuConfig extends Config {
                 return Item.builder().item(item).name(name).lore(lore).type(ClickTypes.REDEEM).slot(slot).build();
             }
         }
-    }
-
-    /**
-     * Properties that are common among all Menus.
-     *
-     * @param title      Title of the menu. Does not update.
-     * @param slots      Size of the menu.
-     * @param fill       Whether the Menu's empty spaces should be filled.
-     * @param navigation If navigation item should be added to menu.
-     */
-    @ConfigSerializable
-    public record MenuProperties(@NotNull String title, int slots, boolean fill, boolean navigation) {
     }
 }
