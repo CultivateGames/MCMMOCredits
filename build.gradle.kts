@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.3.4"
+version = "0.3.5-SNAPSHOT"
 description = "MCMMOCredits"
 
 plugins {
@@ -7,8 +7,8 @@ plugins {
     id("maven-publish")
     id("signing")
     id("xyz.jpenilla.run-paper") version "2.0.1"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
-    id("io.papermc.paperweight.userdev") version "1.5.1"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("io.papermc.paperweight.userdev") version "1.5.3"
 }
 
 repositories {
@@ -20,8 +20,8 @@ repositories {
 
 dependencies {
     paperweight.paperDevBundle("1.19.4-R0.1-SNAPSHOT")
-    implementation("cloud.commandframework:cloud-annotations:1.8.2")
-    implementation("cloud.commandframework:cloud-paper:1.8.2")
+    implementation("cloud.commandframework:cloud-annotations:1.8.3")
+    implementation("cloud.commandframework:cloud-paper:1.8.3")
 
     implementation("org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT")
 
