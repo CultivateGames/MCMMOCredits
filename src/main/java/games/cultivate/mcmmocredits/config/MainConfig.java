@@ -23,7 +23,8 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.data.DAOProvider;
+import games.cultivate.mcmmocredits.data.DatabaseProperties;
+import games.cultivate.mcmmocredits.data.DatabaseType;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
@@ -58,8 +59,11 @@ public class MainConfig extends Config {
     private String editConfig = "<green>You have changed <gray><setting> <green>to <gray><change>.";
     private String editConfigFail = "<red>There was an error while changing settings, operation aborted.";
     private String editConfigPrompt = "<red>Enter the new value for <gray><setting><red>, or type 'cancel' to abort.";
+    private String invalidLeaderboard = "<#FF253C>This leaderboard page is invalid!";
     private String invalidSender = "<red>Invalid command sender! You must be of type: <gray><correct_sender>";
     private String invalidSyntax = "<red>Invalid syntax! Correct syntax: <gray><correct_syntax>";
+    private String leaderboardEntry = "<place>. <green><target>: <white><target_credits>";
+    private String leaderboardTitle = "<#FF253C>MCMMO Credits Leaderboard";
     private String loginMessage = "<hover:show_text:'<green>You have <sender_credits> MCMMO Credits!'><yellow>Hover to see your MCMMO Credit balance!";
     private String mcmmoProfileFail = "The mcMMO Profile for <target> is not loaded! Aborting operation...";
     private String mcmmoSkillCap = "<red>You cannot redeem this many MCMMO Credits into <skill>, due to the Level Cap (<cap>).";
@@ -82,15 +86,6 @@ public class MainConfig extends Config {
     }
 
     /**
-     * Types of possible Database implementations.
-     *
-     * @see DAOProvider
-     */
-    public enum DatabaseType {
-        MYSQL, SQLITE
-    }
-
-    /**
      * Settings used to control the plugin.
      */
     @ConfigSerializable
@@ -98,23 +93,9 @@ public class MainConfig extends Config {
         private boolean addUserMessage = true;
         private DatabaseType databaseType = DatabaseType.SQLITE;
         private boolean debug = false;
+        private int leaderboardPageSize = 10;
         private boolean sendLoginMessage = true;
         private boolean userTabComplete = true;
         private DatabaseProperties mysql = new DatabaseProperties("127.0.0.1", "database", "root", "passw0rd+", 3306, true);
-    }
-
-    /**
-     * Properties used in creation of the Database.
-     *
-     * @param host     Host of the Database. Typically, an IP address.
-     * @param name     Name of the Database.
-     * @param user     Name of the Database user.
-     * @param password Password for the Database user.
-     * @param port     Port where the Database instance is located.
-     * @param ssl      If useSSL is used in the connection URL.
-     * @see DAOProvider
-     */
-    @ConfigSerializable
-    public record DatabaseProperties(String host, String name, String user, String password, int port, boolean ssl) {
     }
 }

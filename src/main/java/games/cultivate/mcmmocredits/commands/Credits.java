@@ -46,6 +46,7 @@ import org.incendo.interfaces.paper.PlayerViewer;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -102,6 +103,24 @@ public final class Credits {
             return;
         }
         this.playerUnknownError(executor, username);
+    }
+
+    @CommandMethod("top <page>")
+    @CommandPermission("mcmmocredits.leaderboard")
+    public void top(final CommandExecutor executor, final @Argument @Range(min = "1") int page) {
+        int limit = this.config.node("leaderboard-page-size").getInt(10);
+        int offset = Math.max(0, (page - 1) * limit);
+        List<User> users = this.dao.getPageOfUsers(limit, offset);
+        if (users.isEmpty()) {
+            Text.forOneUser(executor, this.config.string("invalid-leaderboard")).send();
+            return;
+        }
+        Text.forOneUser(executor, this.config.rawString("leaderboard-title")).send();
+        for (int i = 1; i <= 10; i++) {
+            int rank = i + offset;
+            Resolver resolver = Resolver.builder().users(executor, users.get(i - 1)).tag("place", rank + "").build();
+            Text.fromString(executor, this.config.rawString("leaderboard-entry"), resolver).send();
+        }
     }
 
     /**

@@ -34,6 +34,7 @@ import org.jdbi.v3.sqlobject.customizer.BindMethods;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
@@ -126,6 +127,10 @@ public interface UserDAO extends SqlObject {
      */
     @SqlUpdate("UPDATE MCMMOCredits SET credits = credits - :amount, redeemed = redeemed + :amount WHERE UUID = :uuid")
     void redeemCredits(UUID uuid, int amount);
+
+    @SqlQuery("SELECT * FROM MCMMOCREDITS ORDER BY credits DESC LIMIT :limit OFFSET :offset")
+    @RegisterConstructorMapper(User.class)
+    List<User> getPageOfUsers(int limit, int offset);
 
     /**
      * Returns a {@link User} from the provided {@link CommandSender}.
