@@ -56,7 +56,7 @@ public final class CreditsExpansion extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getVersion() {
-        return "0.3.4";
+        return "0.3.5-SNAPSHOT";
     }
 
     @Override
@@ -70,10 +70,10 @@ public final class CreditsExpansion extends PlaceholderExpansion {
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             if (identifier.equalsIgnoreCase("credits")) {
-                return user.credits() + "";
+                return String.valueOf(user.credits());
             }
             if (identifier.equalsIgnoreCase("redeemed")) {
-                return user.redeemed() + "";
+                return String.valueOf(user.redeemed());
             }
             if (identifier.equalsIgnoreCase("username")) {
                 return user.username();

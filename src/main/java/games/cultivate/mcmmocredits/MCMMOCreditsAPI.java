@@ -24,14 +24,14 @@
 package games.cultivate.mcmmocredits;
 
 import games.cultivate.mcmmocredits.data.UserDAO;
-import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.util.CreditOperation;
+import net.minecraft.world.entity.player.Player;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.util.Optional;
 import java.util.UUID;
 
-//TODO: replace with better design.
 @SuppressWarnings("unused")
 public final class MCMMOCreditsAPI {
 
@@ -43,60 +43,71 @@ public final class MCMMOCreditsAPI {
     }
 
     /**
-     * Returns a Player's MCMMO Credit amount if they exist, otherwise -1.
+     * Returns MCMMO Credit balance of a {@link Player} if they exist, otherwise -1.
      *
      * @param uuid UUID of the player.
      * @return Credit balance or -1.
      */
     public int getCredits(final UUID uuid) {
-        Optional<User> optionalUser = this.dao.getUser(uuid);
-        return optionalUser.map(CommandExecutor::credits).orElse(-1);
+        User user = this.getUser(uuid);
+        return user == null ? -1 : user.credits();
     }
 
     /**
-     * Returns a Player's MCMMO Credit amount if they exist, otherwise -1.
+     * Returns MCMMO Credit balance of a {@link Player} if they exist, otherwise -1.
      *
      * @param username String username of the player.
      * @return Credit balance or -1.
      */
     public int getCredits(final String username) {
-        Optional<User> optionalUser = this.dao.getUser(username);
-        return optionalUser.map(CommandExecutor::credits).orElse(-1);
+        User user = this.getUser(username);
+        return user == null ? -1 : user.credits();
     }
 
-    public boolean addCredits(final UUID uuid, final int amount) {
-        return this.dao.addCredits(uuid, amount);
+    /**
+     * Modifies MCMMO Credit balance of a {@link Player} if they exist. Returns false if the operation fails.
+     *
+     * @param uuid      UUID of the player.
+     * @param operation Operation performed on the credit balance.
+     * @param amount    Amount of credits to modify the balance with.
+     * @return If the transaction was successful.
+     */
+    public boolean modifyCredits(final UUID uuid, final CreditOperation operation, final int amount) {
+        return this.modifyUserCredits(this.getUser(uuid), operation, amount);
     }
 
-    public boolean addCredits(final String username, final int amount) {
-        Optional<User> optionalUser = this.dao.getUser(username);
-        if (optionalUser.isPresent()) {
-            return this.dao.addCredits(optionalUser.get().uuid(), amount);
+    /**
+     * Modifies MCMMO Credit balance of a {@link Player} if they exist. Returns false if the operation fails.
+     *
+     * @param username  String username of the player.
+     * @param operation Operation performed on the credit balance.
+     * @param amount    Amount of credits to modify the balance with.
+     * @return If the transaction was successful.
+     */
+    public boolean modifyCredits(final String username, final CreditOperation operation, final int amount) {
+        return this.modifyUserCredits(this.getUser(username), operation, amount);
+    }
+
+    @Nullable
+    private <T> User getUser(final T id) {
+        if (id instanceof String string) {
+            return this.dao.getUser(string).orElse(null);
         }
-        return false;
-    }
-
-    public boolean setCredits(final UUID uuid, final int amount) {
-        return this.dao.setCredits(uuid, amount);
-    }
-
-    public boolean setCredits(final String username, final int amount) {
-        Optional<User> optionalUser = this.dao.getUser(username);
-        if (optionalUser.isPresent()) {
-            return this.dao.setCredits(optionalUser.get().uuid(), amount);
+        if (id instanceof UUID uuid) {
+            return this.dao.getUser(uuid).orElse(null);
         }
-        return false;
+        return null;
     }
 
-    public boolean takeCredits(final UUID uuid, final int amount) {
-        return this.dao.takeCredits(uuid, amount);
-    }
-
-    public boolean takeCredits(final String username, final int amount) {
-        Optional<User> optionalUser = this.dao.getUser(username);
-        if (optionalUser.isPresent()) {
-            return this.dao.takeCredits(optionalUser.get().uuid(), amount);
+    private boolean modifyUserCredits(@Nullable final User user, final CreditOperation operation, final int amount) {
+        if (user == null) {
+            return false;
         }
-        return false;
+        UUID uuid = user.uuid();
+        return switch (operation) {
+            case ADD -> this.dao.addCredits(uuid, amount);
+            case SET -> this.dao.setCredits(uuid, amount);
+            case TAKE -> this.dao.takeCredits(uuid, amount);
+        };
     }
 }

@@ -200,7 +200,7 @@ public final class Resolver {
          * @return The updated Builder.
          */
         public Builder transaction(final int amount) {
-            return this.tag("amount", amount + "");
+            return this.tag("amount", String.valueOf(amount));
         }
 
         /**
@@ -212,7 +212,7 @@ public final class Resolver {
         @SuppressWarnings("deprecation")
         public Builder skill(final PrimarySkillType skill) {
             String formattedSkill = WordUtils.capitalizeFully(skill.name());
-            return this.tag("skill", formattedSkill).tag("cap", skill.getMaxLevel() + "");
+            return this.tag("skill", formattedSkill).tag("cap", String.valueOf(skill.getMaxLevel()));
         }
 
         /**

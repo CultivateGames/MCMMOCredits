@@ -1,4 +1,4 @@
-# MCMMO Credits v0.3.0 Configuration
+# MCMMO Credits v0.3.5-SNAPSHOT Configuration
 # Repository: https://github.com/CultivateGames/MCMMOCredits
 # Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
 config:
@@ -44,6 +44,7 @@ config:
       amount: 1
       texture: ''
       glow: false
+      command: credits menu main
 main:
   properties:
     title: <#ff253c><bold>MCMMO Credits
@@ -60,7 +61,8 @@ main:
       amount: 1
       texture: ''
       glow: false
-    redemption:
+      command: credits menu config
+    redeem:
       name: <green>Redeem MCMMO Credits!
       lore:
       - <gray>Left Click to redeem Credits!
@@ -69,6 +71,7 @@ main:
       amount: 1
       texture: ''
       glow: false
+      command: credits menu redeem
     fill:
       name: ''
       lore:
@@ -87,6 +90,7 @@ main:
       amount: 1
       texture: ''
       glow: false
+      command: credits menu main
 redeem:
   properties:
     title: <dark_gray>Redeem Your Credits...
@@ -229,3 +233,4 @@ redeem:
       amount: 1
       texture: ''
       glow: false
+      command: credits menu main

@@ -25,7 +25,7 @@ package games.cultivate.mcmmocredits;
 
 import cloud.commandframework.annotations.AnnotationParser;
 import cloud.commandframework.arguments.parser.ParserRegistry;
-import cloud.commandframework.execution.CommandExecutionCoordinator;
+import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.paper.PaperCommandManager;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
@@ -60,22 +60,22 @@ import java.util.function.Function;
  * Main class of the application. Handles startup and shutdown logic.
  */
 public final class MCMMOCredits extends JavaPlugin {
+    private static MCMMOCreditsAPI creditsAPI;
     private Injector injector;
     private MainConfig config;
     private Logger pluginLogger;
-    private static MCMMOCreditsAPI creditsAPI;
 
     @Override
     public void onEnable() {
         long start = System.nanoTime();
-        injector = Guice.createInjector(new PluginModule(this));
-        creditsAPI = this.injector.getInstance(MCMMOCreditsAPI.class);
-        this.config = this.injector.getInstance(MainConfig.class);
+        this.injector = Guice.createInjector(new PluginModule(this));
         this.pluginLogger = this.injector.getInstance(Logger.class);
         this.checkForDependencies();
         this.loadConfiguration();
+        this.config = this.injector.getInstance(MainConfig.class);
         this.loadCommands();
         this.registerListeners();
+        creditsAPI = this.injector.getInstance(MCMMOCreditsAPI.class);
         long end = System.nanoTime();
         if (this.config.bool("settings", "debug")) {
             this.pluginLogger.info("Plugin enabled! Startup took: {} s.", (double) (end - start) / 1000000000);
@@ -95,6 +95,7 @@ public final class MCMMOCredits extends JavaPlugin {
      *
      * @see CreditsExpansion
      */
+    @SuppressWarnings("UnstableApiUsage")
     private void checkForDependencies() {
         if (!PaperUtils.isPaper()) {
             this.pluginLogger.warn("Not using Paper, disabling plugin...");
@@ -120,8 +121,9 @@ public final class MCMMOCredits extends JavaPlugin {
     private void loadCommands() {
         PaperCommandManager<CommandExecutor> manager;
         Function<CommandSender, CommandExecutor> forwardsMapper = x -> this.injector.getInstance(UserDAO.class).fromSender(x);
+        var coordinator = AsynchronousCommandExecutionCoordinator.<CommandExecutor>builder().withAsynchronousParsing().build();
         try {
-            manager = new PaperCommandManager<>(this, CommandExecutionCoordinator.simpleCoordinator(), forwardsMapper, CommandExecutor::sender);
+            manager = new PaperCommandManager<>(this, coordinator, forwardsMapper, CommandExecutor::sender);
         } catch (Exception e) {
             e.printStackTrace();
             return;
