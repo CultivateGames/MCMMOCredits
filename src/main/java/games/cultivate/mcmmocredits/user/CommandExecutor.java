@@ -23,16 +23,10 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import games.cultivate.mcmmocredits.placeholders.Resolver;
-import net.kyori.adventure.text.minimessage.tag.PreProcess;
-import net.kyori.adventure.text.minimessage.tag.Tag;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Represents any entity that can execute a command. Typically a User or Console.
@@ -56,30 +50,6 @@ public abstract class CommandExecutor {
         this.username = username;
         this.credits = credits;
         this.redeemed = redeemed;
-    }
-
-    /**
-     * Builds placeholders for a {@link Resolver}.
-     *
-     * @param prefix Prefix for the placeholders.
-     * @return A map of placeholders.
-     */
-    public Map<String, PreProcess> placeholders(final String prefix) {
-        Map<String, String> map = new HashMap<>();
-        map.put(prefix, this.username);
-        map.put(prefix + "_credits", this.credits + "");
-        map.put(prefix + "_uuid", this.uuid.toString());
-        map.put(prefix + "_redeemed", this.redeemed + "");
-        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> Tag.preProcessParsed(x.getValue())));
-    }
-
-    /**
-     * Gets a built Resolver for the executor.
-     *
-     * @return A built Resolver.
-     */
-    public Resolver resolver() {
-        return Resolver.builder().user(this, "sender").build();
     }
 
     /**

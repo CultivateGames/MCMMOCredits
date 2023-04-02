@@ -33,7 +33,6 @@ import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
-import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.Console;
 import games.cultivate.mcmmocredits.user.User;
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -152,7 +151,7 @@ public class Listeners implements Listener {
             case TAKE -> this.dao.takeCredits(uuid, amount);
         };
         CommandSender sender = e.sender();
-        Resolver resolver = this.updateTransactionResolver(sender, uuid, amount);
+        Resolver resolver = Resolver.ofTransaction(this.dao.fromSender(sender), this.dao.forceUser(uuid), amount);
         if (!transactionStatus) {
             Text.fromString(sender, this.config.string("not-enough-credits"), resolver).send();
             return;
@@ -250,21 +249,6 @@ public class Listeners implements Listener {
      * @return The updated resolver.
      */
     private Resolver updateRedeemResolver(final CommandSender sender, final UUID uuid, final PrimarySkillType skill, final int amount) {
-        CommandExecutor executor = this.dao.fromSender(sender);
-        return Resolver.fromRedemption(executor, this.dao.forceUser(uuid), skill, amount);
-    }
-
-    /**
-     * Updates the Resolver used for message parsing as the information changes during event processing.
-     *
-     * @param sender CommandSender from event.
-     * @param uuid   UUID from event.
-     * @param amount amount of credits from event.
-     * @return The updated resolver.
-     */
-    private Resolver updateTransactionResolver(final CommandSender sender, final UUID uuid, final int amount) {
-        CommandExecutor executor = this.dao.fromSender(sender);
-        User target = this.dao.getUser(uuid).orElseThrow();
-        return Resolver.builder().transaction(amount).users(executor, target).build();
+        return Resolver.ofRedemption(this.dao.fromSender(sender), this.dao.forceUser(uuid), skill, amount);
     }
 }

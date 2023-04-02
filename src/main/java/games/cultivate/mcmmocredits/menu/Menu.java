@@ -24,6 +24,7 @@
 package games.cultivate.mcmmocredits.menu;
 
 import games.cultivate.mcmmocredits.config.Config;
+import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.user.User;
@@ -59,7 +60,8 @@ public record Menu(MenuProperties properties, List<Item> items) {
      */
     public ChestInterface createInterface(final User user, final ClickFactory clickFactory) {
         Component title = Text.forOneUser(user, this.properties.title()).toComponent();
-        List<TransformContext<ChestPane, PlayerViewer>> transforms = this.items().stream().map(x -> x.context(clickFactory, user.resolver())).toList();
+        Resolver resolver = Resolver.ofUser(user);
+        List<TransformContext<ChestPane, PlayerViewer>> transforms = this.items().stream().map(x -> x.context(clickFactory, resolver)).toList();
         return new ChestInterface(this.properties.slots() / 9, title, transforms, List.of(), true, 10, ClickHandler.cancel());
     }
 }

@@ -96,10 +96,9 @@ public final class Credits {
     @CommandMethod("balance <username>")
     @CommandPermission("mcmmocredits.balance.other")
     public void balanceOther(final CommandExecutor executor, final @Argument(suggestions = "user") String username) {
-        Optional<User> optionalUser = this.dao.getUser(username);
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            Text.fromString(executor, this.config.string("balance-other"), executor.resolver().with(user)).send();
+        Optional<User> user = this.dao.getUser(username);
+        if (user.isPresent()) {
+            Text.fromString(executor, this.config.string("balance-other"), Resolver.ofUsers(executor, user.get())).send();
             return;
         }
         this.playerUnknownError(executor, username);
@@ -116,9 +115,10 @@ public final class Credits {
             return;
         }
         Text.forOneUser(executor, this.config.rawString("leaderboard-title")).send();
+        Resolver resolver = Resolver.ofUser(executor);
         for (int i = 1; i <= 10; i++) {
-            int rank = i + offset;
-            Resolver resolver = Resolver.builder().users(executor, users.get(i - 1)).tag("place", rank + "").build();
+            resolver.addUser(users.get(i - 1), "target");
+            resolver.addIntTag("rank", i + offset);
             Text.fromString(executor, this.config.rawString("leaderboard-entry"), resolver).send();
         }
     }
@@ -257,7 +257,8 @@ public final class Credits {
      * @param username Username of unknown user.
      */
     private void playerUnknownError(final CommandExecutor executor, final String username) {
-        Resolver resolver = executor.resolver().toBuilder().username(username).build();
+        Resolver resolver = Resolver.ofUser(executor);
+        resolver.addUsername(username);
         Text.fromString(executor, this.config.string("player-unknown"), resolver).send();
     }
 }

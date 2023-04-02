@@ -45,6 +45,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Exception handler that modifies how Cloud exceptions send messages.
@@ -56,6 +57,7 @@ public final class CloudExceptionHandler {
     private final MainConfig config;
     private final CommandManager<CommandExecutor> manager;
     private final List<Caption> keys;
+    private static final Pattern TO_PATH = Pattern.compile("[.|_]");
 
     /**
      * Constructs the object.
@@ -92,7 +94,7 @@ public final class CloudExceptionHandler {
         CaptionRegistry<CommandExecutor> registry = this.manager.captionRegistry();
         if (registry instanceof FactoryDelegatingCaptionRegistry<CommandExecutor> factory) {
             this.keys.forEach(caption -> {
-                String path = caption.getKey().replaceAll("[.|_]", "-");
+                String path = TO_PATH.matcher(caption.getKey()).replaceAll("-");
                 factory.registerMessageFactory(caption, (capt, executor) -> this.config.node(path).getString());
             });
             this.manager.captionRegistry(factory);
@@ -121,7 +123,9 @@ public final class CloudExceptionHandler {
      * @return The new Resolver.
      */
     private Resolver attachException(final CommandExecutor executor, final String key, final String value) {
-        return executor.resolver().toBuilder().tag(key, value).build();
+        Resolver resolver = Resolver.ofUser(executor);
+        resolver.addStringTag(key, value);
+        return resolver;
     }
 
     /**

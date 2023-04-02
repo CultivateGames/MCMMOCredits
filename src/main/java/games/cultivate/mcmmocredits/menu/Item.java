@@ -25,10 +25,7 @@ package games.cultivate.mcmmocredits.menu;
 
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import org.bukkit.Material;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
-import org.incendo.interfaces.core.click.ClickContext;
-import org.incendo.interfaces.core.click.ClickHandler;
 import org.incendo.interfaces.core.transform.TransformContext;
 import org.incendo.interfaces.core.util.Vector2;
 import org.incendo.interfaces.paper.PlayerViewer;
@@ -157,7 +154,7 @@ public final class Item {
 
     public TransformContext<ChestPane, PlayerViewer> context(final ClickFactory clickFactory, final Resolver resolver) {
         String info = this.type.name().startsWith("EDIT_") ? this.name() : this.data;
-        ClickHandler<ChestPane, InventoryClickEvent, PlayerViewer, ClickContext<ChestPane, InventoryClickEvent, PlayerViewer>> handler = clickFactory.getClick(this.type, info, resolver);
+        var handler = clickFactory.getClick(this.type, info, resolver);
         return TransformContext.of(0, ((pane, view) -> {
             ItemStack menuItem = this.properties.apply(this.stack, view.viewer().player(), resolver);
             return pane.element(ItemStackElement.of(menuItem, handler), this.slot % 9, this.slot / 9);
