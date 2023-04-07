@@ -141,9 +141,7 @@ tasks {
     //TODO: investigate transitive deps
     shadowJar {
         archiveClassifier.set("")
-        minimize {
-            exclude(dependency("com.github.ben-manes.caffeine:caffeine:3.0.3"))
-        }
+        minimize()
         // https://github.com/PaperMC/paperweight-test-plugin/blob/shadow/build.gradle.kts
         fun reloc(pkg: String) = relocate(pkg, "games.cultivate.mcmmocredits.relocate.$pkg")
         reloc("cloud.commandframework")

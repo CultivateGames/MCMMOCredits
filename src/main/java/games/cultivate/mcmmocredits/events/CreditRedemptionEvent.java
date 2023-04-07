@@ -85,6 +85,7 @@ public final class CreditRedemptionEvent extends Event {
     }
 
     @Override
+    @SuppressWarnings("java:S4144")
     public @NotNull HandlerList getHandlers() {
         return HANDLERS;
     }
@@ -141,5 +142,14 @@ public final class CreditRedemptionEvent extends Event {
      */
     public PrimarySkillType skill() {
         return this.skill;
+    }
+
+    /**
+     * Checks if the redemption is performed by the player themselves.
+     *
+     * @return true if the sender is also the recipient of the Credit Redemption.
+     */
+    public boolean isSelfRedemption() {
+       return this.sender instanceof Player p && p.getUniqueId().equals(this.uuid);
     }
 }

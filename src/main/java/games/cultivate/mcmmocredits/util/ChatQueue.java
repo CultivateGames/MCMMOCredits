@@ -30,7 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
- * Represents an opinionated Chat Queue. Uses a map of User UUIDs and Completable Futures to transport chat messages.
+ * Represents a chat queue that manages communication using UUIDs and Completable Futures.
+ * The class utilizes a map for storing and processing chat messages.
  */
 public final class ChatQueue {
     private final Map<UUID, CompletableFuture<String>> map;
@@ -40,7 +41,7 @@ public final class ChatQueue {
     }
 
     /**
-     * Removes an entry using the UUID.
+     * Removes a UUID entry from the queue.
      *
      * @param uuid The UUID to remove.
      */
@@ -52,17 +53,17 @@ public final class ChatQueue {
     }
 
     /**
-     * Checks if a UUID is contained within the ChatQueue.
+     * Checks if the queue contains a specific UUID.
      *
      * @param uuid The UUID to check.
-     * @return If the map contains the UUID.
+     * @return true if the UUID exists in the queue; false otherwise.
      */
     public boolean contains(final UUID uuid) {
         return this.map.containsKey(uuid);
     }
 
     /**
-     * Adds the UUID to the ChatQueue, overwriting any existing entries.
+     * Adds a UUID to the queue, replacing any existing entry with the same UUID.
      *
      * @param uuid The UUID to add.
      */
@@ -72,10 +73,10 @@ public final class ChatQueue {
     }
 
     /**
-     * Applies an action to an existing map entry.
+     * Applies an action to an existing UUID entry in the queue.
      *
-     * @param uuid   The UUID to add.
-     * @param action The action to apply to the map entry's value.
+     * @param uuid   The UUID associated with the entry.
+     * @param action The action to apply to the entry's value.
      */
     public void act(final UUID uuid, final Consumer<? super String> action) {
         this.add(uuid);
@@ -83,10 +84,10 @@ public final class ChatQueue {
     }
 
     /**
-     * Completes a {@link CompletableFuture} provided by the map.
+     * Completes a CompletableFuture associated with a UUID in the queue.
      *
-     * @param uuid       The UUID of the map entry to complete.
-     * @param completion The completion.
+     * @param uuid       The UUID of the entry to complete.
+     * @param completion The completion value.
      */
     public void complete(final UUID uuid, final String completion) {
         if (this.contains(uuid)) {

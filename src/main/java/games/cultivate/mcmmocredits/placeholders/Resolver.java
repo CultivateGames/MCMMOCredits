@@ -133,7 +133,7 @@ public final class Resolver {
         this.addStringTag(prefix, user.username());
         this.addStringTag(prefix + "_uuid", user.uuid().toString());
         this.addIntTag(prefix + "_credits", user.credits());
-        this.addIntTag(prefix + "_credits", user.redeemed());
+        this.addIntTag(prefix + "_redeemed", user.redeemed());
     }
 
     /**

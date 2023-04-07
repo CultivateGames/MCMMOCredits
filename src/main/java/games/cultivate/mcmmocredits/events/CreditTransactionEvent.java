@@ -85,6 +85,7 @@ public final class CreditTransactionEvent extends Event {
     }
 
     @Override
+    @SuppressWarnings("java:S4144")
     public @NotNull HandlerList getHandlers() {
         return HANDLERS;
     }
