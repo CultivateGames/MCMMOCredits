@@ -53,9 +53,9 @@ public final class Util {
     }
 
     /**
-     * Returns a list of non-child skill names from MCMMO, formatted.
+     * Returns a list of non-child skill names from MCMMO, formatted in lowercase.
      *
-     * @return A List of formatted non-child skills name.
+     * @return A List of formatted non-child skill names.
      */
     public static List<String> getSkillNames() {
         if (skills.isEmpty()) {
@@ -65,24 +65,16 @@ public final class Util {
     }
 
     /**
-     * Creates a file and associated directories if they do not exist.
+     * Creates a file and associated directories if they do not exist, given the file name.
      *
      * @param fileName Name of the {@link File} to create.
      */
     public static void createFile(final String fileName) {
-        try {
-            if (!Files.exists(PLUGIN_PATH)) {
-                Files.createDirectories(PLUGIN_PATH);
-            }
-            Files.createFile(PLUGIN_PATH.resolve(fileName));
-        } catch (FileAlreadyExistsException ignored) { //Ignore if file already exists.
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        createFile(PLUGIN_PATH, fileName);
     }
 
     /**
-     * Creates a file and associated directories if they do not exist.
+     * Creates a file and associated directories if they do not exist, given the directory path and the file name.
      *
      * @param dir      The {@link Path} to check for creation.
      * @param fileName Name of the {@link File} to create.
@@ -99,6 +91,14 @@ public final class Util {
         }
     }
 
+    /**
+     * Returns if a player will exceed skill cap on a skill if an amount is applied.
+     *
+     * @param profile PlayerProfile of the user.
+     * @param skill MCMMO Skill to check against.
+     * @param amount The amount of credits to theoretically apply.
+     * @return If the cap will be exceeded.
+     */
     public static boolean exceedsSkillCap(final PlayerProfile profile, final PrimarySkillType skill, final int amount) {
         return profile.getSkillLevel(skill) + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill);
     }
@@ -115,6 +115,11 @@ public final class Util {
         return profile.isLoaded() ? Optional.of(profile) : Optional.empty();
     }
 
+    /**
+     * Returns the path of the plugin directory.
+     *
+     * @return Path of the plugin directory.
+     */
     public static Path getPluginPath() {
         return PLUGIN_PATH;
     }
