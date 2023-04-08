@@ -25,7 +25,6 @@ package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.data.DatabaseProperties;
 import games.cultivate.mcmmocredits.data.DatabaseType;
-import games.cultivate.mcmmocredits.inject.PluginPath;
 import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
@@ -38,21 +37,13 @@ import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.loader.HeaderMode;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.ObjectMapper;
 import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.util.NamingSchemes;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
-import javax.inject.Inject;
-import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * Represents a Configuration file.
@@ -63,9 +54,6 @@ public class Config {
     private transient YamlConfigurationLoader loader;
     private transient CommentedConfigurationNode root;
     private transient List<String> paths;
-    @Inject
-    @PluginPath
-    private transient Path dir;
     private static final String HEADER = """
             MCMMO Credits v0.3.5-SNAPSHOT Configuration
             Repository: https://github.com/CultivateGames/MCMMOCredits
@@ -75,12 +63,13 @@ public class Config {
     /**
      * Constructs the object with properties of the file.
      *
-     * @param type     Class of the config. Must be annotated with @{@link ConfigSerializable}
+     * @param type     Class of the config.
      * @param fileName Name of the config.
      */
     protected Config(final Class<? extends Config> type, final String fileName) {
         this.type = type;
         this.fileName = fileName;
+        this.paths = new ArrayList<>();
     }
 
     /**
@@ -89,13 +78,13 @@ public class Config {
      * @return The Loader.
      */
     private YamlConfigurationLoader createLoader() {
-        Util.createFile(this.dir, this.fileName);
+        Util.createFile(this.fileName);
         return YamlConfigurationLoader.builder()
                 .defaultOptions(opts -> opts.header(HEADER).serializers(build -> {
                     build.register(Item.class, ItemSerializer.INSTANCE);
                     build.register(Menu.class, MenuSerializer.INSTANCE);
                     build.register(ClickTypes.class, ClickTypeSerializer.INSTANCE);
-                })).path(this.dir.resolve(this.fileName))
+                })).path(Util.getPluginPath().resolve(this.fileName))
                 .headerMode(HeaderMode.PRESET)
                 .indent(2)
                 .nodeStyle(NodeStyle.BLOCK).build();
@@ -111,17 +100,6 @@ public class Config {
             ObjectMapper.Factory factory = ObjectMapper.factoryBuilder().defaultNamingScheme(NamingSchemes.LOWER_CASE_DASHED).build();
             factory.get(this.type).load(this.root);
             this.save();
-            Queue<CommentedConfigurationNode> queue = new ArrayDeque<>(this.root.childrenMap().values());
-            List<String> sorted = new LinkedList<>();
-            while (!queue.isEmpty()) {
-                CommentedConfigurationNode node = queue.poll();
-                if (node.isMap()) {
-                    queue.addAll(node.childrenMap().values());
-                } else {
-                    sorted.add(this.translateNode(node.path().array()));
-                }
-            }
-            this.paths = sorted;
         } catch (ConfigurateException e) {
             e.printStackTrace();
         }
@@ -143,6 +121,7 @@ public class Config {
         try {
             this.loader.save(root);
             this.root = root;
+            this.updatePaths();
         } catch (ConfigurateException e) {
             e.printStackTrace();
         }
@@ -254,22 +233,8 @@ public class Config {
      * @return The value.
      */
     public DatabaseProperties getDatabaseProperties() {
-        DatabaseProperties opts = new DatabaseProperties("127.0.0.1", "database", "root", "passw0rd+", 3306, true);
-        return this.value(DatabaseProperties.class, opts, "settings", "mysql");
-    }
-
-    /**
-     * Gets the Database type from the configuration.
-     *
-     * @return The value.
-     */
-    public DatabaseType getDatabaseType() {
-        try {
-            return this.node("settings", "database-type").get(DatabaseType.class);
-        } catch (SerializationException e) {
-            e.printStackTrace();
-        }
-        return DatabaseType.SQLITE;
+        DatabaseProperties opts = new DatabaseProperties(DatabaseType.SQLITE, "127.0.0.1", "database", "root", "passw0rd+", 3306, true);
+        return this.value(DatabaseProperties.class, opts, "settings", "database");
     }
 
     /**
@@ -279,6 +244,9 @@ public class Config {
      * @return Filtered node path list.
      */
     public List<String> filterKeys(final String... keys) {
+        if (this.paths.isEmpty()) {
+            this.updatePaths();
+        }
         List<String> sorted = new ArrayList<>(this.paths);
         sorted.removeIf(x -> Arrays.stream(keys).anyMatch(x::contains));
         return sorted;
@@ -297,5 +265,19 @@ public class Config {
         }
         sb.deleteCharAt(sb.lastIndexOf("."));
         return sb.toString();
+    }
+
+    private void updatePaths() {
+        Queue<CommentedConfigurationNode> queue = new ArrayDeque<>(this.root.childrenMap().values());
+        List<String> sorted = new LinkedList<>();
+        while (!queue.isEmpty()) {
+            CommentedConfigurationNode node = queue.poll();
+            if (node.isMap()) {
+                queue.addAll(node.childrenMap().values());
+            } else {
+                sorted.add(this.translateNode(node.path().array()));
+            }
+        }
+        this.paths = sorted;
     }
 }

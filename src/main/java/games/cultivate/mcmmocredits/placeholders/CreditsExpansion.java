@@ -23,8 +23,8 @@
 //
 package games.cultivate.mcmmocredits.placeholders;
 
-import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.user.UserService;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
@@ -37,11 +37,11 @@ import java.util.Optional;
  * Handles registration with {@link PlaceholderAPI}
  */
 public final class CreditsExpansion extends PlaceholderExpansion {
-    private final UserDAO dao;
+    private final UserService service;
 
     @Inject
-    public CreditsExpansion(final UserDAO dao) {
-        this.dao = dao;
+    public CreditsExpansion(final UserService service) {
+        this.service = service;
     }
 
     @Override
@@ -65,23 +65,19 @@ public final class CreditsExpansion extends PlaceholderExpansion {
     }
 
     @Override
-    public String onRequest(final OfflinePlayer player, final @NotNull String identifier) {
-        Optional<User> optionalUser = this.dao.getUser(player.getName());
+    public String onRequest(final OfflinePlayer player, final @NotNull String id) {
+        Optional<User> optionalUser = this.service.getUser(player.getName());
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
-            if (identifier.equalsIgnoreCase("credits")) {
-                return String.valueOf(user.credits());
-            }
-            if (identifier.equalsIgnoreCase("redeemed")) {
-                return String.valueOf(user.redeemed());
-            }
-            if (identifier.equalsIgnoreCase("username")) {
-                return user.username();
-            }
-            if (identifier.equalsIgnoreCase("uuid")) {
-                return user.uuid().toString();
-            }
+            return switch (id.toLowerCase()) {
+                case "credits" -> String.valueOf(user.credits());
+                case "redeemed" -> String.valueOf(user.redeemed());
+                case "username" -> user.username();
+                case "uuid" -> user.uuid().toString();
+                case "cached" -> String.valueOf(this.service.isCached(user));
+                default -> "Invalid User has been provided!";
+            };
         }
-        return 0 + "";
+        return "Invalid User has been provided!";
     }
 }

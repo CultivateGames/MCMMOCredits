@@ -34,14 +34,13 @@ import com.google.inject.Injector;
 import games.cultivate.mcmmocredits.commands.CloudExceptionHandler;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.SkillParser;
-import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.data.DAOProvider;
-import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.placeholders.CreditsExpansion;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
+import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.Listeners;
 import io.leangen.geantyref.TypeToken;
 import org.bukkit.Bukkit;
@@ -51,7 +50,6 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.interfaces.paper.PaperInterfaceListeners;
 import org.incendo.interfaces.paper.utils.PaperUtils;
-import org.slf4j.Logger;
 
 import java.util.List;
 import java.util.function.Function;
@@ -60,34 +58,23 @@ import java.util.function.Function;
  * Main class of the application. Handles startup and shutdown logic.
  */
 public final class MCMMOCredits extends JavaPlugin {
-    private static MCMMOCreditsAPI creditsAPI;
     private Injector injector;
     private MainConfig config;
-    private Logger pluginLogger;
+    private static UserService userService;
 
     @Override
     public void onEnable() {
         long start = System.nanoTime();
         this.injector = Guice.createInjector(new PluginModule(this));
-        this.pluginLogger = this.injector.getInstance(Logger.class);
         this.checkForDependencies();
-        this.loadConfiguration();
         this.config = this.injector.getInstance(MainConfig.class);
         this.loadCommands();
         this.registerListeners();
-        creditsAPI = this.injector.getInstance(MCMMOCreditsAPI.class);
+        userService = this.injector.getInstance(UserService.class);
         long end = System.nanoTime();
         if (this.config.bool("settings", "debug")) {
-            this.pluginLogger.info("Plugin enabled! Startup took: {} s.", (double) (end - start) / 1000000000);
+            this.getSLF4JLogger().info("Plugin enabled! Startup took: {} s.", (double) (end - start) / 1000000000);
         }
-    }
-
-    /**
-     * Loads injected instances of {@link Config}
-     */
-    public void loadConfiguration() {
-        this.injector.getInstance(MainConfig.class).load();
-        this.injector.getInstance(MenuConfig.class).load();
     }
 
     /**
@@ -98,16 +85,16 @@ public final class MCMMOCredits extends JavaPlugin {
     @SuppressWarnings("UnstableApiUsage")
     private void checkForDependencies() {
         if (!PaperUtils.isPaper()) {
-            this.pluginLogger.warn("Not using Paper, disabling plugin...");
+            this.getSLF4JLogger().warn("Not using Paper, disabling plugin...");
             this.setEnabled(false);
         }
         PluginManager pluginManager = Bukkit.getPluginManager();
         if (pluginManager.getPlugin("mcMMO") == null) {
-            this.pluginLogger.warn("Not using mcMMO, disabling plugin...");
+            this.getSLF4JLogger().warn("Not using mcMMO, disabling plugin...");
             this.setEnabled(false);
             return;
         }
-        this.pluginLogger.info("mcMMO has been found! Continuing to load...");
+        this.getSLF4JLogger().info("mcMMO has been found! Continuing to load...");
         if (pluginManager.getPlugin("PlaceholderAPI") != null) {
             this.injector.getInstance(CreditsExpansion.class).register();
         }
@@ -120,7 +107,7 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     private void loadCommands() {
         PaperCommandManager<CommandExecutor> manager;
-        Function<CommandSender, CommandExecutor> forwardsMapper = x -> this.injector.getInstance(UserDAO.class).fromSender(x);
+        Function<CommandSender, CommandExecutor> forwardsMapper = x -> userService.fromSender(x);
         var coordinator = AsynchronousCommandExecutionCoordinator.<CommandExecutor>builder().withAsynchronousParsing().build();
         try {
             manager = new PaperCommandManager<>(this, coordinator, forwardsMapper, CommandExecutor::sender);
@@ -162,7 +149,7 @@ public final class MCMMOCredits extends JavaPlugin {
     }
 
     @SuppressWarnings("unused")
-    public static MCMMOCreditsAPI getAPI() {
-        return creditsAPI;
+    public static UserService getAPI() {
+        return userService;
     }
 }

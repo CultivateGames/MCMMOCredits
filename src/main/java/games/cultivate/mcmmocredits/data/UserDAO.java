@@ -23,11 +23,8 @@
 //
 package games.cultivate.mcmmocredits.data;
 
-import games.cultivate.mcmmocredits.user.CommandExecutor;
-import games.cultivate.mcmmocredits.user.Console;
+import com.google.inject.ProvidedBy;
 import games.cultivate.mcmmocredits.user.User;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.jdbi.v3.sqlobject.SqlObject;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
 import org.jdbi.v3.sqlobject.customizer.BindMethods;
@@ -35,124 +32,108 @@ import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
  * DAO that accesses {@link User} instances from Database.
  */
+@ProvidedBy(DAOProvider.class)
 public interface UserDAO extends SqlObject {
     /**
-     * Adds provided User to the database.
+     * Adds a user to the database.
      *
-     * @param user The user.
+     * @param user The user to add.
      */
     @SqlUpdate("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed);")
-    void addUser(@BindMethods User user);
+    boolean addUser(@BindMethods User user);
 
     /**
-     * Gets Optional User from the Database. Optional is empty if User does not exist.
+     * Retrieves a user from the database using their username.
      *
-     * @param username Username of the user.
-     * @return Optional User.
+     * @param username The username of the user.
+     * @return An Optional<User> which contains the user if found.
      */
     @SqlQuery("SELECT * FROM MCMMOCREDITS WHERE username LIKE :username LIMIT 1;")
     @RegisterConstructorMapper(User.class)
     Optional<User> getUser(String username);
 
     /**
-     * Gets Optional User from the Database. Optional is empty if User does not exist.
+     * Retrieves a user from the database using their UUID.
      *
-     * @param uuid UUID of the user.
-     * @return Optional User.
+     * @param uuid The UUID of the user.
+     * @return An Optional<User> which contains the user if found.
      */
     @SqlQuery("SELECT * FROM MCMMOCREDITS WHERE uuid = :uuid;")
     @RegisterConstructorMapper(User.class)
     Optional<User> getUser(UUID uuid);
 
     /**
-     * Sets username of existing {@link User} in database.
+     * Sets the username of an existing user in the database.
      *
-     * @param uuid     UUID to search for User with.
-     * @param username Value used to update username.
+     * @param uuid     The UUID of the user.
+     * @param username The new username to set.
      */
     @SqlUpdate("UPDATE MCMMOCredits SET username = :username WHERE UUID = :uuid;")
-    void setUsername(UUID uuid, String username);
+    boolean setUsername(UUID uuid, String username);
 
     /**
-     * Sets credit balance of existing {@link User} in database to provided amount.
+     * Sets the credit balance of an existing user in the database.
      *
-     * @param uuid   UUID to search for User with.
-     * @param amount number of credits
-     * @return if the transaction was successful.
+     * @param uuid   The UUID of the user.
+     * @param amount The new credit balance to set.
+     * @return True if the transaction was successful, false otherwise.
      */
     @SqlUpdate("UPDATE MCMMOCredits SET credits = :amount WHERE UUID = :uuid;")
     boolean setCredits(UUID uuid, int amount);
 
     /**
-     * Gets credit balance of existing {@link User} in database.
+     * Gets the credit balance of an existing user in the database.
      *
-     * @param uuid UUID to search for User with.
-     * @return the result of the query.
+     * @param uuid The UUID of the user.
+     * @return The credit balance of the user.
      */
     @SqlQuery("SELECT credits FROM MCMMOCredits WHERE UUID = :uuid;")
     int getCredits(UUID uuid);
 
     /**
-     * Adds provided amount of credits to credit balance of existing {@link User}.
+     * Adds a specified amount of credits to an existing user's credit balance in the database.
      *
-     * @param uuid   UUID to search for User with.
-     * @param amount number of credits to add to User.
-     * @return if the transaction was successful.
+     * @param uuid   The UUID of the user.
+     * @param amount The number of credits to add.
+     * @return True if the transaction was successful, false otherwise.
      */
     @SqlUpdate("UPDATE MCMMOCredits SET credits = credits + :amount WHERE UUID = :uuid;")
     boolean addCredits(UUID uuid, int amount);
 
     /**
-     * Takes provided amount of credits from credit balance of existing {@link User}.
+     * Takes a specified amount of credits from an existing user's credit balance in the database.
      *
-     * @param uuid   UUID to search for User with.
-     * @param amount number of credits to remove from User.
-     * @return if the transaction was successful.
+     * @param uuid   The UUID of the user.
+     * @param amount The number of credits to remove.
+     * @return True if the transaction was successful, false otherwise.
      */
     @SqlUpdate("UPDATE MCMMOCredits SET credits = credits - :amount WHERE UUID = :uuid;")
     boolean takeCredits(UUID uuid, int amount);
 
     /**
-     * Redeems credits using existing {@link User}. Operation takes credits and adds them to redeemed balance.
+     * Redeems credits for an existing user in the database. This operation takes credits and adds them to the redeemed balance.
      *
-     * @param uuid   UUID to search for User with.
-     * @param amount number of credits that have been redeemed.,
+     * @param uuid   The UUID of the user.
+     * @param amount The number of credits to redeem.
+     * @return True if the transaction was successful, false otherwise.
      */
     @SqlUpdate("UPDATE MCMMOCredits SET credits = credits - :amount, redeemed = redeemed + :amount WHERE UUID = :uuid")
-    void redeemCredits(UUID uuid, int amount);
+    boolean redeemCredits(UUID uuid, int amount);
 
+    /**
+     * Gets a page of users from the database ordered by credit balance in descending order.
+     *
+     * @param limit  The maximum number of users to retrieve.
+     * @param offset The offset for pagination.
+     * @return A list of users.
+     */
     @SqlQuery("SELECT * FROM MCMMOCREDITS ORDER BY credits DESC LIMIT :limit OFFSET :offset")
     @RegisterConstructorMapper(User.class)
     List<User> getPageOfUsers(int limit, int offset);
-
-    /**
-     * Returns a {@link User} from the provided {@link CommandSender}.
-     *
-     * @param sender The CommandSender.
-     * @return The User, or Console.
-     * @see Console
-     */
-    default CommandExecutor fromSender(CommandSender sender) {
-        if (sender instanceof Player player) {
-            return this.forceUser(player.getUniqueId());
-        }
-        return Console.INSTANCE;
-    }
-
-    /**
-     * Gets User when the user is known to exist.
-     *
-     * @param uuid UUID to get User from.
-     * @return The User, or a {@link NoSuchElementException} is thrown.
-     */
-    default User forceUser(UUID uuid) {
-        return this.getUser(uuid).orElseThrow();
-    }
 }

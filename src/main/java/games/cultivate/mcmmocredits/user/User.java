@@ -58,4 +58,16 @@ public final class User extends CommandExecutor {
     public Player player() {
         return Bukkit.getPlayer(this.uuid());
     }
+
+    public User withCredits(final int credits) {
+       return new User(this.uuid(), this.username(), credits, this.redeemed());
+    }
+
+    public User withUsername(final String username) {
+        return new User(this.uuid(), username, this.credits(), this.redeemed());
+    }
+
+    public User withRedeemed(final int redeemed) {
+        return new User(this.uuid(), this.username(), this.credits(), redeemed);
+    }
 }

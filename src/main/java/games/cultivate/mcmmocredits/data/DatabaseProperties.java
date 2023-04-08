@@ -37,5 +37,5 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
  * @see DAOProvider
  */
 @ConfigSerializable
-public record DatabaseProperties(String host, String name, String user, String password, int port, boolean ssl) {
+public record DatabaseProperties(DatabaseType type, String host, String name, String user, String password, int port, boolean ssl) {
 }

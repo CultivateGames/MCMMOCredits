@@ -23,8 +23,13 @@
 //
 package games.cultivate.mcmmocredits.util;
 
+import com.gmail.nossr50.datatypes.player.PlayerProfile;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import com.gmail.nossr50.mcMMO;
+import com.gmail.nossr50.util.player.UserManager;
 import com.gmail.nossr50.util.skills.SkillTools;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,12 +38,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Utility class for methods with no clear association.
  */
 public final class Util {
     private static List<String> skills = new ArrayList<>();
+    private static final Path PLUGIN_PATH = new File(Bukkit.getPluginsFolder(), "MCMMOCredits").toPath();
 
     private Util() {
         throw new AssertionError("Util cannot be instantiated!");
@@ -59,6 +67,23 @@ public final class Util {
     /**
      * Creates a file and associated directories if they do not exist.
      *
+     * @param fileName Name of the {@link File} to create.
+     */
+    public static void createFile(final String fileName) {
+        try {
+            if (!Files.exists(PLUGIN_PATH)) {
+                Files.createDirectories(PLUGIN_PATH);
+            }
+            Files.createFile(PLUGIN_PATH.resolve(fileName));
+        } catch (FileAlreadyExistsException ignored) { //Ignore if file already exists.
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Creates a file and associated directories if they do not exist.
+     *
      * @param dir      The {@link Path} to check for creation.
      * @param fileName Name of the {@link File} to create.
      */
@@ -72,5 +97,25 @@ public final class Util {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static boolean exceedsSkillCap(final PlayerProfile profile, final PrimarySkillType skill, final int amount) {
+        return profile.getSkillLevel(skill) + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill);
+    }
+
+    /**
+     * Obtains a PlayerProfile from the provided UUID.
+     *
+     * @param uuid UUID of a user.
+     * @return PlayerProfile, or empty optional if the profile is not loaded.
+     */
+    public static Optional<PlayerProfile> getMCMMOProfile(final UUID uuid) {
+        Player player = Bukkit.getPlayer(uuid);
+        PlayerProfile profile = player == null ? mcMMO.getDatabaseManager().loadPlayerProfile(uuid) : UserManager.getPlayer(player).getProfile();
+        return profile.isLoaded() ? Optional.of(profile) : Optional.empty();
+    }
+
+    public static Path getPluginPath() {
+        return PLUGIN_PATH;
     }
 }

@@ -37,7 +37,7 @@ edit-config-prompt: <red>Enter the new value for <gray><setting><red>, or type '
 invalid-leaderboard: <#FF253C>This leaderboard page is invalid!
 invalid-sender: '<red>Invalid command sender! You must be of type: <gray><correct_sender>'
 invalid-syntax: '<red>Invalid syntax! Correct syntax: <gray><correct_syntax>'
-leaderboard-entry: '<place>. <green><target>: <white><target_credits>'
+leaderboard-entry: '<rank>. <green><target>: <white><target_credits>'
 leaderboard-title: <#FF253C>MCMMO Credits Leaderboard
 login-message: <hover:show_text:'<green>You have <sender_credits> MCMMO Credits!'><yellow>Hover
   to see your MCMMO Credit balance!
@@ -59,12 +59,12 @@ redeem-sudo-user: <green>Redemption Successful! <sender> has redeemed <amount> C
 reload: <green>The configuration file has been reloaded.
 settings:
   add-user-message: true
-  database-type: SQLITE
   debug: false
   leaderboard-page-size: 10
   send-login-message: true
   user-tab-complete: true
-  mysql:
+  database:
+    type: SQLITE
     host: 127.0.0.1
     name: database
     user: root

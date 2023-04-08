@@ -26,29 +26,20 @@ package games.cultivate.mcmmocredits.inject;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.data.DAOProvider;
-import games.cultivate.mcmmocredits.data.DatabaseType;
-import games.cultivate.mcmmocredits.data.UserDAO;
+import games.cultivate.mcmmocredits.data.DatabaseProperties;
 import games.cultivate.mcmmocredits.menu.ClickFactory;
 import games.cultivate.mcmmocredits.menu.MenuFactory;
+import games.cultivate.mcmmocredits.user.UserCache;
+import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.slf4j.Logger;
-
-import java.nio.file.Path;
 
 /**
  * Adds bindings to Guice.
  */
-//TODO: increase usage of bound Logger.
 public final class PluginModule extends AbstractModule {
     private final MCMMOCredits plugin;
-    private UserDAO dao;
-    private MenuFactory factory;
-    private ClickFactory clickFactory;
 
     /**
      * Constructs the Guice Module.
@@ -62,60 +53,30 @@ public final class PluginModule extends AbstractModule {
     @Override
     protected void configure() {
         this.bind(MCMMOCredits.class).toInstance(this.plugin);
-        this.bind(JavaPlugin.class).toInstance(this.plugin);
-        this.bind(Logger.class).toInstance(this.plugin.getSLF4JLogger());
-        this.bind(Path.class).annotatedWith(PluginPath.class).toInstance(this.plugin.getDataFolder().toPath());
-        this.bind(MainConfig.class).asEagerSingleton();
-        this.bind(MenuConfig.class).asEagerSingleton();
+        this.bind(UserService.class).asEagerSingleton();
+        this.bind(UserCache.class).asEagerSingleton();
         this.bind(ChatQueue.class).asEagerSingleton();
-        this.bind(DAOProvider.class).asEagerSingleton();
+        this.bind(MenuFactory.class).asEagerSingleton();
+        this.bind(ClickFactory.class).asEagerSingleton();
+
     }
 
-    /**
-     * Provides the MenuFactory. Required due to passing in multiple injected objects needed to construct Menus.
-     *
-     * @param menuConfig   Instance of the MenuConfig.
-     * @param config       Instance of the MainConfig.
-     * @param clickFactory Instance of the ClickFactory.
-     * @return The MenuFactory.
-     */
     @Provides
-    public MenuFactory provideFactory(final MenuConfig menuConfig, final MainConfig config, final ClickFactory clickFactory) {
-        if (this.factory == null) {
-            this.factory = new MenuFactory(menuConfig, config, clickFactory);
-        }
-        return this.factory;
+    public DatabaseProperties provideProperties(final MainConfig config) {
+        return config.getDatabaseProperties();
     }
 
-    /**
-     * Provides the ClickFactory. Required since we are passing in the configuration.
-     *
-     * @param config Instance of the MainConfig.
-     * @param queue Instance of the ChatQueue.
-     * @param plugin Instance of the plugin.
-     * @return The ClickFactory.
-     */
     @Provides
-    public ClickFactory provideClickFactory(final MainConfig config, final ChatQueue queue, final MCMMOCredits plugin) {
-        if (this.clickFactory == null) {
-            this.clickFactory = new ClickFactory(queue, config, plugin);
-        }
-        return this.clickFactory;
+    public MainConfig provideConfig() {
+        MainConfig config = new MainConfig();
+        config.load();
+        return config;
     }
 
-    /**
-     * Provides the UserDAO. Required since DB type is determined by {@link Config}.
-     *
-     * @param config   Config that stores the {@link DatabaseType}.
-     * @param provider The DAOProvider. Loads database based on configuration.
-     * @return The UserDAO.
-     */
     @Provides
-    public UserDAO provideDAO(final MainConfig config, final DAOProvider provider) {
-        if (this.dao == null) {
-            config.load();
-            this.dao = provider.provide(config.getDatabaseType(), config.getDatabaseProperties());
-        }
-        return this.dao;
+    public MenuConfig provideMenuConfig() {
+        MenuConfig config = new MenuConfig();
+        config.load();
+        return config;
     }
 }

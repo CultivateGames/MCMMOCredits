@@ -25,27 +25,24 @@ package games.cultivate.mcmmocredits.util;
 
 import com.gmail.nossr50.datatypes.player.PlayerProfile;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import com.gmail.nossr50.mcMMO;
-import com.gmail.nossr50.util.player.UserManager;
 import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
+import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.Console;
 import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.user.UserService;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.incendo.interfaces.paper.view.ChestView;
@@ -59,14 +56,14 @@ import java.util.UUID;
  */
 public class Listeners implements Listener {
     private final ChatQueue queue;
-    private final UserDAO dao;
+    private final UserService service;
     private final MainConfig config;
 
     @Inject
-    public Listeners(final MainConfig config, final ChatQueue queue, final UserDAO dao) {
+    public Listeners(final MainConfig config, final ChatQueue queue, final UserService service) {
         this.config = config;
         this.queue = queue;
-        this.dao = dao;
+        this.service = service;
     }
 
     /**
@@ -76,19 +73,20 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerPreLogin(final AsyncPlayerPreLoginEvent e) {
-        if (e.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
-            var profile = e.getPlayerProfile();
-            UUID uuid = profile.getId();
-            String username = profile.getName();
-            Optional<User> user = this.dao.getUser(uuid);
-            if (user.isPresent()) {
-                this.dao.setUsername(uuid, username);
-                return;
-            }
-            this.dao.addUser(new User(uuid, username, 0, 0));
-            if (this.config.bool("settings", "add-user-message")) {
-                Text.forOneUser(Console.INSTANCE, this.config.string("add-user")).send();
-            }
+        if (!e.getLoginResult().equals(Result.ALLOWED)) {
+            return;
+        }
+        var profile = e.getPlayerProfile();
+        UUID uuid = profile.getId();
+        String username = profile.getName();
+        Optional<User> user = this.service.getUser(uuid);
+        if (user.isPresent()) {
+            this.service.setUsername(uuid, username);
+            return;
+        }
+        this.service.addUser(uuid, username);
+        if (this.config.bool("settings", "add-user-message")) {
+            Text.forOneUser(Console.INSTANCE, this.config.string("add-user")).send();
         }
     }
 
@@ -100,7 +98,7 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerJoin(final PlayerJoinEvent e) {
         if (this.config.bool("settings", "send-login-message")) {
-            User user = this.dao.forceUser(e.getPlayer().getUniqueId());
+            User user = this.service.forceUser(e.getPlayer().getUniqueId());
             Text.forOneUser(user, this.config.string("login-message")).send();
         }
     }
@@ -117,7 +115,7 @@ public class Listeners implements Listener {
             String completion = PlainTextComponentSerializer.plainText().serialize(e.message());
             if (completion.equalsIgnoreCase("cancel")) {
                 this.queue.remove(uuid);
-                User user = this.dao.forceUser(uuid);
+                User user = this.service.forceUser(uuid);
                 Text.forOneUser(user, this.config.string("cancel-prompt")).send();
             }
             this.queue.complete(uuid, completion);
@@ -132,7 +130,10 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerQuit(final PlayerQuitEvent e) {
-        this.queue.remove(e.getPlayer().getUniqueId());
+        UUID uuid = e.getPlayer().getUniqueId();
+        String username = e.getPlayer().getName();
+        this.service.removeFromCache(uuid, username);
+        this.queue.remove(uuid);
     }
 
     /**
@@ -142,27 +143,21 @@ public class Listeners implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void performTransaction(final CreditTransactionEvent e) {
-        UUID uuid = e.uuid();
+        CommandExecutor executor = this.service.fromSender(e.sender());
+        User target = this.service.forceUser(e.uuid());
         int amount = e.amount();
         CreditOperation operation = e.operation();
-        boolean transactionStatus = switch (operation) {
-            case ADD -> this.dao.addCredits(uuid, amount);
-            case SET -> this.dao.setCredits(uuid, amount);
-            case TAKE -> this.dao.takeCredits(uuid, amount);
-        };
-        CommandSender sender = e.sender();
-        Resolver resolver = Resolver.ofTransaction(this.dao.fromSender(sender), this.dao.forceUser(uuid), amount);
-        if (!transactionStatus) {
-            Text.fromString(sender, this.config.string("not-enough-credits"), resolver).send();
+        Resolver resolver = Resolver.ofTransaction(executor, target, amount);
+        if (!this.service.modifyCredits(target.uuid(), operation, amount)) {
+            Text.fromString(executor, this.config.string("not-enough-credits"), resolver).send();
             return;
         }
         String content = "credits-" + operation;
         if (!e.silentForSender()) {
-            Text.fromString(sender, this.config.string(content), resolver).send();
+            Text.fromString(executor, this.config.string(content), resolver).send();
         }
-        Player player = Bukkit.getPlayer(uuid);
-        if (player != null && !e.silentForUser()) {
-            Text.fromString(player, this.config.string(content + "-user"), resolver).send();
+        if (target.player() != null && !e.silentForUser()) {
+            Text.fromString(target, this.config.string(content + "-user"), resolver).send();
         }
     }
 
@@ -173,39 +168,39 @@ public class Listeners implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void performRedemption(final CreditRedemptionEvent e) {
-        UUID uuid = e.uuid();
+        CommandExecutor executor = this.service.fromSender(e.sender());
+        User target = this.service.forceUser(e.uuid());
         int amount = e.amount();
-        CommandSender sender = e.sender();
         PrimarySkillType skill = e.skill();
-        Resolver resolver = this.updateRedeemResolver(sender, uuid, skill, amount);
-        if (this.dao.getCredits(uuid) < amount) {
-            Text.fromString(sender, this.config.string("not-enough-credits"), resolver).send();
+        Resolver resolver = Resolver.ofRedemption(executor, target, skill, amount);
+        if (target.credits() < amount) {
+            Text.fromString(executor, this.config.string("not-enough-credits"), resolver).send();
             return;
         }
-        Player player = Bukkit.getPlayer(uuid);
-        PlayerProfile profile = player != null ? UserManager.getPlayer(player).getProfile() : mcMMO.getDatabaseManager().loadPlayerProfile(uuid);
-        if (!profile.isLoaded()) {
-            Text.fromString(sender, this.config.string("mcmmo-profile-fail"), resolver).send();
+        Optional<PlayerProfile> optionalProfile = Util.getMCMMOProfile(e.uuid());
+        if (optionalProfile.isEmpty()) {
+            Text.fromString(executor, this.config.string("mcmmo-profile-fail"), resolver).send();
             return;
         }
-        int currentLevel = profile.getSkillLevel(skill);
-        if (currentLevel + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill)) {
-            Text.fromString(sender, this.config.string("mcmmo-skill-cap"), resolver).send();
+        PlayerProfile profile = optionalProfile.get();
+        if (Util.exceedsSkillCap(profile, skill, amount)) {
+            Text.fromString(executor, this.config.string("mcmmo-skill-cap"), resolver).send();
             return;
         }
-        this.dao.redeemCredits(uuid, amount);
-        profile.modifySkill(skill, currentLevel + amount);
-        profile.save(true);
-        resolver = this.updateRedeemResolver(sender, uuid, skill, amount);
-        if (!e.silentForSender()) {
-            if (sender instanceof Player p && p.getUniqueId().equals(uuid)) {
-                Text.fromString(sender, this.config.string("redeem"), resolver).send();
-                return;
+        if (this.service.redeemCredits(target.uuid(), amount)) {
+            profile.addLevels(skill, amount);
+            profile.save(true);
+            //TODO: fix
+            //make new user to avoid hitting database. If we implement a User Cache this will not be necessary.
+            target = new User(target.uuid(), target.username(), target.credits() - amount, target.redeemed() + amount);
+            resolver = Resolver.ofRedemption(executor, target, skill, amount);
+            if (!e.silentForSender()) {
+                String key = e.isSelfRedemption() ? "redeem" : "redeem-sudo";
+                Text.fromString(executor, this.config.string(key), resolver).send();
             }
-            Text.fromString(sender, this.config.string("redeem-sudo"), resolver).send();
-        }
-        if (!e.silentForUser() && player != null) {
-            Text.fromString(player, this.config.string("redeem-sudo-user"), resolver).send();
+            if (!e.silentForUser() && target.player() != null) {
+                Text.fromString(target, this.config.string("redeem-sudo-user"), resolver).send();
+            }
         }
     }
 
@@ -237,18 +232,5 @@ public class Listeners implements Listener {
         if (e.getInventory().getHolder() instanceof ChestView) {
             e.setCancelled(true);
         }
-    }
-
-    /**
-     * Updates the Resolver used for message parsing as the information changes during event processing.
-     *
-     * @param sender CommandSender from event.
-     * @param uuid   UUID from event.
-     * @param skill  MCMMO skill from event.
-     * @param amount amount of credits from event.
-     * @return The updated resolver.
-     */
-    private Resolver updateRedeemResolver(final CommandSender sender, final UUID uuid, final PrimarySkillType skill, final int amount) {
-        return Resolver.ofRedemption(this.dao.fromSender(sender), this.dao.forceUser(uuid), skill, amount);
     }
 }

@@ -62,7 +62,7 @@ public class MainConfig extends Config {
     private String invalidLeaderboard = "<#FF253C>This leaderboard page is invalid!";
     private String invalidSender = "<red>Invalid command sender! You must be of type: <gray><correct_sender>";
     private String invalidSyntax = "<red>Invalid syntax! Correct syntax: <gray><correct_syntax>";
-    private String leaderboardEntry = "<place>. <green><target>: <white><target_credits>";
+    private String leaderboardEntry = "<rank>. <green><target>: <white><target_credits>";
     private String leaderboardTitle = "<#FF253C>MCMMO Credits Leaderboard";
     private String loginMessage = "<hover:show_text:'<green>You have <sender_credits> MCMMO Credits!'><yellow>Hover to see your MCMMO Credit balance!";
     private String mcmmoProfileFail = "The mcMMO Profile for <target> is not loaded! Aborting operation...";
@@ -81,7 +81,7 @@ public class MainConfig extends Config {
     /**
      * Constructs the configuration.
      */
-    MainConfig() {
+    public MainConfig() {
         super(MainConfig.class, "config.yml");
     }
 
@@ -91,11 +91,10 @@ public class MainConfig extends Config {
     @ConfigSerializable
     static class Settings {
         private boolean addUserMessage = true;
-        private DatabaseType databaseType = DatabaseType.SQLITE;
         private boolean debug = false;
         private int leaderboardPageSize = 10;
         private boolean sendLoginMessage = true;
         private boolean userTabComplete = true;
-        private DatabaseProperties mysql = new DatabaseProperties("127.0.0.1", "database", "root", "passw0rd+", 3306, true);
+        private DatabaseProperties database = new DatabaseProperties(DatabaseType.SQLITE, "127.0.0.1", "database", "root", "passw0rd+", 3306, true);
     }
 }

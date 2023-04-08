@@ -29,9 +29,9 @@ import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.specifier.Range;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.menu.Menu;
@@ -40,8 +40,10 @@ import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.CreditOperation;
 import org.bukkit.Bukkit;
+import org.bukkit.event.Event;
 import org.incendo.interfaces.paper.PlayerViewer;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
@@ -57,23 +59,25 @@ import java.util.Optional;
 public final class Credits {
     private final MenuConfig menuConfig;
     private final MainConfig config;
-    private final UserDAO dao;
+    private final UserService userService;
     private final MenuFactory factory;
+    private final MCMMOCredits plugin;
 
     /**
      * Constructs the command object via injection.
      *
-     * @param config     Instance of MainConfig. Used for messages and reload command.
-     * @param menuConfig Instance of MenuConfig. Used for reload command.
-     * @param dao        Instance of UserDAO. Used to obtain User info from command.
-     * @param factory    Instance of MenuFactory. Used to construct menus.
+     * @param config      Instance of MainConfig. Used for messages and reload command.
+     * @param menuConfig  Instance of MenuConfig. Used for reload command.
+     * @param userService Instance of UserService. Used to obtain User info from command.
+     * @param factory     Instance of MenuFactory. Used to construct menus.
      */
     @Inject
-    public Credits(final MainConfig config, final MenuConfig menuConfig, final UserDAO dao, final MenuFactory factory) {
+    public Credits(final MainConfig config, final MenuConfig menuConfig, final UserService userService, final MenuFactory factory, final MCMMOCredits plugin) {
         this.config = config;
         this.menuConfig = menuConfig;
-        this.dao = dao;
+        this.userService = userService;
         this.factory = factory;
+        this.plugin = plugin;
     }
 
     /**
@@ -96,7 +100,7 @@ public final class Credits {
     @CommandMethod("balance <username>")
     @CommandPermission("mcmmocredits.balance.other")
     public void balanceOther(final CommandExecutor executor, final @Argument(suggestions = "user") String username) {
-        Optional<User> user = this.dao.getUser(username);
+        Optional<User> user = this.userService.getUser(username);
         if (user.isPresent()) {
             Text.fromString(executor, this.config.string("balance-other"), Resolver.ofUsers(executor, user.get())).send();
             return;
@@ -109,7 +113,7 @@ public final class Credits {
     public void top(final CommandExecutor executor, final @Argument @Range(min = "1") int page) {
         int limit = this.config.node("leaderboard-page-size").getInt(10);
         int offset = Math.max(0, (page - 1) * limit);
-        List<User> users = this.dao.getPageOfUsers(limit, offset);
+        List<User> users = this.userService.getPageOfUsers(limit, offset);
         if (users.isEmpty()) {
             Text.forOneUser(executor, this.config.string("invalid-leaderboard")).send();
             return;
@@ -134,7 +138,7 @@ public final class Credits {
     @CommandPermission("mcmmocredits.modify.self")
     public void modify(final User user, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount) {
         CreditTransactionEvent event = new CreditTransactionEvent(user.player(), user.uuid(), operation, amount, true, false);
-        Bukkit.getPluginManager().callEvent(event);
+        this.runEvent(event);
     }
 
     /**
@@ -149,10 +153,10 @@ public final class Credits {
     @CommandMethod("<operation> <amount> <username>")
     @CommandPermission("mcmmocredits.modify.other")
     public void modifyOther(final CommandExecutor executor, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
-        Optional<User> optionalUser = this.dao.getUser(username);
+        Optional<User> optionalUser = this.userService.getUser(username);
         if (optionalUser.isPresent()) {
             CreditTransactionEvent event = new CreditTransactionEvent(executor.sender(), optionalUser.get().uuid(), operation, amount, silent, false);
-            Bukkit.getPluginManager().callEvent(event);
+            this.runEvent(event);
             return;
         }
         this.playerUnknownError(executor, username);
@@ -169,7 +173,7 @@ public final class Credits {
     @CommandPermission("mcmmocredits.redeem.self")
     public void redeem(final User user, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
         CreditRedemptionEvent event = new CreditRedemptionEvent(user.player(), user.uuid(), skill, amount, true, false);
-        Bukkit.getPluginManager().callEvent(event);
+        this.runEvent(event);
     }
 
     /**
@@ -184,10 +188,10 @@ public final class Credits {
     @CommandMethod("redeem <amount> <skill> <username>")
     @CommandPermission("mcmmocredits.redeem.other")
     public void redeemOther(final CommandExecutor executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
-        Optional<User> optionalUser = this.dao.getUser(username);
+        Optional<User> optionalUser = this.userService.getUser(username);
         if (optionalUser.isPresent()) {
             CreditRedemptionEvent event = new CreditRedemptionEvent(executor.sender(), optionalUser.get().uuid(), skill, amount, silent, false);
-            Bukkit.getPluginManager().callEvent(event);
+            this.runEvent(event);
             return;
         }
         this.playerUnknownError(executor, username);
@@ -260,5 +264,14 @@ public final class Credits {
         Resolver resolver = Resolver.ofUser(executor);
         resolver.addUsername(username);
         Text.fromString(executor, this.config.string("player-unknown"), resolver).send();
+    }
+
+    /**
+     * Utility method to call events synchronously.
+     *
+     * @param event The event.
+     */
+    private void runEvent(final Event event) {
+        Bukkit.getScheduler().getMainThreadExecutor(this.plugin).execute(() -> Bukkit.getPluginManager().callEvent(event));
     }
 }

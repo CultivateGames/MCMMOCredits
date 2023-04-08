@@ -50,7 +50,7 @@ public class MenuConfig extends Config {
     /**
      * Constructs the configuration.
      */
-    MenuConfig() {
+    public MenuConfig() {
         super(MenuConfig.class, "menus.yml");
     }
 
