@@ -148,12 +148,11 @@ public final class CloudExceptionHandler {
      */
     private static final class CaptionFormatter implements CaptionVariableReplacementHandler {
         @Override
-        public @NotNull String replaceVariables(final @NotNull String string, @NotNull final CaptionVariable... variables) {
-            String replacedString = string;
+        public @NotNull String replaceVariables(@NotNull String string, @NotNull final CaptionVariable... variables) {
             for (final CaptionVariable variable : variables) {
-                replacedString = replacedString.replace(String.format("<%s>", variable.getKey()), variable.getValue());
+                string = string.replace(String.format("<%s>", variable.getKey()), variable.getValue());
             }
-            return replacedString;
+            return string;
         }
     }
 }

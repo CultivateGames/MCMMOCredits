@@ -24,6 +24,7 @@
 package games.cultivate.mcmmocredits;
 
 import cloud.commandframework.annotations.AnnotationParser;
+import cloud.commandframework.annotations.PropertyReplacingStringProcessor;
 import cloud.commandframework.arguments.parser.ParserRegistry;
 import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
@@ -58,9 +59,14 @@ import java.util.function.Function;
  * Main class of the application. Handles startup and shutdown logic.
  */
 public final class MCMMOCredits extends JavaPlugin {
+    private static UserService userService;
     private Injector injector;
     private MainConfig config;
-    private static UserService userService;
+
+    @SuppressWarnings("unused")
+    public static UserService getAPI() {
+        return userService;
+    }
 
     @Override
     public void onEnable() {
@@ -68,7 +74,11 @@ public final class MCMMOCredits extends JavaPlugin {
         this.injector = Guice.createInjector(new PluginModule(this));
         this.checkForDependencies();
         this.config = this.injector.getInstance(MainConfig.class);
-        this.loadCommands();
+        try {
+            this.loadCommands();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         this.registerListeners();
         userService = this.injector.getInstance(UserService.class);
         long end = System.nanoTime();
@@ -105,21 +115,27 @@ public final class MCMMOCredits extends JavaPlugin {
      *
      * @see CloudExceptionHandler
      */
-    private void loadCommands() {
+    private void loadCommands() throws Exception {
+        PaperCommandManager<CommandExecutor> manager = this.loadCommandManager();
+        this.loadCommandParser(manager);
+        this.parseCommands(manager);
+        new CloudExceptionHandler(this.config, manager).apply();
+    }
+
+    private PaperCommandManager<CommandExecutor> loadCommandManager() throws Exception {
         PaperCommandManager<CommandExecutor> manager;
         Function<CommandSender, CommandExecutor> forwardsMapper = x -> userService.fromSender(x);
         var coordinator = AsynchronousCommandExecutionCoordinator.<CommandExecutor>builder().withAsynchronousParsing().build();
-        try {
-            manager = new PaperCommandManager<>(this, coordinator, forwardsMapper, CommandExecutor::sender);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
+        manager = new PaperCommandManager<>(this, coordinator, forwardsMapper, CommandExecutor::sender);
         manager.registerBrigadier();
         manager.brigadierManager().setNativeNumberSuggestions(false);
         manager.registerAsynchronousCompletions();
+        return manager;
+    }
+
+    private void loadCommandParser(final PaperCommandManager<CommandExecutor> manager) {
         ParserRegistry<CommandExecutor> parser = manager.parserRegistry();
-        parser.registerParserSupplier(TypeToken.get(PrimarySkillType.class), options -> new SkillParser<>());
+        parser.registerParserSupplier(TypeToken.get(PrimarySkillType.class), x -> new SkillParser<>());
         boolean tabCompletion = this.config.node("settings", "user-tab-complete").getBoolean();
         parser.registerSuggestionProvider("user", (c, i) -> {
             if (tabCompletion) {
@@ -127,10 +143,20 @@ public final class MCMMOCredits extends JavaPlugin {
             }
             return List.of();
         });
-        parser.registerSuggestionProvider("menus", (c, i) -> List.of("main", "config", "redeem"));
+        List<String> menus = List.of("main", "config", "redeem");
+        parser.registerSuggestionProvider("menus", (c, i) -> menus);
+    }
+
+    private void parseCommands(final PaperCommandManager<CommandExecutor> manager) {
         AnnotationParser<CommandExecutor> annotationParser = new AnnotationParser<>(manager, CommandExecutor.class, p -> SimpleCommandMeta.empty());
+        String commandPrefix = this.config.rawString("command-prefix");
+        annotationParser.stringProcessor(new PropertyReplacingStringProcessor(x -> {
+            if (x.equals("command.prefix")) {
+                return commandPrefix;
+            }
+            return x;
+        }));
         annotationParser.parse(this.injector.getInstance(Credits.class));
-        new CloudExceptionHandler(this.config, manager).apply();
     }
 
     /**
@@ -143,13 +169,13 @@ public final class MCMMOCredits extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        long start = System.nanoTime();
         this.injector.getInstance(MainConfig.class).save();
         this.injector.getInstance(MenuConfig.class).save();
         this.injector.getInstance(DAOProvider.class).disable();
-    }
-
-    @SuppressWarnings("unused")
-    public static UserService getAPI() {
-        return userService;
+        long end = System.nanoTime();
+        if (this.config.bool("settings", "debug")) {
+            this.getSLF4JLogger().info("Plugin disabled! Shutdown took: {} s.", (double) (end - start) / 1000000000);
+        }
     }
 }

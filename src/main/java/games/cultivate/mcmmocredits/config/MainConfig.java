@@ -50,6 +50,7 @@ public class MainConfig extends Config {
     private String balanceOther = "<green><target> has <target_credits> MCMMO Credits! They have redeemed <target_redeemed> Credits.";
     private String cancelPrompt = "<red>You have cancelled the current operation.";
     private String commandExecution = "<red>There was an error executing this command!";
+    private String commandPrefix = "credits";
     private String creditsAdd = "<green>You have given <amount> Credits to <target>.";
     private String creditsSet = "<yellow>You have set <target>'s Credits to <amount>.";
     private String creditsTake = "<red>You have taken <amount> Credits from <target>.";

@@ -22,6 +22,7 @@ balance-other: <green><target> has <target_credits> MCMMO Credits! They have red
   <target_redeemed> Credits.
 cancel-prompt: <red>You have cancelled the current operation.
 command-execution: <red>There was an error executing this command!
+command-prefix: credits
 credits-add: <green>You have given <amount> Credits to <target>.
 credits-set: <yellow>You have set <target>'s Credits to <amount>.
 credits-take: <red>You have taken <amount> Credits from <target>.

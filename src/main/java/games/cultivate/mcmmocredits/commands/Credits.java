@@ -52,10 +52,10 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Handles all /credits commands. Alias: /mcmmocredits.
- * We use duplicate code in some places to enforce unique permissions.
+ * Handles all commands. Prefix is customizable via config.
+ * Default is /credits.
  */
-@CommandMethod("credits|mcmmocredits")
+@CommandMethod("${command.prefix}")
 public final class Credits {
     private final MenuConfig menuConfig;
     private final MainConfig config;
