@@ -25,6 +25,7 @@ package games.cultivate.mcmmocredits.placeholders;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
+import games.cultivate.mcmmocredits.util.Util;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
@@ -154,7 +155,7 @@ public final class Resolver {
      */
     @SuppressWarnings("deprecation")
     public void addSkill(final PrimarySkillType skill) {
-        this.addStringTag("skill", this.capitalize(skill.name()));
+        this.addStringTag("skill", Util.capitalizeWord(skill.name()));
         this.addIntTag("cap", skill.getMaxLevel());
     }
 
@@ -196,18 +197,5 @@ public final class Resolver {
             builder = builder.tag(entry.getKey(), Tag.preProcessParsed(entry.getValue()));
         }
         return builder.build();
-    }
-
-    /**
-     * Capitalizes the first letter of the input string and sets the remaining characters to lowercase.
-     *
-     * @param string The input string to be capitalized.
-     * @return The capitalized string.
-     */
-    private String capitalize(final String string) {
-        if (string == null || string.isEmpty()) {
-            return string;
-        }
-        return string.substring(0, 1).toUpperCase() + string.substring(1).toLowerCase();
     }
 }

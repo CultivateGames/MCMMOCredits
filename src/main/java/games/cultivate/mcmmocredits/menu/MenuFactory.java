@@ -73,7 +73,7 @@ public final class MenuFactory {
             this.addMainMenuItem(menu, user, "config");
             this.addMainMenuItem(menu, user, "redeem");
         }
-        if (menu.properties().fill()) {
+        if (menu.fill()) {
             this.applyFill(menu, path);
         }
         return menu.createInterface(user, this.clickFactory);
@@ -100,11 +100,11 @@ public final class MenuFactory {
      * @param path Node path of the menu.
      */
     private void applyFill(final Menu menu, final String path) {
-        Set<Integer> allSlots = IntStream.range(0, menu.properties().slots()).boxed().collect(Collectors.toSet());
+        Set<Integer> allSlots = IntStream.range(0, menu.slots()).boxed().collect(Collectors.toSet());
         Set<Integer> itemSlots = menu.items().stream().map(Item::slot).collect(Collectors.toSet());
         allSlots.removeAll(itemSlots);
         Item fill = this.menuConfig.getItem(path, "items", "fill");
-        allSlots.forEach(x -> menu.items().add(fill.toBuilder().slot(x).build()));
+        allSlots.forEach(x -> menu.items().add(fill.withSlot(x)));
     }
 
     /**
@@ -124,6 +124,6 @@ public final class MenuFactory {
     }
 
     private Item prepareConfigItem(final String type, final String name, final int slot) {
-        return this.menuConfig.getItem("config", "items", type).toBuilder().name(name).slot(slot).build();
+        return this.menuConfig.getItem("config", "items", type).withName(name).withSlot(slot);
     }
 }

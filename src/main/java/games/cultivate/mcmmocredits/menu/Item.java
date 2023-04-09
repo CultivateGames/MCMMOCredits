@@ -24,7 +24,10 @@
 package games.cultivate.mcmmocredits.menu;
 
 import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.text.Text;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.incendo.interfaces.core.transform.TransformContext;
 import org.incendo.interfaces.core.util.Vector2;
@@ -40,22 +43,25 @@ import java.util.List;
 public final class Item {
     private final ClickTypes type;
     private final ItemStack stack;
-    private final ItemProperties properties;
+    private final String name;
+    private final List<String> lore;
     private final int slot;
     private final String data;
 
     /**
      * Constructs the object.
      *
-     * @param stack      The representative ItemStack. Updated with refreshing name/lore.
-     * @param properties Updatable properties of the item.
-     * @param type       Item ClickTypes that determines what type of click is applied.
-     * @param slot       Location of item in the inventory.
-     * @param data       String data used to construct the click. For example, could represent a command or skill type.
+     * @param stack The representative ItemStack. Updated with refreshing name/lore.
+     * @param name  Mutable name of the item.
+     * @param lore  Mutable lore of the item.
+     * @param type  Item ClickTypes that determines what type of click is applied.
+     * @param slot  Location of item in the inventory.
+     * @param data  String data used to construct the click. For example, could represent a command or skill type.
      */
-    private Item(final ItemStack stack, final ItemProperties properties, final ClickTypes type, final String data, final int slot) {
+    private Item(final ItemStack stack, final String name, final List<String> lore, final ClickTypes type, final String data, final int slot) {
         this.stack = stack;
-        this.properties = properties;
+        this.name = name;
+        this.lore = lore;
         this.type = type;
         this.data = data;
         this.slot = slot;
@@ -68,7 +74,9 @@ public final class Item {
      * @return The Item.
      */
     public static Item of(final Material material) {
-        return Item.builder().item(new ItemStack(material, 1)).build();
+        return Item.builder()
+                .item(new ItemStack(material, 1))
+                .build();
     }
 
     /**
@@ -80,13 +88,28 @@ public final class Item {
         return new Item.Builder();
     }
 
-    /**
-     * Converts the Item into a builder.
-     *
-     * @return New instance of the Item Builder with preserved properties.
-     */
-    public Item.Builder toBuilder() {
-        return Item.builder().item(this.stack).properties(this.properties).type(this.type).slot(this.slot).data(this.data);
+    public Item withClickType(final ClickTypes type) {
+        return new Item(this.stack, this.name, this.lore, type, this.data, this.slot);
+    }
+
+    public Item withStack(final ItemStack stack) {
+        return new Item(stack, this.name, this.lore, this.type, this.data, this.slot);
+    }
+
+    public Item withName(final String name) {
+        return new Item(this.stack, name, this.lore, this.type, this.data, this.slot);
+    }
+
+    public Item withLore(final List<String> lore) {
+        return new Item(this.stack, this.name, lore, this.type, this.data, this.slot);
+    }
+
+    public Item withData(final String data) {
+        return new Item(this.stack, this.name, this.lore, this.type, data, this.slot);
+    }
+
+    public Item withSlot(final int slot) {
+        return new Item(this.stack, this.name, this.lore, this.type, this.data, slot);
     }
 
     /**
@@ -113,7 +136,7 @@ public final class Item {
      * @return The Item's name.
      */
     public String name() {
-        return this.properties.name();
+        return this.name;
     }
 
     /**
@@ -122,16 +145,7 @@ public final class Item {
      * @return The Item's lore.
      */
     public List<String> lore() {
-        return this.properties.lore();
-    }
-
-    /**
-     * Get the ItemProperties.
-     *
-     * @return The ItemProperties.
-     */
-    public ItemProperties properties() {
-        return this.properties;
+        return this.lore;
     }
 
     /**
@@ -152,11 +166,26 @@ public final class Item {
         return this.data;
     }
 
+    public ItemStack applyProperties(final Player player, final Resolver resolver) {
+        Component display = Text.fromString(player, this.name, resolver).toComponent();
+        var ilore = this.lore.stream().map(x -> Text.fromString(player, x, resolver).toComponent()).toList();
+        ItemStack stackCopy = new ItemStack(this.stack);
+        stackCopy.editMeta(meta -> {
+            if (!this.name.isEmpty()) {
+                meta.displayName(display);
+            }
+            if (this.lore.stream().noneMatch(String::isEmpty)) {
+                meta.lore(ilore);
+            }
+        });
+        return stackCopy;
+    }
+
     public TransformContext<ChestPane, PlayerViewer> context(final ClickFactory clickFactory, final Resolver resolver) {
         String info = this.type.name().startsWith("EDIT_") ? this.name() : this.data;
         var handler = clickFactory.getClick(this.type, info, resolver);
         return TransformContext.of(0, ((pane, view) -> {
-            ItemStack menuItem = this.properties.apply(this.stack, view.viewer().player(), resolver);
+            ItemStack menuItem = this.applyProperties(view.viewer().player(), resolver);
             return pane.element(ItemStackElement.of(menuItem, handler), this.slot % 9, this.slot / 9);
         }));
     }
@@ -167,7 +196,8 @@ public final class Item {
     public static final class Builder {
         private ClickTypes type;
         private ItemStack item;
-        private ItemProperties properties;
+        private String name;
+        private List<String> lore;
         private int slot;
         private String data;
 
@@ -177,7 +207,8 @@ public final class Item {
         private Builder() {
             this.type = ClickTypes.FILL;
             this.item = new ItemStack(Material.STONE, 1);
-            this.properties = ItemProperties.empty();
+            this.name = "";
+            this.lore = List.of();
             this.slot = 0;
             this.data = "";
         }
@@ -211,7 +242,7 @@ public final class Item {
          * @return The updated Builder.
          */
         public Builder name(final String name) {
-            this.properties = new ItemProperties(name, this.properties.lore());
+            this.name = name;
             return this;
         }
 
@@ -222,12 +253,7 @@ public final class Item {
          * @return The updated Builder.
          */
         public Builder lore(final List<String> lore) {
-            this.properties = new ItemProperties(this.properties.name(), lore);
-            return this;
-        }
-
-        public Builder properties(final ItemProperties properties) {
-            this.properties = properties;
+            this.lore = lore;
             return this;
         }
 
@@ -259,7 +285,7 @@ public final class Item {
          * @return A new Item instance.
          */
         public Item build() {
-            return new Item(this.item, this.properties, this.type, this.data, this.slot);
+            return new Item(this.item, this.name, this.lore, this.type, this.data, this.slot);
         }
     }
 }

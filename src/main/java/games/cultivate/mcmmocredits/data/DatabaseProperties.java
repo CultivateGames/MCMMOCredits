@@ -38,4 +38,7 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
  */
 @ConfigSerializable
 public record DatabaseProperties(DatabaseType type, String host, String name, String user, String password, int port, boolean ssl) {
+    public static DatabaseProperties defaults() {
+        return new DatabaseProperties(DatabaseType.SQLITE, "127.0.0.1", "database", "root", "passw0rd+", 3306, true);
+    }
 }

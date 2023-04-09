@@ -24,7 +24,6 @@
 package games.cultivate.mcmmocredits.serializers;
 
 import games.cultivate.mcmmocredits.config.Config;
-import games.cultivate.mcmmocredits.menu.MenuProperties;
 import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
@@ -36,6 +35,7 @@ import org.spongepowered.configurate.serialize.TypeSerializer;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+
 /**
  * Handles serialization/deserialization of {@link Menu} from {@link Config}.
  * The Menu deserialized here is incomplete and is transferred to the MenuFactory.
@@ -45,7 +45,6 @@ public final class MenuSerializer implements TypeSerializer<Menu> {
 
     @Override
     public Menu deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
-        MenuProperties properties = node.node("properties").get(MenuProperties.class);
         List<Item> items = new ArrayList<>();
         for (ConfigurationNode entry : node.node("items").childrenMap().values()) {
             Item item = entry.get(Item.class);
@@ -54,10 +53,14 @@ public final class MenuSerializer implements TypeSerializer<Menu> {
                 items.add(item);
             }
         }
-        if (properties.navigation()) {
+        boolean navigation = node.node("navigation").getBoolean();
+        if (navigation) {
             items.add(node.node("items", "navigation").get(Item.class));
         }
-        return new Menu(properties, items);
+        String title = node.node("title").getString();
+        int slots = node.node("slots").getInt();
+        boolean fill = node.node("fill").getBoolean();
+        return new Menu(items, title, slots, fill, navigation);
     }
 
     @Override

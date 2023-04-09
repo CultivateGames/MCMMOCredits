@@ -56,10 +56,7 @@ public final class ItemSerializer implements TypeSerializer<Item> {
         int slot = node.node("slot").getInt();
         Material material = node.node("material").get(Material.class, Material.STONE);
         int amount = node.node("amount").getInt(1);
-
-        Item.Builder builder = Item.builder().name(name).lore(lore).slot(slot);
         ItemStack item = new ItemStack(material, amount);
-
         ItemMeta meta = item.getItemMeta();
         if (node.node("glow").getBoolean(false)) {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
@@ -83,7 +80,14 @@ public final class ItemSerializer implements TypeSerializer<Item> {
             case REDEEM -> ((String) node.key()).toUpperCase();
             case FILL -> "fill";
         };
-        return builder.item(item).type(clickType).data(data).build();
+        return Item.builder()
+                .name(name)
+                .lore(lore)
+                .slot(slot)
+                .item(item)
+                .type(clickType)
+                .data(data)
+                .build();
     }
 
     @Override

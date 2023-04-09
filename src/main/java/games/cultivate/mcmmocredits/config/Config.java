@@ -24,7 +24,6 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.data.DatabaseProperties;
-import games.cultivate.mcmmocredits.data.DatabaseType;
 import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
@@ -233,8 +232,7 @@ public class Config {
      * @return The value.
      */
     public DatabaseProperties getDatabaseProperties() {
-        DatabaseProperties opts = new DatabaseProperties(DatabaseType.SQLITE, "127.0.0.1", "database", "root", "passw0rd+", 3306, true);
-        return this.value(DatabaseProperties.class, opts, "settings", "database");
+        return this.value(DatabaseProperties.class, DatabaseProperties.defaults(), "settings", "database");
     }
 
     /**

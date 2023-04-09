@@ -28,7 +28,7 @@ import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.menu.MenuProperties;
-import org.apache.commons.lang.WordUtils;
+import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
@@ -95,11 +95,15 @@ public class MenuConfig extends Config {
             private Item messages = this.configItem(Material.WRITABLE_BOOK, ClickTypes.EDIT_MESSAGE);
             private Item settings = this.configItem(Material.REDSTONE, ClickTypes.EDIT_SETTING);
             private Item fill = FILLER_ITEM;
-            private Item navigation = NAVIGATION_ITEM.toBuilder().slot(49).build();
+            private Item navigation = NAVIGATION_ITEM.withSlot(49);
 
             private Item configItem(final Material material, final ClickTypes type) {
-                List<String> lore = List.of("<gray>Click here to edit this config option!");
-                return Item.builder().item(new ItemStack(material, 1)).slot(-1).type(type).lore(lore).build();
+                return Item.builder()
+                        .item(new ItemStack(material, 1))
+                        .slot(-1)
+                        .type(type)
+                        .lore(List.of("<gray>Click here to edit this config option!"))
+                        .build();
             }
         }
     }
@@ -131,10 +135,13 @@ public class MenuConfig extends Config {
             private Item navigation = NAVIGATION_ITEM;
 
             private Item redeemItem(final Material material, final PrimarySkillType skill, final int slot) {
-                ItemStack item = new ItemStack(material, 1);
-                String name = "<yellow>" + WordUtils.capitalizeFully(skill.name());
-                List<String> lore = List.of("<yellow><sender>, click here to redeem!");
-                return Item.builder().item(item).name(name).lore(lore).type(ClickTypes.REDEEM).slot(slot).build();
+                return Item.builder()
+                        .item(new ItemStack(material, 1))
+                        .name("<yellow>" + Util.capitalizeWord(skill.name()))
+                        .lore(List.of("<yellow><sender>, click here to redeem!"))
+                        .type(ClickTypes.REDEEM)
+                        .slot(slot)
+                        .build();
             }
         }
     }

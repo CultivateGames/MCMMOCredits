@@ -37,6 +37,7 @@ import java.util.Properties;
  */
 public class DataSourceFactory {
     private DataSourceFactory() {
+        throw new AssertionError("DataSourceFactory cannot be instantiated!");
     }
 
     /**

@@ -123,4 +123,17 @@ public final class Util {
     public static Path getPluginPath() {
         return PLUGIN_PATH;
     }
+
+    /**
+     * Capitalizes the first letter of the input string and sets the remaining characters to lowercase.
+     *
+     * @param string The input string to be capitalized.
+     * @return The capitalized string.
+     */
+    public static String capitalizeWord(final String string) {
+        if (string == null || string.isEmpty()) {
+            return string;
+        }
+        return string.substring(0, 1).toUpperCase() + string.substring(1).toLowerCase();
+    }
 }

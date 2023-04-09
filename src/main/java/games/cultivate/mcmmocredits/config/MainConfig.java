@@ -24,7 +24,6 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.data.DatabaseProperties;
-import games.cultivate.mcmmocredits.data.DatabaseType;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
@@ -96,6 +95,6 @@ public class MainConfig extends Config {
         private int leaderboardPageSize = 10;
         private boolean sendLoginMessage = true;
         private boolean userTabComplete = true;
-        private DatabaseProperties database = new DatabaseProperties(DatabaseType.SQLITE, "127.0.0.1", "database", "root", "passw0rd+", 3306, true);
+        private DatabaseProperties database = DatabaseProperties.defaults();
     }
 }

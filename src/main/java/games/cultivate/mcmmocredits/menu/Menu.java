@@ -23,45 +23,31 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
-import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.Component;
 import org.incendo.interfaces.core.click.ClickHandler;
-import org.incendo.interfaces.core.transform.TransformContext;
-import org.incendo.interfaces.paper.PlayerViewer;
-import org.incendo.interfaces.paper.pane.ChestPane;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
 import java.util.List;
 
 /**
- * Representation of a GUI created by the plugin.
- * <p>
- * When constructed, we only have a list of items serialized from a {@link Config}.
- * This object is passed to the {@link MenuFactory} to apply transformations to the serialized items.
- * It is then built using the createInterface method.
- *
- * @param properties Common menu properties.
- * @param items      List of Items obtained through serialization.
- * @see MenuSerializer
- * @see MenuFactory
+ * Represents a menu in the game with a list of items, title, number of slots, and optional fill and navigation.
  */
-public record Menu(MenuProperties properties, List<Item> items) {
+public record Menu(List<Item> items, String title, int slots, boolean fill, boolean navigation) {
+
     /**
-     * Transforms the Menu into a completed ChestInterface that is ready to view.
+     * Creates a new ChestInterface for the given user with the specified clickFactory.
      *
-     * @param user         User to parse the Menu's title against.
-     * @param clickFactory Instance of the ClickFactory.
-     * @return The built ChestInterface.
-     * @see MenuFactory
+     * @param user         The user for which the ChestInterface will be created.
+     * @param clickFactory The factory responsible for creating click actions.
+     * @return A new ChestInterface instance.
      */
     public ChestInterface createInterface(final User user, final ClickFactory clickFactory) {
-        Component title = Text.forOneUser(user, this.properties.title()).toComponent();
+        Component compTitle = Text.forOneUser(user, this.title).toComponent();
         Resolver resolver = Resolver.ofUser(user);
-        List<TransformContext<ChestPane, PlayerViewer>> transforms = this.items().stream().map(x -> x.context(clickFactory, resolver)).toList();
-        return new ChestInterface(this.properties.slots() / 9, title, transforms, List.of(), true, 10, ClickHandler.cancel());
+        var transforms = this.items().stream().map(x -> x.context(clickFactory, resolver)).toList();
+        return new ChestInterface(this.slots / 9, compTitle, transforms, List.of(), true, 10, ClickHandler.cancel());
     }
 }
