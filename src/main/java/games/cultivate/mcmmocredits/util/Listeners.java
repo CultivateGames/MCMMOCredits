@@ -98,7 +98,7 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerJoin(final PlayerJoinEvent e) {
         if (this.config.getBoolean("settings", "send-login-message")) {
-            User user = this.service.forceUser(e.getPlayer().getUniqueId());
+            User user = this.service.getUser(e.getPlayer().getUniqueId()).orElseThrow();
             Text.forOneUser(user, this.config.getMessage("login-message")).send();
         }
     }
@@ -115,7 +115,7 @@ public class Listeners implements Listener {
             String completion = PlainTextComponentSerializer.plainText().serialize(e.message());
             if (completion.equalsIgnoreCase("cancel")) {
                 this.queue.remove(uuid);
-                User user = this.service.forceUser(uuid);
+                User user = this.service.getUser(uuid).orElseThrow();
                 Text.forOneUser(user, this.config.getMessage("cancel-prompt")).send();
             }
             this.queue.complete(uuid, completion);
@@ -131,8 +131,7 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerQuit(final PlayerQuitEvent e) {
         UUID uuid = e.getPlayer().getUniqueId();
-        String username = e.getPlayer().getName();
-        this.service.removeFromCache(uuid, username);
+        this.service.removeFromCache(uuid, e.getPlayer().getName());
         this.queue.remove(uuid);
     }
 
@@ -144,20 +143,20 @@ public class Listeners implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void performTransaction(final CreditTransactionEvent e) {
         CommandExecutor executor = this.service.fromSender(e.sender());
-        User target = this.service.forceUser(e.uuid());
+        User target = this.service.getUser(e.uuid()).orElseThrow();
         int amount = e.amount();
         CreditOperation operation = e.operation();
         Resolver resolver = Resolver.ofTransaction(executor, target, amount);
-        if (!this.service.modifyCredits(target.uuid(), operation, amount)) {
+        target = this.service.modifyCredits(target.uuid(), operation, amount);
+        if (target == null) {
             Text.fromString(executor, this.config.getMessage("not-enough-credits"), resolver).send();
             return;
         }
-        String content = "credits-" + operation;
         if (!e.silentForSender()) {
-            Text.fromString(executor, this.config.getMessage(content), resolver).send();
+            Text.fromString(executor, this.config.getMessage(operation.getMessageKey()), resolver).send();
         }
         if (target.player() != null && !e.silentForUser()) {
-            Text.fromString(target, this.config.getMessage(content + "-user"), resolver).send();
+            Text.fromString(target, this.config.getMessage(operation.getUserMessageKey()), resolver).send();
         }
     }
 
@@ -169,7 +168,7 @@ public class Listeners implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void performRedemption(final CreditRedemptionEvent e) {
         CommandExecutor executor = this.service.fromSender(e.sender());
-        User target = this.service.forceUser(e.uuid());
+        User target = this.service.getUser(e.uuid()).orElseThrow();
         int amount = e.amount();
         PrimarySkillType skill = e.skill();
         Resolver resolver = Resolver.ofRedemption(executor, target, skill, amount);
@@ -187,12 +186,10 @@ public class Listeners implements Listener {
             Text.fromString(executor, this.config.getMessage("mcmmo-skill-cap"), resolver).send();
             return;
         }
-        if (this.service.redeemCredits(target.uuid(), amount)) {
+        target = this.service.redeemCredits(target.uuid(), amount);
+        if (target != null) {
             profile.addLevels(skill, amount);
             profile.save(true);
-            //TODO: fix
-            //make new user to avoid hitting database. If we implement a User Cache this will not be necessary.
-            target = new User(target.uuid(), target.username(), target.credits() - amount, target.redeemed() + amount);
             resolver = Resolver.ofRedemption(executor, target, skill, amount);
             if (!e.silentForSender()) {
                 String key = e.isSelfRedemption() ? "redeem" : "redeem-sudo";

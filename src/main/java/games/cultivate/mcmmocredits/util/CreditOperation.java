@@ -23,11 +23,33 @@
 //
 package games.cultivate.mcmmocredits.util;
 
+import java.util.function.IntBinaryOperator;
+
 /**
  * Represents different credit transactions in /credits modify add|set|take
  */
 public enum CreditOperation {
-    ADD, SET, TAKE;
+    ADD(Integer::sum),
+    TAKE((a, b) -> a - b),
+    SET((a, b) -> b);
+
+    private final IntBinaryOperator operator;
+
+    CreditOperation(IntBinaryOperator operator) {
+        this.operator = operator;
+    }
+
+    public int apply(int a, int b) {
+        return this.operator.applyAsInt(a, b);
+    }
+
+    public String getMessageKey() {
+        return "credits-" + this;
+    }
+
+    public String getUserMessageKey() {
+        return this.getMessageKey() + "-user";
+    }
 
     @Override
     public String toString() {

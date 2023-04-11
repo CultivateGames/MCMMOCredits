@@ -28,15 +28,25 @@ import games.cultivate.mcmmocredits.util.CreditOperation;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Service to get and modify Users.
+ */
 public final class UserService {
     private final UserDAO dao;
     private final UserCache cache;
 
+    /**
+     * Constructs the service.
+     *
+     * @param dao   Instance of UserDAO.
+     * @param cache Instance of UserCache.
+     */
     @Inject
     public UserService(final UserDAO dao, final UserCache cache) {
         this.dao = dao;
@@ -110,12 +120,11 @@ public final class UserService {
     /**
      * @see UserDAO#setUsername(UUID, String)
      */
-    public boolean setUsername(final UUID uuid, final String username) {
+    public @Nullable User setUsername(final UUID uuid, final String username) {
         if (this.dao.setUsername(uuid, username)) {
-            this.cache.update(uuid, user -> user.withUsername(username));
-            return true;
+            return this.cache.update(uuid, user -> user.withUsername(username));
         }
-        return false;
+        return null;
     }
 
     /**
@@ -126,55 +135,34 @@ public final class UserService {
     }
 
     /**
-     * @see UserDAO#setCredits(UUID, int)
+     * Modifies credit balance of a User and returns the updated User.
+     *
+     * @param uuid      UUID of the user.
+     * @param operation the operation to apply.
+     * @param amount    amount of credits to redeem.
+     * @return the updated User.
      */
-    public boolean setCredits(final UUID uuid, final int amount) {
-        if (this.dao.setCredits(uuid, amount)) {
-            this.cache.update(uuid, user -> user.withCredits(amount));
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @see UserDAO#addCredits(UUID, int)
-     */
-    public boolean addCredits(final UUID uuid, final int amount) {
-        if (this.dao.addCredits(uuid, amount)) {
-            this.cache.update(uuid, user -> user.withCredits(user.credits() + amount));
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @see UserDAO#takeCredits(UUID, int)
-     */
-    public boolean takeCredits(final UUID uuid, final int amount) {
-        if (this.dao.takeCredits(uuid, amount)) {
-            this.cache.update(uuid, user -> user.withCredits(user.credits() - amount));
-            return true;
-        }
-        return false;
-    }
-
-    public boolean modifyCredits(final UUID uuid, final CreditOperation operation, final int amount) {
-        return switch (operation) {
-            case ADD -> this.addCredits(uuid, amount);
-            case SET -> this.setCredits(uuid, amount);
-            case TAKE -> this.takeCredits(uuid, amount);
+    public @Nullable User modifyCredits(final UUID uuid, final CreditOperation operation, final int amount) {
+        boolean status = switch (operation) {
+            case ADD -> this.dao.addCredits(uuid, amount);
+            case SET -> this.dao.setCredits(uuid, amount);
+            case TAKE -> this.dao.takeCredits(uuid, amount);
         };
+        return status ? this.cache.update(uuid, u -> u.withCredits(operation.apply(u.credits(), amount))) : null;
     }
 
     /**
-     * @see UserDAO#redeemCredits(UUID, int)
+     * Performs a credit redemption and returns the updated User.
+     *
+     * @param uuid   UUID of the user.
+     * @param amount amount of credits to redeem.
+     * @return the updated User.
      */
-    public boolean redeemCredits(final UUID uuid, final int amount) {
+    public @Nullable User redeemCredits(final UUID uuid, final int amount) {
         if (this.dao.redeemCredits(uuid, amount)) {
-            this.cache.update(uuid, user -> user.withCredits(user.credits() - amount).withRedeemed(user.redeemed() + amount));
-            return true;
+            return this.cache.update(uuid, user -> user.withCredits(user.credits() - amount).withRedeemed(user.redeemed() + amount));
         }
-        return false;
+        return null;
     }
 
     /**
@@ -191,20 +179,7 @@ public final class UserService {
      * @return The CommandExecutor, either a User or Console.
      */
     public CommandExecutor fromSender(final CommandSender sender) {
-        if (sender instanceof Player player) {
-            return this.forceUser(player.getUniqueId());
-        }
-        return Console.INSTANCE;
-    }
-
-    /**
-     * Retrieves a user from the database when the user is known to exist.
-     *
-     * @param uuid The UUID of the user.
-     * @return The user, or throws NoSuchElementException if not found.
-     */
-    public User forceUser(final UUID uuid) {
-        return this.getUser(uuid).orElseThrow();
+        return sender instanceof Player p ? this.getUser(p.getUniqueId()).orElseThrow() : Console.INSTANCE;
     }
 
     /**
