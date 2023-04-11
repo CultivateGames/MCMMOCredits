@@ -151,7 +151,7 @@ public final class UserService {
      * @see UserDAO#takeCredits(UUID, int)
      */
     public boolean takeCredits(final UUID uuid, final int amount) {
-        if (this.dao.addCredits(uuid, amount)) {
+        if (this.dao.takeCredits(uuid, amount)) {
             this.cache.update(uuid, user -> user.withCredits(user.credits() - amount));
             return true;
         }
@@ -170,11 +170,11 @@ public final class UserService {
      * @see UserDAO#redeemCredits(UUID, int)
      */
     public boolean redeemCredits(final UUID uuid, final int amount) {
-        boolean status = this.dao.redeemCredits(uuid, amount);
-        if (status) {
+        if (this.dao.redeemCredits(uuid, amount)) {
             this.cache.update(uuid, user -> user.withCredits(user.credits() - amount).withRedeemed(user.redeemed() + amount));
+            return true;
         }
-        return status;
+        return false;
     }
 
     /**

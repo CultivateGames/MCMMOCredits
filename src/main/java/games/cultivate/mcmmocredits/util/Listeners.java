@@ -85,8 +85,8 @@ public class Listeners implements Listener {
             return;
         }
         this.service.addUser(uuid, username);
-        if (this.config.bool("settings", "add-user-message")) {
-            Text.forOneUser(Console.INSTANCE, this.config.string("add-user")).send();
+        if (this.config.getBoolean("settings", "add-user-message")) {
+            Text.forOneUser(Console.INSTANCE, this.config.getMessage("add-user")).send();
         }
     }
 
@@ -97,9 +97,9 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(final PlayerJoinEvent e) {
-        if (this.config.bool("settings", "send-login-message")) {
+        if (this.config.getBoolean("settings", "send-login-message")) {
             User user = this.service.forceUser(e.getPlayer().getUniqueId());
-            Text.forOneUser(user, this.config.string("login-message")).send();
+            Text.forOneUser(user, this.config.getMessage("login-message")).send();
         }
     }
 
@@ -116,7 +116,7 @@ public class Listeners implements Listener {
             if (completion.equalsIgnoreCase("cancel")) {
                 this.queue.remove(uuid);
                 User user = this.service.forceUser(uuid);
-                Text.forOneUser(user, this.config.string("cancel-prompt")).send();
+                Text.forOneUser(user, this.config.getMessage("cancel-prompt")).send();
             }
             this.queue.complete(uuid, completion);
             e.setCancelled(true);
@@ -149,15 +149,15 @@ public class Listeners implements Listener {
         CreditOperation operation = e.operation();
         Resolver resolver = Resolver.ofTransaction(executor, target, amount);
         if (!this.service.modifyCredits(target.uuid(), operation, amount)) {
-            Text.fromString(executor, this.config.string("not-enough-credits"), resolver).send();
+            Text.fromString(executor, this.config.getMessage("not-enough-credits"), resolver).send();
             return;
         }
         String content = "credits-" + operation;
         if (!e.silentForSender()) {
-            Text.fromString(executor, this.config.string(content), resolver).send();
+            Text.fromString(executor, this.config.getMessage(content), resolver).send();
         }
         if (target.player() != null && !e.silentForUser()) {
-            Text.fromString(target, this.config.string(content + "-user"), resolver).send();
+            Text.fromString(target, this.config.getMessage(content + "-user"), resolver).send();
         }
     }
 
@@ -174,17 +174,17 @@ public class Listeners implements Listener {
         PrimarySkillType skill = e.skill();
         Resolver resolver = Resolver.ofRedemption(executor, target, skill, amount);
         if (target.credits() < amount) {
-            Text.fromString(executor, this.config.string("not-enough-credits"), resolver).send();
+            Text.fromString(executor, this.config.getMessage("not-enough-credits"), resolver).send();
             return;
         }
         Optional<PlayerProfile> optionalProfile = Util.getMCMMOProfile(e.uuid());
         if (optionalProfile.isEmpty()) {
-            Text.fromString(executor, this.config.string("mcmmo-profile-fail"), resolver).send();
+            Text.fromString(executor, this.config.getMessage("mcmmo-profile-fail"), resolver).send();
             return;
         }
         PlayerProfile profile = optionalProfile.get();
         if (Util.exceedsSkillCap(profile, skill, amount)) {
-            Text.fromString(executor, this.config.string("mcmmo-skill-cap"), resolver).send();
+            Text.fromString(executor, this.config.getMessage("mcmmo-skill-cap"), resolver).send();
             return;
         }
         if (this.service.redeemCredits(target.uuid(), amount)) {
@@ -196,10 +196,10 @@ public class Listeners implements Listener {
             resolver = Resolver.ofRedemption(executor, target, skill, amount);
             if (!e.silentForSender()) {
                 String key = e.isSelfRedemption() ? "redeem" : "redeem-sudo";
-                Text.fromString(executor, this.config.string(key), resolver).send();
+                Text.fromString(executor, this.config.getMessage(key), resolver).send();
             }
             if (!e.silentForUser() && target.player() != null) {
-                Text.fromString(target, this.config.string("redeem-sudo-user"), resolver).send();
+                Text.fromString(target, this.config.getMessage("redeem-sudo-user"), resolver).send();
             }
         }
     }

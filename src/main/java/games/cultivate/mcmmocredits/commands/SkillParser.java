@@ -31,10 +31,8 @@ import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.exceptions.parsing.NoInputProvidedException;
 import cloud.commandframework.exceptions.parsing.ParserException;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import com.gmail.nossr50.util.skills.SkillTools;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.util.Util;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serial;
@@ -54,16 +52,11 @@ public final class SkillParser<C> implements ArgumentParser<C, PrimarySkillType>
         if (input == null) {
             return ArgumentParseResult.failure(new NoInputProvidedException(SkillParser.class, commandContext));
         }
-        try {
-            PrimarySkillType skill = PrimarySkillType.valueOf(input.toUpperCase());
+        if (Util.getSkillNames().contains(input.toLowerCase())) {
             inputQueue.remove();
-            if (SkillTools.NON_CHILD_SKILLS.contains(skill)) {
-                return ArgumentParseResult.success(skill);
-            }
-            return ArgumentParseResult.failure(new SkillParseException(input, commandContext));
-        } catch (final IllegalArgumentException e) {
-            return ArgumentParseResult.failure(new SkillParseException(input, commandContext));
+            return ArgumentParseResult.success(PrimarySkillType.valueOf(input.toUpperCase()));
         }
+        return ArgumentParseResult.failure(new SkillParseException(input, commandContext));
     }
 
     @Override
@@ -82,7 +75,7 @@ public final class SkillParser<C> implements ArgumentParser<C, PrimarySkillType>
         private static final long serialVersionUID = 3489324098342876342L;
 
         public SkillParseException(final String input, final CommandContext<?> context) {
-            super(SkillParser.class, context, StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_ENUM, CaptionVariable.of("input", input), CaptionVariable.of("acceptableValues", StringUtils.join(Util.getSkillNames(), ", ")));
+            super(SkillParser.class, context, StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_ENUM, CaptionVariable.of("input", input), CaptionVariable.of("acceptableValues", Util.getJoinedSkillNames()));
         }
     }
 }

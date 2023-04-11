@@ -23,20 +23,24 @@
 //
 package games.cultivate.mcmmocredits.util;
 
+import com.gmail.nossr50.api.SkillAPI;
 import com.gmail.nossr50.datatypes.player.PlayerProfile;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.util.player.UserManager;
-import com.gmail.nossr50.util.skills.SkillTools;
+import games.cultivate.mcmmocredits.menu.ClickTypes;
+import games.cultivate.mcmmocredits.menu.Item;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,8 +49,8 @@ import java.util.UUID;
  * Utility class for methods with no clear association.
  */
 public final class Util {
-    private static List<String> skills = new ArrayList<>();
     private static final Path PLUGIN_PATH = new File(Bukkit.getPluginsFolder(), "MCMMOCredits").toPath();
+    private static final List<String> MCMMO_SKILLS = SkillAPI.getNonChildSkills().stream().map(String::toLowerCase).toList();
 
     private Util() {
         throw new AssertionError("Util cannot be instantiated!");
@@ -58,10 +62,16 @@ public final class Util {
      * @return A List of formatted non-child skill names.
      */
     public static List<String> getSkillNames() {
-        if (skills.isEmpty()) {
-            skills = SkillTools.NON_CHILD_SKILLS.stream().map(PrimarySkillType::name).map(String::toLowerCase).toList();
-        }
-        return skills;
+        return MCMMO_SKILLS;
+    }
+
+    /**
+     * Returns a list of non-child skill names from MCMMO, joined by a delimiter.
+     *
+     * @return A List of formatted non-child skill names.
+     */
+    public static String getJoinedSkillNames() {
+        return Util.joinString(",", MCMMO_SKILLS);
     }
 
     /**
@@ -95,8 +105,8 @@ public final class Util {
      * Returns if a player will exceed skill cap on a skill if an amount is applied.
      *
      * @param profile PlayerProfile of the user.
-     * @param skill MCMMO Skill to check against.
-     * @param amount The amount of credits to theoretically apply.
+     * @param skill   MCMMO Skill to check against.
+     * @param amount  The amount of credits to theoretically apply.
      * @return If the cap will be exceeded.
      */
     public static boolean exceedsSkillCap(final PlayerProfile profile, final PrimarySkillType skill, final int amount) {
@@ -135,5 +145,65 @@ public final class Util {
             return string;
         }
         return string.substring(0, 1).toUpperCase() + string.substring(1).toLowerCase();
+    }
+
+    /**
+     * Utility method to create Config Menu items for the Menu Config.
+     *
+     * @param material type of the item.
+     * @param type     type of the click.
+     * @return Built item for Menu Config.
+     */
+    public static Item createConfigItem(final Material material, final ClickTypes type) {
+        return Item.builder()
+                .item(new ItemStack(material, 1))
+                .slot(-1)
+                .type(type)
+                .lore(List.of("<gray>Click here to edit this config option!"))
+                .build();
+    }
+
+    /**
+     * Utility method to create items that execute commands for the Menu Config.
+     *
+     * @param material type of the item.
+     * @param name     name of the item as a string.
+     * @param lore     lore of the item as a List of string.
+     * @param command  command to be executed as a string.
+     * @param slot     location of the item in the menu. 0 based.
+     * @return Built item for Menu Config.
+     */
+    public static Item createCommandItem(final Material material, final String name, final String lore, final String command, final int slot) {
+        return Item.builder()
+                .item(new ItemStack(material, 1))
+                .name(name)
+                .lore(List.of(lore))
+                .slot(slot)
+                .type(ClickTypes.COMMAND)
+                .data(command)
+                .build();
+    }
+
+    public static Item createRedeemItem(final Material material, final PrimarySkillType skill, final int slot) {
+        return Item.builder()
+                .item(new ItemStack(material, 1))
+                .name("<yellow>" + Util.capitalizeWord(skill.name()))
+                .lore(List.of("<yellow><sender>, click here to redeem!"))
+                .type(ClickTypes.REDEEM)
+                .slot(slot)
+                .build();
+    }
+
+    public static <T> String joinString(final String delimiter, final Iterable<T> members) {
+        StringBuilder sb = new StringBuilder();
+        for (T obj : members) {
+            sb.append(obj).append(delimiter);
+        }
+        sb.deleteCharAt(sb.lastIndexOf(delimiter));
+        return sb.toString();
+    }
+
+    public static <T> String joinString(final String delimiter, final T[] array) {
+        return Util.joinString(delimiter, Arrays.asList(array));
     }
 }

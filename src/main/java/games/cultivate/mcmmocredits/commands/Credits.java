@@ -34,8 +34,8 @@ import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
+import games.cultivate.mcmmocredits.menu.ClickFactory;
 import games.cultivate.mcmmocredits.menu.Menu;
-import games.cultivate.mcmmocredits.menu.MenuFactory;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
@@ -45,7 +45,6 @@ import games.cultivate.mcmmocredits.util.CreditOperation;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.incendo.interfaces.paper.PlayerViewer;
-import org.incendo.interfaces.paper.type.ChestInterface;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -60,23 +59,23 @@ public final class Credits {
     private final MenuConfig menuConfig;
     private final MainConfig config;
     private final UserService userService;
-    private final MenuFactory factory;
+    private final ClickFactory clickFactory;
     private final MCMMOCredits plugin;
 
     /**
      * Constructs the command object via injection.
      *
-     * @param config      Instance of MainConfig. Used for messages and reload command.
-     * @param menuConfig  Instance of MenuConfig. Used for reload command.
-     * @param userService Instance of UserService. Used to obtain User info from command.
-     * @param factory     Instance of MenuFactory. Used to construct menus.
+     * @param config       Instance of MainConfig. Used for messages and reload command.
+     * @param menuConfig   Instance of MenuConfig. Used for reload command.
+     * @param userService  Instance of UserService. Used to obtain User info from command.
+     * @param clickFactory Instance of ClickFactory. Used to construct menus.
      */
     @Inject
-    public Credits(final MainConfig config, final MenuConfig menuConfig, final UserService userService, final MenuFactory factory, final MCMMOCredits plugin) {
+    public Credits(final MainConfig config, final MenuConfig menuConfig, final UserService userService, final ClickFactory clickFactory, final MCMMOCredits plugin) {
         this.config = config;
         this.menuConfig = menuConfig;
         this.userService = userService;
-        this.factory = factory;
+        this.clickFactory = clickFactory;
         this.plugin = plugin;
     }
 
@@ -88,7 +87,7 @@ public final class Credits {
     @CommandMethod("balance")
     @CommandPermission("mcmmocredits.balance.self")
     public void balance(final User user) {
-        Text.forOneUser(user, this.config.string("balance")).send();
+        Text.forOneUser(user, this.config.getMessage("balance")).send();
     }
 
     /**
@@ -102,7 +101,7 @@ public final class Credits {
     public void balanceOther(final CommandExecutor executor, final @Argument(suggestions = "user") String username) {
         Optional<User> user = this.userService.getUser(username);
         if (user.isPresent()) {
-            Text.fromString(executor, this.config.string("balance-other"), Resolver.ofUsers(executor, user.get())).send();
+            Text.fromString(executor, this.config.getMessage("balance-other"), Resolver.ofUsers(executor, user.get())).send();
             return;
         }
         this.playerUnknownError(executor, username);
@@ -111,19 +110,19 @@ public final class Credits {
     @CommandMethod("top <page>")
     @CommandPermission("mcmmocredits.leaderboard")
     public void top(final CommandExecutor executor, final @Argument @Range(min = "1") int page) {
-        int limit = this.config.node("leaderboard-page-size").getInt(10);
+        int limit = this.config.getInteger("settings", "leaderboard-page-size");
         int offset = Math.max(0, (page - 1) * limit);
         List<User> users = this.userService.getPageOfUsers(limit, offset);
         if (users.isEmpty()) {
-            Text.forOneUser(executor, this.config.string("invalid-leaderboard")).send();
+            Text.forOneUser(executor, this.config.getMessage("invalid-leaderboard")).send();
             return;
         }
-        Text.forOneUser(executor, this.config.rawString("leaderboard-title")).send();
+        Text.forOneUser(executor, this.config.getString("leaderboard-title")).send();
         Resolver resolver = Resolver.ofUser(executor);
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= limit; i++) {
             resolver.addUser(users.get(i - 1), "target");
             resolver.addIntTag("rank", i + offset);
-            Text.fromString(executor, this.config.rawString("leaderboard-entry"), resolver).send();
+            Text.fromString(executor, this.config.getString("leaderboard-entry"), resolver).send();
         }
     }
 
@@ -207,7 +206,7 @@ public final class Credits {
     public void reload(final CommandExecutor executor) {
         this.config.load();
         this.menuConfig.load();
-        Text.forOneUser(executor, this.config.string("reload")).send();
+        Text.forOneUser(executor, this.config.getMessage("reload")).send();
     }
 
     /**
@@ -250,8 +249,15 @@ public final class Credits {
      * @param type Menu Type from command input.
      */
     private void handleMenu(final User user, final String type) {
-        ChestInterface chest = this.factory.buildMenu(user, type);
-        chest.open(PlayerViewer.of(user.player()));
+        String menuType = type.toLowerCase();
+        Menu menu = this.menuConfig.getMenu(menuType);
+        PlayerViewer viewer = PlayerViewer.of(user.player());
+        switch (menuType) {
+            case "main" -> menu.createMainMenu(user, this.clickFactory).open(viewer);
+            case "config" -> menu.createConfigMenu(user, this.config, this.clickFactory).open(viewer);
+            case "redeem" -> menu.createMenu(user, this.clickFactory).open(viewer);
+            default -> throw new IllegalArgumentException("Invalid menu type passed! Value: " + menuType);
+        }
     }
 
     /**
@@ -263,7 +269,7 @@ public final class Credits {
     private void playerUnknownError(final CommandExecutor executor, final String username) {
         Resolver resolver = Resolver.ofUser(executor);
         resolver.addUsername(username);
-        Text.fromString(executor, this.config.string("player-unknown"), resolver).send();
+        Text.fromString(executor, this.config.getMessage("player-unknown"), resolver).send();
     }
 
     /**

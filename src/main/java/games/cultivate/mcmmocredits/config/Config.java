@@ -43,21 +43,22 @@ import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * Represents a Configuration file.
  */
 public class Config {
-    private final transient Class<? extends Config> type;
-    private final transient String fileName;
-    private transient YamlConfigurationLoader loader;
-    private transient CommentedConfigurationNode root;
-    private transient List<String> paths;
     private static final String HEADER = """
             MCMMO Credits v0.3.5-SNAPSHOT Configuration
             Repository: https://github.com/CultivateGames/MCMMOCredits
             Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
             """;
+    private final transient Class<? extends Config> type;
+    private final transient String fileName;
+    private transient YamlConfigurationLoader loader;
+    private transient CommentedConfigurationNode root;
+    private transient List<String> paths;
 
     /**
      * Constructs the object with properties of the file.
@@ -79,11 +80,11 @@ public class Config {
     private YamlConfigurationLoader createLoader() {
         Util.createFile(this.fileName);
         return YamlConfigurationLoader.builder()
-                .defaultOptions(opts -> opts.header(HEADER).serializers(build -> {
-                    build.register(Item.class, ItemSerializer.INSTANCE);
-                    build.register(Menu.class, MenuSerializer.INSTANCE);
-                    build.register(ClickTypes.class, ClickTypeSerializer.INSTANCE);
-                })).path(Util.getPluginPath().resolve(this.fileName))
+                .defaultOptions(opts -> opts.header(HEADER).serializers(build -> build
+                        .register(Item.class, ItemSerializer.INSTANCE)
+                        .register(Menu.class, MenuSerializer.INSTANCE)
+                        .register(ClickTypes.class, ClickTypeSerializer.INSTANCE)))
+                .path(Util.getPluginPath().resolve(this.fileName))
                 .headerMode(HeaderMode.PRESET)
                 .indent(2)
                 .nodeStyle(NodeStyle.BLOCK).build();
@@ -144,7 +145,7 @@ public class Config {
      * @param <T>   Type of the value.
      * @return If the operation was successful.
      */
-    public <T> boolean modify(@NotNull final T value, final Object... path) {
+    public <T> boolean set(@NotNull final T value, final Object... path) {
         try {
             this.root.node(path).set(value);
             this.save();
@@ -164,13 +165,13 @@ public class Config {
      * @param <T>  Type of the value.
      * @return The value.
      */
-    private <T> T value(final Class<T> type, final T def, final Object... path) {
+    private <T> T get(final Class<T> type, final T def, final Object... path) {
         try {
             return this.root.node(path).get(type);
         } catch (SerializationException e) {
             e.printStackTrace();
         }
-        String log = "[MCMMOCredits] Config is missing value: " + this.translateNode(path);
+        String log = "[MCMMOCredits] Config is missing value: " + Util.joinString(".", path);
         Bukkit.getLogger().warning(log);
         return def;
     }
@@ -181,8 +182,8 @@ public class Config {
      * @param path Node path where the value is found.
      * @return The value.
      */
-    public boolean bool(final Object... path) {
-        return this.value(boolean.class, false, path);
+    public boolean getBoolean(final Object... path) {
+        return this.get(boolean.class, false, path);
     }
 
     /**
@@ -191,8 +192,8 @@ public class Config {
      * @param path Node path where the value is found.
      * @return The value.
      */
-    public String string(final Object... path) {
-        return this.value(String.class, "", "prefix") + this.value(String.class, "", path);
+    public String getMessage(final Object... path) {
+        return this.get(String.class, "", "prefix") + this.get(String.class, "", path);
     }
 
     /**
@@ -201,10 +202,19 @@ public class Config {
      * @param path Node path where the value is found.
      * @return The value.
      */
-    public String rawString(final Object... path) {
-        return this.value(String.class, "", path);
+    public String getString(final Object... path) {
+        return this.get(String.class, "", path);
     }
 
+    /**
+     * Gets an int from the configuration.
+     *
+     * @param path Node path where the value is found.
+     * @return The value.
+     */
+    public int getInteger(final Object... path) {
+        return this.get(int.class, 0, path);
+    }
 
     /**
      * Gets a Menu from the configuration.
@@ -213,7 +223,7 @@ public class Config {
      * @return The value.
      */
     public Menu getMenu(final Object... path) {
-        return this.value(Menu.class, null, path);
+        return this.get(Menu.class, null, path);
     }
 
     /**
@@ -223,7 +233,7 @@ public class Config {
      * @return The value.
      */
     public Item getItem(final Object... path) {
-        return this.value(Item.class, null, path);
+        return this.get(Item.class, null, path);
     }
 
     /**
@@ -232,39 +242,13 @@ public class Config {
      * @return The value.
      */
     public DatabaseProperties getDatabaseProperties() {
-        return this.value(DatabaseProperties.class, DatabaseProperties.defaults(), "settings", "database");
+        return this.get(DatabaseProperties.class, DatabaseProperties.defaults(), "settings", "database");
     }
 
     /**
-     * Filters available node paths against provided String array.
-     *
-     * @param keys Strings to filter against.
-     * @return Filtered node path list.
+     * Updates the list of configuration node paths as strings, sorted in the order they were encountered.
+     * This method performs a breadth-first traversal of the configuration nodes.
      */
-    public List<String> filterKeys(final String... keys) {
-        if (this.paths.isEmpty()) {
-            this.updatePaths();
-        }
-        List<String> sorted = new ArrayList<>(this.paths);
-        sorted.removeIf(x -> Arrays.stream(keys).anyMatch(x::contains));
-        return sorted;
-    }
-
-    /**
-     * Translates node paths into Strings. Example: "settings", "add-player-message" -> "settings.add-player-message".
-     *
-     * @param path The node path.
-     * @return String representing the node path.
-     */
-    public String translateNode(final Object... path) {
-        StringBuilder sb = new StringBuilder();
-        for (Object obj : path) {
-            sb.append(obj).append(".");
-        }
-        sb.deleteCharAt(sb.lastIndexOf("."));
-        return sb.toString();
-    }
-
     private void updatePaths() {
         Queue<CommentedConfigurationNode> queue = new ArrayDeque<>(this.root.childrenMap().values());
         List<String> sorted = new LinkedList<>();
@@ -273,9 +257,38 @@ public class Config {
             if (node.isMap()) {
                 queue.addAll(node.childrenMap().values());
             } else {
-                sorted.add(this.translateNode(node.path().array()));
+                sorted.add(Util.joinString(".", node.path()));
             }
         }
         this.paths = sorted;
+    }
+
+    /**
+     * Returns the list of configuration node paths as strings.
+     * If the list is empty, it calls the {@link #updatePaths()} method to populate it.
+     *
+     * @return The list of configuration node paths as strings.
+     */
+    public List<String> getPaths() {
+        if (this.paths.isEmpty()) {
+            this.updatePaths();
+        }
+        return this.paths;
+    }
+
+    /**
+     * Filters the list of configuration node paths based on the provided Predicate.
+     * If the list of paths is empty, it calls the {@link #updatePaths()} method to populate it.
+     *
+     * @param filter The Predicate to filter the list of paths.
+     * @return A filtered list of configuration node paths as strings.
+     */
+    public List<String> filterNodes(final Predicate<? super String> filter) {
+        if (this.paths.isEmpty()) {
+            this.updatePaths();
+        }
+        List<String> sorted = new ArrayList<>(this.paths);
+        sorted.removeIf(filter);
+        return sorted;
     }
 }

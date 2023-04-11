@@ -30,7 +30,6 @@ import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.data.DatabaseProperties;
 import games.cultivate.mcmmocredits.menu.ClickFactory;
-import games.cultivate.mcmmocredits.menu.MenuFactory;
 import games.cultivate.mcmmocredits.user.UserCache;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
@@ -56,9 +55,7 @@ public final class PluginModule extends AbstractModule {
         this.bind(UserService.class).asEagerSingleton();
         this.bind(UserCache.class).asEagerSingleton();
         this.bind(ChatQueue.class).asEagerSingleton();
-        this.bind(MenuFactory.class).asEagerSingleton();
         this.bind(ClickFactory.class).asEagerSingleton();
-
     }
 
     @Provides

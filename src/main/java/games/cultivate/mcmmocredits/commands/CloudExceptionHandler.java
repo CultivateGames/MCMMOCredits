@@ -89,13 +89,13 @@ public final class CloudExceptionHandler {
         this.manager.registerExceptionHandler(InvalidCommandSenderException.class, (c, e) -> this.sendError(c, "invalid-sender", "correct_sender", e.getRequiredSender().getSimpleName()));
         this.manager.registerExceptionHandler(NoPermissionException.class, (c, e) -> this.sendError(c, "no-permission", "permission", e.getMissingPermission()));
         this.manager.registerExceptionHandler(CommandExecutionException.class, (c, e) -> this.sendError(c, "command-execution", "command_context", String.valueOf(e.getCommandContext())));
-        this.manager.registerExceptionHandler(ArgumentParseException.class, (c, e) -> Text.fromString(c, this.config.string("argument-parsing"), this.attachParseException(c, e)).send());
+        this.manager.registerExceptionHandler(ArgumentParseException.class, (c, e) -> Text.fromString(c, this.config.getMessage("argument-parsing"), this.attachParseException(c, e)).send());
         this.manager.captionVariableReplacementHandler(new CaptionFormatter());
         CaptionRegistry<CommandExecutor> registry = this.manager.captionRegistry();
         if (registry instanceof FactoryDelegatingCaptionRegistry<CommandExecutor> factory) {
             this.keys.forEach(caption -> {
                 String path = TO_PATH.matcher(caption.getKey()).replaceAll("-");
-                factory.registerMessageFactory(caption, (capt, executor) -> this.config.node(path).getString());
+                factory.registerMessageFactory(caption, (capt, executor) -> this.config.getString(path));
             });
             this.manager.captionRegistry(factory);
         }
@@ -111,7 +111,7 @@ public final class CloudExceptionHandler {
      */
     private void sendError(final CommandExecutor executor, final String path, final String key, final String value) {
         Resolver resolver = this.attachException(executor, key, value);
-        Text.fromString(executor, this.config.string(path), resolver).send();
+        Text.fromString(executor, this.config.getMessage(path), resolver).send();
     }
 
     /**

@@ -51,9 +51,6 @@ public final class ItemSerializer implements TypeSerializer<Item> {
 
     @Override
     public Item deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
-        String name = node.node("name").getString("");
-        List<String> lore = node.node("lore").getList(String.class);
-        int slot = node.node("slot").getInt();
         Material material = node.node("material").get(Material.class, Material.STONE);
         int amount = node.node("amount").getInt(1);
         ItemStack item = new ItemStack(material, amount);
@@ -80,6 +77,9 @@ public final class ItemSerializer implements TypeSerializer<Item> {
             case REDEEM -> ((String) node.key()).toUpperCase();
             case FILL -> "fill";
         };
+        String name = node.node("name").getString("");
+        List<String> lore = node.node("lore").getList(String.class);
+        int slot = node.node("slot").getInt();
         return Item.builder()
                 .name(name)
                 .lore(lore)

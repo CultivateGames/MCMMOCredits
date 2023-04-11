@@ -28,6 +28,7 @@ import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.util.ChatQueue;
+import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -65,7 +66,7 @@ public final class ClickFactory {
         return this.closeInventory().andThen(click -> {
             resolver.addSkill(skill);
             Player player = click.viewer().player();
-            Text.fromString(player, this.config.string("redeem-prompt"), resolver).send();
+            Text.fromString(player, this.config.getMessage("redeem-prompt"), resolver).send();
             this.queue.act(player.getUniqueId(), i -> this.executeCommand(player, String.format("credits redeem %d %s", Integer.parseInt(i), skill.toLowerCase())));
         });
     }
@@ -78,13 +79,13 @@ public final class ClickFactory {
     private ClickHandler<ChestPane, InventoryClickEvent, PlayerViewer,
             ClickContext<ChestPane, InventoryClickEvent, PlayerViewer>> buildConfigClick(final Resolver resolver, final Object... path) {
         return this.closeInventory().andThen(click -> {
-            resolver.addStringTag("setting", this.config.translateNode(path));
+            resolver.addStringTag("setting", Util.joinString(".", path));
             Player player = click.viewer().player();
-            Text.fromString(player, this.config.string("edit-config-prompt"), resolver).send();
+            Text.fromString(player, this.config.getMessage("edit-config-prompt"), resolver).send();
             this.queue.act(player.getUniqueId(), i -> {
-                boolean status = this.config.modify(i, path);
+                boolean status = this.config.set(i, path);
                 resolver.addStringTag("change", i);
-                Text.fromString(player, this.config.string(status ? "edit-config" : "edit-config-fail"), resolver).send();
+                Text.fromString(player, this.config.getMessage(status ? "edit-config" : "edit-config-fail"), resolver).send();
             });
         });
     }

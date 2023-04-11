@@ -123,6 +123,7 @@ tasks {
             events("passed", "skipped", "failed")
         }
     }
+
     compileJava {
         options.encoding = Charsets.UTF_8.name()
         options.compilerArgs.add("-parameters")
@@ -135,10 +136,11 @@ tasks {
     processResources {
         filteringCharset = Charsets.UTF_8.name()
     }
+
     runServer {
         minecraftVersion("1.19.4")
     }
-    //TODO: investigate transitive deps
+
     shadowJar {
         archiveClassifier.set("")
         minimize()
@@ -156,7 +158,6 @@ tasks {
         reloc("org.jdbi")
         reloc("org.incendo")
         reloc("org.spongepowered")
-
         manifest {
             attributes(Pair("Main-Class", "games.cultivate.mcmmocredits.MCMMOCredits"))
         }

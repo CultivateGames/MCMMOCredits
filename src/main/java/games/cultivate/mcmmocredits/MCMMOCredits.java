@@ -82,7 +82,7 @@ public final class MCMMOCredits extends JavaPlugin {
         this.registerListeners();
         userService = this.injector.getInstance(UserService.class);
         long end = System.nanoTime();
-        if (this.config.bool("settings", "debug")) {
+        if (this.config.getBoolean("settings", "debug")) {
             this.getSLF4JLogger().info("Plugin enabled! Startup took: {} s.", (double) (end - start) / 1000000000);
         }
     }
@@ -136,7 +136,7 @@ public final class MCMMOCredits extends JavaPlugin {
     private void loadCommandParser(final PaperCommandManager<CommandExecutor> manager) {
         ParserRegistry<CommandExecutor> parser = manager.parserRegistry();
         parser.registerParserSupplier(TypeToken.get(PrimarySkillType.class), x -> new SkillParser<>());
-        boolean tabCompletion = this.config.node("settings", "user-tab-complete").getBoolean();
+        boolean tabCompletion = this.config.getBoolean("settings", "user-tab-complete");
         parser.registerSuggestionProvider("user", (c, i) -> {
             if (tabCompletion) {
                 return Bukkit.getOnlinePlayers().stream().filter(x -> !(c.getSender() instanceof Player p) || x.canSee(p)).map(Player::getName).toList();
@@ -149,7 +149,7 @@ public final class MCMMOCredits extends JavaPlugin {
 
     private void parseCommands(final PaperCommandManager<CommandExecutor> manager) {
         AnnotationParser<CommandExecutor> annotationParser = new AnnotationParser<>(manager, CommandExecutor.class, p -> SimpleCommandMeta.empty());
-        String commandPrefix = this.config.rawString("command-prefix");
+        String commandPrefix = this.config.getString("command-prefix");
         annotationParser.stringProcessor(new PropertyReplacingStringProcessor(x -> {
             if (x.equals("command.prefix")) {
                 return commandPrefix;
@@ -174,7 +174,7 @@ public final class MCMMOCredits extends JavaPlugin {
         this.injector.getInstance(MenuConfig.class).save();
         this.injector.getInstance(DAOProvider.class).disable();
         long end = System.nanoTime();
-        if (this.config.bool("settings", "debug")) {
+        if (this.config.getBoolean("settings", "debug")) {
             this.getSLF4JLogger().info("Plugin disabled! Shutdown took: {} s.", (double) (end - start) / 1000000000);
         }
     }
