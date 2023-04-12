@@ -59,7 +59,7 @@ public class MainConfig extends Config {
     private String editConfig = "<green>You have changed <gray><setting> <green>to <gray><change>.";
     private String editConfigFail = "<red>There was an error while changing settings, operation aborted.";
     private String editConfigPrompt = "<red>Enter the new value for <gray><setting><red>, or type 'cancel' to abort.";
-    private String invalidLeaderboard = "<#FF253C>This leaderboard page is invalid!";
+    private String invalidLeaderboard = "<#FF253C>This leaderboard page is invalid or not enabled!";
     private String invalidSender = "<red>Invalid command sender! You must be of type: <gray><correct_sender>";
     private String invalidSyntax = "<red>Invalid syntax! Correct syntax: <gray><correct_syntax>";
     private String leaderboardEntry = "<rank>. <green><target>: <white><target_credits>";
@@ -92,6 +92,7 @@ public class MainConfig extends Config {
     static class Settings {
         private boolean addUserMessage = true;
         private boolean debug = false;
+        private boolean leaderboardEnabled = true;
         private int leaderboardPageSize = 10;
         private boolean sendLoginMessage = true;
         private boolean userTabComplete = true;

@@ -104,8 +104,10 @@ public final class CloudExceptionHandler {
     /**
      * Sends a message to the user based on an exception.
      *
-     * @param path path of the message being sent.
-     * @param key  key of a placeholder being added to the resolver.
+     * @param executor Command executor. Can be from Console.
+     * @param path     path of the message being sent.
+     * @param key      key of a placeholder being added to the resolver.
+     * @param value    value of a placeholder being added to the resolver.
      */
     private void sendError(final CommandExecutor executor, final String path, final String key, final String value) {
         Resolver resolver = this.attachException(executor, key, value);

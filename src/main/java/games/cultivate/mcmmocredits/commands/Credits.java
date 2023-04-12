@@ -117,6 +117,10 @@ public final class Credits {
     @CommandMethod("top <page>")
     @CommandPermission("mcmmocredits.leaderboard")
     public void top(final CommandExecutor executor, final @Argument @Range(min = "1") int page) {
+        if (!this.config.getBoolean("settings", "leaderboard-enabled")) {
+            Text.forOneUser(executor, this.config.getMessage("invalid-leaderboard")).send();
+            return;
+        }
         int limit = this.config.getInteger("settings", "leaderboard-page-size");
         int offset = Math.max(0, (page - 1) * limit);
         List<User> users = this.userService.getPageOfUsers(limit, offset);
