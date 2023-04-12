@@ -49,6 +49,9 @@ public final class PluginModule extends AbstractModule {
         this.plugin = plugin;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void configure() {
         this.bind(MCMMOCredits.class).toInstance(this.plugin);
@@ -58,11 +61,22 @@ public final class PluginModule extends AbstractModule {
         this.bind(ClickFactory.class).asEagerSingleton();
     }
 
+    /**
+     * Provides properties of the Database through the configuration.
+     *
+     * @param config The injected MainConfig.
+     * @return the Database properties.
+     */
     @Provides
     public DatabaseProperties provideProperties(final MainConfig config) {
         return config.getDatabaseProperties();
     }
 
+    /**
+     * Provides the MainConfig for injection. Loads the config first.
+     *
+     * @return The loaded MainConfig.
+     */
     @Provides
     public MainConfig provideConfig() {
         MainConfig config = new MainConfig();
@@ -70,6 +84,11 @@ public final class PluginModule extends AbstractModule {
         return config;
     }
 
+    /**
+     * Provides the MenuConfig for injection. Loads the config first.
+     *
+     * @return The loaded MenuConfig.
+     */
     @Provides
     public MenuConfig provideMenuConfig() {
         MenuConfig config = new MenuConfig();

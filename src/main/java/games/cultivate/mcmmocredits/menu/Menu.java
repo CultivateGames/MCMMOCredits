@@ -29,18 +29,22 @@ import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.incendo.interfaces.core.click.ClickHandler;
-import org.incendo.interfaces.core.transform.TransformContext;
-import org.incendo.interfaces.paper.PlayerViewer;
-import org.incendo.interfaces.paper.element.ItemStackElement;
-import org.incendo.interfaces.paper.pane.ChestPane;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * Represents a menu in the game with a list of items, title, number of slots, and optional fill and navigation.
+ * Represents a menu with a list of items, title, number of slots, and optional fill and navigation.
+ *
+ * @param items      Map of items and their configuration node keys.
+ * @param title      Unparsed title of the Menu.
+ * @param slots      Size of the chest UI that holds the Menu.
+ * @param fill       Whether bordering fill items should be enabled.
+ * @param navigation Whether a navigation item should be enabled.
  */
 public record Menu(Map<String, Item> items, String title, int slots, boolean fill, boolean navigation) {
 
@@ -95,26 +99,29 @@ public record Menu(Map<String, Item> items, String title, int slots, boolean fil
         }
     }
 
+    /**
+     * Creates the Config Editing menu.
+     *
+     * @param user    The viewer of the menu.
+     * @param config  The config being edited.
+     * @param factory The ClickFactory to generate click handlers.
+     * @return The menu.
+     */
     public ChestInterface createConfigMenu(final User user, final MainConfig config, final ClickFactory factory) {
         this.addConfigItems(config);
         return this.createMenu(user, factory);
     }
 
+    /**
+     * Creates the Main Menu.
+     *
+     * @param user    The viewer of the menu.
+     * @param factory The ClickFactory to generate click handlers.
+     * @return The menu.
+     */
     public ChestInterface createMainMenu(final User user, final ClickFactory factory) {
         this.checkMenuPermissions(user);
         return this.createMenu(user, factory);
-    }
-
-    public void createMenuContext(final User user, final ClickFactory factory) {
-        Resolver resolver = Resolver.ofUser(user);
-        List<TransformContext<ChestPane, PlayerViewer>> list = new ArrayList<>();
-        for (var entry : this.items.entrySet()) {
-            Item item = entry.getValue();
-            list.add(TransformContext.of(0, (pane, view) -> {
-                ItemStack menuItem = item.applyProperties(user.player(), resolver);
-                return pane.element(ItemStackElement.of(menuItem, factory.getClick(item.clickType(), entry.getKey(), resolver)), item.slot() % 9, item.slot() / 9);
-            }));
-        }
     }
 
     /**

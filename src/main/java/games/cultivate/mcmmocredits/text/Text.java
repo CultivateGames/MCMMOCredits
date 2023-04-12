@@ -90,7 +90,7 @@ public final class Text {
     }
 
     /**
-     * Converts a Text to a Component. Placeholders are parsed and italics are removed in this stage.
+     * Converts a Text to a Component. Placeholders are parsed and default italics are removed.
      *
      * @return A finished Component.
      */

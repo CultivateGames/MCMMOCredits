@@ -44,26 +44,45 @@ public final class CreditsExpansion extends PlaceholderExpansion {
         this.service = service;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @NotNull String getAuthor() {
         return "Cultivate Games";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @NotNull String getIdentifier() {
         return "mcmmocredits";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @NotNull String getVersion() {
         return "0.3.5-SNAPSHOT";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean persist() {
         return true;
     }
 
+    /**
+     * Handles placeholder parsing by loading the User and exposing all properties of it.
+     *
+     * @param player Instance of the user.
+     * @param id     suffix of the placeholder key. ex. "credits" in %mcmmocredits_credits%
+     * @return The placeholder value
+     */
     @Override
     public String onRequest(final OfflinePlayer player, final @NotNull String id) {
         Optional<User> optionalUser = this.service.getUser(player.getName());

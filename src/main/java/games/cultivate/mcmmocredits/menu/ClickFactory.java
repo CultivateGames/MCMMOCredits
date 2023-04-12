@@ -61,6 +61,13 @@ public final class ClickFactory {
         this.plugin = plugin;
     }
 
+    /**
+     * Builds a ClickHandler that will redeem credits into the button specified skill.
+     *
+     * @param resolver the Resolver used to format the message.
+     * @param skill    the skill name to be redeemed (if applicable).
+     * @return The ClickHandler.
+     */
     private ClickHandler<ChestPane, InventoryClickEvent, PlayerViewer,
             ClickContext<ChestPane, InventoryClickEvent, PlayerViewer>> buildRedeemClick(final Resolver resolver, final String skill) {
         return this.closeInventory().andThen(click -> {
@@ -71,11 +78,24 @@ public final class ClickFactory {
         });
     }
 
+    /**
+     * Builds a ClickHandler that will execute a specified command when a button is clicked.
+     *
+     * @param command the command to be executed
+     * @return The ClickHandler.
+     */
     private ClickHandler<ChestPane, InventoryClickEvent, PlayerViewer,
             ClickContext<ChestPane, InventoryClickEvent, PlayerViewer>> buildCommandClick(final String command) {
         return click -> this.executeCommand(click.viewer().player(), command);
     }
 
+    /**
+     * Builds a ClickHandler that will edit a specified config node when the corresponding button is clicked.
+     *
+     * @param resolver the Resolver object used to format the click message
+     * @param path     the path to the configuration setting or message to be edited
+     * @return The ClickHandler.
+     */
     private ClickHandler<ChestPane, InventoryClickEvent, PlayerViewer,
             ClickContext<ChestPane, InventoryClickEvent, PlayerViewer>> buildConfigClick(final Resolver resolver, final Object... path) {
         return this.closeInventory().andThen(click -> {
@@ -110,9 +130,17 @@ public final class ClickFactory {
         Bukkit.getScheduler().getMainThreadExecutor(this.plugin).execute(() -> Bukkit.dispatchCommand(player, command));
     }
 
+    /**
+     * Retrieves a ClickHandler based on the specified ClickTypes and associated data.
+     *
+     * @param type     the type of click
+     * @param data     the associated data (e.g. skill name or command)
+     * @param resolver the Resolver object used to format the click message
+     * @return The ClickHandler.
+     */
     public ClickHandler<ChestPane, InventoryClickEvent, PlayerViewer,
             ClickContext<ChestPane, InventoryClickEvent, PlayerViewer>> getClick(final ClickTypes type, final String data, final Resolver resolver) {
-       return switch (type) {
+        return switch (type) {
             case FILL -> ClickHandler.cancel();
             case REDEEM -> this.buildRedeemClick(resolver, data);
             case COMMAND -> this.buildCommandClick(data);

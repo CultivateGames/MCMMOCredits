@@ -68,17 +68,16 @@ public final class MCMMOCredits extends JavaPlugin {
         return userService;
     }
 
+    /**
+     * Handles startup of the plugin. Duration is tracked if debug is enabled.
+     */
     @Override
     public void onEnable() {
         long start = System.nanoTime();
         this.injector = Guice.createInjector(new PluginModule(this));
         this.checkForDependencies();
         this.config = this.injector.getInstance(MainConfig.class);
-        try {
-            this.loadCommands();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        this.loadCommands();
         this.registerListeners();
         userService = this.injector.getInstance(UserService.class);
         long end = System.nanoTime();
@@ -115,13 +114,25 @@ public final class MCMMOCredits extends JavaPlugin {
      *
      * @see CloudExceptionHandler
      */
-    private void loadCommands() throws Exception {
-        PaperCommandManager<CommandExecutor> manager = this.loadCommandManager();
+    private void loadCommands() {
+        PaperCommandManager<CommandExecutor> manager;
+        try {
+            manager = this.loadCommandManager();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
         this.loadCommandParser(manager);
         this.parseCommands(manager);
         new CloudExceptionHandler(this.config, manager).apply();
     }
 
+    /**
+     * Loads the actual CommandManager. Currently only compatible with Paper.
+     *
+     * @return The loaded CommandManager.
+     * @throws Exception thrown when initiating the manager.
+     */
     private PaperCommandManager<CommandExecutor> loadCommandManager() throws Exception {
         PaperCommandManager<CommandExecutor> manager;
         Function<CommandSender, CommandExecutor> forwardsMapper = x -> userService.fromSender(x);
@@ -133,6 +144,12 @@ public final class MCMMOCredits extends JavaPlugin {
         return manager;
     }
 
+    /**
+     * Loads the ParserRegistry using the CommandManager.
+     * The CommandManager must be loaded before calling this.
+     *
+     * @param manager The loaded CommandManager.
+     */
     private void loadCommandParser(final PaperCommandManager<CommandExecutor> manager) {
         ParserRegistry<CommandExecutor> parser = manager.parserRegistry();
         parser.registerParserSupplier(TypeToken.get(PrimarySkillType.class), x -> new SkillParser<>());
@@ -147,6 +164,11 @@ public final class MCMMOCredits extends JavaPlugin {
         parser.registerSuggestionProvider("menus", (c, i) -> menus);
     }
 
+    /**
+     * Parses existing commands using an AnnotationParser, and sets the customizable command prefix.
+     *
+     * @param manager The loaded CommandManager.
+     */
     private void parseCommands(final PaperCommandManager<CommandExecutor> manager) {
         AnnotationParser<CommandExecutor> annotationParser = new AnnotationParser<>(manager, CommandExecutor.class, p -> SimpleCommandMeta.empty());
         String commandPrefix = this.config.getString("command-prefix");
@@ -167,6 +189,9 @@ public final class MCMMOCredits extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
     }
 
+    /**
+     * Handles shutdown of the plugin. Duration is tracked if debug is enabled.
+     */
     @Override
     public void onDisable() {
         long start = System.nanoTime();

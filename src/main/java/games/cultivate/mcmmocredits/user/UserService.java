@@ -85,7 +85,10 @@ public final class UserService {
     }
 
     /**
-     * @see UserDAO#addUser(User)
+     * Adds a new user with the specified UUID and username.
+     *
+     * @param uuid     the UUID of the new user
+     * @param username the username of the new user
      */
     public void addUser(final UUID uuid, final String username) {
         User user = new User(uuid, username, 0, 0);
@@ -94,7 +97,10 @@ public final class UserService {
     }
 
     /**
-     * @see UserDAO#getUser(String)
+     * Retrieves an optional User from the specified username.
+     *
+     * @param username the username of the user to retrieve
+     * @return an optional User object if the user exists, otherwise an empty optional
      */
     public Optional<User> getUser(final String username) {
         if (this.isCached(username)) {
@@ -106,7 +112,10 @@ public final class UserService {
     }
 
     /**
-     * @see UserDAO#getUser(UUID)
+     * Retrieves an optional User from the specified UUID.
+     *
+     * @param uuid the UUID of the user to retrieve
+     * @return an optional User object if the user exists, otherwise an empty optional
      */
     public Optional<User> getUser(final UUID uuid) {
         if (this.isCached(uuid)) {
@@ -118,7 +127,11 @@ public final class UserService {
     }
 
     /**
-     * @see UserDAO#setUsername(UUID, String)
+     * Updates the username for the specified user with a new username.
+     *
+     * @param uuid     the UUID of the user to update
+     * @param username the new username for the user
+     * @return the updated User object if the update was successful, otherwise null
      */
     public @Nullable User setUsername(final UUID uuid, final String username) {
         if (this.dao.setUsername(uuid, username)) {
@@ -128,7 +141,10 @@ public final class UserService {
     }
 
     /**
-     * @see UserDAO#getCredits(UUID)
+     * Retrieves the number of credits for the specified user.
+     *
+     * @param uuid the UUID of the user to retrieve credits for
+     * @return the number of credits for the specified user, or 0 if the user does not exist
      */
     public int getCredits(final UUID uuid) {
         return this.getUser(uuid).map(User::credits).orElse(0);
@@ -166,7 +182,11 @@ public final class UserService {
     }
 
     /**
-     * @see UserDAO#getPageOfUsers(int, int)
+     * Retrieves a page of users with the specified limit and offset.
+     *
+     * @param limit  the maximum number of users to retrieve
+     * @param offset the starting index of the page of users
+     * @return a List of User objects representing the page of users
      */
     public List<User> getPageOfUsers(final int limit, final int offset) {
         return this.dao.getPageOfUsers(limit, offset);

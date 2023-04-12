@@ -183,7 +183,7 @@ public final class Resolver {
      * @param username The username to be added.
      */
     public void addUsername(final String username) {
-        this.addStringTag("target_username", username);
+        this.addStringTag("target", username);
     }
 
     /**

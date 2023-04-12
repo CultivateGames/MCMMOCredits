@@ -49,6 +49,14 @@ import java.util.UUID;
 public final class ItemSerializer implements TypeSerializer<Item> {
     public static final ItemSerializer INSTANCE = new ItemSerializer();
 
+    /**
+     * Deserializes an Item from the configuration.
+     *
+     * @param type the type of return value required
+     * @param node the node containing serialized data
+     * @return The deserialized Item.
+     * @throws SerializationException Thrown when trying to get ClickType from a node.
+     */
     @Override
     public Item deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
         Material material = node.node("material").get(Material.class, Material.STONE);
@@ -90,6 +98,14 @@ public final class ItemSerializer implements TypeSerializer<Item> {
                 .build();
     }
 
+    /**
+     * Serializes an Item to the configuration.
+     *
+     * @param type the type of the input object
+     * @param item the object to be serialized
+     * @param node the node to write to
+     * @throws SerializationException Thrown when setting nodes to a value.
+     */
     @Override
     public void serialize(final Type type, final Item item, final ConfigurationNode node) throws SerializationException {
         node.node("name").set(item.name());

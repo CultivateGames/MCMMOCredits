@@ -35,7 +35,7 @@ import java.util.Properties;
 /**
  * Creates {@link HikariDataSource} objects based on configured database properties.
  */
-public class DataSourceFactory {
+public final class DataSourceFactory {
     private DataSourceFactory() {
         throw new AssertionError("DataSourceFactory cannot be instantiated!");
     }

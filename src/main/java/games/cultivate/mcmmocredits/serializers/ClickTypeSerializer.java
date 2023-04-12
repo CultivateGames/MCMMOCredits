@@ -34,6 +34,13 @@ import java.lang.reflect.Type;
 public final class ClickTypeSerializer implements TypeSerializer<ClickTypes> {
     public static final ClickTypeSerializer INSTANCE = new ClickTypeSerializer();
 
+    /**
+     * Deserializes the ClickType by checking the node's key.
+     *
+     * @param type the type of return value required
+     * @param node the node containing serialized data
+     * @return The ClickType.
+     */
     @Override
     public ClickTypes deserialize(final Type type, final ConfigurationNode node) {
         String data = (String) node.key();
@@ -49,6 +56,9 @@ public final class ClickTypeSerializer implements TypeSerializer<ClickTypes> {
         };
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void serialize(final Type type, @Nullable final ClickTypes obj, final ConfigurationNode node) {
         throw new UnsupportedOperationException("Operation not supported!");

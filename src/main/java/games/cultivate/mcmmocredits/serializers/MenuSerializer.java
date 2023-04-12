@@ -42,6 +42,14 @@ import java.util.Map;
 public final class MenuSerializer implements TypeSerializer<Menu> {
     public static final MenuSerializer INSTANCE = new MenuSerializer();
 
+    /**
+     * Deserializes a Menu from configuration by iterating the item map, and directly reading all other properties.
+     *
+     * @param type the type of return value required
+     * @param node the node containing serialized data
+     * @return The deserialized Menu.
+     * @throws SerializationException Thrown when getting the Item from node map.
+     */
     @Override
     public Menu deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
         Map<String, Item> items = new HashMap<>();
@@ -55,6 +63,9 @@ public final class MenuSerializer implements TypeSerializer<Menu> {
         return new Menu(items, title, slots, fill, navigation);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void serialize(final Type type, @Nullable final Menu obj, final ConfigurationNode node) {
         throw new UnsupportedOperationException("Cannot serialize Menu");

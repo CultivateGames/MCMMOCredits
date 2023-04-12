@@ -88,26 +88,62 @@ public final class Item {
         return new Item.Builder();
     }
 
+    /**
+     * Provides copy of existing item with updated ClickType
+     *
+     * @param type ClickType to apply.
+     * @return An updated copy of the item.
+     */
     public Item withClickType(final ClickTypes type) {
         return new Item(this.stack, this.name, this.lore, type, this.data, this.slot);
     }
 
+    /**
+     * Provides copy of existing item with updated ItemStack.
+     *
+     * @param stack ItemStack to apply.
+     * @return An updated copy of the item.
+     */
     public Item withStack(final ItemStack stack) {
         return new Item(stack, this.name, this.lore, this.type, this.data, this.slot);
     }
 
+    /**
+     * Provides copy of existing item with updated name.
+     *
+     * @param name name to apply.
+     * @return An updated copy of the item.
+     */
     public Item withName(final String name) {
         return new Item(this.stack, name, this.lore, this.type, this.data, this.slot);
     }
 
+    /**
+     * Provides copy of existing item with updated lore.
+     *
+     * @param lore lore to apply.
+     * @return An updated copy of the item.
+     */
     public Item withLore(final List<String> lore) {
         return new Item(this.stack, this.name, lore, this.type, this.data, this.slot);
     }
 
+    /**
+     * Provides copy of existing item with updated data
+     *
+     * @param data data to apply.
+     * @return An updated copy of the item.
+     */
     public Item withData(final String data) {
         return new Item(this.stack, this.name, this.lore, this.type, data, this.slot);
     }
 
+    /**
+     * Provides copy of existing item with updated slot.
+     *
+     * @param slot slot to apply.
+     * @return An updated copy of the item.
+     */
     public Item withSlot(final int slot) {
         return new Item(this.stack, this.name, this.lore, this.type, this.data, slot);
     }
@@ -166,6 +202,13 @@ public final class Item {
         return this.data;
     }
 
+    /**
+     * Updates the name and lore based on the passed in Player and resolver.
+     *
+     * @param player   The viewer of the item.
+     * @param resolver The resolver used to parse the item.
+     * @return A Bukkit ItemStack with updated properties.
+     */
     public ItemStack applyProperties(final Player player, final Resolver resolver) {
         Component display = Text.fromString(player, this.name, resolver).toComponent();
         var ilore = this.lore.stream().map(x -> Text.fromString(player, x, resolver).toComponent()).toList();
@@ -181,6 +224,14 @@ public final class Item {
         return stackCopy;
     }
 
+    /**
+     * Provides a TransformContext object for the item where
+     * it's name and lore are updated, and a click handler is attached to it.
+     *
+     * @param clickFactory ClickFactory to obtain the click for the item.
+     * @param resolver     Resolver to update the item's name/lore.
+     * @return The TransformContext.
+     */
     public TransformContext<ChestPane, PlayerViewer> context(final ClickFactory clickFactory, final Resolver resolver) {
         String info = this.type.name().startsWith("EDIT_") ? this.name() : this.data;
         var handler = clickFactory.getClick(this.type, info, resolver);

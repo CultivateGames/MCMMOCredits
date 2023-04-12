@@ -23,6 +23,8 @@
 //
 package games.cultivate.mcmmocredits.util;
 
+import games.cultivate.mcmmocredits.user.User;
+
 import java.util.function.IntBinaryOperator;
 
 /**
@@ -35,22 +37,47 @@ public enum CreditOperation {
 
     private final IntBinaryOperator operator;
 
-    CreditOperation(IntBinaryOperator operator) {
+    /**
+     * Constructs the enum.
+     *
+     * @param operator Used to apply transactions to {@link User} credit balances.
+     */
+    CreditOperation(final IntBinaryOperator operator) {
         this.operator = operator;
     }
 
-    public int apply(int a, int b) {
+    /**
+     * Applies the transaction using the provided ints.
+     *
+     * @param a An int.
+     * @param b An int.
+     * @return The result of the operation.
+     */
+    public int apply(final int a, final int b) {
         return this.operator.applyAsInt(a, b);
     }
 
+    /**
+     * Generates the message key for the message sent to the executor of the transaction.
+     *
+     * @return The message key.
+     */
     public String getMessageKey() {
         return "credits-" + this;
     }
 
+    /**
+     * Generates the message key for the message sent to the recipient of the transaction.
+     *
+     * @return The message key.
+     */
     public String getUserMessageKey() {
         return this.getMessageKey() + "-user";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return this.name().toLowerCase();

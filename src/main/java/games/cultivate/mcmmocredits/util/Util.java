@@ -184,6 +184,14 @@ public final class Util {
                 .build();
     }
 
+    /**
+     * Utility method to create items that execute credit redemptions for the Menu Config.
+     *
+     * @param material type of the item.
+     * @param skill    skill that will be redeemed into.
+     * @param slot     location of the item in the menu. 0 based.
+     * @return Built item for Menu Config.
+     */
     public static Item createRedeemItem(final Material material, final PrimarySkillType skill, final int slot) {
         return Item.builder()
                 .item(new ItemStack(material, 1))
@@ -194,6 +202,14 @@ public final class Util {
                 .build();
     }
 
+    /**
+     * Utility method that will join a collection of strings with the provided delimiter.
+     *
+     * @param delimiter string-based delimited.
+     * @param members   collection of object to delimit.
+     * @param <T>       The object being delimited. Converted to string.
+     * @return The combined string.
+     */
     public static <T> String joinString(final String delimiter, final Iterable<T> members) {
         StringBuilder sb = new StringBuilder();
         for (T obj : members) {
@@ -203,6 +219,14 @@ public final class Util {
         return sb.toString();
     }
 
+    /**
+     * Utility method that will join an array of strings with the provided delimiter.
+     *
+     * @param delimiter string-based delimited.
+     * @param array     array of object to delimit. Converted to iterable list.
+     * @param <T>       The object being delimited. Converted to string.
+     * @return The combined string.
+     */
     public static <T> String joinString(final String delimiter, final T[] array) {
         return Util.joinString(delimiter, Arrays.asList(array));
     }

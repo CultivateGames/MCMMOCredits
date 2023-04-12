@@ -46,6 +46,9 @@ import java.util.Queue;
  */
 public final class SkillParser<C> implements ArgumentParser<C, PrimarySkillType> {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @NotNull ArgumentParseResult<PrimarySkillType> parse(@NotNull final CommandContext<C> commandContext, final Queue<String> inputQueue) {
         String input = inputQueue.peek();
@@ -59,6 +62,9 @@ public final class SkillParser<C> implements ArgumentParser<C, PrimarySkillType>
         return ArgumentParseResult.failure(new SkillParseException(input, commandContext));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @NotNull List<String> suggestions(@NotNull final CommandContext<C> commandContext, @NotNull final String input) {
         return Util.getSkillNames();

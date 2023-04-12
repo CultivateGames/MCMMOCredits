@@ -44,6 +44,7 @@ public interface UserDAO extends SqlObject {
      * Adds a user to the database.
      *
      * @param user The user to add.
+     * @return True if the transaction was successful, false otherwise.
      */
     @SqlUpdate("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed);")
     boolean addUser(@BindMethods User user);
@@ -73,6 +74,7 @@ public interface UserDAO extends SqlObject {
      *
      * @param uuid     The UUID of the user.
      * @param username The new username to set.
+     * @return True if the transaction was successful, false otherwise.
      */
     @SqlUpdate("UPDATE MCMMOCredits SET username = :username WHERE UUID = :uuid;")
     boolean setUsername(UUID uuid, String username);

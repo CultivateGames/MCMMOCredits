@@ -69,6 +69,7 @@ public final class Credits {
      * @param menuConfig   Instance of MenuConfig. Used for reload command.
      * @param userService  Instance of UserService. Used to obtain User info from command.
      * @param clickFactory Instance of ClickFactory. Used to construct menus.
+     * @param plugin       Instance of the MCMMOCredits to run events synchronously.
      */
     @Inject
     public Credits(final MainConfig config, final MenuConfig menuConfig, final UserService userService, final ClickFactory clickFactory, final MCMMOCredits plugin) {
@@ -107,6 +108,12 @@ public final class Credits {
         this.playerUnknownError(executor, username);
     }
 
+    /**
+     * /credits top page. Sends leaderboard rankings to the user who triggers the command.
+     *
+     * @param executor the CommandExecutor to send the leaderboard message to
+     * @param page     the page number of the leaderboard to retrieve
+     */
     @CommandMethod("top <page>")
     @CommandPermission("mcmmocredits.leaderboard")
     public void top(final CommandExecutor executor, final @Argument @Range(min = "1") int page) {

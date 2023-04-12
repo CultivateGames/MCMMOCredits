@@ -29,7 +29,7 @@ import org.bukkit.entity.Player;
 import java.util.UUID;
 
 /**
- * Represents any entity that can execute a command. Typically a User or Console.
+ * Represents a Player or Console that can execute a command.
  */
 public abstract class CommandExecutor {
     private final UUID uuid;

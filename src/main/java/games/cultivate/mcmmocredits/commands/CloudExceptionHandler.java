@@ -51,13 +51,13 @@ import java.util.regex.Pattern;
  * Exception handler that modifies how Cloud exceptions send messages.
  *
  * @see Credits
+ * @see <a href="https://github.com/Incendo/cloud/blob/master/cloud-minecraft/cloud-minecraft-extras/src/main/java/cloud/commandframework/minecraft/extras/MinecraftExceptionHandler.java">MinecraftExceptionHandler</a>
  */
-//https://github.com/Incendo/cloud/blob/master/cloud-minecraft/cloud-minecraft-extras/src/main/java/cloud/commandframework/minecraft/extras/MinecraftExceptionHandler.java
 public final class CloudExceptionHandler {
+    private static final Pattern TO_PATH = Pattern.compile("[.|_]");
     private final MainConfig config;
     private final CommandManager<CommandExecutor> manager;
     private final List<Caption> keys;
-    private static final Pattern TO_PATH = Pattern.compile("[.|_]");
 
     /**
      * Constructs the object.
@@ -104,10 +104,8 @@ public final class CloudExceptionHandler {
     /**
      * Sends a message to the user based on an exception.
      *
-     * @param executor Command executor. Can be from Console.
-     * @param path     path of the message being sent.
-     * @param key      key of a placeholder being added to the resolver.
-     * @param value    value of a placeholder being added to the resolver.
+     * @param path path of the message being sent.
+     * @param key  key of a placeholder being added to the resolver.
      */
     private void sendError(final CommandExecutor executor, final String path, final String key, final String value) {
         Resolver resolver = this.attachException(executor, key, value);
@@ -132,7 +130,7 @@ public final class CloudExceptionHandler {
      * Attaches a new tag built from an exception to a Resolver, but parses external placeholders first.
      *
      * @param executor Command executor. Can be Console.
-     * @param ex The ArgumentParseException.
+     * @param ex       The ArgumentParseException.
      * @return The new Resolver.
      */
     private Resolver attachParseException(final CommandExecutor executor, final ArgumentParseException ex) {

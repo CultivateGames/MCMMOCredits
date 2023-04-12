@@ -28,6 +28,7 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 /**
  * Properties used in creation of the Database.
  *
+ * @param type     Type of the Database.
  * @param host     Host of the Database. Typically, an IP address.
  * @param name     Name of the Database.
  * @param user     Name of the Database user.

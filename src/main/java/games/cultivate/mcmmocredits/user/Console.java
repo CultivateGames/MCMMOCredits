@@ -30,30 +30,45 @@ import org.bukkit.entity.Player;
 import java.util.UUID;
 
 /**
- * CommandExecutor which is an instance of console. Separated from the DAO/Database layer.
+ * CommandExecutor which is an instance of Console. Separated from the DAO/Database layer.
  */
 public final class Console extends CommandExecutor {
     public static final Console INSTANCE = new Console();
 
+    /**
+     * Constructs the Console. Console's instance is a singleton.
+     */
     private Console() {
         super(new UUID(0, 0), "CONSOLE", 0, 0);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isPlayer() {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isConsole() {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public CommandSender sender() {
         return Bukkit.getConsoleSender();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Player player() {
         throw new UnsupportedOperationException("Console is not a player!");
