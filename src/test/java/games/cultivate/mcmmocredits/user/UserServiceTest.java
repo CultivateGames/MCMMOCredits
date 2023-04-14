@@ -291,5 +291,4 @@ class UserServiceTest {
         assertFalse(this.cache.contains(this.testUUID));
         assertFalse(this.cache.contains(this.testUsername));
     }
-
 }
