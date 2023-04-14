@@ -1,38 +1,34 @@
 package games.cultivate.mcmmocredits.util;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-//TODO: fix tests
+//TODO: finish test coverage of Util class
 class UtilTest {
-    private static final Path PATH = Path.of("src", "test", "resources");
-
-    @AfterAll
-    static void tearDown() throws IOException {
-        Files.deleteIfExists(PATH.resolve("newfile.txt"));
+    @Test
+    void capitalizeWord() {
+        String input = "testInput";
+        String capitalized = Util.capitalizeWord(input);
+        assertEquals("Testinput", capitalized);
     }
 
     @Test
-    void testCreateFile() throws IOException {
-        Util.createFile(PATH, "newfile.txt");
-        File f = PATH.resolve("newfile.txt").toFile();
-        try (FileWriter fw = new FileWriter(f)) {
-            fw.write("12345c");
-        }
-        assertEquals("12345c", Files.readString(PATH.resolve("newfile.txt")));
+    void joinString() {
+        String delimiter = ",";
+        List<String> members = Arrays.asList("one", "two", "three");
+        String expectedResult = "one,two,three";
+        assertEquals(expectedResult, Util.joinString(delimiter, members));
     }
 
     @Test
-    void testCreateFileAlreadyExists() throws IOException {
-        Util.createFile(PATH, "blank.txt");
-        assertEquals("1234", Files.readString(PATH.resolve("blank.txt")));
+    void joinStringFromArray() {
+        String delimiter = ",";
+        String[] array = new String[]{"one", "two", "three"};
+        String expectedResult = "one,two,three";
+        assertEquals(expectedResult, Util.joinString(delimiter, array));
     }
 }

@@ -89,6 +89,14 @@ public final class UserCache {
      * @param user the User object to add
      */
     public void add(final User user) {
+        if (this.contains(user.uuid())) {
+            String oldUsername = this.uuidCache.remove(user.uuid()).username();
+            this.stringCache.remove(oldUsername);
+        }
+        if (this.contains(user.username())) {
+            UUID oldUUID = this.stringCache.remove(user.username()).uuid();
+            this.uuidCache.remove(oldUUID);
+        }
         this.uuidCache.put(user.uuid(), user);
         this.stringCache.put(user.username(), user);
     }

@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import com.gmail.nossr50.api.SkillAPI;
 import com.gmail.nossr50.datatypes.player.PlayerProfile;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.mcMMO;
@@ -49,8 +48,9 @@ import java.util.UUID;
  * Utility class for methods with no clear association.
  */
 public final class Util {
-    private static final Path PLUGIN_PATH = new File(Bukkit.getPluginsFolder(), "MCMMOCredits").toPath();
-    private static final List<String> MCMMO_SKILLS = SkillAPI.getNonChildSkills().stream().map(String::toLowerCase).toList();
+    private static Path pluginPath;
+    //We are keeping a string list rather than calculating it to reduce complexity.
+    private static final List<String> MCMMO_SKILLS = List.of("acrobatics", "alchemy", "archery", "axes", "excavation", "fishing", "herbalism", "mining", "repair", "swords", "taming", "unarmed", "woodcutting");
 
     private Util() {
         throw new AssertionError("Util cannot be instantiated!");
@@ -80,7 +80,7 @@ public final class Util {
      * @param fileName Name of the {@link File} to create.
      */
     public static void createFile(final String fileName) {
-        createFile(PLUGIN_PATH, fileName);
+        createFile(pluginPath, fileName);
     }
 
     /**
@@ -131,7 +131,10 @@ public final class Util {
      * @return Path of the plugin directory.
      */
     public static Path getPluginPath() {
-        return PLUGIN_PATH;
+        if (pluginPath == null) {
+            pluginPath = new File(Bukkit.getPluginsFolder(), "MCMMOCredits").toPath();
+        }
+        return pluginPath;
     }
 
     /**
@@ -155,12 +158,7 @@ public final class Util {
      * @return Built item for Menu Config.
      */
     public static Item createConfigItem(final Material material, final ClickTypes type) {
-        return Item.builder()
-                .item(new ItemStack(material, 1))
-                .slot(-1)
-                .type(type)
-                .lore(List.of("<gray>Click here to edit this config option!"))
-                .build();
+        return Item.builder().item(new ItemStack(material, 1)).slot(-1).type(type).lore(List.of("<gray>Click here to edit this config option!")).build();
     }
 
     /**
@@ -174,14 +172,7 @@ public final class Util {
      * @return Built item for Menu Config.
      */
     public static Item createCommandItem(final Material material, final String name, final String lore, final String command, final int slot) {
-        return Item.builder()
-                .item(new ItemStack(material, 1))
-                .name(name)
-                .lore(List.of(lore))
-                .slot(slot)
-                .type(ClickTypes.COMMAND)
-                .data(command)
-                .build();
+        return Item.builder().item(new ItemStack(material, 1)).name(name).lore(List.of(lore)).slot(slot).type(ClickTypes.COMMAND).data(command).build();
     }
 
     /**
@@ -193,13 +184,7 @@ public final class Util {
      * @return Built item for Menu Config.
      */
     public static Item createRedeemItem(final Material material, final PrimarySkillType skill, final int slot) {
-        return Item.builder()
-                .item(new ItemStack(material, 1))
-                .name("<yellow>" + Util.capitalizeWord(skill.name()))
-                .lore(List.of("<yellow><sender>, click here to redeem!"))
-                .type(ClickTypes.REDEEM)
-                .slot(slot)
-                .build();
+        return Item.builder().item(new ItemStack(material, 1)).name("<yellow>" + Util.capitalizeWord(skill.name())).lore(List.of("<yellow><sender>, click here to redeem!")).type(ClickTypes.REDEEM).slot(slot).build();
     }
 
     /**

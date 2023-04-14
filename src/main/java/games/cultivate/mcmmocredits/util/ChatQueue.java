@@ -23,6 +23,7 @@
 //
 package games.cultivate.mcmmocredits.util;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -50,6 +51,16 @@ public final class ChatQueue {
             this.map.get(uuid).complete(null);
             this.map.remove(uuid);
         }
+    }
+
+    /**
+     * Gets the value from the provided key.
+     *
+     * @param uuid The UUID to get.
+     * @return The value from the underlying map, or null if it is not present.
+     */
+    public @Nullable CompletableFuture<String> get(final UUID uuid) {
+        return this.map.get(uuid);
     }
 
     /**

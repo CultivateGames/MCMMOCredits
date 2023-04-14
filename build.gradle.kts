@@ -38,6 +38,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
     testImplementation("org.jdbi:jdbi3-testing:3.37.1")
     testImplementation("com.h2database:h2:2.1.214")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
 
 
     compileOnly("me.clip:placeholderapi:2.11.2") {
