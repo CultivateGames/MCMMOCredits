@@ -28,32 +28,41 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CreditOperationTest {
+    private final int a = 100;
+    private final int b = 50;
+
 
     @Test
     void apply_AddOperation_PositiveNumbers_ReturnsCorrectSum() {
-        int a = 5;
-        int b = 10;
-        int expectedResult = 15;
-        int result = CreditOperation.ADD.apply(a, b);
+        //Arrange
+        int expectedResult = this.a + this.b;
+
+        //Act
+        int result = CreditOperation.ADD.apply(this.a, this.b);
+
+        //Assert
         assertEquals(expectedResult, result);
     }
 
     @Test
     void apply_TakeOperation_PositiveNumbers_ReturnsCorrectDifference() {
-        int a = 15;
-        int b = 5;
-        int expectedResult = 10;
-        int result = CreditOperation.TAKE.apply(a, b);
+        //Arrange
+        int expectedResult = this.a - this.b;
+
+        //Act
+        int result = CreditOperation.TAKE.apply(this.a, this.b);
+
+        //Assert
         assertEquals(expectedResult, result);
     }
 
     @Test
     void apply_SetOperation_PositiveNumbers_ReturnsSecondNumber() {
-        int a = 5;
-        int b = 10;
-        int expectedResult = 10;
-        int result = CreditOperation.SET.apply(a, b);
-        assertEquals(expectedResult, result);
+        //Act
+        int result = CreditOperation.SET.apply(this.a, this.b);
+
+        //Assert
+        assertEquals(this.b, result);
     }
 
     @Test

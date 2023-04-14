@@ -143,7 +143,7 @@ public final class Resolver {
      * @param sender The sender user.
      * @param target The target user.
      */
-    public void addUserPair(final CommandExecutor sender, final CommandExecutor target) {
+    private void addUserPair(final CommandExecutor sender, final CommandExecutor target) {
         this.addUser(sender, "sender");
         this.addUser(target, "target");
     }

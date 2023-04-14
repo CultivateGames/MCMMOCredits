@@ -1,3 +1,26 @@
+//
+// MIT License
+//
+// Copyright (c) 2023 Cultivate Games
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
 package games.cultivate.mcmmocredits.util;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +42,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ChatQueueTest {
     private ChatQueue chatQueue;
+    private final UUID uuid = UUID.randomUUID();
+    private final String completion = "test";
 
     @BeforeEach
     void setUp() {
@@ -27,179 +52,152 @@ class ChatQueueTest {
 
     @Test
     void remove_UUIDInQueue_RemovesEntry() {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
+        //Arrange
+        this.chatQueue.add(this.uuid);
 
-        // Act
-        this.chatQueue.add(uuid);
-        this.chatQueue.remove(uuid);
-        boolean contains = this.chatQueue.contains(uuid);
+        //Act
+        this.chatQueue.remove(this.uuid);
+        boolean contains = this.chatQueue.contains(this.uuid);
 
-        // Assert
+        //Assert
         assertFalse(contains);
     }
 
     @Test
     void remove_UUIDNotInQueue_DoesNotThrowException() {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
+        //Act
+        this.chatQueue.remove(this.uuid);
+        boolean contains = this.chatQueue.contains(this.uuid);
 
-        // Act
-        this.chatQueue.remove(uuid);
-        boolean contains = this.chatQueue.contains(uuid);
-
-        // Assert
+        //Assert
         assertFalse(contains);
     }
 
     @Test
     void get_ExistingUUID_ReturnsCorrectValue() {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
-        this.chatQueue.add(uuid);
+        //Arrange
+        this.chatQueue.add(this.uuid);
 
-        // Act
-        CompletableFuture<String> result = this.chatQueue.get(uuid);
+        //Act
+        CompletableFuture<String> result = this.chatQueue.get(this.uuid);
 
-        // Assert
+        //Assert
         assertNotNull(result);
     }
 
     @Test
     void get_NonExistingUUID_ReturnsNull() {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
+        //Act
+        CompletableFuture<String> result = this.chatQueue.get(this.uuid);
 
-        // Act
-        CompletableFuture<String> result = this.chatQueue.get(uuid);
-
-        // Assert
+        //Assert
         assertNull(result);
     }
 
     @Test
     void contains_UUIDInQueue_ReturnsTrue() {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
+        //Arrange
+        this.chatQueue.add(this.uuid);
 
-        // Act
-        this.chatQueue.add(uuid);
+        //Act
+        boolean contains = this.chatQueue.contains(this.uuid);
 
-        // Assert
-        assertTrue(this.chatQueue.contains(uuid));
+        //Assert
+        assertTrue(contains);
     }
 
     @Test
     void contains_UUIDNotInQueue_ReturnsFalse() {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
+        //Act
+        boolean contains = this.chatQueue.contains(this.uuid);
 
-        // Act
-        boolean contains = this.chatQueue.contains(uuid);
-
-        // Assert
+        //Assert
         assertFalse(contains);
     }
 
     @Test
     void add_NonExistingUUID_AddsNewEntry() {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
+        //Arrange
+        this.chatQueue.add(this.uuid);
 
-        // Act
-        this.chatQueue.add(uuid);
-        boolean contains = this.chatQueue.contains(uuid);
+        //Act
+        boolean contains = this.chatQueue.contains(this.uuid);
 
-        // Assert
+        //Assert
         assertTrue(contains);
     }
 
     @Test
     void add_ExistingUUID_ReplacesExistingEntry() {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
-        String initialCompletion = "initial";
+        //Arrange
+        this.chatQueue.add(this.uuid);
+        this.chatQueue.complete(this.uuid, this.completion);
 
-        // Act
-        this.chatQueue.add(uuid);
-        this.chatQueue.complete(uuid, initialCompletion);
-        this.chatQueue.add(uuid);
-        CompletableFuture<String> newFuture = this.chatQueue.get(uuid);
+        //Act
+        this.chatQueue.add(this.uuid);
+        CompletableFuture<String> newFuture = this.chatQueue.get(this.uuid);
 
-        // Assert
+        //Assert
         assertThrows(TimeoutException.class, () -> newFuture.get(5L, TimeUnit.MILLISECONDS));
     }
 
     @Test
     void act_AddsUUIDAndPerformsAction() {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
-        String completion = "test";
+        //Arrange
         AtomicBoolean actionExecuted = new AtomicBoolean(false);
+        this.chatQueue.add(this.uuid);
 
-        // Act
-        this.chatQueue.add(uuid);
-        this.chatQueue.act(uuid, s -> {
-            assertEquals(completion, s);
+        //Act
+        this.chatQueue.act(this.uuid, s -> {
+            assertEquals(this.completion, s);
             actionExecuted.set(true);
         });
-        this.chatQueue.complete(uuid, completion);
+        this.chatQueue.complete(this.uuid, this.completion);
 
-        // Assert
+        //Assert
         assertTrue(actionExecuted.get());
     }
 
     @Test
     void act_NonExistingUUID_DoesNotThrowException() {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
-
-        // Act & Assert
-        assertDoesNotThrow(() -> this.chatQueue.act(uuid, s -> {}));
+        //Act & Assert
+        assertDoesNotThrow(() -> this.chatQueue.act(this.uuid, s -> {}));
     }
 
     @Test
     void act_ExistingUUID_RemovesUUIDAfterAction() {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
-        String completion = "test";
+        //Arrange
         AtomicBoolean actionExecuted = new AtomicBoolean(false);
+        this.chatQueue.add(this.uuid);
 
-        // Act
-        this.chatQueue.add(uuid);
-        this.chatQueue.act(uuid, s -> {
-            assertEquals(completion, s);
+        //Act
+        this.chatQueue.act(this.uuid, s -> {
+            assertEquals(this.completion, s);
             actionExecuted.set(true);
         });
-        this.chatQueue.complete(uuid, completion);
+        this.chatQueue.complete(this.uuid, this.completion);
 
-        // Assert
-        assertFalse(this.chatQueue.contains(uuid));
+        //Assert
+        assertFalse(this.chatQueue.contains(this.uuid));
         assertTrue(actionExecuted.get());
     }
 
     @Test
     void complete_ExistingUUID_CompletesFuture() {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
-        String completion = "test";
-        this.chatQueue.add(uuid);
+        //Arrange
+        this.chatQueue.add(this.uuid);
 
-        // Act
-        this.chatQueue.complete(uuid, completion);
-        String result = this.chatQueue.get(uuid).join();
+        //Act
+        this.chatQueue.complete(this.uuid, this.completion);
+        String result = this.chatQueue.get(this.uuid).join();
 
-        // Assert
-        assertEquals(completion, result);
+        //Assert
+        assertEquals(this.completion, result);
     }
 
     @Test
     void complete_NonExistingUUID_DoesNotThrowException() {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
-        String completion = "test";
-
-        // Act & Assert
-        assertDoesNotThrow(() -> this.chatQueue.complete(uuid, completion));
+        //Act & Assert
+        assertDoesNotThrow(() -> this.chatQueue.complete(this.uuid, this.completion));
     }
 }

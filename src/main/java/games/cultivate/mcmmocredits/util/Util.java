@@ -200,7 +200,10 @@ public final class Util {
         for (T obj : members) {
             sb.append(obj).append(delimiter);
         }
-        sb.deleteCharAt(sb.lastIndexOf(delimiter));
+        int last = sb.lastIndexOf(delimiter);
+        if (last != -1) {
+            sb.deleteCharAt(last);
+        }
         return sb.toString();
     }
 
