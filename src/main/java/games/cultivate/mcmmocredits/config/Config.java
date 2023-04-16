@@ -31,7 +31,6 @@ import games.cultivate.mcmmocredits.serializers.ClickTypeSerializer;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import games.cultivate.mcmmocredits.util.Util;
-import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
@@ -42,6 +41,7 @@ import org.spongepowered.configurate.util.NamingSchemes;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
+import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -60,6 +60,7 @@ public class Config {
             """;
     private final transient Class<? extends Config> type;
     private final transient String fileName;
+    private final transient Path path;
     private transient YamlConfigurationLoader loader;
     private transient CommentedConfigurationNode root;
     private transient List<String> paths;
@@ -70,10 +71,15 @@ public class Config {
      * @param type     Class of the config.
      * @param fileName Name of the config.
      */
-    protected Config(final Class<? extends Config> type, final String fileName) {
+    protected Config(final Class<? extends Config> type, final String fileName, final Path path) {
         this.type = type;
         this.fileName = fileName;
+        this.path = path;
         this.paths = new ArrayList<>();
+    }
+
+    protected Config(final Class<? extends Config> type, final String fileName) {
+        this(type, fileName, Util.getPluginPath());
     }
 
     /**
@@ -82,13 +88,13 @@ public class Config {
      * @return The Loader.
      */
     private YamlConfigurationLoader createLoader() {
-        Util.createFile(this.fileName);
+        Util.createFile(this.path, this.fileName);
         return YamlConfigurationLoader.builder()
                 .defaultOptions(opts -> opts.header(HEADER).serializers(build -> build
                         .register(Item.class, ItemSerializer.INSTANCE)
                         .register(Menu.class, MenuSerializer.INSTANCE)
                         .register(ClickTypes.class, ClickTypeSerializer.INSTANCE)))
-                .path(Util.getPluginPath().resolve(this.fileName))
+                .path(this.path.resolve(this.fileName))
                 .headerMode(HeaderMode.PRESET)
                 .indent(2)
                 .nodeStyle(NodeStyle.BLOCK).build();
@@ -171,12 +177,11 @@ public class Config {
      */
     private <T> T get(final Class<T> type, final T def, final Object... path) {
         try {
-            return this.root.node(path).get(type);
+            T value = this.root.node(path).get(type);
+            return value != null ? value : def;
         } catch (SerializationException e) {
             e.printStackTrace();
         }
-        String log = "[MCMMOCredits] Config is missing value: " + Util.joinString(".", path);
-        Bukkit.getLogger().warning(log);
         return def;
     }
 
@@ -245,8 +250,8 @@ public class Config {
      *
      * @return The value.
      */
-    public DatabaseProperties getDatabaseProperties() {
-        return this.get(DatabaseProperties.class, DatabaseProperties.defaults(), "settings", "database");
+    public DatabaseProperties getDatabaseProperties(final Object... path) {
+        return this.get(DatabaseProperties.class, DatabaseProperties.defaults(), path);
     }
 
     /**
@@ -290,6 +295,9 @@ public class Config {
     public List<String> filterNodes(final Predicate<? super String> filter) {
         if (this.paths.isEmpty()) {
             this.updatePaths();
+        }
+        if (filter == null) {
+            return this.paths;
         }
         List<String> sorted = new ArrayList<>(this.paths);
         sorted.removeIf(filter);

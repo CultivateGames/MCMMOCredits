@@ -83,7 +83,7 @@ public final class ItemSerializer implements TypeSerializer<Item> {
             case EDIT_MESSAGE -> "messages";
             case EDIT_SETTING -> "settings";
             case REDEEM -> ((String) node.key()).toUpperCase();
-            case FILL -> "fill";
+            case FILL -> "";
         };
         String name = node.node("name").getString("");
         List<String> lore = node.node("lore").getList(String.class);

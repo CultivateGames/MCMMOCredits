@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
@@ -31,6 +30,7 @@ import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Material;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,6 +51,10 @@ public class MenuConfig extends Config {
      */
     public MenuConfig() {
         super(MenuConfig.class, "menus.yml");
+    }
+
+    public MenuConfig(final Path path) {
+        super(MenuConfig.class, "menus.yml", path);
     }
 
     /**
@@ -103,19 +107,19 @@ public class MenuConfig extends Config {
         private Map<String, Item> items = new HashMap<>();
 
         protected RedeemMenu() {
-            this.items.put("acrobatics", Util.createRedeemItem(Material.NETHERITE_BOOTS, PrimarySkillType.ACROBATICS, 10));
-            this.items.put("alchemy", Util.createRedeemItem(Material.BREWING_STAND, PrimarySkillType.ALCHEMY, 11));
-            this.items.put("archery", Util.createRedeemItem(Material.BOW, PrimarySkillType.ARCHERY, 12));
-            this.items.put("axes", Util.createRedeemItem(Material.NETHERITE_AXE, PrimarySkillType.AXES, 13));
-            this.items.put("excavation", Util.createRedeemItem(Material.NETHERITE_SHOVEL, PrimarySkillType.EXCAVATION, 14));
-            this.items.put("fishing", Util.createRedeemItem(Material.FISHING_ROD, PrimarySkillType.FISHING, 15));
-            this.items.put("herbalism", Util.createRedeemItem(Material.SUGAR_CANE, PrimarySkillType.HERBALISM, 16));
-            this.items.put("mining", Util.createRedeemItem(Material.NETHERITE_PICKAXE, PrimarySkillType.MINING, 19));
-            this.items.put("repair", Util.createRedeemItem(Material.ANVIL, PrimarySkillType.REPAIR, 20));
-            this.items.put("swords", Util.createRedeemItem(Material.NETHERITE_SWORD, PrimarySkillType.SWORDS, 21));
-            this.items.put("taming", Util.createRedeemItem(Material.LEAD, PrimarySkillType.TAMING, 23));
-            this.items.put("unarmed", Util.createRedeemItem(Material.CARROT_ON_A_STICK, PrimarySkillType.UNARMED, 24));
-            this.items.put("woodcutting", Util.createRedeemItem(Material.OAK_LOG, PrimarySkillType.WOODCUTTING, 25));
+            this.items.put("acrobatics", Util.createRedeemItem(Material.NETHERITE_BOOTS, "ACROBATICS", 10));
+            this.items.put("alchemy", Util.createRedeemItem(Material.BREWING_STAND, "ALCHEMY", 11));
+            this.items.put("archery", Util.createRedeemItem(Material.BOW, "ARCHERY", 12));
+            this.items.put("axes", Util.createRedeemItem(Material.NETHERITE_AXE, "AXES", 13));
+            this.items.put("excavation", Util.createRedeemItem(Material.NETHERITE_SHOVEL, "EXCAVATION", 14));
+            this.items.put("fishing", Util.createRedeemItem(Material.FISHING_ROD, "FISHING", 15));
+            this.items.put("herbalism", Util.createRedeemItem(Material.SUGAR_CANE, "HERBALISM", 16));
+            this.items.put("mining", Util.createRedeemItem(Material.NETHERITE_PICKAXE, "MINING", 19));
+            this.items.put("repair", Util.createRedeemItem(Material.ANVIL, "REPAIR", 20));
+            this.items.put("swords", Util.createRedeemItem(Material.NETHERITE_SWORD, "SWORDS", 21));
+            this.items.put("taming", Util.createRedeemItem(Material.LEAD, "TAMING", 23));
+            this.items.put("unarmed", Util.createRedeemItem(Material.CARROT_ON_A_STICK, "UNARMED", 24));
+            this.items.put("woodcutting", Util.createRedeemItem(Material.OAK_LOG, "WOODCUTTING", 25));
             this.items.put("fill", FILLER_ITEM);
             this.items.put("navigation", NAVIGATION_ITEM);
         }

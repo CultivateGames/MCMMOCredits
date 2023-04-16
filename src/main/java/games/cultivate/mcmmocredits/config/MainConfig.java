@@ -26,6 +26,8 @@ package games.cultivate.mcmmocredits.config;
 import games.cultivate.mcmmocredits.data.DatabaseProperties;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
+import java.nio.file.Path;
+
 /**
  * Configuration used to modify settings and messages.
  */
@@ -83,6 +85,10 @@ public class MainConfig extends Config {
      */
     public MainConfig() {
         super(MainConfig.class, "config.yml");
+    }
+
+    MainConfig(final Path path) {
+        super(MainConfig.class, "config.yml", path);
     }
 
     /**

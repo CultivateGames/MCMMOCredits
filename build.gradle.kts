@@ -41,7 +41,7 @@ dependencies {
     testImplementation("org.mockito:mockito-inline:5.2.0")
 
 
-    compileOnly("me.clip:placeholderapi:2.11.2") {
+    compileOnly("me.clip:placeholderapi:2.11.3") {
         exclude(group = "net.kyori")
     }
 

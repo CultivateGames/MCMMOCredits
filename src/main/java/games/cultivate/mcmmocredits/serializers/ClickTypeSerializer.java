@@ -51,8 +51,7 @@ public final class ClickTypeSerializer implements TypeSerializer<ClickTypes> {
             case "messages" -> ClickTypes.EDIT_MESSAGE;
             case "settings" -> ClickTypes.EDIT_SETTING;
             case "navigation", "config", "redeem" -> ClickTypes.COMMAND;
-            case "fill" -> ClickTypes.FILL;
-            default -> throw new IllegalStateException("Invalid data was passed to the ClickTypeSerializer! value:" + data);
+            default -> ClickTypes.FILL;
         };
     }
 

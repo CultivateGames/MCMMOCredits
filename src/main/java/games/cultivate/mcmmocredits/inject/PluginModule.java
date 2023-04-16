@@ -69,7 +69,7 @@ public final class PluginModule extends AbstractModule {
      */
     @Provides
     public DatabaseProperties provideProperties(final MainConfig config) {
-        return config.getDatabaseProperties();
+        return config.getDatabaseProperties("settings", "database");
     }
 
     /**

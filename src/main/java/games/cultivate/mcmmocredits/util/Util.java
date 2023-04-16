@@ -183,8 +183,8 @@ public final class Util {
      * @param slot     location of the item in the menu. 0 based.
      * @return Built item for Menu Config.
      */
-    public static Item createRedeemItem(final Material material, final PrimarySkillType skill, final int slot) {
-        return Item.builder().item(new ItemStack(material, 1)).name("<yellow>" + Util.capitalizeWord(skill.name())).lore(List.of("<yellow><sender>, click here to redeem!")).type(ClickTypes.REDEEM).slot(slot).build();
+    public static Item createRedeemItem(final Material material, final String skill, final int slot) {
+        return Item.builder().item(new ItemStack(material, 1)).name("<yellow>" + Util.capitalizeWord(skill)).lore(List.of("<yellow><sender>, click here to redeem!")).type(ClickTypes.REDEEM).slot(slot).build();
     }
 
     /**

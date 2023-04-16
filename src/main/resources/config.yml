@@ -1,6 +1,7 @@
 # MCMMO Credits v0.3.5-SNAPSHOT Configuration
 # Repository: https://github.com/CultivateGames/MCMMOCredits
 # Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
+
 prefix: '<hover:show_text:''<green><sender>: <sender_credits> Credits''><gold><bold>CREDITS</bold> '
 add-user: <target> has been added to the database!
 argument-parse-failure-no-input-was-provided: No input was provided
@@ -35,7 +36,7 @@ edit-config: <green>You have changed <gray><setting> <green>to <gray><change>.
 edit-config-fail: <red>There was an error while changing settings, operation aborted.
 edit-config-prompt: <red>Enter the new value for <gray><setting><red>, or type 'cancel'
   to abort.
-invalid-leaderboard: <#FF253C>This leaderboard page is invalid!
+invalid-leaderboard: <#FF253C>This leaderboard page is invalid or not enabled!
 invalid-sender: '<red>Invalid command sender! You must be of type: <gray><correct_sender>'
 invalid-syntax: '<red>Invalid syntax! Correct syntax: <gray><correct_syntax>'
 leaderboard-entry: '<rank>. <green><target>: <white><target_credits>'
@@ -61,6 +62,7 @@ reload: <green>The configuration file has been reloaded.
 settings:
   add-user-message: true
   debug: false
+  leaderboard-enabled: true
   leaderboard-page-size: 10
   send-login-message: true
   user-tab-complete: true
