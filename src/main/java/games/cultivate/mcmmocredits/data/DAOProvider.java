@@ -52,7 +52,7 @@ public final class DAOProvider implements Provider<UserDAO> {
     @Inject
     public DAOProvider(final DatabaseProperties properties, final MCMMOCredits plugin) {
         this.type = properties.type();
-        this.hikari = this.type.getDataSource(properties, plugin);
+        this.hikari = new HikariDataSource(this.type.getDataConfig(properties, plugin));
     }
 
     /**

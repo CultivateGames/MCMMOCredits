@@ -33,7 +33,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * Creates {@link HikariDataSource} objects based on configured database properties.
+ * Creates {@link HikariConfig} objects based on configured database properties.
  */
 public final class DataSourceFactory {
     private DataSourceFactory() {
@@ -46,11 +46,14 @@ public final class DataSourceFactory {
      * @param properties The {@link DatabaseProperties} for configuring the data source.
      * @return A configured {@link HikariDataSource} instance for SQLite.
      */
-    public static HikariDataSource createSQLite(final DatabaseProperties properties) {
-        HikariConfig config = createBaseConfig(properties);
-        Util.createFile("database.db");
+    public static HikariConfig createSQLite(final DatabaseProperties properties) {
+        HikariConfig config = new HikariConfig();
+        DatabaseType type = properties.type();
+        config.setPoolName("MCMMOCredits " + type.name());
         config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
-        return new HikariDataSource(config);
+        config.addDataSourceProperty("url", type.createURL(properties));
+        Util.createFile("database.db");
+        return config;
     }
 
     /**
@@ -60,8 +63,12 @@ public final class DataSourceFactory {
      * @param plugin     The {@link MCMMOCredits} plugin for loading resource files.
      * @return A configured {@link HikariDataSource} instance for MySQL.
      */
-    public static HikariDataSource createMySQL(final DatabaseProperties properties, final MCMMOCredits plugin) {
-        HikariConfig config = createBaseConfig(properties);
+    public static HikariConfig createMySQL(final DatabaseProperties properties, final MCMMOCredits plugin) {
+        HikariConfig config = new HikariConfig();
+        DatabaseType type = properties.type();
+        config.setPoolName("MCMMOCredits " + type.name());
+        config.setJdbcUrl(type.createURL(properties));
+        config.setDataSourceClassName("com.mysql.cj.jdbc.MysqlDataSource");
         Properties hproperties = new Properties();
         try (InputStream is = plugin.getResource("hikari.properties")) {
             hproperties.load(is);
@@ -72,20 +79,6 @@ public final class DataSourceFactory {
         config.setUsername(properties.user());
         config.setPassword(properties.password());
         config.addDataSourceProperty("useSSL", properties.ssl());
-        return new HikariDataSource(config);
-    }
-
-    /**
-     * Creates a base HikariConfig with common settings for both SQLite and MySQL.
-     *
-     * @param properties The {@link DatabaseProperties} for configuring the base config.
-     * @return A {@link HikariConfig} instance with common settings applied.
-     */
-    private static HikariConfig createBaseConfig(final DatabaseProperties properties) {
-        HikariConfig config = new HikariConfig();
-        DatabaseType type = properties.type();
-        config.addDataSourceProperty("url", type.createURL(properties));
-        config.setPoolName("MCMMOCredits " + type.name());
         return config;
     }
 }

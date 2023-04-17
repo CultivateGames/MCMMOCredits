@@ -70,6 +70,7 @@ public class Config {
      *
      * @param type     Class of the config.
      * @param fileName Name of the config.
+     * @param path     Path of the config.
      */
     protected Config(final Class<? extends Config> type, final String fileName, final Path path) {
         this.type = type;
@@ -248,6 +249,7 @@ public class Config {
     /**
      * Gets the DatabaseProperties object from the configuration.
      *
+     * @param path Node path where the value is found.
      * @return The value.
      */
     public DatabaseProperties getDatabaseProperties(final Object... path) {

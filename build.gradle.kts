@@ -40,6 +40,9 @@ dependencies {
     testImplementation("com.h2database:h2:2.1.214")
     testImplementation("org.mockito:mockito-inline:5.2.0")
 
+    //versions not latest, in line w/ Paper
+    testRuntimeOnly("org.xerial:sqlite-jdbc:3.41.0.0")
+    testRuntimeOnly("mysql:mysql-connector-java:8.0.32")
 
     compileOnly("me.clip:placeholderapi:2.11.3") {
         exclude(group = "net.kyori")

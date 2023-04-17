@@ -79,9 +79,9 @@ Sourced from: https://github.com/TehBrian/Iteminator/blob/main/.checkstyle/check
         <property name="maximum" value="0"/>
         <property name="message" value="Line has trailing spaces."/>
     </module>
-
+    <module name="SuppressWarningsFilter" />
     <module name="TreeWalker">
-
+        <module name="SuppressWarningsHolder" />
         <!-- Checks for Javadoc comments.                   -->
         <!-- See https://checkstyle.org/config_javadoc.html -->
         <module name="InvalidJavadocPosition"/>

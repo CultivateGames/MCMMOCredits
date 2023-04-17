@@ -26,6 +26,7 @@ package games.cultivate.mcmmocredits.user;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -115,4 +116,33 @@ public abstract class CommandExecutor {
      * @return the Player.
      */
     public abstract Player player();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @SuppressWarnings("checkstyle:needbraces")
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        CommandExecutor executor = (CommandExecutor) o;
+
+        if (this.credits != executor.credits) return false;
+        if (this.redeemed != executor.redeemed) return false;
+        if (!Objects.equals(this.uuid, executor.uuid)) return false;
+        return Objects.equals(this.username, executor.username);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        int result = this.uuid != null ? this.uuid.hashCode() : 0;
+        result = 31 * result + (this.username != null ? this.username.hashCode() : 0);
+        result = 31 * result + this.credits;
+        result = 31 * result + this.redeemed;
+        return result;
+    }
 }

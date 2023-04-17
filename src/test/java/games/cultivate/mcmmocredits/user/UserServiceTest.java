@@ -95,8 +95,8 @@ class UserServiceTest {
         this.service.addUser(this.testUUID, this.testUsername);
 
         //Assert
-        assertTrue(this.service.isCached(this.testUUID));
-        assertTrue(this.service.isCached(this.testUsername));
+        assertTrue(this.cache.contains(this.testUUID));
+        assertTrue(this.cache.contains(this.testUsername));
         verify(this.mockDao, times(1)).addUser(any());
     }
 

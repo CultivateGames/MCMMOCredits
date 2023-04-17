@@ -25,6 +25,8 @@ package games.cultivate.mcmmocredits.util;
 
 import com.gmail.nossr50.datatypes.player.PlayerProfile;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import com.gmail.nossr50.mcMMO;
+import com.gmail.nossr50.util.player.UserManager;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
@@ -36,6 +38,8 @@ import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -176,13 +180,13 @@ public class Listeners implements Listener {
             Text.fromString(executor, this.config.getMessage("not-enough-credits"), resolver).send();
             return;
         }
-        Optional<PlayerProfile> optionalProfile = Util.getMCMMOProfile(e.uuid());
+        Optional<PlayerProfile> optionalProfile = this.getMCMMOProfile(e.uuid());
         if (optionalProfile.isEmpty()) {
             Text.fromString(executor, this.config.getMessage("mcmmo-profile-fail"), resolver).send();
             return;
         }
         PlayerProfile profile = optionalProfile.get();
-        if (Util.exceedsSkillCap(profile, skill, amount)) {
+        if (this.exceedsSkillCap(profile, skill, amount)) {
             Text.fromString(executor, this.config.getMessage("mcmmo-skill-cap"), resolver).send();
             return;
         }
@@ -229,5 +233,29 @@ public class Listeners implements Listener {
         if (e.getInventory().getHolder() instanceof ChestView) {
             e.setCancelled(true);
         }
+    }
+
+    /**
+     * Returns if a player will exceed skill cap on a skill if an amount is applied.
+     *
+     * @param profile PlayerProfile of the user.
+     * @param skill   MCMMO Skill to check against.
+     * @param amount  The amount of credits to theoretically apply.
+     * @return If the cap will be exceeded.
+     */
+    private boolean exceedsSkillCap(final PlayerProfile profile, final PrimarySkillType skill, final int amount) {
+        return profile.getSkillLevel(skill) + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill);
+    }
+
+    /**
+     * Obtains a PlayerProfile from the provided UUID.
+     *
+     * @param uuid UUID of a user.
+     * @return PlayerProfile, or empty optional if the profile is not loaded.
+     */
+    private Optional<PlayerProfile> getMCMMOProfile(final UUID uuid) {
+        Player player = Bukkit.getPlayer(uuid);
+        PlayerProfile profile = player == null ? mcMMO.getDatabaseManager().loadPlayerProfile(uuid) : UserManager.getPlayer(player).getProfile();
+        return profile.isLoaded() ? Optional.of(profile) : Optional.empty();
     }
 }

@@ -55,7 +55,7 @@ public interface UserDAO extends SqlObject {
      * @param username The username of the user.
      * @return An Optional<User> which contains the user if found.
      */
-    @SqlQuery("SELECT * FROM MCMMOCREDITS WHERE username LIKE :username LIMIT 1;")
+    @SqlQuery("SELECT * FROM MCMMOCredits WHERE username LIKE :username LIMIT 1;")
     @RegisterConstructorMapper(User.class)
     Optional<User> getUser(String username);
 
@@ -65,7 +65,7 @@ public interface UserDAO extends SqlObject {
      * @param uuid The UUID of the user.
      * @return An Optional<User> which contains the user if found.
      */
-    @SqlQuery("SELECT * FROM MCMMOCREDITS WHERE uuid = :uuid;")
+    @SqlQuery("SELECT * FROM MCMMOCredits WHERE uuid = :uuid;")
     @RegisterConstructorMapper(User.class)
     Optional<User> getUser(UUID uuid);
 
@@ -135,7 +135,7 @@ public interface UserDAO extends SqlObject {
      * @param offset The offset for pagination.
      * @return A list of users.
      */
-    @SqlQuery("SELECT * FROM MCMMOCREDITS ORDER BY credits DESC LIMIT :limit OFFSET :offset")
+    @SqlQuery("SELECT * FROM MCMMOCredits ORDER BY credits DESC LIMIT :limit OFFSET :offset")
     @RegisterConstructorMapper(User.class)
     List<User> getPageOfUsers(int limit, int offset);
 }

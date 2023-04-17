@@ -87,7 +87,7 @@ public class MainConfig extends Config {
         super(MainConfig.class, "config.yml");
     }
 
-    MainConfig(final Path path) {
+    public MainConfig(final Path path) {
         super(MainConfig.class, "config.yml", path);
     }
 

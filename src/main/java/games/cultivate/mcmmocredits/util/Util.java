@@ -23,15 +23,10 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import com.gmail.nossr50.datatypes.player.PlayerProfile;
-import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import com.gmail.nossr50.mcMMO;
-import com.gmail.nossr50.util.player.UserManager;
 import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
@@ -41,16 +36,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Utility class for methods with no clear association.
  */
 public final class Util {
-    private static Path pluginPath;
     //We are keeping a string list rather than calculating it to reduce complexity.
+    @SuppressWarnings("checkstyle:linelength")
     private static final List<String> MCMMO_SKILLS = List.of("acrobatics", "alchemy", "archery", "axes", "excavation", "fishing", "herbalism", "mining", "repair", "swords", "taming", "unarmed", "woodcutting");
+    private static Path pluginPath;
 
     private Util() {
         throw new AssertionError("Util cannot be instantiated!");
@@ -99,30 +93,6 @@ public final class Util {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Returns if a player will exceed skill cap on a skill if an amount is applied.
-     *
-     * @param profile PlayerProfile of the user.
-     * @param skill   MCMMO Skill to check against.
-     * @param amount  The amount of credits to theoretically apply.
-     * @return If the cap will be exceeded.
-     */
-    public static boolean exceedsSkillCap(final PlayerProfile profile, final PrimarySkillType skill, final int amount) {
-        return profile.getSkillLevel(skill) + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill);
-    }
-
-    /**
-     * Obtains a PlayerProfile from the provided UUID.
-     *
-     * @param uuid UUID of a user.
-     * @return PlayerProfile, or empty optional if the profile is not loaded.
-     */
-    public static Optional<PlayerProfile> getMCMMOProfile(final UUID uuid) {
-        Player player = Bukkit.getPlayer(uuid);
-        PlayerProfile profile = player == null ? mcMMO.getDatabaseManager().loadPlayerProfile(uuid) : UserManager.getPlayer(player).getProfile();
-        return profile.isLoaded() ? Optional.of(profile) : Optional.empty();
     }
 
     /**
@@ -184,7 +154,8 @@ public final class Util {
      * @return Built item for Menu Config.
      */
     public static Item createRedeemItem(final Material material, final String skill, final int slot) {
-        return Item.builder().item(new ItemStack(material, 1)).name("<yellow>" + Util.capitalizeWord(skill)).lore(List.of("<yellow><sender>, click here to redeem!")).type(ClickTypes.REDEEM).slot(slot).build();
+        List<String> lore = List.of("<yellow><sender>, click here to redeem!");
+        return Item.builder().item(new ItemStack(material, 1)).name("<yellow>" + Util.capitalizeWord(skill)).lore(lore).type(ClickTypes.REDEEM).slot(slot).build();
     }
 
     /**

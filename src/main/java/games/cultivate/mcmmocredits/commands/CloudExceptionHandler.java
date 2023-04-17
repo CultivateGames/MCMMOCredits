@@ -51,7 +51,6 @@ import java.util.regex.Pattern;
  * Exception handler that modifies how Cloud exceptions send messages.
  *
  * @see Credits
- * @see <a href="https://github.com/Incendo/cloud/blob/master/cloud-minecraft/cloud-minecraft-extras/src/main/java/cloud/commandframework/minecraft/extras/MinecraftExceptionHandler.java">MinecraftExceptionHandler</a>
  */
 public final class CloudExceptionHandler {
     private static final Pattern TO_PATH = Pattern.compile("[.|_]");
@@ -148,11 +147,12 @@ public final class CloudExceptionHandler {
      */
     private static final class CaptionFormatter implements CaptionVariableReplacementHandler {
         @Override
-        public @NotNull String replaceVariables(@NotNull String string, @NotNull final CaptionVariable... variables) {
+        public @NotNull String replaceVariables(@NotNull final String string, @NotNull final CaptionVariable... variables) {
+            String value = "";
             for (final CaptionVariable variable : variables) {
-                string = string.replace(String.format("<%s>", variable.getKey()), variable.getValue());
+                value = string.replace(String.format("<%s>", variable.getKey()), variable.getValue());
             }
-            return string;
+            return value;
         }
     }
 }

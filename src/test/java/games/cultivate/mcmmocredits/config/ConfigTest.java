@@ -70,8 +70,8 @@ class ConfigTest {
 
     @AfterAll
     static void tearDown() throws IOException {
-        Files.deleteIfExists(Path.of("src", "test", "resources", "config.yml"));
-        Files.deleteIfExists(Path.of("src", "test", "resources", "menus.yml"));
+        Files.deleteIfExists(TEST_PATH.resolve("config.yml"));
+        Files.deleteIfExists(TEST_PATH.resolve("menus.yml"));
     }
 
     @Test

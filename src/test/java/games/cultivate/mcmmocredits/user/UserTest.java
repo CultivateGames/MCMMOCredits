@@ -35,6 +35,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -104,6 +105,7 @@ class UserTest {
         User updatedUser = this.user.withCredits(newCredits);
 
         //Assert
+        assertNotEquals(this.user, updatedUser);
         assertEquals(this.user.uuid(), updatedUser.uuid());
         assertEquals(this.user.username(), updatedUser.username());
         assertEquals(newCredits, updatedUser.credits());
@@ -119,6 +121,7 @@ class UserTest {
         User updatedUser = this.user.withUsername(newUsername);
 
         //Assert
+        assertNotEquals(this.user, updatedUser);
         assertEquals(this.user.uuid(), updatedUser.uuid());
         assertEquals(newUsername, updatedUser.username());
         assertEquals(this.user.credits(), updatedUser.credits());
@@ -134,6 +137,7 @@ class UserTest {
         User updatedUser = this.user.withRedeemed(newRedeemed);
 
         //Assert
+        assertNotEquals(this.user, updatedUser);
         assertEquals(this.user.uuid(), updatedUser.uuid());
         assertEquals(this.user.username(), updatedUser.username());
         assertEquals(this.user.credits(), updatedUser.credits());

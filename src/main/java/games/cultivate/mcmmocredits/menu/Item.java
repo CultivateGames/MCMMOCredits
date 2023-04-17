@@ -243,27 +243,28 @@ public final class Item {
     }
 
     @Override
-    public boolean equals(Object o) {
+    @SuppressWarnings("checkstyle:needbraces")
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Item item = (Item) o;
-        if (stack.getAmount() != item.stack.getAmount()) return false;
-        if (stack.getType() != item.stack.getType()) return false;
-        if (slot != item.slot) return false;
-        if (type != item.type) return false;
-        if (!Objects.equals(name, item.name)) return false;
-        if (!Objects.equals(lore, item.lore)) return false;
-        return Objects.equals(data, item.data);
+        Item that = (Item) o;
+        if (this.stack.getAmount() != that.stack.getAmount()) return false;
+        if (this.stack.getType() != that.stack.getType()) return false;
+        if (this.slot != that.slot) return false;
+        if (this.type != that.type) return false;
+        if (!Objects.equals(this.name, that.name)) return false;
+        if (!Objects.equals(this.lore, that.lore)) return false;
+        return Objects.equals(this.data, that.data);
     }
 
     @Override
     public int hashCode() {
-        int result = type != null ? type.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (lore != null ? lore.hashCode() : 0);
-        result = 31 * result + slot;
-        result = 31 * result + (data != null ? data.hashCode() : 0);
+        int result = this.type != null ? this.type.hashCode() : 0;
+        result = 31 * result + (this.name != null ? this.name.hashCode() : 0);
+        result = 31 * result + (this.lore != null ? this.lore.hashCode() : 0);
+        result = 31 * result + this.slot;
+        result = 31 * result + (this.data != null ? this.data.hashCode() : 0);
         return result;
     }
 

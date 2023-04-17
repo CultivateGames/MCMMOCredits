@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.data;
 
-import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariConfig;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.util.Util;
 
@@ -46,7 +46,7 @@ public enum DatabaseType {
         if (this == DatabaseType.SQLITE) {
             return "jdbc:sqlite:" + Util.getPluginPath().resolve("database.db");
         }
-        return "jdbc:mysql://" + properties.host() + ":" + properties.port() + "/" + properties.name();
+        return "jdbc:mysql://" + properties.host() + ":" + properties.port() + "/" + properties.name() + "?useSSL=" + properties.ssl();
     }
 
     /**
@@ -58,7 +58,7 @@ public enum DatabaseType {
         return "CREATE-TABLE-" + this.name();
     }
 
-    public HikariDataSource getDataSource(final DatabaseProperties properties, final MCMMOCredits plugin) {
+    public HikariConfig getDataConfig(final DatabaseProperties properties, final MCMMOCredits plugin) {
         if (this == DatabaseType.SQLITE) {
             return DataSourceFactory.createSQLite(properties);
         }

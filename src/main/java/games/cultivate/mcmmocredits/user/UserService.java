@@ -54,26 +54,6 @@ public final class UserService {
     }
 
     /**
-     * Checks if the user is cached by UUID.
-     *
-     * @param uuid The UUID to check.
-     * @return If the User is cached.
-     */
-    public boolean isCached(final UUID uuid) {
-        return this.cache.contains(uuid);
-    }
-
-    /**
-     * Checks if the user is cached by username.
-     *
-     * @param username The username to check.
-     * @return If the User is cached.
-     */
-    public boolean isCached(final String username) {
-        return this.cache.contains(username);
-    }
-
-    /**
      * Checks if the user is cached by UUID and username.
      *
      * @param user The User to check.
@@ -81,7 +61,7 @@ public final class UserService {
      * There is no scenario in which a user is only cached by one of the underlying caches.
      */
     public boolean isCached(final User user) {
-        return this.isCached(user.uuid()) && this.isCached(user.username());
+        return this.cache.contains(user.uuid()) && this.cache.contains(user.username());
     }
 
     /**
@@ -103,7 +83,7 @@ public final class UserService {
      * @return an optional User object if the user exists, otherwise an empty optional
      */
     public Optional<User> getUser(final String username) {
-        if (this.isCached(username)) {
+        if (this.cache.contains(username)) {
             return Optional.of(this.cache.get(username));
         }
         Optional<User> optionalUser = this.dao.getUser(username);
@@ -118,7 +98,7 @@ public final class UserService {
      * @return an optional User object if the user exists, otherwise an empty optional
      */
     public Optional<User> getUser(final UUID uuid) {
-        if (this.isCached(uuid)) {
+        if (this.cache.contains(uuid)) {
             return Optional.of(this.cache.get(uuid));
         }
         Optional<User> optionalUser = this.dao.getUser(uuid);

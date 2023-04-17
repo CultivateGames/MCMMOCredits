@@ -55,6 +55,7 @@ import java.util.Optional;
  * Default is /credits.
  */
 @CommandMethod("${command.prefix}")
+@SuppressWarnings("checkstyle:linelength")
 public final class Credits {
     private final MenuConfig menuConfig;
     private final MainConfig config;
