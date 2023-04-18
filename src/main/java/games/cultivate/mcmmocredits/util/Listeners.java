@@ -156,6 +156,11 @@ public class Listeners implements Listener {
             Text.fromString(executor, this.config.getMessage("not-enough-credits"), resolver).send();
             return;
         }
+        //TODO: refactor
+        if (e.isSelfTransaction()) {
+            executor = target;
+        }
+        resolver = Resolver.ofTransaction(executor, target, amount);
         if (!e.silentForSender()) {
             Text.fromString(executor, this.config.getMessage(operation.getMessageKey()), resolver).send();
         }
