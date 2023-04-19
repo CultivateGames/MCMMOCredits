@@ -24,15 +24,23 @@
 package games.cultivate.mcmmocredits.inject;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.data.DatabaseProperties;
+import games.cultivate.mcmmocredits.database.DatabaseProperties;
+import games.cultivate.mcmmocredits.user.UserDAO;
+import games.cultivate.mcmmocredits.database.types.H2Database;
+import games.cultivate.mcmmocredits.database.types.MySqlDatabase;
+import games.cultivate.mcmmocredits.database.types.SqlLiteDatabase;
 import games.cultivate.mcmmocredits.menu.ClickFactory;
 import games.cultivate.mcmmocredits.user.UserCache;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
+
+import javax.inject.Provider;
+import javax.inject.Singleton;
 
 /**
  * Adds bindings to Guice.
@@ -61,15 +69,16 @@ public final class PluginModule extends AbstractModule {
         this.bind(ClickFactory.class).asEagerSingleton();
     }
 
-    /**
-     * Provides properties of the Database through the configuration.
-     *
-     * @param config The injected MainConfig.
-     * @return the Database properties.
-     */
     @Provides
-    public DatabaseProperties provideProperties(final MainConfig config) {
-        return config.getDatabaseProperties("settings", "database");
+    @Singleton
+    public UserDAO provideDAO(final MainConfig config, final Injector injector) {
+        DatabaseProperties properties = config.getDatabaseProperties("settings", "database");
+        Provider<UserDAO> provider = switch (properties.type()) {
+            case SQLITE -> injector.getProvider(SqlLiteDatabase.class).get();
+            case MYSQL -> injector.getProvider(MySqlDatabase.class).get();
+            case H2 -> injector.getProvider(H2Database.class).get();
+        };
+        return provider.get();
     }
 
     /**

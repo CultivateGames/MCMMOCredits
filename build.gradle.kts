@@ -25,33 +25,33 @@ dependencies {
 
     implementation("org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT")
 
-    implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
-        exclude(module = "paper-api")
-    }
-
+    implementation("com.h2database:h2:2.1.214")
     implementation("com.google.inject:guice:5.1.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.jdbi:jdbi3-core:3.37.1")
     implementation("org.jdbi:jdbi3-sqlite:3.37.1")
     implementation("org.jdbi:jdbi3-sqlobject:3.37.1")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
-    testImplementation("org.jdbi:jdbi3-testing:3.37.1")
-    testImplementation("com.h2database:h2:2.1.214")
-    testImplementation("org.mockito:mockito-inline:5.2.0")
-
-    //versions not latest, in line w/ Paper
-    testRuntimeOnly("org.xerial:sqlite-jdbc:3.41.0.0")
-    testRuntimeOnly("mysql:mysql-connector-java:8.0.32")
+    implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
+        exclude(module = "paper-api")
+    }
 
     compileOnly("me.clip:placeholderapi:2.11.3") {
         exclude(group = "net.kyori")
     }
-
     compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.218") {
         exclude("com.sk89q.worldguard")
         exclude("com.sk89q.worldedit")
     }
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
+
+    testImplementation("org.jdbi:jdbi3-testing:3.37.1")
+    testImplementation("com.h2database:h2:2.1.214")
+    //versions not latest, in line w/ Paper
+    testRuntimeOnly("org.xerial:sqlite-jdbc:3.41.0.0")
+    testRuntimeOnly("mysql:mysql-connector-java:8.0.32")
 }
 
 java {
@@ -147,7 +147,9 @@ tasks {
 
     shadowJar {
         archiveClassifier.set("")
-        minimize()
+        minimize {
+            exclude(dependency("com.h2database:h2:2.1.214"))
+        }
         // https://github.com/PaperMC/paperweight-test-plugin/blob/shadow/build.gradle.kts
         fun reloc(pkg: String) = relocate(pkg, "games.cultivate.mcmmocredits.relocate.$pkg")
         reloc("cloud.commandframework")

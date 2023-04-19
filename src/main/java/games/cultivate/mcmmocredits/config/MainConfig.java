@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.data.DatabaseProperties;
+import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.nio.file.Path;

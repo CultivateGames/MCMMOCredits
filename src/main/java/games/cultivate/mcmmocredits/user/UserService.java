@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.util.CreditOperation;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

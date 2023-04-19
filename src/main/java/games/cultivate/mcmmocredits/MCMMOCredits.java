@@ -37,7 +37,7 @@ import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.SkillParser;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.data.DAOProvider;
+import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.placeholders.CreditsExpansion;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
@@ -197,7 +197,7 @@ public final class MCMMOCredits extends JavaPlugin {
         long start = System.nanoTime();
         this.injector.getInstance(MainConfig.class).save();
         this.injector.getInstance(MenuConfig.class).save();
-        this.injector.getInstance(DAOProvider.class).disable();
+        this.injector.getInstance(Database.class).disable();
         long end = System.nanoTime();
         if (this.config.getBoolean("settings", "debug")) {
             this.getSLF4JLogger().info("Plugin disabled! Shutdown took: {} s.", (double) (end - start) / 1000000000);

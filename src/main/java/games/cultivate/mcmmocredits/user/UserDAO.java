@@ -21,10 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.data;
+package games.cultivate.mcmmocredits.user;
 
-import com.google.inject.ProvidedBy;
-import games.cultivate.mcmmocredits.user.User;
 import org.jdbi.v3.sqlobject.SqlObject;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
 import org.jdbi.v3.sqlobject.customizer.BindMethods;
@@ -38,7 +36,6 @@ import java.util.UUID;
 /**
  * DAO that accesses {@link User} instances from Database.
  */
-@ProvidedBy(DAOProvider.class)
 public interface UserDAO extends SqlObject {
     /**
      * Adds a user to the database.
@@ -53,7 +50,7 @@ public interface UserDAO extends SqlObject {
      * Retrieves a user from the database using their username.
      *
      * @param username The username of the user.
-     * @return An Optional<User> which contains the user if found.
+     * @return An Optional User which contains the user if found.
      */
     @SqlQuery("SELECT * FROM MCMMOCredits WHERE username LIKE :username LIMIT 1;")
     @RegisterConstructorMapper(User.class)
@@ -63,7 +60,7 @@ public interface UserDAO extends SqlObject {
      * Retrieves a user from the database using their UUID.
      *
      * @param uuid The UUID of the user.
-     * @return An Optional<User> which contains the user if found.
+     * @return An Optional User which contains the user if found.
      */
     @SqlQuery("SELECT * FROM MCMMOCredits WHERE uuid = :uuid;")
     @RegisterConstructorMapper(User.class)

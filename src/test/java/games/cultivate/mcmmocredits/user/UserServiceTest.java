@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.util.CreditOperation;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -31,7 +30,6 @@ import org.bukkit.entity.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.List;
@@ -45,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -272,14 +271,13 @@ class UserServiceTest {
     void fromSender_SenderIsPlayer_ReturnsUser() {
         //Arrange
         this.cache.add(this.user);
-        try (MockedStatic<Bukkit> mockedBukkit = Mockito.mockStatic(Bukkit.class)) {
+        try (MockedStatic<Bukkit> mockedBukkit = mockStatic(Bukkit.class)) {
             Player player = mock(Player.class);
             when(player.getUniqueId()).thenReturn(this.testUUID);
-            CommandSender sender = player;
             mockedBukkit.when(() -> Bukkit.getPlayer(this.testUUID)).thenReturn(player);
 
             //Act
-            CommandExecutor test = this.service.fromSender(sender);
+            CommandExecutor test = this.service.fromSender(player);
 
             //Assert
             assertNotNull(test);
