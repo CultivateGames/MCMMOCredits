@@ -20,6 +20,8 @@ repositories {
 
 dependencies {
     paperweight.paperDevBundle("1.19.4-R0.1-SNAPSHOT")
+    implementation ("org.bstats:bstats-bukkit:3.0.2")
+
     implementation("cloud.commandframework:cloud-annotations:1.8.3")
     implementation("cloud.commandframework:cloud-paper:1.8.3")
 
@@ -46,12 +48,6 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
     testImplementation("org.mockito:mockito-inline:5.2.0")
-
-    testImplementation("org.jdbi:jdbi3-testing:3.37.1")
-    testImplementation("com.h2database:h2:2.1.214")
-    //versions not latest, in line w/ Paper
-    testRuntimeOnly("org.xerial:sqlite-jdbc:3.41.0.0")
-    testRuntimeOnly("mysql:mysql-connector-java:8.0.32")
 }
 
 java {
@@ -160,6 +156,7 @@ tasks {
         reloc("javax.annotation")
         reloc("javax.inject")
         reloc("org.aopalliance")
+        reloc("org.bstats")
         reloc("org.checkerframework")
         reloc("org.jdbi")
         reloc("org.incendo")

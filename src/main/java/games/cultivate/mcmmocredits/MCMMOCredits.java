@@ -44,6 +44,7 @@ import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.Listeners;
 import io.leangen.geantyref.TypeToken;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -51,8 +52,10 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.interfaces.paper.PaperInterfaceListeners;
 import org.incendo.interfaces.paper.utils.PaperUtils;
+import org.slf4j.Logger;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -62,6 +65,7 @@ public final class MCMMOCredits extends JavaPlugin {
     private static UserService userService;
     private Injector injector;
     private MainConfig config;
+    private Logger logger;
 
     @SuppressWarnings("unused")
     public static UserService getAPI() {
@@ -74,15 +78,17 @@ public final class MCMMOCredits extends JavaPlugin {
     @Override
     public void onEnable() {
         long start = System.nanoTime();
+        this.logger = this.getSLF4JLogger();
         this.injector = Guice.createInjector(new PluginModule(this));
         this.checkForDependencies();
         this.config = this.injector.getInstance(MainConfig.class);
         this.loadCommands();
         this.registerListeners();
         userService = this.injector.getInstance(UserService.class);
+        this.enableMetrics();
         long end = System.nanoTime();
         if (this.config.getBoolean("settings", "debug")) {
-            this.getSLF4JLogger().info("Plugin enabled! Startup took: {} s.", (double) (end - start) / 1000000000);
+            this.logger.info("Plugin enabled! Startup took: {} s.", (double) (end - start) / 1000000000);
         }
     }
 
@@ -93,20 +99,23 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     @SuppressWarnings("UnstableApiUsage")
     private void checkForDependencies() {
+        this.logger.info("Checking Dependencies...");
         if (!PaperUtils.isPaper()) {
-            this.getSLF4JLogger().warn("Not using Paper, disabling plugin...");
+            this.logger.warn("Not using Paper, disabling plugin...");
             this.setEnabled(false);
         }
+        this.logger.info("Paper has been found! Continuing to load...");
         PluginManager pluginManager = Bukkit.getPluginManager();
         if (pluginManager.getPlugin("mcMMO") == null) {
-            this.getSLF4JLogger().warn("Not using mcMMO, disabling plugin...");
+            this.logger.warn("Not using mcMMO, disabling plugin...");
             this.setEnabled(false);
             return;
         }
-        this.getSLF4JLogger().info("mcMMO has been found! Continuing to load...");
+        this.logger.info("mcMMO has been found! Continuing to load...");
         if (pluginManager.getPlugin("PlaceholderAPI") != null) {
             this.injector.getInstance(CreditsExpansion.class).register();
         }
+        this.logger.info("Dependencies loaded!");
     }
 
     /**
@@ -115,6 +124,7 @@ public final class MCMMOCredits extends JavaPlugin {
      * @see CloudExceptionHandler
      */
     private void loadCommands() {
+        this.logger.info("Checking Commands...");
         PaperCommandManager<CommandExecutor> manager;
         try {
             manager = this.loadCommandManager();
@@ -125,6 +135,7 @@ public final class MCMMOCredits extends JavaPlugin {
         this.loadCommandParser(manager);
         this.parseCommands(manager);
         new CloudExceptionHandler(this.config, manager).apply();
+        this.logger.info("Commands loaded!");
     }
 
     /**
@@ -139,7 +150,7 @@ public final class MCMMOCredits extends JavaPlugin {
         var coordinator = AsynchronousCommandExecutionCoordinator.<CommandExecutor>builder().withAsynchronousParsing().build();
         manager = new PaperCommandManager<>(this, coordinator, forwardsMapper, CommandExecutor::sender);
         manager.registerBrigadier();
-        manager.brigadierManager().setNativeNumberSuggestions(false);
+        Objects.requireNonNull(manager.brigadierManager()).setNativeNumberSuggestions(false);
         manager.registerAsynchronousCompletions();
         return manager;
     }
@@ -185,8 +196,16 @@ public final class MCMMOCredits extends JavaPlugin {
      * Registers all required Event Listeners.
      */
     private void registerListeners() {
+        this.logger.info("Registering Listeners...");
         Bukkit.getPluginManager().registerEvents(new PaperInterfaceListeners(this, 10L), this);
         Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
+    }
+
+    private void enableMetrics() {
+        if (this.config.getBoolean("settings", "bstats-metrics-enabled")) {
+            this.logger.info("Enabling Bstats.. To disable metrics, set bstats-metrics-enabled to false in config.yml");
+            new Metrics(this, 18254);
+        }
     }
 
     /**
@@ -200,7 +219,7 @@ public final class MCMMOCredits extends JavaPlugin {
         this.injector.getInstance(Database.class).disable();
         long end = System.nanoTime();
         if (this.config.getBoolean("settings", "debug")) {
-            this.getSLF4JLogger().info("Plugin disabled! Shutdown took: {} s.", (double) (end - start) / 1000000000);
+            this.logger.info("Plugin disabled! Shutdown took: {} s.", (double) (end - start) / 1000000000);
         }
     }
 }

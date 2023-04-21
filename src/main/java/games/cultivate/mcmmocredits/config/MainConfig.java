@@ -97,6 +97,7 @@ public class MainConfig extends Config {
     @ConfigSerializable
     static class Settings {
         private boolean addUserMessage = true;
+        private boolean bstatsMetricsEnabled = true;
         private boolean debug = false;
         private boolean leaderboardEnabled = true;
         private int leaderboardPageSize = 10;

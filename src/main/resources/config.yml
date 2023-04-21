@@ -61,6 +61,7 @@ redeem-sudo-user: <green>Redemption Successful! <sender> has redeemed <amount> C
 reload: <green>The configuration file has been reloaded.
 settings:
   add-user-message: true
+  bstats-metrics-enabled: true
   debug: false
   leaderboard-enabled: true
   leaderboard-page-size: 10
