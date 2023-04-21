@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.database;
 
-import com.zaxxer.hikari.HikariConfig;
 import games.cultivate.mcmmocredits.user.UserDAO;
 import org.jdbi.v3.core.locator.ClasspathSqlLocator;
 
@@ -32,7 +31,7 @@ import javax.inject.Provider;
 public interface Database extends Provider<UserDAO> {
     ClasspathSqlLocator LOCATOR = ClasspathSqlLocator.create();
 
-    HikariConfig createConfig();
+    void load();
 
     void disable();
 

@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.database.types;
 
-import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.user.UserDAO;
@@ -32,27 +31,27 @@ import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlite3.SQLitePlugin;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
-import javax.inject.Inject;
-
-//TODO: change url structure, find way to write unit tests.
 public final class SqlLiteDatabase implements Database {
-    private final String url;
-    private HikariDataSource source;
+    private final HikariDataSource source;
     private UserDAO dao;
 
-    @Inject
     public SqlLiteDatabase() {
-        this.url = "jdbc:sqlite:" + Util.getPluginPath().resolve("database.db");
+        String url = "jdbc:sqlite:" + Util.getPluginPath().resolve("database.db");
+        this.source = new HikariDataSource();
+        this.source.setPoolName("MCMMOCredits SQLITE");
+        this.source.setDataSourceClassName("org.sqlite.SQLiteDataSource");
+        this.source.addDataSourceProperty("url", url);
+        Util.createFile("database.db");
     }
 
     @Override
-    public HikariConfig createConfig() {
-        HikariConfig config = new HikariConfig();
-        config.setPoolName("MCMMOCredits SQLITE");
-        config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
-        config.addDataSourceProperty("url", this.url);
-        Util.createFile("database.db");
-        return config;
+    public void load() {
+        if (this.dao == null) {
+            Jdbi jdbi = Jdbi.create(this.source).installPlugin(new SqlObjectPlugin()).installPlugin(new SQLitePlugin());
+            String query = this.findQuery("CREATE-TABLE-SQLITE");
+            jdbi.useHandle(x -> x.execute(query));
+            this.dao = jdbi.onDemand(UserDAO.class);
+        }
     }
 
     @Override
@@ -64,14 +63,7 @@ public final class SqlLiteDatabase implements Database {
 
     @Override
     public UserDAO get() {
-        if (this.dao != null && this.source != null) {
-            return this.dao;
-        }
-        this.source = new HikariDataSource(this.createConfig());
-        Jdbi jdbi = Jdbi.create(this.source).installPlugin(new SqlObjectPlugin()).installPlugin(new SQLitePlugin());
-        String query = this.findQuery("CREATE-TABLE-SQLITE");
-        jdbi.useHandle(x -> x.execute(query));
-        this.dao = jdbi.onDemand(UserDAO.class);
+        this.load();
         return this.dao;
     }
 }

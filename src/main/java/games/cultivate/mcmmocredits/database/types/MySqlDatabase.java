@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.database.types;
 
-import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
@@ -33,41 +32,41 @@ import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import javax.inject.Inject;
 
-//TODO: change url structure, find way to write unit tests.
 public final class MySqlDatabase implements Database {
-    private final DatabaseProperties properties;
-    private final String url;
-    private HikariDataSource source;
+    private final HikariDataSource source;
     private UserDAO dao;
 
     @Inject
     public MySqlDatabase(final DatabaseProperties properties) {
-        this.properties = properties;
-        this.url = String.format("jdbc:mysql://%s:%d/%s?useSSL=%s",
-                this.properties.host(),
-                this.properties.port(),
-                this.properties.name(),
-                this.properties.ssl());
+        String url = String.format("jdbc:mysql://%s:%d/%s?useSSL=%s",
+                properties.host(),
+                properties.port(),
+                properties.name(),
+                properties.ssl());
+        this.source = new HikariDataSource();
+        this.source.setPoolName("MCMMOCredits MYSQL");
+        this.source.setDataSourceClassName("com.mysql.cj.jdbc.MysqlDataSource");
+        this.source.addDataSourceProperty("cachePrepStmts", true);
+        this.source.addDataSourceProperty("prepStmtCacheSize", 250);
+        this.source.addDataSourceProperty("prepStmtCacheSqlLimit", 2048);
+        this.source.addDataSourceProperty("useServerPrepStmts", true);
+        this.source.addDataSourceProperty("rewriteBatchedStatements", true);
+        this.source.addDataSourceProperty("cacheResultSetMetadata", true);
+        this.source.addDataSourceProperty("cacheServerConfiguration", true);
+        this.source.addDataSourceProperty("elideSetAutoCommits", true);
+        this.source.addDataSourceProperty("maintainTimeStats", false);
+        this.source.addDataSourceProperty("url", url);
+        this.source.addDataSourceProperty("user", properties.user());
+        this.source.addDataSourceProperty("password", properties.password());
     }
 
-    @Override
-    public HikariConfig createConfig() {
-        HikariConfig config = new HikariConfig();
-        config.setPoolName("MCMMOCredits MYSQL");
-        config.setDataSourceClassName("com.mysql.cj.jdbc.MysqlDataSource");
-        config.addDataSourceProperty("cachePrepStmts", true);
-        config.addDataSourceProperty("prepStmtCacheSize", 250);
-        config.addDataSourceProperty("prepStmtCacheSqlLimit", 2048);
-        config.addDataSourceProperty("useServerPrepStmts", true);
-        config.addDataSourceProperty("rewriteBatchedStatements", true);
-        config.addDataSourceProperty("cacheResultSetMetadata", true);
-        config.addDataSourceProperty("cacheServerConfiguration", true);
-        config.addDataSourceProperty("elideSetAutoCommits", true);
-        config.addDataSourceProperty("maintainTimeStats", false);
-        config.addDataSourceProperty("url", this.url);
-        config.addDataSourceProperty("user", this.properties.user());
-        config.addDataSourceProperty("password", this.properties.password());
-        return config;
+    public void load() {
+        if (this.dao == null) {
+            Jdbi jdbi = Jdbi.create(this.source).installPlugin(new SqlObjectPlugin());
+            String query = this.findQuery("CREATE-TABLE-MYSQL");
+            jdbi.useHandle(x -> x.execute(query));
+            this.dao = jdbi.onDemand(UserDAO.class);
+        }
     }
 
     @Override
@@ -79,14 +78,7 @@ public final class MySqlDatabase implements Database {
 
     @Override
     public UserDAO get() {
-        if (this.dao != null && this.source != null) {
-            return this.dao;
-        }
-        this.source = new HikariDataSource(this.createConfig());
-        Jdbi jdbi = Jdbi.create(this.source).installPlugin(new SqlObjectPlugin());
-        String query = this.findQuery("CREATE-TABLE-MYSQL");
-        jdbi.useHandle(x -> x.execute(query));
-        this.dao = jdbi.onDemand(UserDAO.class);
+        this.load();
         return this.dao;
     }
 }

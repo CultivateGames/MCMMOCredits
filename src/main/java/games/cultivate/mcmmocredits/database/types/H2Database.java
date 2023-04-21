@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.database.types;
 
-import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.user.UserDAO;
@@ -32,27 +31,27 @@ import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.h2.H2DatabasePlugin;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
-import javax.inject.Inject;
-
-//TODO: change url structure, find way to write unit tests.
 public final class H2Database implements Database {
-    private final String url;
-    private HikariDataSource source;
+    private final HikariDataSource source;
     private UserDAO dao;
 
-    @Inject
     public H2Database() {
-        this.url = "jdbc:h2:file:./" + Util.getPluginPath().resolve("h2-database") + ";DB_CLOSE_DELAY=-1;MODE=MYSQL";
+        String url = "jdbc:h2:file:./" + Util.getPluginPath().resolve("h2-database") + ";DB_CLOSE_DELAY=-1;MODE=MYSQL";
+        this.source = new HikariDataSource();
+        this.source.setPoolName("MCMMOCredits H2");
+        this.source.setDataSourceClassName("org.h2.jdbcx.JdbcDataSource");
+        this.source.addDataSourceProperty("url", url);
+        Util.createFile("h2-database.mv.db");
     }
 
     @Override
-    public HikariConfig createConfig() {
-        HikariConfig config = new HikariConfig();
-        config.setPoolName("MCMMOCredits H2");
-        config.setDataSourceClassName("org.h2.jdbcx.JdbcDataSource");
-        config.addDataSourceProperty("url", this.url);
-        Util.createFile("h2-database.mv.db");
-        return config;
+    public void load() {
+        if (this.dao == null) {
+            Jdbi jdbi = Jdbi.create(this.source).installPlugin(new SqlObjectPlugin()).installPlugin(new H2DatabasePlugin());
+            String query = this.findQuery("CREATE-TABLE-MYSQL");
+            jdbi.useHandle(x -> x.execute(query));
+            this.dao = jdbi.onDemand(UserDAO.class);
+        }
     }
 
     @Override
@@ -64,14 +63,7 @@ public final class H2Database implements Database {
 
     @Override
     public UserDAO get() {
-        if (this.dao != null && this.source != null) {
-            return this.dao;
-        }
-        this.source = new HikariDataSource(this.createConfig());
-        Jdbi jdbi = Jdbi.create(this.source).installPlugin(new SqlObjectPlugin()).installPlugin(new H2DatabasePlugin());
-        String query = this.findQuery("CREATE-TABLE-MYSQL");
-        jdbi.useHandle(x -> x.execute(query));
-        this.dao = jdbi.onDemand(UserDAO.class);
+        this.load();
         return this.dao;
     }
 }
