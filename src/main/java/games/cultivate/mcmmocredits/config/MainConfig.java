@@ -23,7 +23,9 @@
 //
 package games.cultivate.mcmmocredits.config;
 
+import games.cultivate.mcmmocredits.converters.ConverterType;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
+import games.cultivate.mcmmocredits.util.Util;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.nio.file.Path;
@@ -79,6 +81,7 @@ public class MainConfig extends Config {
     private String reload = "<green>The configuration file has been reloaded.";
 
     private Settings settings = new Settings();
+    private Conversion converter = new Conversion();
 
     /**
      * Constructs the configuration.
@@ -104,5 +107,23 @@ public class MainConfig extends Config {
         private boolean sendLoginMessage = true;
         private boolean userTabComplete = true;
         private DatabaseProperties database = DatabaseProperties.defaults();
+    }
+
+    @ConfigSerializable
+    static class Conversion {
+        private boolean enabled = false;
+        private ConverterType type = ConverterType.INTERNAL_SQLITE;
+        private InternalConversion internal = new InternalConversion();
+        private ExternalConversion external = new ExternalConversion();
+    }
+
+    @ConfigSerializable
+    static class InternalConversion {
+        private DatabaseProperties properties = DatabaseProperties.defaults();
+    }
+
+    @ConfigSerializable
+    static class ExternalConversion {
+        private Path csvPath = Util.getPluginPath().resolve("userdata.csv");
     }
 }

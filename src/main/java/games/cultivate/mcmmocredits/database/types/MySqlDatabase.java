@@ -24,6 +24,7 @@
 package games.cultivate.mcmmocredits.database.types;
 
 import com.zaxxer.hikari.HikariDataSource;
+import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import games.cultivate.mcmmocredits.user.UserDAO;
@@ -37,7 +38,8 @@ public final class MySqlDatabase implements Database {
     private UserDAO dao;
 
     @Inject
-    public MySqlDatabase(final DatabaseProperties properties) {
+    public MySqlDatabase(final MainConfig config) {
+        DatabaseProperties properties = config.getDatabaseProperties("settings", "database");
         String url = String.format("jdbc:mysql://%s:%d/%s?useSSL=%s",
                 properties.host(),
                 properties.port(),

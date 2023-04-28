@@ -23,12 +23,15 @@
 //
 package games.cultivate.mcmmocredits.user;
 
+import org.jdbi.v3.core.Handle;
+import org.jdbi.v3.core.statement.PreparedBatch;
 import org.jdbi.v3.sqlobject.SqlObject;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
 import org.jdbi.v3.sqlobject.customizer.BindMethods;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,6 +48,24 @@ public interface UserDAO extends SqlObject {
      */
     @SqlUpdate("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed);")
     boolean addUser(@BindMethods User user);
+
+    /**
+     * Adds a collection of users to the database.
+     *
+     * @param users The users to add.
+     */
+    default void addUsers(Collection<User> users) {
+        try (Handle handle = this.getHandle()) {
+            PreparedBatch batch = handle.prepareBatch("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed)");
+            for (User u : users) {
+                batch = batch.bind("uuid", u.uuid().toString())
+                        .bind("username", u.username())
+                        .bind("credits", u.credits())
+                        .bind("redeemed", u.redeemed()).add();
+            }
+            batch.execute();
+        }
+    }
 
     /**
      * Retrieves a user from the database using their username.
@@ -135,4 +156,15 @@ public interface UserDAO extends SqlObject {
     @SqlQuery("SELECT * FROM MCMMOCredits ORDER BY credits DESC LIMIT :limit OFFSET :offset")
     @RegisterConstructorMapper(User.class)
     List<User> getPageOfUsers(int limit, int offset);
+
+    /**
+     * Gets all users from the current Database.
+     * <p>
+     * Note: This should be used with extreme caution on larger datasets.
+     *
+     * @return A list of all users.
+     */
+    @SqlQuery("SELECT * FROM MCMMOCredits")
+    @RegisterConstructorMapper(User.class)
+    List<User> getAllUsers();
 }
