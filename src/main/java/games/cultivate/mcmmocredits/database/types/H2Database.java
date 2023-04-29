@@ -25,6 +25,7 @@ package games.cultivate.mcmmocredits.database.types;
 
 import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.UUIDMapper;
 import games.cultivate.mcmmocredits.user.UserDAO;
 import games.cultivate.mcmmocredits.util.Util;
 import org.jdbi.v3.core.Jdbi;
@@ -48,6 +49,7 @@ public final class H2Database implements Database {
     public void load() {
         if (this.dao == null) {
             Jdbi jdbi = Jdbi.create(this.source).installPlugin(new SqlObjectPlugin()).installPlugin(new H2DatabasePlugin());
+            jdbi.registerColumnMapper(new UUIDMapper());
             String query = this.findQuery("CREATE-TABLE-MYSQL");
             jdbi.useHandle(x -> x.execute(query));
             this.dao = jdbi.onDemand(UserDAO.class);

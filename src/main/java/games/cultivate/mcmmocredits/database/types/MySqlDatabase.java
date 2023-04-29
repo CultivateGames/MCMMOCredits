@@ -26,6 +26,7 @@ package games.cultivate.mcmmocredits.database.types;
 import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
+import games.cultivate.mcmmocredits.database.UUIDMapper;
 import games.cultivate.mcmmocredits.user.UserDAO;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
@@ -45,7 +46,8 @@ public final class MySqlDatabase implements Database {
                 properties.ssl());
         this.source = new HikariDataSource();
         this.source.setPoolName("MCMMOCredits MYSQL");
-        this.source.setDataSourceClassName("com.mysql.cj.jdbc.MysqlDataSource");
+        //https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration
+        this.source.setJdbcUrl(url);
         this.source.addDataSourceProperty("cachePrepStmts", true);
         this.source.addDataSourceProperty("prepStmtCacheSize", 250);
         this.source.addDataSourceProperty("prepStmtCacheSqlLimit", 2048);
@@ -55,7 +57,6 @@ public final class MySqlDatabase implements Database {
         this.source.addDataSourceProperty("cacheServerConfiguration", true);
         this.source.addDataSourceProperty("elideSetAutoCommits", true);
         this.source.addDataSourceProperty("maintainTimeStats", false);
-        this.source.addDataSourceProperty("url", url);
         this.source.addDataSourceProperty("user", properties.user());
         this.source.addDataSourceProperty("password", properties.password());
     }
@@ -63,6 +64,7 @@ public final class MySqlDatabase implements Database {
     public void load() {
         if (this.dao == null) {
             Jdbi jdbi = Jdbi.create(this.source).installPlugin(new SqlObjectPlugin());
+            jdbi.registerColumnMapper(new UUIDMapper());
             String query = this.findQuery("CREATE-TABLE-MYSQL");
             jdbi.useHandle(x -> x.execute(query));
             this.dao = jdbi.onDemand(UserDAO.class);

@@ -199,13 +199,16 @@ public final class MCMMOCredits extends JavaPlugin {
         this.logger.info("Registering Listeners...");
         Bukkit.getPluginManager().registerEvents(new PaperInterfaceListeners(this, 10L), this);
         Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
+        this.logger.info("Listeners registered!");
     }
 
     private void enableMetrics() {
         if (this.config.getBoolean("settings", "bstats-metrics-enabled")) {
             this.logger.info("Enabling Bstats.. To disable metrics, set bstats-metrics-enabled to false in config.yml");
             new Metrics(this, 18254);
+            return;
         }
+        this.logger.info("Bstats is disabled, skipping initialization...");
     }
 
     /**
