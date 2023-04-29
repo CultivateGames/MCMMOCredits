@@ -85,6 +85,7 @@ public final class CreditTransactionEvent extends Event {
     }
 
     @Override
+    @SuppressWarnings("java:S4144")
     public @NotNull HandlerList getHandlers() {
         return HANDLERS;
     }
@@ -141,5 +142,14 @@ public final class CreditTransactionEvent extends Event {
      */
     public boolean silentForSender() {
         return this.senderSilent;
+    }
+
+    /**
+     * Checks if the redemption is performed by the player themselves.
+     *
+     * @return true if the sender is also the recipient of the Credit Redemption.
+     */
+    public boolean isSelfTransaction() {
+        return this.sender instanceof Player p && p.getUniqueId().equals(this.uuid);
     }
 }

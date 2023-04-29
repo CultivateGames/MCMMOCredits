@@ -23,41 +23,62 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import com.gmail.nossr50.util.skills.SkillTools;
+import games.cultivate.mcmmocredits.menu.ClickType;
+import games.cultivate.mcmmocredits.menu.Item;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * Utility class for methods with no clear association.
  */
 public final class Util {
-    private static List<String> skills = new ArrayList<>();
+    //We are keeping a string list rather than calculating it to reduce complexity.
+    @SuppressWarnings("checkstyle:linelength")
+    private static final List<String> MCMMO_SKILLS = List.of("acrobatics", "alchemy", "archery", "axes", "excavation", "fishing", "herbalism", "mining", "repair", "swords", "taming", "unarmed", "woodcutting");
+    private static Path pluginPath;
 
     private Util() {
         throw new AssertionError("Util cannot be instantiated!");
     }
 
     /**
-     * Returns a list of non-child skill names from MCMMO, formatted.
+     * Returns a list of non-child skill names from MCMMO, formatted in lowercase.
      *
-     * @return A List of formatted non-child skills name.
+     * @return A List of formatted non-child skill names.
      */
     public static List<String> getSkillNames() {
-        if (skills.isEmpty()) {
-            skills = SkillTools.NON_CHILD_SKILLS.stream().map(PrimarySkillType::name).map(String::toLowerCase).toList();
-        }
-        return skills;
+        return MCMMO_SKILLS;
     }
 
     /**
-     * Creates a file and associated directories if they do not exist.
+     * Returns a list of non-child skill names from MCMMO, joined by a delimiter.
+     *
+     * @return A List of formatted non-child skill names.
+     */
+    public static String getJoinedSkillNames() {
+        return Util.joinString(",", MCMMO_SKILLS);
+    }
+
+    /**
+     * Creates a file and associated directories if they do not exist, given the file name.
+     *
+     * @param fileName Name of the {@link File} to create.
+     */
+    public static void createFile(final String fileName) {
+        createFile(pluginPath, fileName);
+    }
+
+    /**
+     * Creates a file and associated directories if they do not exist, given the directory path and the file name.
      *
      * @param dir      The {@link Path} to check for creation.
      * @param fileName Name of the {@link File} to create.
@@ -72,5 +93,100 @@ public final class Util {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Returns the path of the plugin directory.
+     *
+     * @return Path of the plugin directory.
+     */
+    public static Path getPluginPath() {
+        if (pluginPath == null) {
+            pluginPath = new File(Bukkit.getPluginsFolder(), "MCMMOCredits").toPath();
+        }
+        return pluginPath;
+    }
+
+    /**
+     * Capitalizes the first letter of the input string and sets the remaining characters to lowercase.
+     *
+     * @param string The input string to be capitalized.
+     * @return The capitalized string.
+     */
+    public static String capitalizeWord(final String string) {
+        if (string == null || string.isEmpty()) {
+            return string;
+        }
+        return string.substring(0, 1).toUpperCase() + string.substring(1).toLowerCase();
+    }
+
+    /**
+     * Utility method to create Config Menu items for the Menu Config.
+     *
+     * @param material type of the item.
+     * @param type     type of the click.
+     * @return Built item for Menu Config.
+     */
+    public static Item createConfigItem(final Material material, final ClickType type) {
+        return Item.builder().item(new ItemStack(material, 1)).slot(-1).type(type).lore(List.of("<gray>Click here to edit this config option!")).build();
+    }
+
+    /**
+     * Utility method to create items that execute commands for the Menu Config.
+     *
+     * @param material type of the item.
+     * @param name     name of the item as a string.
+     * @param lore     lore of the item as a List of string.
+     * @param command  command to be executed as a string.
+     * @param slot     location of the item in the menu. 0 based.
+     * @return Built item for Menu Config.
+     */
+    public static Item createCommandItem(final Material material, final String name, final String lore, final String command, final int slot) {
+        return Item.builder().item(new ItemStack(material, 1)).name(name).lore(List.of(lore)).slot(slot).type(ClickType.COMMAND).data(command).build();
+    }
+
+    /**
+     * Utility method to create items that execute credit redemptions for the Menu Config.
+     *
+     * @param material type of the item.
+     * @param skill    skill that will be redeemed into.
+     * @param slot     location of the item in the menu. 0 based.
+     * @return Built item for Menu Config.
+     */
+    public static Item createRedeemItem(final Material material, final String skill, final int slot) {
+        List<String> lore = List.of("<yellow><sender>, click here to redeem!");
+        return Item.builder().item(new ItemStack(material, 1)).name("<yellow>" + Util.capitalizeWord(skill)).lore(lore).type(ClickType.REDEEM).slot(slot).build();
+    }
+
+    /**
+     * Utility method that will join a collection of strings with the provided delimiter.
+     *
+     * @param delimiter string-based delimited.
+     * @param members   collection of object to delimit.
+     * @param <T>       The object being delimited. Converted to string.
+     * @return The combined string.
+     */
+    public static <T> String joinString(final String delimiter, final Iterable<T> members) {
+        StringBuilder sb = new StringBuilder();
+        for (T obj : members) {
+            sb.append(obj).append(delimiter);
+        }
+        int last = sb.lastIndexOf(delimiter);
+        if (last != -1) {
+            sb.deleteCharAt(last);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Utility method that will join an array of strings with the provided delimiter.
+     *
+     * @param delimiter string-based delimited.
+     * @param array     array of object to delimit. Converted to iterable list.
+     * @param <T>       The object being delimited. Converted to string.
+     * @return The combined string.
+     */
+    public static <T> String joinString(final String delimiter, final T[] array) {
+        return Util.joinString(delimiter, Arrays.asList(array));
     }
 }

@@ -21,22 +21,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.inject;
-
-import javax.inject.Qualifier;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+package games.cultivate.mcmmocredits.database;
 
 /**
- * Indicates when a variable is equal to the injected plugin file path. Used in favor of @Named.
+ * Enum representing the supported database types (e.g., MySQL, SQLite).
  */
-@Qualifier
-@Target({FIELD, PARAMETER, METHOD})
-@Retention(RUNTIME)
-public @interface PluginPath {
+public enum DatabaseType {
+    MYSQL, SQLITE, H2
 }

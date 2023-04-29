@@ -86,11 +86,11 @@ public final class Text {
      * @return a new Text.
      */
     public static Text forOneUser(final CommandExecutor executor, final String content) {
-        return Text.fromString(executor, content, executor.resolver());
+        return Text.fromString(executor, content, Resolver.ofUser(executor));
     }
 
     /**
-     * Converts a Text to a Component. Placeholders are parsed and italics are removed in this stage.
+     * Converts a Text to a Component. Placeholders are parsed and default italics are removed.
      *
      * @return A finished Component.
      */
@@ -98,7 +98,7 @@ public final class Text {
         if (this.audience instanceof Player player) {
             this.content = PlaceholderAPI.setPlaceholders(player, this.content);
         }
-        return NO_ITALICS.append(MiniMessage.miniMessage().deserialize(this.content, this.resolver.resolver()));
+        return NO_ITALICS.append(MiniMessage.miniMessage().deserialize(this.content, this.resolver.toTagResolver()));
     }
 
     /**

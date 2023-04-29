@@ -21,15 +21,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.menu;
+package games.cultivate.mcmmocredits.database;
 
-/**
- * Represents all possible Item obligations inside a {@link Menu}
- */
-public enum ClickTypes {
-    COMMAND,
-    EDIT_MESSAGE,
-    EDIT_SETTING,
-    FILL,
-    REDEEM
+import games.cultivate.mcmmocredits.user.UserDAO;
+import org.jdbi.v3.core.locator.ClasspathSqlLocator;
+
+import javax.inject.Provider;
+
+public interface Database extends Provider<UserDAO> {
+    ClasspathSqlLocator LOCATOR = ClasspathSqlLocator.create();
+
+    void load();
+
+    void disable();
+
+    default String findQuery(final String string) {
+        return LOCATOR.getResource(this.getClass().getClassLoader(), string + ".sql");
+    }
 }

@@ -24,32 +24,33 @@
 package games.cultivate.mcmmocredits.inject;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.config.MainConfig.DatabaseProperties;
-import games.cultivate.mcmmocredits.config.MainConfig.DatabaseType;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.data.DAOProvider;
-import games.cultivate.mcmmocredits.data.UserDAO;
+import games.cultivate.mcmmocredits.converters.CSVConverter;
+import games.cultivate.mcmmocredits.converters.Converter;
+import games.cultivate.mcmmocredits.converters.InternalConverter;
+import games.cultivate.mcmmocredits.converters.PluginConverter;
+import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.DatabaseProperties;
+import games.cultivate.mcmmocredits.database.types.H2Database;
+import games.cultivate.mcmmocredits.database.types.MySqlDatabase;
+import games.cultivate.mcmmocredits.database.types.SqlLiteDatabase;
 import games.cultivate.mcmmocredits.menu.ClickFactory;
-import games.cultivate.mcmmocredits.menu.MenuFactory;
+import games.cultivate.mcmmocredits.user.UserCache;
+import games.cultivate.mcmmocredits.user.UserDAO;
+import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.slf4j.Logger;
 
-import java.nio.file.Path;
+import javax.inject.Singleton;
 
 /**
  * Adds bindings to Guice.
  */
-//TODO: increase usage of bound Logger.
 public final class PluginModule extends AbstractModule {
     private final MCMMOCredits plugin;
-    private UserDAO dao;
-    private MenuFactory factory;
-    private ClickFactory clickFactory;
 
     /**
      * Constructs the Guice Module.
@@ -60,57 +61,67 @@ public final class PluginModule extends AbstractModule {
         this.plugin = plugin;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void configure() {
         this.bind(MCMMOCredits.class).toInstance(this.plugin);
-        this.bind(JavaPlugin.class).toInstance(this.plugin);
-        this.bind(Logger.class).toInstance(this.plugin.getSLF4JLogger());
-        this.bind(Path.class).annotatedWith(PluginPath.class).toInstance(this.plugin.getDataFolder().toPath());
-        this.bind(MainConfig.class).asEagerSingleton();
-        this.bind(MenuConfig.class).asEagerSingleton();
+        this.bind(UserService.class).asEagerSingleton();
+        this.bind(UserCache.class).asEagerSingleton();
         this.bind(ChatQueue.class).asEagerSingleton();
-        this.bind(DAOProvider.class).asEagerSingleton();
+        this.bind(ClickFactory.class).asEagerSingleton();
+    }
+
+    @Provides
+    public Database provideDatabase(final MainConfig config, final Injector injector) {
+        DatabaseProperties properties = config.getDatabaseProperties("settings", "database");
+        return switch (properties.type()) {
+            case SQLITE -> injector.getProvider(SqlLiteDatabase.class).get();
+            case MYSQL -> injector.getProvider(MySqlDatabase.class).get();
+            case H2 -> injector.getProvider(H2Database.class).get();
+        };
+    }
+
+    @Provides
+    @Singleton
+    public UserDAO provideDAO(final Database database) {
+        return database.get();
     }
 
     /**
-     * Provides the MenuFactory. Required due to passing in multiple injected objects needed to construct Menus.
+     * Provides the MainConfig for injection. Loads the config first.
      *
-     * @param menuConfig   Instance of the MenuConfig.
-     * @param config       Instance of the MainConfig.
-     * @param clickFactory Instance of the ClickFactory.
-     * @return The MenuFactory.
+     * @return The loaded MainConfig.
      */
     @Provides
-    public MenuFactory provideFactory(final MenuConfig menuConfig, final MainConfig config, final ClickFactory clickFactory) {
-        if (this.factory == null) {
-            this.factory = new MenuFactory(menuConfig, config, clickFactory);
-        }
-        return this.factory;
-    }
-
-    @Provides
-    public ClickFactory provideClickFactory(final MainConfig config, final ChatQueue queue, final MCMMOCredits plugin) {
-        if (this.clickFactory == null) {
-            this.clickFactory = new ClickFactory(queue, config, plugin);
-        }
-        return this.clickFactory;
+    @Singleton
+    public MainConfig provideConfig() {
+        MainConfig config = new MainConfig();
+        config.load();
+        return config;
     }
 
     /**
-     * Provides the UserDAO. Required since DB type is determined by {@link Config}.
+     * Provides the MenuConfig for injection. Loads the config first.
      *
-     * @param config   Config that stores the {@link DatabaseType}.
-     * @param provider The DAOProvider. Loads database based on configuration.
-     * @return The UserDAO.
+     * @return The loaded MenuConfig.
      */
     @Provides
-    public UserDAO provideDAO(final MainConfig config, final DAOProvider provider) {
-        if (this.dao == null) {
-            config.load();
-            DatabaseType type = config.getDatabaseType();
-            DatabaseProperties properties = config.getDatabaseProperties();
-            this.dao = type == MainConfig.DatabaseType.SQLITE ? provider.provideSQLite() : provider.provideSQL(properties);
-        }
-        return this.dao;
+    @Singleton
+    public MenuConfig provideMenuConfig() {
+        MenuConfig config = new MenuConfig();
+        config.load();
+        return config;
+    }
+
+    @Provides
+    @Singleton
+    public Converter provideConverter(final MainConfig config, final Injector injector) {
+        return switch (config.getConverterType("converter", "type")) {
+            case EXTERNAL_GRM, EXTERNAL_MORPH -> injector.getInstance(PluginConverter.class);
+            case EXTERNAL_CSV -> injector.getInstance(CSVConverter.class);
+            case INTERNAL_SQLITE, INTERNAL_H2, INTERNAL_MYSQL -> injector.getInstance(InternalConverter.class);
+        };
     }
 }

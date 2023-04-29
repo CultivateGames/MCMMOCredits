@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import games.cultivate.mcmmocredits.data.UserDAO;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -34,28 +33,77 @@ import java.util.UUID;
  * Command Executor which is a Player. Interacted with through the {@link UserDAO}
  */
 public final class User extends CommandExecutor {
-
-   public User(final UUID uuid, final String username, final int credits, final int redeemed) {
+    /**
+     * Constructs the User. Users are immutable.
+     *
+     * @param uuid     The UUID of the executor.
+     * @param username The username of the executor.
+     * @param credits  The default credit balance of the executor.
+     * @param redeemed The default redeemed statistic of the executor.
+     */
+    public User(final UUID uuid, final String username, final int credits, final int redeemed) {
         super(uuid, username, credits, redeemed);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isPlayer() {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isConsole() {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public CommandSender sender() {
         return this.player();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Player player() {
         return Bukkit.getPlayer(this.uuid());
+    }
+
+    /**
+     * Provides copy of existing User with updated credit balance.
+     *
+     * @param credits credit balance to apply.
+     * @return An updated copy of the User.
+     */
+    public User withCredits(final int credits) {
+        return new User(this.uuid(), this.username(), credits, this.redeemed());
+    }
+
+    /**
+     * Provides copy of existing User with updated credit balance.
+     *
+     * @param username new username to apply.
+     * @return An updated copy of the User.
+     */
+    public User withUsername(final String username) {
+        return new User(this.uuid(), username, this.credits(), this.redeemed());
+    }
+
+    /**
+     * Provides copy of existing User with updated redeemed credit balance.
+     *
+     * @param redeemed redeemed credit balance to apply.
+     * @return An updated copy of the User.
+     */
+    public User withRedeemed(final int redeemed) {
+        return new User(this.uuid(), this.username(), this.credits(), redeemed);
     }
 }

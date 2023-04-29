@@ -21,18 +21,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.util;
-
-import org.jdbi.v3.core.locator.ClasspathSqlLocator;
+package games.cultivate.mcmmocredits.menu;
 
 /**
- * Utility class which loads locally saved SQL queries.
+ * Represents all possible click types inside a {@link Menu}
  */
-//https://github.com/broccolai/tickets/blob/rewrite/everything/core/src/main/java/love/broccolai/tickets/core/utilities/QueriesLocator.java
-public final class Queries {
-    private final ClasspathSqlLocator locator = ClasspathSqlLocator.create();
-
-    public String query(final String name) {
-        return this.locator.locate(this.getClass(), name);
-    }
+public enum ClickType {
+    COMMAND,
+    EDIT_MESSAGE,
+    EDIT_SETTING,
+    FILL,
+    REDEEM
 }

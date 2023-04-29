@@ -23,44 +23,122 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.config.Config;
-import games.cultivate.mcmmocredits.config.MenuConfig.MenuProperties;
-import games.cultivate.mcmmocredits.serializers.MenuSerializer;
+import games.cultivate.mcmmocredits.config.MainConfig;
+import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.Component;
+import org.bukkit.entity.Player;
 import org.incendo.interfaces.core.click.ClickHandler;
-import org.incendo.interfaces.core.transform.TransformContext;
-import org.incendo.interfaces.paper.PlayerViewer;
-import org.incendo.interfaces.paper.pane.ChestPane;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * Representation of a GUI created by the plugin.
- * <p>
- * When constructed, we only have a list of items serialized from a {@link Config}.
- * This object is passed to the {@link MenuFactory} to apply transformations to the serialized items.
- * It is then built using the createInterface method.
+ * Represents a menu with a list of items, title, number of slots, and optional fill and navigation.
  *
- * @param properties Common menu properties.
- * @param items      List of Items obtained through serialization.
- * @see MenuSerializer
- * @see MenuFactory
+ * @param items      Map of items and their configuration node keys.
+ * @param title      Unparsed title of the Menu.
+ * @param slots      Size of the chest UI that holds the Menu.
+ * @param fill       Whether bordering fill items should be enabled.
+ * @param navigation Whether a navigation item should be enabled.
  */
-public record Menu(MenuProperties properties, List<Item> items) {
+public record Menu(Map<String, Item> items, String title, int slots, boolean fill, boolean navigation) {
+
     /**
-     * Transforms the Menu into a completed ChestInterface that is ready to view.
+     * Applies all required Configuration items to the current Menu.
      *
-     * @param user         User to parse the Menu's title against.
-     * @param clickFactory Instance of the ClickFactory.
-     * @return The built ChestInterface.
-     * @see MenuFactory
+     * @param config The configuration.
      */
-    public ChestInterface createInterface(final User user, final ClickFactory clickFactory) {
-        Component title = Text.forOneUser(user, this.properties.title()).toComponent();
-        List<TransformContext<ChestPane, PlayerViewer>> transforms = this.items().stream().map(x -> x.context(clickFactory, user.resolver())).toList();
-        return new ChestInterface(this.properties.slots() / 9, title, transforms, List.of(), true, 10, ClickHandler.cancel());
+    //TODO: paginate
+    private void addConfigItems(final MainConfig config) {
+        List<String> keys = config.filterNodes(x -> x.contains("database") || x.contains("converter"));
+        Item messages = this.items.get("messages");
+        Item settings = this.items.get("settings");
+        this.items.remove("messages");
+        this.items.remove("settings");
+        int x = 0;
+        for (String key : keys) {
+            Item item = (key.contains("settings") ? settings : messages).withName(key).withSlot(x);
+            this.items.put(key, item);
+            x++;
+        }
+    }
+
+    /**
+     * Remove Main Menu shortcuts if the provided User does not have permission.
+     *
+     * @param user The user viewing the menu.
+     */
+    private void checkMenuPermissions(final User user) {
+        Player player = user.player();
+        if (!player.hasPermission("mcmmocredits.menu.config")) {
+            this.items.remove("config");
+        }
+        if (!player.hasPermission("mcmmocredits.menu.redeem")) {
+            this.items.remove("redeem");
+        }
+    }
+
+    /**
+     * Applies all Fill items to the current Menu.
+     */
+    private void createFill() {
+        Item fill = this.items.get("fill");
+        this.items.remove("fill");
+        if (this.fill) {
+            Set<Integer> slots = new HashSet<>();
+            this.items.values().forEach(x -> slots.add(x.slot()));
+            for (int i = 0; i < this.slots; i++) {
+                if (!slots.contains(i)) {
+                    this.items.put("fill" + i, fill.withSlot(i));
+                }
+            }
+        }
+    }
+
+    /**
+     * Creates the Config Editing menu.
+     *
+     * @param user    The viewer of the menu.
+     * @param config  The config being edited.
+     * @param factory The ClickFactory to generate click handlers.
+     * @return The menu.
+     */
+    public ChestInterface createConfigMenu(final User user, final MainConfig config, final ClickFactory factory) {
+        this.addConfigItems(config);
+        return this.createMenu(user, factory);
+    }
+
+    /**
+     * Creates the Main Menu.
+     *
+     * @param user    The viewer of the menu.
+     * @param factory The ClickFactory to generate click handlers.
+     * @return The menu.
+     */
+    public ChestInterface createMainMenu(final User user, final ClickFactory factory) {
+        this.checkMenuPermissions(user);
+        return this.createMenu(user, factory);
+    }
+
+    /**
+     * Creates a new ChestInterface for the given user with the specified clickFactory.
+     *
+     * @param user         The user for which the ChestInterface will be created.
+     * @param clickFactory The factory responsible for creating click actions.
+     * @return A new ChestInterface instance.
+     */
+    public ChestInterface createMenu(final User user, final ClickFactory clickFactory) {
+        if (!this.navigation) {
+            this.items.remove("navigation");
+        }
+        this.createFill();
+        var transforms = this.items.values().stream().map(x -> x.context(clickFactory, Resolver.ofUser(user))).toList();
+        Component compTitle = Text.forOneUser(user, this.title).toComponent();
+        return new ChestInterface(this.slots / 9, compTitle, transforms, List.of(), true, 10, ClickHandler.cancel());
     }
 }

@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.3.4"
+version = "0.3.6"
 description = "MCMMOCredits"
 
 plugins {
@@ -7,8 +7,8 @@ plugins {
     id("maven-publish")
     id("signing")
     id("xyz.jpenilla.run-paper") version "2.0.1"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
-    id("io.papermc.paperweight.userdev") version "1.5.1"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("io.papermc.paperweight.userdev") version "1.5.3"
 }
 
 repositories {
@@ -16,38 +16,40 @@ repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://nexus.neetgames.com/repository/maven-releases/")
+    maven("https://maven.enginehub.org/repo/")
 }
 
 dependencies {
     paperweight.paperDevBundle("1.19.4-R0.1-SNAPSHOT")
-    implementation("cloud.commandframework:cloud-annotations:1.8.2")
-    implementation("cloud.commandframework:cloud-paper:1.8.2")
+    implementation ("org.bstats:bstats-bukkit:3.0.2")
+
+    implementation("cloud.commandframework:cloud-annotations:1.8.3")
+    implementation("cloud.commandframework:cloud-paper:1.8.3")
 
     implementation("org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT")
+
+    implementation("com.h2database:h2:2.1.214")
+    implementation("com.google.inject:guice:5.1.0")
+    implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("org.jdbi:jdbi3-core:3.38.0")
+    implementation("org.jdbi:jdbi3-sqlite:3.38.0")
+    implementation("org.jdbi:jdbi3-sqlobject:3.38.0")
+    implementation("org.enginehub:squirrelid:0.3.2")
 
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
         exclude(module = "paper-api")
     }
 
-    implementation("com.google.inject:guice:5.1.0")
-    implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.jdbi:jdbi3-core:3.37.1")
-    implementation("org.jdbi:jdbi3-sqlite:3.37.1")
-    implementation("org.jdbi:jdbi3-sqlobject:3.37.1")
-
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
-    testImplementation("org.jdbi:jdbi3-testing:3.37.1")
-    testImplementation("com.h2database:h2:2.1.214")
-
-
-    compileOnly("me.clip:placeholderapi:2.11.2") {
+    compileOnly("me.clip:placeholderapi:2.11.3") {
         exclude(group = "net.kyori")
     }
-
     compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.218") {
         exclude("com.sk89q.worldguard")
         exclude("com.sk89q.worldedit")
     }
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
 }
 
 java {
@@ -123,6 +125,7 @@ tasks {
             events("passed", "skipped", "failed")
         }
     }
+
     compileJava {
         options.encoding = Charsets.UTF_8.name()
         options.compilerArgs.add("-parameters")
@@ -135,14 +138,15 @@ tasks {
     processResources {
         filteringCharset = Charsets.UTF_8.name()
     }
+
     runServer {
         minecraftVersion("1.19.4")
     }
-    //TODO: investigate transitive deps
+
     shadowJar {
         archiveClassifier.set("")
         minimize {
-            exclude(dependency("com.github.ben-manes.caffeine:caffeine:3.0.3"))
+            exclude(dependency("com.h2database:h2:2.1.214"))
         }
         // https://github.com/PaperMC/paperweight-test-plugin/blob/shadow/build.gradle.kts
         fun reloc(pkg: String) = relocate(pkg, "games.cultivate.mcmmocredits.relocate.$pkg")
@@ -154,11 +158,12 @@ tasks {
         reloc("javax.annotation")
         reloc("javax.inject")
         reloc("org.aopalliance")
+        reloc("org.bstats")
         reloc("org.checkerframework")
+        reloc("org.enginehub")
         reloc("org.jdbi")
         reloc("org.incendo")
         reloc("org.spongepowered")
-
         manifest {
             attributes(Pair("Main-Class", "games.cultivate.mcmmocredits.MCMMOCredits"))
         }

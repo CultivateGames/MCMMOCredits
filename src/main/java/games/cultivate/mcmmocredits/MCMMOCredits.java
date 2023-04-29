@@ -24,8 +24,9 @@
 package games.cultivate.mcmmocredits;
 
 import cloud.commandframework.annotations.AnnotationParser;
+import cloud.commandframework.annotations.PropertyReplacingStringProcessor;
 import cloud.commandframework.arguments.parser.ParserRegistry;
-import cloud.commandframework.execution.CommandExecutionCoordinator;
+import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.paper.PaperCommandManager;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
@@ -34,16 +35,17 @@ import com.google.inject.Injector;
 import games.cultivate.mcmmocredits.commands.CloudExceptionHandler;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.SkillParser;
-import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
-import games.cultivate.mcmmocredits.data.DAOProvider;
-import games.cultivate.mcmmocredits.data.UserDAO;
+import games.cultivate.mcmmocredits.converters.Converter;
+import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.placeholders.CreditsExpansion;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
+import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.Listeners;
 import io.leangen.geantyref.TypeToken;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -54,40 +56,42 @@ import org.incendo.interfaces.paper.utils.PaperUtils;
 import org.slf4j.Logger;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
  * Main class of the application. Handles startup and shutdown logic.
  */
 public final class MCMMOCredits extends JavaPlugin {
+    private static UserService userService;
     private Injector injector;
     private MainConfig config;
-    private Logger pluginLogger;
-    private static MCMMOCreditsAPI creditsAPI;
+    private Logger logger;
 
-    @Override
-    public void onEnable() {
-        long start = System.nanoTime();
-        injector = Guice.createInjector(new PluginModule(this));
-        creditsAPI = this.injector.getInstance(MCMMOCreditsAPI.class);
-        this.config = this.injector.getInstance(MainConfig.class);
-        this.pluginLogger = this.injector.getInstance(Logger.class);
-        this.checkForDependencies();
-        this.loadConfiguration();
-        this.loadCommands();
-        this.registerListeners();
-        long end = System.nanoTime();
-        if (this.config.bool("settings", "debug")) {
-            this.pluginLogger.info("Plugin enabled! Startup took: {} s.", (double) (end - start) / 1000000000);
-        }
+    @SuppressWarnings("unused")
+    public static UserService getAPI() {
+        return userService;
     }
 
     /**
-     * Loads injected instances of {@link Config}
+     * Handles startup of the plugin. Duration is tracked if debug is enabled.
      */
-    public void loadConfiguration() {
-        this.injector.getInstance(MainConfig.class).load();
-        this.injector.getInstance(MenuConfig.class).load();
+    @Override
+    public void onEnable() {
+        long start = System.nanoTime();
+        this.logger = this.getSLF4JLogger();
+        this.injector = Guice.createInjector(new PluginModule(this));
+        this.checkForDependencies();
+        this.config = this.injector.getInstance(MainConfig.class);
+        this.runConversionProcess();
+        this.loadCommands();
+        this.registerListeners();
+        userService = this.injector.getInstance(UserService.class);
+        this.enableMetrics();
+        long end = System.nanoTime();
+        if (this.config.getBoolean("settings", "debug")) {
+            this.logger.info("Plugin enabled! Startup took: {}s.", (double) (end - start) / 1000000000);
+        }
     }
 
     /**
@@ -95,21 +99,25 @@ public final class MCMMOCredits extends JavaPlugin {
      *
      * @see CreditsExpansion
      */
+    @SuppressWarnings("UnstableApiUsage")
     private void checkForDependencies() {
+        this.logger.info("Checking Dependencies...");
         if (!PaperUtils.isPaper()) {
-            this.pluginLogger.warn("Not using Paper, disabling plugin...");
+            this.logger.warn("Not using Paper, disabling plugin...");
             this.setEnabled(false);
         }
+        this.logger.info("Paper has been found! Continuing to load...");
         PluginManager pluginManager = Bukkit.getPluginManager();
         if (pluginManager.getPlugin("mcMMO") == null) {
-            this.pluginLogger.warn("Not using mcMMO, disabling plugin...");
+            this.logger.warn("Not using mcMMO, disabling plugin...");
             this.setEnabled(false);
             return;
         }
-        this.pluginLogger.info("mcMMO has been found! Continuing to load...");
+        this.logger.info("mcMMO has been found! Continuing to load...");
         if (pluginManager.getPlugin("PlaceholderAPI") != null) {
             this.injector.getInstance(CreditsExpansion.class).register();
         }
+        this.logger.info("Dependencies loaded!");
     }
 
     /**
@@ -118,49 +126,118 @@ public final class MCMMOCredits extends JavaPlugin {
      * @see CloudExceptionHandler
      */
     private void loadCommands() {
+        this.logger.info("Checking Commands...");
         PaperCommandManager<CommandExecutor> manager;
-        Function<CommandSender, CommandExecutor> forwardsMapper = x -> this.injector.getInstance(UserDAO.class).fromSender(x);
         try {
-            manager = new PaperCommandManager<>(this, CommandExecutionCoordinator.simpleCoordinator(), forwardsMapper, CommandExecutor::sender);
+            manager = this.loadCommandManager();
         } catch (Exception e) {
             e.printStackTrace();
             return;
         }
+        this.loadCommandParser(manager);
+        this.parseCommands(manager);
+        new CloudExceptionHandler(this.config, manager).apply();
+        this.logger.info("Commands loaded!");
+    }
+
+    /**
+     * Loads the actual CommandManager. Currently only compatible with Paper.
+     *
+     * @return The loaded CommandManager.
+     * @throws Exception thrown when initiating the manager.
+     */
+    private PaperCommandManager<CommandExecutor> loadCommandManager() throws Exception {
+        PaperCommandManager<CommandExecutor> manager;
+        Function<CommandSender, CommandExecutor> forwardsMapper = x -> userService.fromSender(x);
+        var coordinator = AsynchronousCommandExecutionCoordinator.<CommandExecutor>builder().withAsynchronousParsing().build();
+        manager = new PaperCommandManager<>(this, coordinator, forwardsMapper, CommandExecutor::sender);
         manager.registerBrigadier();
-        manager.brigadierManager().setNativeNumberSuggestions(false);
+        Objects.requireNonNull(manager.brigadierManager()).setNativeNumberSuggestions(false);
         manager.registerAsynchronousCompletions();
+        return manager;
+    }
+
+    /**
+     * Loads the ParserRegistry using the CommandManager.
+     * The CommandManager must be loaded before calling this.
+     *
+     * @param manager The loaded CommandManager.
+     */
+    private void loadCommandParser(final PaperCommandManager<CommandExecutor> manager) {
         ParserRegistry<CommandExecutor> parser = manager.parserRegistry();
-        parser.registerParserSupplier(TypeToken.get(PrimarySkillType.class), options -> new SkillParser<>());
-        boolean tabCompletion = this.config.node("settings", "user-tab-complete").getBoolean();
+        parser.registerParserSupplier(TypeToken.get(PrimarySkillType.class), x -> new SkillParser<>());
+        boolean tabCompletion = this.config.getBoolean("settings", "user-tab-complete");
         parser.registerSuggestionProvider("user", (c, i) -> {
             if (tabCompletion) {
                 return Bukkit.getOnlinePlayers().stream().filter(x -> !(c.getSender() instanceof Player p) || x.canSee(p)).map(Player::getName).toList();
             }
             return List.of();
         });
-        parser.registerSuggestionProvider("menus", (c, i) -> List.of("main", "config", "redeem"));
+        List<String> menus = List.of("main", "config", "redeem");
+        parser.registerSuggestionProvider("menus", (c, i) -> menus);
+    }
+
+    /**
+     * Parses existing commands using an AnnotationParser, and sets the customizable command prefix.
+     *
+     * @param manager The loaded CommandManager.
+     */
+    private void parseCommands(final PaperCommandManager<CommandExecutor> manager) {
         AnnotationParser<CommandExecutor> annotationParser = new AnnotationParser<>(manager, CommandExecutor.class, p -> SimpleCommandMeta.empty());
+        String commandPrefix = this.config.getString("command-prefix");
+        annotationParser.stringProcessor(new PropertyReplacingStringProcessor(x -> {
+            if (x.equals("command.prefix")) {
+                return commandPrefix;
+            }
+            return x;
+        }));
         annotationParser.parse(this.injector.getInstance(Credits.class));
-        new CloudExceptionHandler(this.config, manager).apply();
     }
 
     /**
      * Registers all required Event Listeners.
      */
     private void registerListeners() {
+        this.logger.info("Registering Listeners...");
         Bukkit.getPluginManager().registerEvents(new PaperInterfaceListeners(this, 10L), this);
         Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
+        this.logger.info("Listeners registered!");
     }
 
+    private void enableMetrics() {
+        if (this.config.getBoolean("settings", "bstats-metrics-enabled")) {
+            this.logger.info("Enabling Bstats.. To disable metrics, set bstats-metrics-enabled to false in config.yml");
+            new Metrics(this, 18254);
+            return;
+        }
+        this.logger.info("Bstats is disabled, skipping initialization...");
+    }
+
+    private void runConversionProcess() {
+        if (this.config.getBoolean("converter", "enabled")) {
+            long start = System.nanoTime();
+            Converter converter = this.injector.getInstance(Converter.class);
+            converter.run(this.logger);
+            long end = System.nanoTime();
+            this.logger.info("Conversion completed! Process took: {}s.", (double) (end - start) / 1000000000);
+        }
+    }
+
+    /**
+     * Handles shutdown of the plugin. Duration is tracked if debug is enabled.
+     */
     @Override
     public void onDisable() {
+        long start = System.nanoTime();
         this.injector.getInstance(MainConfig.class).save();
         this.injector.getInstance(MenuConfig.class).save();
-        this.injector.getInstance(DAOProvider.class).disable();
-    }
-
-    @SuppressWarnings("unused")
-    public static MCMMOCreditsAPI getAPI() {
-        return creditsAPI;
+        this.injector.getInstance(Database.class).disable();
+        if (this.config.getBoolean("converter", "enabled")) {
+            this.logger.warn("Converter is still enabled!! Disable converter before the next server startup to avoid running conversion again!");
+        }
+        long end = System.nanoTime();
+        if (this.config.getBoolean("settings", "debug")) {
+            this.logger.info("Plugin disabled! Shutdown took: {}s.", (double) (end - start) / 1000000000);
+        }
     }
 }

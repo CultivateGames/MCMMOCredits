@@ -23,64 +23,65 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.config.MainConfig.DatabaseProperties;
-import games.cultivate.mcmmocredits.config.MainConfig.DatabaseType;
-import games.cultivate.mcmmocredits.inject.PluginPath;
-import games.cultivate.mcmmocredits.menu.ClickTypes;
+import games.cultivate.mcmmocredits.converters.ConverterType;
+import games.cultivate.mcmmocredits.database.DatabaseProperties;
+import games.cultivate.mcmmocredits.menu.ClickType;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.serializers.ClickTypeSerializer;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import games.cultivate.mcmmocredits.util.Util;
-import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.loader.HeaderMode;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.ObjectMapper;
 import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.util.NamingSchemes;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
-import javax.inject.Inject;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.function.Predicate;
 
 /**
  * Represents a Configuration file.
  */
 public class Config {
-    private final transient Class<? extends Config> type;
-    private final transient String fileName;
-    private transient YamlConfigurationLoader loader;
-    private transient CommentedConfigurationNode root;
-    private transient List<String> paths;
-    @Inject
-    @PluginPath
-    private transient Path dir;
     private static final String HEADER = """
-            MCMMO Credits v0.3.4 Configuration
+            MCMMO Credits v0.3.6 Configuration
             Repository: https://github.com/CultivateGames/MCMMOCredits
             Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
             """;
+    private final transient Class<? extends Config> type;
+    private final transient String fileName;
+    private final transient Path path;
+    private transient YamlConfigurationLoader loader;
+    private transient CommentedConfigurationNode root;
+    private transient List<String> paths;
 
     /**
      * Constructs the object with properties of the file.
      *
-     * @param type     Class of the config. Must be annotated with @{@link ConfigSerializable}
+     * @param type     Class of the config.
      * @param fileName Name of the config.
+     * @param path     Path of the config.
      */
-    protected Config(final Class<? extends Config> type, final String fileName) {
+    protected Config(final Class<? extends Config> type, final String fileName, final Path path) {
         this.type = type;
         this.fileName = fileName;
+        this.path = path;
+        this.paths = new ArrayList<>();
+    }
+
+    protected Config(final Class<? extends Config> type, final String fileName) {
+        this(type, fileName, Util.getPluginPath());
     }
 
     /**
@@ -89,13 +90,13 @@ public class Config {
      * @return The Loader.
      */
     private YamlConfigurationLoader createLoader() {
-        Util.createFile(this.dir, this.fileName);
+        Util.createFile(this.path, this.fileName);
         return YamlConfigurationLoader.builder()
-                .defaultOptions(opts -> opts.header(HEADER).serializers(build -> {
-                    build.register(Item.class, ItemSerializer.INSTANCE);
-                    build.register(Menu.class, MenuSerializer.INSTANCE);
-                    build.register(ClickTypes.class, ClickTypeSerializer.INSTANCE);
-                })).path(this.dir.resolve(this.fileName))
+                .defaultOptions(opts -> opts.header(HEADER).serializers(build -> build
+                        .register(Item.class, ItemSerializer.INSTANCE)
+                        .register(Menu.class, MenuSerializer.INSTANCE)
+                        .register(ClickType.class, ClickTypeSerializer.INSTANCE)))
+                .path(this.path.resolve(this.fileName))
                 .headerMode(HeaderMode.PRESET)
                 .indent(2)
                 .nodeStyle(NodeStyle.BLOCK).build();
@@ -111,17 +112,6 @@ public class Config {
             ObjectMapper.Factory factory = ObjectMapper.factoryBuilder().defaultNamingScheme(NamingSchemes.LOWER_CASE_DASHED).build();
             factory.get(this.type).load(this.root);
             this.save();
-            Queue<CommentedConfigurationNode> queue = new ArrayDeque<>(this.root.childrenMap().values());
-            List<String> sorted = new LinkedList<>();
-            while (!queue.isEmpty()) {
-                CommentedConfigurationNode node = queue.poll();
-                if (node.isMap()) {
-                    queue.addAll(node.childrenMap().values());
-                } else {
-                    sorted.add(this.translateNode(node.path().array()));
-                }
-            }
-            this.paths = sorted;
         } catch (ConfigurateException e) {
             e.printStackTrace();
         }
@@ -143,6 +133,7 @@ public class Config {
         try {
             this.loader.save(root);
             this.root = root;
+            this.updatePaths();
         } catch (ConfigurateException e) {
             e.printStackTrace();
         }
@@ -166,7 +157,7 @@ public class Config {
      * @param <T>   Type of the value.
      * @return If the operation was successful.
      */
-    public <T> boolean modify(@NotNull final T value, final Object... path) {
+    public <T> boolean set(@NotNull final T value, final Object... path) {
         try {
             this.root.node(path).set(value);
             this.save();
@@ -186,14 +177,13 @@ public class Config {
      * @param <T>  Type of the value.
      * @return The value.
      */
-    private <T> T value(final Class<T> type, final T def, final Object... path) {
+    private <T> T get(final Class<T> type, final T def, final Object... path) {
         try {
-            return this.root.node(path).get(type);
+            T value = this.root.node(path).get(type);
+            return value != null ? value : def;
         } catch (SerializationException e) {
             e.printStackTrace();
         }
-        String log = "[MCMMOCredits] Config is missing value: " + this.translateNode(path);
-        Bukkit.getLogger().warning(log);
         return def;
     }
 
@@ -203,8 +193,8 @@ public class Config {
      * @param path Node path where the value is found.
      * @return The value.
      */
-    public boolean bool(final Object... path) {
-        return this.value(boolean.class, false, path);
+    public boolean getBoolean(final Object... path) {
+        return this.get(boolean.class, false, path);
     }
 
     /**
@@ -213,8 +203,28 @@ public class Config {
      * @param path Node path where the value is found.
      * @return The value.
      */
-    public String string(final Object... path) {
-        return this.value(String.class, "", "prefix") + this.value(String.class, "", path);
+    public String getMessage(final Object... path) {
+        return this.get(String.class, "", "prefix") + this.get(String.class, "", path);
+    }
+
+    /**
+     * Gets a String from the configuration.
+     *
+     * @param path Node path where the value is found.
+     * @return The value.
+     */
+    public String getString(final Object... path) {
+        return this.get(String.class, "", path);
+    }
+
+    /**
+     * Gets an int from the configuration.
+     *
+     * @param path Node path where the value is found.
+     * @return The value.
+     */
+    public int getInteger(final Object... path) {
+        return this.get(int.class, 0, path);
     }
 
     /**
@@ -224,7 +234,7 @@ public class Config {
      * @return The value.
      */
     public Menu getMenu(final Object... path) {
-        return this.value(Menu.class, null, path);
+        return this.get(Menu.class, null, path);
     }
 
     /**
@@ -234,57 +244,77 @@ public class Config {
      * @return The value.
      */
     public Item getItem(final Object... path) {
-        return this.value(Item.class, null, path);
+        return this.get(Item.class, null, path);
     }
 
     /**
      * Gets the DatabaseProperties object from the configuration.
      *
+     * @param path Node path where the value is found.
      * @return The value.
      */
-    public DatabaseProperties getDatabaseProperties() {
-        DatabaseProperties opts = new DatabaseProperties("127.0.0.1", "database", "root", "passw0rd+", 3306, true);
-        return this.value(DatabaseProperties.class, opts, "settings", "mysql");
+    public DatabaseProperties getDatabaseProperties(final Object... path) {
+        return this.get(DatabaseProperties.class, DatabaseProperties.defaults(), path);
     }
 
     /**
-     * Gets the Database type from the configuration.
+     * Gets the ConverterType object from the configuration.
      *
+     * @param path Node path where the value is found.
      * @return The value.
      */
-    public DatabaseType getDatabaseType() {
-        try {
-            return this.node("settings", "database-type").get(DatabaseType.class);
-        } catch (SerializationException e) {
-            e.printStackTrace();
+    public ConverterType getConverterType(final Object... path) {
+        return this.get(ConverterType.class, null, path);
+    }
+
+
+    /**
+     * Updates the list of configuration node paths as strings, sorted in the order they were encountered.
+     * This method performs a breadth-first traversal of the configuration nodes.
+     */
+    private void updatePaths() {
+        Queue<CommentedConfigurationNode> queue = new ArrayDeque<>(this.root.childrenMap().values());
+        List<String> sorted = new LinkedList<>();
+        while (!queue.isEmpty()) {
+            CommentedConfigurationNode node = queue.poll();
+            if (node.isMap()) {
+                queue.addAll(node.childrenMap().values());
+            } else {
+                sorted.add(Util.joinString(".", node.path()));
+            }
         }
-        return DatabaseType.SQLITE;
+        this.paths = sorted;
     }
 
     /**
-     * Filters available node paths against provided String array.
+     * Returns the list of configuration node paths as strings.
+     * If the list is empty, it calls the {@link #updatePaths()} method to populate it.
      *
-     * @param keys Strings to filter against.
-     * @return Filtered node path list.
+     * @return The list of configuration node paths as strings.
      */
-    public List<String> filterKeys(final String... keys) {
+    public List<String> getPaths() {
+        if (this.paths.isEmpty()) {
+            this.updatePaths();
+        }
+        return this.paths;
+    }
+
+    /**
+     * Filters the list of configuration node paths based on the provided Predicate.
+     * If the list of paths is empty, it calls the {@link #updatePaths()} method to populate it.
+     *
+     * @param filter The Predicate to filter the list of paths.
+     * @return A filtered list of configuration node paths as strings.
+     */
+    public List<String> filterNodes(final Predicate<? super String> filter) {
+        if (this.paths.isEmpty()) {
+            this.updatePaths();
+        }
+        if (filter == null) {
+            return this.paths;
+        }
         List<String> sorted = new ArrayList<>(this.paths);
-        sorted.removeIf(x -> Arrays.stream(keys).anyMatch(x::contains));
+        sorted.removeIf(filter);
         return sorted;
-    }
-
-    /**
-     * Translates node paths into Strings. Example: "settings", "add-player-message" -> "settings.add-player-message".
-     *
-     * @param path The node path.
-     * @return String representing the node path.
-     */
-    public String translateNode(final Object... path) {
-        StringBuilder sb = new StringBuilder();
-        for (Object obj : path) {
-            sb.append(obj).append(".");
-        }
-        sb.deleteCharAt(sb.lastIndexOf("."));
-        return sb.toString();
     }
 }

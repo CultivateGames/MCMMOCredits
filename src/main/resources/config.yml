@@ -1,6 +1,7 @@
-# MCMMO Credits v0.3.0 Configuration
+# MCMMO Credits v0.3.6 Configuration
 # Repository: https://github.com/CultivateGames/MCMMOCredits
 # Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
+
 prefix: '<hover:show_text:''<green><sender>: <sender_credits> Credits''><gold><bold>CREDITS</bold> '
 add-user: <target> has been added to the database!
 argument-parse-failure-no-input-was-provided: No input was provided
@@ -22,6 +23,7 @@ balance-other: <green><target> has <target_credits> MCMMO Credits! They have red
   <target_redeemed> Credits.
 cancel-prompt: <red>You have cancelled the current operation.
 command-execution: <red>There was an error executing this command!
+command-prefix: credits
 credits-add: <green>You have given <amount> Credits to <target>.
 credits-set: <yellow>You have set <target>'s Credits to <amount>.
 credits-take: <red>You have taken <amount> Credits from <target>.
@@ -34,14 +36,17 @@ edit-config: <green>You have changed <gray><setting> <green>to <gray><change>.
 edit-config-fail: <red>There was an error while changing settings, operation aborted.
 edit-config-prompt: <red>Enter the new value for <gray><setting><red>, or type 'cancel'
   to abort.
+invalid-leaderboard: <#FF253C>This leaderboard page is invalid or not enabled!
 invalid-sender: '<red>Invalid command sender! You must be of type: <gray><correct_sender>'
 invalid-syntax: '<red>Invalid syntax! Correct syntax: <gray><correct_syntax>'
+leaderboard-entry: '<rank>. <green><target>: <white><target_credits>'
+leaderboard-title: <#FF253C>MCMMO Credits Leaderboard
 login-message: <hover:show_text:'<green>You have <sender_credits> MCMMO Credits!'><yellow>Hover
   to see your MCMMO Credit balance!
 mcmmo-profile-fail: The mcMMO Profile for <target> is not loaded! Aborting operation...
 mcmmo-skill-cap: <red>You cannot redeem this many MCMMO Credits into <skill>, due
   to the Level Cap (<cap>).
-no-permission: '<hover:show_text:''<red>Required permission: <required_permission>''><red>You
+no-permission: '<hover:show_text:''<red>Required permission: <permission>''><red>You
   do not have permission to do this!'
 not-enough-credits: <red>You do not have enough MCMMO Credits to do this!
 player-unknown: <red>This player does not exist in our database!
@@ -56,14 +61,29 @@ redeem-sudo-user: <green>Redemption Successful! <sender> has redeemed <amount> C
 reload: <green>The configuration file has been reloaded.
 settings:
   add-user-message: true
-  database-type: SQLITE
+  bstats-metrics-enabled: true
   debug: false
+  leaderboard-enabled: true
+  leaderboard-page-size: 10
   send-login-message: true
   user-tab-complete: true
-  mysql:
+  database:
+    type: SQLITE
     host: 127.0.0.1
     name: database
     user: root
     password: passw0rd+
     port: 3306
     ssl: true
+converter:
+  enabled: false
+  type: INTERNAL_SQLITE
+  internal:
+    properties:
+      type: SQLITE
+      host: 127.0.0.1
+      name: database
+      user: root
+      password: passw0rd+
+      port: 3306
+      ssl: true

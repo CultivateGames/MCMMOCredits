@@ -26,7 +26,7 @@ package games.cultivate.mcmmocredits.serializers;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import games.cultivate.mcmmocredits.config.Config;
-import games.cultivate.mcmmocredits.menu.ClickTypes;
+import games.cultivate.mcmmocredits.menu.ClickType;
 import games.cultivate.mcmmocredits.menu.Item;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -49,17 +49,19 @@ import java.util.UUID;
 public final class ItemSerializer implements TypeSerializer<Item> {
     public static final ItemSerializer INSTANCE = new ItemSerializer();
 
+    /**
+     * Deserializes an Item from the configuration.
+     *
+     * @param type the type of return value required
+     * @param node the node containing serialized data
+     * @return The deserialized Item.
+     * @throws SerializationException Thrown when trying to get ClickType from a node.
+     */
     @Override
     public Item deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
-        String name = node.node("name").getString("");
-        List<String> lore = node.node("lore").getList(String.class);
-        int slot = node.node("slot").getInt();
         Material material = node.node("material").get(Material.class, Material.STONE);
         int amount = node.node("amount").getInt(1);
-
-        Item.Builder builder = Item.builder().name(name).lore(lore).slot(slot);
         ItemStack item = new ItemStack(material, amount);
-
         ItemMeta meta = item.getItemMeta();
         if (node.node("glow").getBoolean(false)) {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
@@ -75,17 +77,35 @@ public final class ItemSerializer implements TypeSerializer<Item> {
             skullMeta.setPlayerProfile(profile);
             item.setItemMeta(skullMeta);
         }
-        ClickTypes clickType = node.get(ClickTypes.class, ClickTypes.FILL);
+        ClickType clickType = node.get(ClickType.class, ClickType.FILL);
         String data = switch (clickType) {
             case COMMAND -> node.node("command").getString("");
             case EDIT_MESSAGE -> "messages";
             case EDIT_SETTING -> "settings";
             case REDEEM -> ((String) node.key()).toUpperCase();
-            case FILL -> "fill";
+            case FILL -> "";
         };
-        return builder.item(item).type(clickType).data(data).build();
+        String name = node.node("name").getString("");
+        List<String> lore = node.node("lore").getList(String.class);
+        int slot = node.node("slot").getInt();
+        return Item.builder()
+                .name(name)
+                .lore(lore)
+                .slot(slot)
+                .item(item)
+                .type(clickType)
+                .data(data)
+                .build();
     }
 
+    /**
+     * Serializes an Item to the configuration.
+     *
+     * @param type the type of the input object
+     * @param item the object to be serialized
+     * @param node the node to write to
+     * @throws SerializationException Thrown when setting nodes to a value.
+     */
     @Override
     public void serialize(final Type type, final Item item, final ConfigurationNode node) throws SerializationException {
         node.node("name").set(item.name());
@@ -106,8 +126,8 @@ public final class ItemSerializer implements TypeSerializer<Item> {
         }
         node.node("texture").set(texture);
         node.node("glow").set(!stack.getEnchantments().isEmpty());
-        ClickTypes clickType = item.clickType();
-        if (clickType == ClickTypes.COMMAND) {
+        ClickType clickType = item.clickType();
+        if (clickType == ClickType.COMMAND) {
             node.node("command").set(item.data());
         }
     }

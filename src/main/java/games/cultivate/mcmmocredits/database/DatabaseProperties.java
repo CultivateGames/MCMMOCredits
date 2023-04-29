@@ -21,35 +21,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.menu;
+package games.cultivate.mcmmocredits.database;
 
-import games.cultivate.mcmmocredits.placeholders.Resolver;
-import games.cultivate.mcmmocredits.text.Text;
-import net.kyori.adventure.text.Component;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
-import java.util.List;
-
+/**
+ * Properties used in creation of the {@linkplain Database}
+ *
+ * @param type     Type of the Database.
+ * @param host     Host of the Database. Typically, an IP address.
+ * @param name     Name of the Database.
+ * @param user     Name of the Database user.
+ * @param password Password for the Database user.
+ * @param port     Port where the Database instance is located.
+ * @param ssl      If useSSL is used in the connection URL.
+ */
 @ConfigSerializable
-public record ItemProperties(String name, List<String> lore) {
-    public static ItemProperties empty() {
-        return new ItemProperties("", List.of(""));
-    }
-
-    public ItemStack apply(final ItemStack item, final Player player, final Resolver resolver) {
-        Component display = Text.fromString(player, this.name, resolver).toComponent();
-        List<Component> displayLore = this.lore.stream().map(x -> Text.fromString(player, x, resolver).toComponent()).toList();
-        ItemStack stackCopy = new ItemStack(item);
-        stackCopy.editMeta(meta -> {
-            if (!this.name.isEmpty()) {
-                meta.displayName(display);
-            }
-            if (this.lore.stream().noneMatch(String::isEmpty)) {
-                meta.lore(displayLore);
-            }
-        });
-        return stackCopy;
+public record DatabaseProperties(DatabaseType type, String host, String name, String user, String password, int port, boolean ssl) {
+    public static DatabaseProperties defaults() {
+        return new DatabaseProperties(DatabaseType.SQLITE, "127.0.0.1", "database", "root", "passw0rd+", 3306, true);
     }
 }

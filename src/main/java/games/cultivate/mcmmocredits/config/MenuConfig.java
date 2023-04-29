@@ -23,17 +23,16 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import games.cultivate.mcmmocredits.menu.ClickTypes;
+import games.cultivate.mcmmocredits.menu.ClickType;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
-import org.apache.commons.lang.WordUtils;
+import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
-import java.util.List;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Configuration used to adjust properties of all {@link Menu} instances.
@@ -42,7 +41,7 @@ import java.util.List;
 @SuppressWarnings({"FieldMayBeFinal, unused"})
 public class MenuConfig extends Config {
     private static final Item FILLER_ITEM = Item.of(Material.BLACK_STAINED_GLASS_PANE);
-    private static final Item NAVIGATION_ITEM = commandItem(Material.COMPASS, "<red>Previous Menu", "<gray>Left Click to go back!", "credits menu main", 40);
+    private static final Item NAVIGATION_ITEM = Util.createCommandItem(Material.COMPASS, "<red>Previous Menu", "<gray>Left Click to go back!", "credits menu main", 40);
     private ConfigMenu config = new ConfigMenu();
     private MainMenu main = new MainMenu();
     private RedeemMenu redeem = new RedeemMenu();
@@ -50,19 +49,12 @@ public class MenuConfig extends Config {
     /**
      * Constructs the configuration.
      */
-    MenuConfig() {
+    public MenuConfig() {
         super(MenuConfig.class, "menus.yml");
     }
 
-    private static Item commandItem(final Material material, final String name, final String lore, final String command, final int slot) {
-        return Item.builder()
-                .item(new ItemStack(material, 1))
-                .name(name)
-                .lore(List.of(lore))
-                .slot(slot)
-                .type(ClickTypes.COMMAND)
-                .data(command)
-                .build();
+    public MenuConfig(final Path path) {
+        super(MenuConfig.class, "menus.yml", path);
     }
 
     /**
@@ -70,15 +62,17 @@ public class MenuConfig extends Config {
      */
     @ConfigSerializable
     static class MainMenu {
-        private MenuProperties properties = new MenuProperties("<#ff253c><bold>MCMMO Credits", 54, false, false);
-        private Items items = new Items();
+        private String title = "<#ff253c><bold>MCMMO Credits";
+        private int slots = 54;
+        private boolean fill = false;
+        private boolean navigation = false;
+        private Map<String, Item> items = new HashMap<>();
 
-        @ConfigSerializable
-        static class Items {
-            private Item config = commandItem(Material.DIAMOND, "<#FF253C>Edit Config", "<gray>Left Click to edit config!", "credits menu config", 11);
-            private Item redeem = commandItem(Material.EMERALD, "<green>Redeem MCMMO Credits!", "<gray>Left Click to redeem Credits!", "credits menu redeem", 15);
-            private Item fill = FILLER_ITEM;
-            private Item navigation = NAVIGATION_ITEM;
+        protected MainMenu() {
+            this.items.put("config", Util.createCommandItem(Material.DIAMOND, "<#FF253C>Edit Config", "<gray>Left Click to edit config!", "credits menu config", 11));
+            this.items.put("redeem", Util.createCommandItem(Material.EMERALD, "<green>Redeem MCMMO Credits!", "<gray>Left Click to redeem Credits!", "credits menu redeem", 15));
+            this.items.put("fill", FILLER_ITEM);
+            this.items.put("navigation", NAVIGATION_ITEM);
         }
     }
 
@@ -87,20 +81,17 @@ public class MenuConfig extends Config {
      */
     @ConfigSerializable
     static class ConfigMenu {
-        private MenuProperties properties = new MenuProperties("<dark_gray>Edit Your Configuration...", 54, false, false);
-        private Items items = new Items();
+        private String title = "<dark_gray>Edit Your Configuration...";
+        private int slots = 54;
+        private boolean fill = false;
+        private boolean navigation = false;
+        private Map<String, Item> items = new HashMap<>();
 
-        @ConfigSerializable
-        static class Items {
-            private Item messages = this.configItem(Material.WRITABLE_BOOK, ClickTypes.EDIT_MESSAGE);
-            private Item settings = this.configItem(Material.REDSTONE, ClickTypes.EDIT_SETTING);
-            private Item fill = FILLER_ITEM;
-            private Item navigation = NAVIGATION_ITEM.toBuilder().slot(49).build();
-
-            private Item configItem(final Material material, final ClickTypes type) {
-                List<String> lore = List.of("<gray>Click here to edit this config option!");
-                return Item.builder().item(new ItemStack(material, 1)).slot(-1).type(type).lore(lore).build();
-            }
+        protected ConfigMenu() {
+            this.items.put("messages", Util.createConfigItem(Material.WRITABLE_BOOK, ClickType.EDIT_MESSAGE));
+            this.items.put("settings", Util.createConfigItem(Material.REDSTONE, ClickType.EDIT_SETTING));
+            this.items.put("fill", FILLER_ITEM);
+            this.items.put("navigation", NAVIGATION_ITEM.withSlot(49));
         }
     }
 
@@ -109,45 +100,28 @@ public class MenuConfig extends Config {
      */
     @ConfigSerializable
     static class RedeemMenu {
-        private MenuProperties properties = new MenuProperties("<dark_gray>Redeem Your Credits...", 45, false, false);
-        private Items items = new Items();
+        private String title = "<dark_gray>Redeem Your Credits...";
+        private int slots = 45;
+        private boolean fill = false;
+        private boolean navigation = false;
+        private Map<String, Item> items = new HashMap<>();
 
-        @ConfigSerializable
-        static class Items {
-            private Item acrobatics = this.redeemItem(Material.NETHERITE_BOOTS, PrimarySkillType.ACROBATICS, 10);
-            private Item alchemy = this.redeemItem(Material.BREWING_STAND, PrimarySkillType.ALCHEMY, 11);
-            private Item archery = this.redeemItem(Material.BOW, PrimarySkillType.ARCHERY, 12);
-            private Item axes = this.redeemItem(Material.NETHERITE_AXE, PrimarySkillType.AXES, 13);
-            private Item excavation = this.redeemItem(Material.NETHERITE_SHOVEL, PrimarySkillType.EXCAVATION, 14);
-            private Item fishing = this.redeemItem(Material.FISHING_ROD, PrimarySkillType.FISHING, 15);
-            private Item herbalism = this.redeemItem(Material.SUGAR_CANE, PrimarySkillType.HERBALISM, 16);
-            private Item mining = this.redeemItem(Material.NETHERITE_PICKAXE, PrimarySkillType.MINING, 19);
-            private Item repair = this.redeemItem(Material.ANVIL, PrimarySkillType.REPAIR, 20);
-            private Item swords = this.redeemItem(Material.NETHERITE_SWORD, PrimarySkillType.SWORDS, 21);
-            private Item taming = this.redeemItem(Material.LEAD, PrimarySkillType.TAMING, 23);
-            private Item unarmed = this.redeemItem(Material.CARROT_ON_A_STICK, PrimarySkillType.UNARMED, 24);
-            private Item woodcutting = this.redeemItem(Material.OAK_LOG, PrimarySkillType.WOODCUTTING, 25);
-            private Item fill = FILLER_ITEM;
-            private Item navigation = NAVIGATION_ITEM;
-
-            private Item redeemItem(final Material material, final PrimarySkillType skill, final int slot) {
-                ItemStack item = new ItemStack(material, 1);
-                String name = "<yellow>" + WordUtils.capitalizeFully(skill.name());
-                List<String> lore = List.of("<yellow><sender>, click here to redeem!");
-                return Item.builder().item(item).name(name).lore(lore).type(ClickTypes.REDEEM).slot(slot).build();
-            }
+        protected RedeemMenu() {
+            this.items.put("acrobatics", Util.createRedeemItem(Material.NETHERITE_BOOTS, "ACROBATICS", 10));
+            this.items.put("alchemy", Util.createRedeemItem(Material.BREWING_STAND, "ALCHEMY", 11));
+            this.items.put("archery", Util.createRedeemItem(Material.BOW, "ARCHERY", 12));
+            this.items.put("axes", Util.createRedeemItem(Material.NETHERITE_AXE, "AXES", 13));
+            this.items.put("excavation", Util.createRedeemItem(Material.NETHERITE_SHOVEL, "EXCAVATION", 14));
+            this.items.put("fishing", Util.createRedeemItem(Material.FISHING_ROD, "FISHING", 15));
+            this.items.put("herbalism", Util.createRedeemItem(Material.SUGAR_CANE, "HERBALISM", 16));
+            this.items.put("mining", Util.createRedeemItem(Material.NETHERITE_PICKAXE, "MINING", 19));
+            this.items.put("repair", Util.createRedeemItem(Material.ANVIL, "REPAIR", 20));
+            this.items.put("swords", Util.createRedeemItem(Material.NETHERITE_SWORD, "SWORDS", 21));
+            this.items.put("taming", Util.createRedeemItem(Material.LEAD, "TAMING", 23));
+            this.items.put("unarmed", Util.createRedeemItem(Material.CARROT_ON_A_STICK, "UNARMED", 24));
+            this.items.put("woodcutting", Util.createRedeemItem(Material.OAK_LOG, "WOODCUTTING", 25));
+            this.items.put("fill", FILLER_ITEM);
+            this.items.put("navigation", NAVIGATION_ITEM);
         }
-    }
-
-    /**
-     * Properties that are common among all Menus.
-     *
-     * @param title      Title of the menu. Does not update.
-     * @param slots      Size of the menu.
-     * @param fill       Whether the Menu's empty spaces should be filled.
-     * @param navigation If navigation item should be added to menu.
-     */
-    @ConfigSerializable
-    public record MenuProperties(@NotNull String title, int slots, boolean fill, boolean navigation) {
     }
 }

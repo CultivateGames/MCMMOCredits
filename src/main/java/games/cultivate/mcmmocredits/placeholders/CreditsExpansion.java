@@ -23,8 +23,8 @@
 //
 package games.cultivate.mcmmocredits.placeholders;
 
-import games.cultivate.mcmmocredits.data.UserDAO;
 import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.user.UserService;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
@@ -37,51 +37,66 @@ import java.util.Optional;
  * Handles registration with {@link PlaceholderAPI}
  */
 public final class CreditsExpansion extends PlaceholderExpansion {
-    private final UserDAO dao;
+    private final UserService service;
 
     @Inject
-    public CreditsExpansion(final UserDAO dao) {
-        this.dao = dao;
+    public CreditsExpansion(final UserService service) {
+        this.service = service;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @NotNull String getAuthor() {
         return "Cultivate Games";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @NotNull String getIdentifier() {
         return "mcmmocredits";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @NotNull String getVersion() {
-        return "0.3.4";
+        return "0.3.6";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean persist() {
         return true;
     }
 
+    /**
+     * Handles placeholder parsing by loading the User and exposing all properties of it.
+     *
+     * @param player Instance of the user.
+     * @param id     suffix of the placeholder key. ex. "credits" in %mcmmocredits_credits%
+     * @return The placeholder value
+     */
     @Override
-    public String onRequest(final OfflinePlayer player, final @NotNull String identifier) {
-        Optional<User> optionalUser = this.dao.getUser(player.getName());
+    public String onRequest(final OfflinePlayer player, final @NotNull String id) {
+        Optional<User> optionalUser = this.service.getUser(player.getName());
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
-            if (identifier.equalsIgnoreCase("credits")) {
-                return user.credits() + "";
-            }
-            if (identifier.equalsIgnoreCase("redeemed")) {
-                return user.redeemed() + "";
-            }
-            if (identifier.equalsIgnoreCase("username")) {
-                return user.username();
-            }
-            if (identifier.equalsIgnoreCase("uuid")) {
-                return user.uuid().toString();
-            }
+            return switch (id.toLowerCase()) {
+                case "credits" -> String.valueOf(user.credits());
+                case "redeemed" -> String.valueOf(user.redeemed());
+                case "username" -> user.username();
+                case "uuid" -> user.uuid().toString();
+                case "cached" -> String.valueOf(this.service.isCached(user));
+                default -> "Invalid User has been provided!";
+            };
         }
-        return 0 + "";
+        return "Invalid User has been provided!";
     }
 }

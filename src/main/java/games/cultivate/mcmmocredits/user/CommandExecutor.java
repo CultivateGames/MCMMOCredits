@@ -23,19 +23,14 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import games.cultivate.mcmmocredits.placeholders.Resolver;
-import net.kyori.adventure.text.minimessage.tag.PreProcess;
-import net.kyori.adventure.text.minimessage.tag.Tag;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
- * Represents any entity that can execute a command. Typically a User or Console.
+ * Represents a Player or Console that can execute a command.
  */
 public abstract class CommandExecutor {
     private final UUID uuid;
@@ -56,30 +51,6 @@ public abstract class CommandExecutor {
         this.username = username;
         this.credits = credits;
         this.redeemed = redeemed;
-    }
-
-    /**
-     * Builds placeholders for a {@link Resolver}.
-     *
-     * @param prefix Prefix for the placeholders.
-     * @return A map of placeholders.
-     */
-    public Map<String, PreProcess> placeholders(final String prefix) {
-        Map<String, String> map = new HashMap<>();
-        map.put(prefix, this.username);
-        map.put(prefix + "_credits", this.credits + "");
-        map.put(prefix + "_uuid", this.uuid.toString());
-        map.put(prefix + "_redeemed", this.redeemed + "");
-        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> Tag.preProcessParsed(x.getValue())));
-    }
-
-    /**
-     * Gets a built Resolver for the executor.
-     *
-     * @return A built Resolver.
-     */
-    public Resolver resolver() {
-        return Resolver.builder().user(this, "sender").build();
     }
 
     /**
@@ -145,4 +116,33 @@ public abstract class CommandExecutor {
      * @return the Player.
      */
     public abstract Player player();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @SuppressWarnings("checkstyle:needbraces")
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        CommandExecutor executor = (CommandExecutor) o;
+
+        if (this.credits != executor.credits) return false;
+        if (this.redeemed != executor.redeemed) return false;
+        if (!Objects.equals(this.uuid, executor.uuid)) return false;
+        return Objects.equals(this.username, executor.username);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        int result = this.uuid != null ? this.uuid.hashCode() : 0;
+        result = 31 * result + (this.username != null ? this.username.hashCode() : 0);
+        result = 31 * result + this.credits;
+        result = 31 * result + this.redeemed;
+        return result;
+    }
 }

@@ -24,8 +24,6 @@
 package games.cultivate.mcmmocredits.serializers;
 
 import games.cultivate.mcmmocredits.config.Config;
-import games.cultivate.mcmmocredits.config.MenuConfig.MenuProperties;
-import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -34,8 +32,9 @@ import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.serialize.TypeSerializer;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Handles serialization/deserialization of {@link Menu} from {@link Config}.
  * The Menu deserialized here is incomplete and is transferred to the MenuFactory.
@@ -43,23 +42,30 @@ import java.util.List;
 public final class MenuSerializer implements TypeSerializer<Menu> {
     public static final MenuSerializer INSTANCE = new MenuSerializer();
 
+    /**
+     * Deserializes a Menu from configuration by iterating the item map, and directly reading all other properties.
+     *
+     * @param type the type of return value required
+     * @param node the node containing serialized data
+     * @return The deserialized Menu.
+     * @throws SerializationException Thrown when getting the Item from node map.
+     */
     @Override
     public Menu deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
-        MenuProperties properties = node.node("properties").get(MenuProperties.class);
-        List<Item> items = new ArrayList<>();
+        Map<String, Item> items = new HashMap<>();
         for (ConfigurationNode entry : node.node("items").childrenMap().values()) {
-            Item item = entry.get(Item.class);
-            ClickTypes itemType = item.clickType();
-            if (itemType != ClickTypes.FILL && itemType != ClickTypes.COMMAND) {
-                items.add(item);
-            }
+            items.put((String) entry.key(), entry.get(Item.class));
         }
-        if (properties.navigation()) {
-            items.add(node.node("items", "navigation").get(Item.class));
-        }
-        return new Menu(properties, items);
+        String title = node.node("title").getString();
+        int slots = node.node("slots").getInt();
+        boolean fill = node.node("fill").getBoolean();
+        boolean navigation = node.node("navigation").getBoolean();
+        return new Menu(items, title, slots, fill, navigation);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void serialize(final Type type, @Nullable final Menu obj, final ConfigurationNode node) {
         throw new UnsupportedOperationException("Cannot serialize Menu");

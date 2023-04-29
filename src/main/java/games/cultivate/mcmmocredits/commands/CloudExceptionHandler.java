@@ -45,14 +45,15 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Exception handler that modifies how Cloud exceptions send messages.
  *
  * @see Credits
  */
-//https://github.com/Incendo/cloud/blob/master/cloud-minecraft/cloud-minecraft-extras/src/main/java/cloud/commandframework/minecraft/extras/MinecraftExceptionHandler.java
 public final class CloudExceptionHandler {
+    private static final Pattern TO_PATH = Pattern.compile("[.|_]");
     private final MainConfig config;
     private final CommandManager<CommandExecutor> manager;
     private final List<Caption> keys;
@@ -87,13 +88,13 @@ public final class CloudExceptionHandler {
         this.manager.registerExceptionHandler(InvalidCommandSenderException.class, (c, e) -> this.sendError(c, "invalid-sender", "correct_sender", e.getRequiredSender().getSimpleName()));
         this.manager.registerExceptionHandler(NoPermissionException.class, (c, e) -> this.sendError(c, "no-permission", "permission", e.getMissingPermission()));
         this.manager.registerExceptionHandler(CommandExecutionException.class, (c, e) -> this.sendError(c, "command-execution", "command_context", String.valueOf(e.getCommandContext())));
-        this.manager.registerExceptionHandler(ArgumentParseException.class, (c, e) -> Text.fromString(c, this.config.string("argument-parsing"), this.attachParseException(c, e)).send());
+        this.manager.registerExceptionHandler(ArgumentParseException.class, (c, e) -> Text.fromString(c, this.config.getMessage("argument-parsing"), this.attachParseException(c, e)).send());
         this.manager.captionVariableReplacementHandler(new CaptionFormatter());
         CaptionRegistry<CommandExecutor> registry = this.manager.captionRegistry();
         if (registry instanceof FactoryDelegatingCaptionRegistry<CommandExecutor> factory) {
             this.keys.forEach(caption -> {
-                String path = caption.getKey().replaceAll("[.|_]", "-");
-                factory.registerMessageFactory(caption, (capt, executor) -> this.config.node(path).getString());
+                String path = TO_PATH.matcher(caption.getKey()).replaceAll("-");
+                factory.registerMessageFactory(caption, (capt, executor) -> this.config.getString(path));
             });
             this.manager.captionRegistry(factory);
         }
@@ -109,7 +110,7 @@ public final class CloudExceptionHandler {
      */
     private void sendError(final CommandExecutor executor, final String path, final String key, final String value) {
         Resolver resolver = this.attachException(executor, key, value);
-        Text.fromString(executor, this.config.string(path), resolver).send();
+        Text.fromString(executor, this.config.getMessage(path), resolver).send();
     }
 
     /**
@@ -121,14 +122,16 @@ public final class CloudExceptionHandler {
      * @return The new Resolver.
      */
     private Resolver attachException(final CommandExecutor executor, final String key, final String value) {
-        return executor.resolver().toBuilder().tag(key, value).build();
+        Resolver resolver = Resolver.ofUser(executor);
+        resolver.addStringTag(key, value);
+        return resolver;
     }
 
     /**
      * Attaches a new tag built from an exception to a Resolver, but parses external placeholders first.
      *
      * @param executor Command executor. Can be Console.
-     * @param ex The ArgumentParseException.
+     * @param ex       The ArgumentParseException.
      * @return The new Resolver.
      */
     private Resolver attachParseException(final CommandExecutor executor, final ArgumentParseException ex) {
@@ -144,12 +147,12 @@ public final class CloudExceptionHandler {
      */
     private static final class CaptionFormatter implements CaptionVariableReplacementHandler {
         @Override
-        public @NotNull String replaceVariables(final @NotNull String string, @NotNull final CaptionVariable... variables) {
-            String replacedString = string;
+        @SuppressWarnings("checkstyle:finalparameters")
+        public @NotNull String replaceVariables(@NotNull String string, @NotNull final CaptionVariable... variables) {
             for (final CaptionVariable variable : variables) {
-                replacedString = replacedString.replace(String.format("<%s>", variable.getKey()), variable.getValue());
+                string = string.replace(String.format("<%s>", variable.getKey()), variable.getValue());
             }
-            return replacedString;
+            return string;
         }
     }
 }
