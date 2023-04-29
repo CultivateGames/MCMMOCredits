@@ -23,6 +23,7 @@
 //
 package games.cultivate.mcmmocredits.config;
 
+import games.cultivate.mcmmocredits.converters.ConverterType;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import games.cultivate.mcmmocredits.menu.ClickTypes;
 import games.cultivate.mcmmocredits.menu.Item;
@@ -255,6 +256,17 @@ public class Config {
     public DatabaseProperties getDatabaseProperties(final Object... path) {
         return this.get(DatabaseProperties.class, DatabaseProperties.defaults(), path);
     }
+
+    /**
+     * Gets the ConverterType object from the configuration.
+     *
+     * @param path Node path where the value is found.
+     * @return The value.
+     */
+    public ConverterType getConverterType(final Object... path) {
+        return this.get(ConverterType.class, null, path);
+    }
+
 
     /**
      * Updates the list of configuration node paths as strings, sorted in the order they were encountered.

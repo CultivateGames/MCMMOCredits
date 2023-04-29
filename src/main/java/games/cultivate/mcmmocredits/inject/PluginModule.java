@@ -29,17 +29,21 @@ import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
+import games.cultivate.mcmmocredits.converters.CSVConverter;
+import games.cultivate.mcmmocredits.converters.Converter;
+import games.cultivate.mcmmocredits.converters.InternalConverter;
+import games.cultivate.mcmmocredits.converters.PluginConverter;
+import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import games.cultivate.mcmmocredits.user.UserDAO;
 import games.cultivate.mcmmocredits.database.types.H2Database;
 import games.cultivate.mcmmocredits.database.types.MySqlDatabase;
 import games.cultivate.mcmmocredits.database.types.SqlLiteDatabase;
 import games.cultivate.mcmmocredits.menu.ClickFactory;
 import games.cultivate.mcmmocredits.user.UserCache;
+import games.cultivate.mcmmocredits.user.UserDAO;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
 
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 /**
@@ -70,15 +74,19 @@ public final class PluginModule extends AbstractModule {
     }
 
     @Provides
-    @Singleton
-    public UserDAO provideDAO(final MainConfig config, final Injector injector) {
+    public Database provideDatabase(final MainConfig config, final Injector injector) {
         DatabaseProperties properties = config.getDatabaseProperties("settings", "database");
-        Provider<UserDAO> provider = switch (properties.type()) {
+        return switch (properties.type()) {
             case SQLITE -> injector.getProvider(SqlLiteDatabase.class).get();
             case MYSQL -> injector.getProvider(MySqlDatabase.class).get();
             case H2 -> injector.getProvider(H2Database.class).get();
         };
-        return provider.get();
+    }
+
+    @Provides
+    @Singleton
+    public UserDAO provideDAO(final Database database) {
+        return database.get();
     }
 
     /**
@@ -87,6 +95,7 @@ public final class PluginModule extends AbstractModule {
      * @return The loaded MainConfig.
      */
     @Provides
+    @Singleton
     public MainConfig provideConfig() {
         MainConfig config = new MainConfig();
         config.load();
@@ -99,9 +108,20 @@ public final class PluginModule extends AbstractModule {
      * @return The loaded MenuConfig.
      */
     @Provides
+    @Singleton
     public MenuConfig provideMenuConfig() {
         MenuConfig config = new MenuConfig();
         config.load();
         return config;
+    }
+
+    @Provides
+    @Singleton
+    public Converter provideConverter(final MainConfig config, final Injector injector) {
+        return switch (config.getConverterType("converter", "type")) {
+            case EXTERNAL_GRM, EXTERNAL_MORPH -> injector.getInstance(PluginConverter.class);
+            case EXTERNAL_CSV -> injector.getInstance(CSVConverter.class);
+            case INTERNAL_SQLITE, INTERNAL_H2, INTERNAL_MYSQL -> injector.getInstance(InternalConverter.class);
+        };
     }
 }

@@ -37,6 +37,7 @@ import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.commands.SkillParser;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
+import games.cultivate.mcmmocredits.converters.Converter;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.placeholders.CreditsExpansion;
@@ -82,13 +83,14 @@ public final class MCMMOCredits extends JavaPlugin {
         this.injector = Guice.createInjector(new PluginModule(this));
         this.checkForDependencies();
         this.config = this.injector.getInstance(MainConfig.class);
+        this.runConversionProcess();
         this.loadCommands();
         this.registerListeners();
         userService = this.injector.getInstance(UserService.class);
         this.enableMetrics();
         long end = System.nanoTime();
         if (this.config.getBoolean("settings", "debug")) {
-            this.logger.info("Plugin enabled! Startup took: {} s.", (double) (end - start) / 1000000000);
+            this.logger.info("Plugin enabled! Startup took: {}s.", (double) (end - start) / 1000000000);
         }
     }
 
@@ -211,6 +213,16 @@ public final class MCMMOCredits extends JavaPlugin {
         this.logger.info("Bstats is disabled, skipping initialization...");
     }
 
+    private void runConversionProcess() {
+        if (this.config.getBoolean("converter", "enabled")) {
+            long start = System.nanoTime();
+            Converter converter = this.injector.getInstance(Converter.class);
+            converter.run(this.logger);
+            long end = System.nanoTime();
+            this.logger.info("Conversion completed! Process took: {}s.", (double) (end - start) / 1000000000);
+        }
+    }
+
     /**
      * Handles shutdown of the plugin. Duration is tracked if debug is enabled.
      */
@@ -222,7 +234,7 @@ public final class MCMMOCredits extends JavaPlugin {
         this.injector.getInstance(Database.class).disable();
         long end = System.nanoTime();
         if (this.config.getBoolean("settings", "debug")) {
-            this.logger.info("Plugin disabled! Shutdown took: {} s.", (double) (end - start) / 1000000000);
+            this.logger.info("Plugin disabled! Shutdown took: {}s.", (double) (end - start) / 1000000000);
         }
     }
 }

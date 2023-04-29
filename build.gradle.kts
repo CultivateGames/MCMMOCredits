@@ -16,6 +16,7 @@ repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://nexus.neetgames.com/repository/maven-releases/")
+    maven("https://maven.enginehub.org/repo/")
 }
 
 dependencies {
@@ -30,9 +31,10 @@ dependencies {
     implementation("com.h2database:h2:2.1.214")
     implementation("com.google.inject:guice:5.1.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.jdbi:jdbi3-core:3.37.1")
-    implementation("org.jdbi:jdbi3-sqlite:3.37.1")
-    implementation("org.jdbi:jdbi3-sqlobject:3.37.1")
+    implementation("org.jdbi:jdbi3-core:3.38.0")
+    implementation("org.jdbi:jdbi3-sqlite:3.38.0")
+    implementation("org.jdbi:jdbi3-sqlobject:3.38.0")
+    implementation("org.enginehub:squirrelid:0.3.2")
 
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
         exclude(module = "paper-api")
@@ -158,6 +160,7 @@ tasks {
         reloc("org.aopalliance")
         reloc("org.bstats")
         reloc("org.checkerframework")
+        reloc("org.enginehub")
         reloc("org.jdbi")
         reloc("org.incendo")
         reloc("org.spongepowered")
