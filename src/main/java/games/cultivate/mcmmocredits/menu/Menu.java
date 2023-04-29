@@ -53,8 +53,9 @@ public record Menu(Map<String, Item> items, String title, int slots, boolean fil
      *
      * @param config The configuration.
      */
+    //TODO: paginate
     private void addConfigItems(final MainConfig config) {
-        List<String> keys = config.filterNodes(x -> x.contains("database"));
+        List<String> keys = config.filterNodes(x -> x.contains("database") || x.contains("converter"));
         Item messages = this.items.get("messages");
         Item settings = this.items.get("settings");
         this.items.remove("messages");

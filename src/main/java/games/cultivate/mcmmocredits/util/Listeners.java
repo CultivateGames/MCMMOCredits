@@ -90,7 +90,9 @@ public class Listeners implements Listener {
         }
         this.service.addUser(uuid, username);
         if (this.config.getBoolean("settings", "add-user-message")) {
-            Text.forOneUser(Console.INSTANCE, this.config.getMessage("add-user")).send();
+            Resolver resolver = Resolver.ofUser(Console.INSTANCE);
+            resolver.addUsername(username);
+            Text.fromString(Console.INSTANCE, this.config.getMessage("add-user"), resolver).send();
         }
     }
 
