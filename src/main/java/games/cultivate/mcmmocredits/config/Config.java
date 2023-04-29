@@ -25,7 +25,7 @@ package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.converters.ConverterType;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import games.cultivate.mcmmocredits.menu.ClickTypes;
+import games.cultivate.mcmmocredits.menu.ClickType;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.serializers.ClickTypeSerializer;
@@ -95,7 +95,7 @@ public class Config {
                 .defaultOptions(opts -> opts.header(HEADER).serializers(build -> build
                         .register(Item.class, ItemSerializer.INSTANCE)
                         .register(Menu.class, MenuSerializer.INSTANCE)
-                        .register(ClickTypes.class, ClickTypeSerializer.INSTANCE)))
+                        .register(ClickType.class, ClickTypeSerializer.INSTANCE)))
                 .path(this.path.resolve(this.fileName))
                 .headerMode(HeaderMode.PRESET)
                 .indent(2)

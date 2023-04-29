@@ -11,7 +11,7 @@ config:
     settings:
       name: ''
       lore:
-        - <gray>Click here to edit this config option!
+      - <gray>Click here to edit this config option!
       slot: -1
       material: REDSTONE
       amount: 1
@@ -20,7 +20,7 @@ config:
     navigation:
       name: <red>Previous Menu
       lore:
-        - <gray>Left Click to go back!
+      - <gray>Left Click to go back!
       slot: 49
       material: COMPASS
       amount: 1
@@ -30,7 +30,7 @@ config:
     messages:
       name: ''
       lore:
-        - <gray>Click here to edit this config option!
+      - <gray>Click here to edit this config option!
       slot: -1
       material: WRITABLE_BOOK
       amount: 1
@@ -53,7 +53,7 @@ main:
     navigation:
       name: <red>Previous Menu
       lore:
-        - <gray>Left Click to go back!
+      - <gray>Left Click to go back!
       slot: 40
       material: COMPASS
       amount: 1
@@ -63,7 +63,7 @@ main:
     redeem:
       name: <green>Redeem MCMMO Credits!
       lore:
-        - <gray>Left Click to redeem Credits!
+      - <gray>Left Click to redeem Credits!
       slot: 15
       material: EMERALD
       amount: 1
@@ -81,7 +81,7 @@ main:
     config:
       name: <#FF253C>Edit Config
       lore:
-        - <gray>Left Click to edit config!
+      - <gray>Left Click to edit config!
       slot: 11
       material: DIAMOND
       amount: 1
@@ -97,7 +97,7 @@ redeem:
     repair:
       name: <yellow>Repair
       lore:
-        - <yellow><sender>, click here to redeem!
+      - <yellow><sender>, click here to redeem!
       slot: 20
       material: ANVIL
       amount: 1
@@ -106,7 +106,7 @@ redeem:
     herbalism:
       name: <yellow>Herbalism
       lore:
-        - <yellow><sender>, click here to redeem!
+      - <yellow><sender>, click here to redeem!
       slot: 16
       material: SUGAR_CANE
       amount: 1
@@ -115,7 +115,7 @@ redeem:
     fishing:
       name: <yellow>Fishing
       lore:
-        - <yellow><sender>, click here to redeem!
+      - <yellow><sender>, click here to redeem!
       slot: 15
       material: FISHING_ROD
       amount: 1
@@ -124,7 +124,7 @@ redeem:
     axes:
       name: <yellow>Axes
       lore:
-        - <yellow><sender>, click here to redeem!
+      - <yellow><sender>, click here to redeem!
       slot: 13
       material: NETHERITE_AXE
       amount: 1
@@ -133,7 +133,7 @@ redeem:
     swords:
       name: <yellow>Swords
       lore:
-        - <yellow><sender>, click here to redeem!
+      - <yellow><sender>, click here to redeem!
       slot: 21
       material: NETHERITE_SWORD
       amount: 1
@@ -142,7 +142,7 @@ redeem:
     alchemy:
       name: <yellow>Alchemy
       lore:
-        - <yellow><sender>, click here to redeem!
+      - <yellow><sender>, click here to redeem!
       slot: 11
       material: BREWING_STAND
       amount: 1
@@ -151,7 +151,7 @@ redeem:
     mining:
       name: <yellow>Mining
       lore:
-        - <yellow><sender>, click here to redeem!
+      - <yellow><sender>, click here to redeem!
       slot: 19
       material: NETHERITE_PICKAXE
       amount: 1
@@ -168,7 +168,7 @@ redeem:
     acrobatics:
       name: <yellow>Acrobatics
       lore:
-        - <yellow><sender>, click here to redeem!
+      - <yellow><sender>, click here to redeem!
       slot: 10
       material: NETHERITE_BOOTS
       amount: 1
@@ -177,7 +177,7 @@ redeem:
     woodcutting:
       name: <yellow>Woodcutting
       lore:
-        - <yellow><sender>, click here to redeem!
+      - <yellow><sender>, click here to redeem!
       slot: 25
       material: OAK_LOG
       amount: 1
@@ -186,7 +186,7 @@ redeem:
     navigation:
       name: <red>Previous Menu
       lore:
-        - <gray>Left Click to go back!
+      - <gray>Left Click to go back!
       slot: 40
       material: COMPASS
       amount: 1
@@ -196,7 +196,7 @@ redeem:
     excavation:
       name: <yellow>Excavation
       lore:
-        - <yellow><sender>, click here to redeem!
+      - <yellow><sender>, click here to redeem!
       slot: 14
       material: NETHERITE_SHOVEL
       amount: 1
@@ -205,7 +205,7 @@ redeem:
     unarmed:
       name: <yellow>Unarmed
       lore:
-        - <yellow><sender>, click here to redeem!
+      - <yellow><sender>, click here to redeem!
       slot: 24
       material: CARROT_ON_A_STICK
       amount: 1
@@ -214,7 +214,7 @@ redeem:
     archery:
       name: <yellow>Archery
       lore:
-        - <yellow><sender>, click here to redeem!
+      - <yellow><sender>, click here to redeem!
       slot: 12
       material: BOW
       amount: 1
@@ -223,7 +223,7 @@ redeem:
     taming:
       name: <yellow>Taming
       lore:
-        - <yellow><sender>, click here to redeem!
+      - <yellow><sender>, click here to redeem!
       slot: 23
       material: LEAD
       amount: 1

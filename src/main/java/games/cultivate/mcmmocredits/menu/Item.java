@@ -42,7 +42,7 @@ import java.util.Objects;
  * An {@link ItemStack} used within a {@link Menu}.
  */
 public final class Item {
-    private final ClickTypes type;
+    private final ClickType type;
     private final ItemStack stack;
     private final String name;
     private final List<String> lore;
@@ -55,11 +55,11 @@ public final class Item {
      * @param stack The representative ItemStack. Updated with refreshing name/lore.
      * @param name  Mutable name of the item.
      * @param lore  Mutable lore of the item.
-     * @param type  Item ClickTypes that determines what type of click is applied.
+     * @param type  Item ClickType that determines what type of click is applied.
      * @param slot  Location of item in the inventory.
      * @param data  String data used to construct the click. For example, could represent a command or skill type.
      */
-    private Item(final ItemStack stack, final String name, final List<String> lore, final ClickTypes type, final String data, final int slot) {
+    private Item(final ItemStack stack, final String name, final List<String> lore, final ClickType type, final String data, final int slot) {
         this.stack = stack;
         this.name = name;
         this.lore = lore;
@@ -95,7 +95,7 @@ public final class Item {
      * @param type ClickType to apply.
      * @return An updated copy of the item.
      */
-    public Item withClickType(final ClickTypes type) {
+    public Item withClickType(final ClickType type) {
         return new Item(this.stack, this.name, this.lore, type, this.data, this.slot);
     }
 
@@ -154,7 +154,7 @@ public final class Item {
      *
      * @return The ItemType.
      */
-    public ClickTypes clickType() {
+    public ClickType clickType() {
         return this.type;
     }
 
@@ -272,7 +272,7 @@ public final class Item {
      * Builder class for {@link Item}.
      */
     public static final class Builder {
-        private ClickTypes type;
+        private ClickType type;
         private ItemStack item;
         private String name;
         private List<String> lore;
@@ -283,7 +283,7 @@ public final class Item {
          * Constructs the Builder with sane defaults.
          */
         private Builder() {
-            this.type = ClickTypes.FILL;
+            this.type = ClickType.FILL;
             this.item = new ItemStack(Material.STONE, 1);
             this.name = "";
             this.lore = List.of();
@@ -297,7 +297,7 @@ public final class Item {
          * @param type The ItemType.
          * @return The updated Builder.
          */
-        public Builder type(final ClickTypes type) {
+        public Builder type(final ClickType type) {
             this.type = type;
             return this;
         }

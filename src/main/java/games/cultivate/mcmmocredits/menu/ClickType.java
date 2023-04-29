@@ -26,7 +26,7 @@ package games.cultivate.mcmmocredits.menu;
 /**
  * Represents all possible click types inside a {@link Menu}
  */
-public enum ClickTypes {
+public enum ClickType {
     COMMAND,
     EDIT_MESSAGE,
     EDIT_SETTING,

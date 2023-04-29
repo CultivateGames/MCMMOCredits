@@ -75,3 +75,15 @@ settings:
     password: passw0rd+
     port: 3306
     ssl: true
+converter:
+  enabled: false
+  type: INTERNAL_SQLITE
+  internal:
+    properties:
+      type: SQLITE
+      host: 127.0.0.1
+      name: database
+      user: root
+      password: passw0rd+
+      port: 3306
+      ssl: true

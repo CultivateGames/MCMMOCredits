@@ -52,7 +52,7 @@ class ItemTest {
     @Test
     void buildItem_ItemBuilder_ValidItem() {
         //Arrange
-        ClickTypes clickType = ClickTypes.COMMAND;
+        ClickType clickType = ClickType.COMMAND;
         ItemStack stack = new ItemStack(Material.DIAMOND, 1);
         String name = "Test Item";
         List<String> lore = List.of("Test lore line 1", "Test lore line 2");
@@ -83,7 +83,7 @@ class ItemTest {
     void changeClickType_InitialItem_UpdatedClickType() {
         //Arrange
         Item item = Item.builder().build();
-        ClickTypes newClickType = ClickTypes.COMMAND;
+        ClickType newClickType = ClickType.COMMAND;
 
         //Act
         Item updatedItem = item.withClickType(newClickType);
@@ -161,7 +161,7 @@ class ItemTest {
     @Test
     void getClickType_InitialItem_CorrectClickType() {
         //Arrange
-        ClickTypes clickType = ClickTypes.COMMAND;
+        ClickType clickType = ClickType.COMMAND;
         Item item = Item.builder().type(clickType).build();
 
         //Act & Assert
@@ -224,7 +224,7 @@ class ItemTest {
         ItemStack stack = new ItemStack(Material.DIAMOND, 1);
         String name = "Test Item";
         List<String> lore = List.of("Test lore line 1", "Test lore line 2");
-        ClickTypes clickType = ClickTypes.COMMAND;
+        ClickType clickType = ClickType.COMMAND;
         String data = "example_data";
         Item item = Item.builder().item(stack).name(name).lore(lore).type(clickType).data(data).build();
 

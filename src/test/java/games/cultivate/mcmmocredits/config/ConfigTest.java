@@ -24,7 +24,7 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import games.cultivate.mcmmocredits.menu.ClickTypes;
+import games.cultivate.mcmmocredits.menu.ClickType;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.util.Util;
@@ -253,7 +253,7 @@ class ConfigTest {
             assertNotNull(result);
             assertEquals("<red>Previous Menu", result.name());
             assertEquals(40, result.slot());
-            assertEquals(ClickTypes.COMMAND, result.clickType());
+            assertEquals(ClickType.COMMAND, result.clickType());
             assertEquals("credits menu main", result.data());
         }
     }
@@ -294,7 +294,7 @@ class ConfigTest {
             String name = "testingThisItem";
             String data = "credits command";
             List<String> lore = List.of("testing the lore!");
-            ClickTypes type = ClickTypes.COMMAND;
+            ClickType type = ClickType.COMMAND;
             Item newNavItem = Item.builder().item(new ItemStack(mat, amount)).name(name).slot(slot).lore(lore).type(type).data(data).build();
 
             //Act

@@ -23,11 +23,11 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import org.jdbi.v3.core.Handle;
-import org.jdbi.v3.core.statement.PreparedBatch;
 import org.jdbi.v3.sqlobject.SqlObject;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
 import org.jdbi.v3.sqlobject.customizer.BindMethods;
+import org.jdbi.v3.sqlobject.statement.BatchChunkSize;
+import org.jdbi.v3.sqlobject.statement.SqlBatch;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
@@ -54,18 +54,9 @@ public interface UserDAO extends SqlObject {
      *
      * @param users The users to add.
      */
-    default void addUsers(@BindMethods Collection<User> users) {
-        try (Handle handle = this.getHandle()) {
-            PreparedBatch batch = handle.prepareBatch("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed)");
-            for (User u : users) {
-                batch = batch.bind("uuid", u.uuid().toString())
-                        .bind("username", u.username())
-                        .bind("credits", u.credits())
-                        .bind("redeemed", u.redeemed()).add();
-            }
-            batch.execute();
-        }
-    }
+    @SqlBatch("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed);")
+    @BatchChunkSize(1000)
+    void addUsers(@BindMethods Collection<User> users);
 
     /**
      * Retrieves a user from the database using their username.

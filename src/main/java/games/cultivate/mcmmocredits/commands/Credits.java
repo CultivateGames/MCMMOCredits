@@ -61,25 +61,25 @@ import java.util.concurrent.Executor;
 public final class Credits {
     private final MenuConfig menuConfig;
     private final MainConfig config;
-    private final UserService userService;
-    private final ClickFactory clickFactory;
+    private final UserService service;
+    private final ClickFactory factory;
     private final MCMMOCredits plugin;
 
     /**
      * Constructs the command object via injection.
      *
-     * @param config       Instance of MainConfig. Used for messages and reload command.
-     * @param menuConfig   Instance of MenuConfig. Used for reload command.
-     * @param userService  Instance of UserService. Used to obtain User info from command.
-     * @param clickFactory Instance of ClickFactory. Used to construct menus.
-     * @param plugin       Instance of the MCMMOCredits to run events synchronously.
+     * @param config     Instance of MainConfig. Used for messages and reload command.
+     * @param menuConfig Instance of MenuConfig. Used for reload command.
+     * @param service    Instance of UserService. Used to obtain User info from command.
+     * @param factory    Instance of ClickFactory. Used to construct menus.
+     * @param plugin     Instance of the MCMMOCredits to run events synchronously.
      */
     @Inject
-    public Credits(final MainConfig config, final MenuConfig menuConfig, final UserService userService, final ClickFactory clickFactory, final MCMMOCredits plugin) {
+    public Credits(final MainConfig config, final MenuConfig menuConfig, final UserService service, final ClickFactory factory, final MCMMOCredits plugin) {
         this.config = config;
         this.menuConfig = menuConfig;
-        this.userService = userService;
-        this.clickFactory = clickFactory;
+        this.service = service;
+        this.factory = factory;
         this.plugin = plugin;
     }
 
@@ -103,7 +103,7 @@ public final class Credits {
     @CommandMethod("balance <username>")
     @CommandPermission("mcmmocredits.balance.other")
     public void balanceOther(final CommandExecutor executor, final @Argument(suggestions = "user") String username) {
-        Optional<User> user = this.userService.getUser(username);
+        Optional<User> user = this.service.getUser(username);
         if (user.isPresent()) {
             Text.fromString(executor, this.config.getMessage("balance-other"), Resolver.ofUsers(executor, user.get())).send();
             return;
@@ -126,7 +126,7 @@ public final class Credits {
         }
         int limit = this.config.getInteger("settings", "leaderboard-page-size");
         int offset = Math.max(0, (page - 1) * limit);
-        List<User> users = this.userService.getPageOfUsers(limit, offset);
+        List<User> users = this.service.getPageOfUsers(limit, offset);
         if (users.isEmpty()) {
             Text.forOneUser(executor, this.config.getMessage("invalid-leaderboard")).send();
             return;
@@ -136,7 +136,7 @@ public final class Credits {
         for (int i = 1; i <= limit; i++) {
             resolver.addUser(users.get(i - 1), "target");
             resolver.addIntTag("rank", i + offset);
-            Text.fromString(executor, this.config.getString("leaderboard-entry"), resolver).send();
+            Text.forOneUser(executor, this.config.getString("leaderboard-entry")).send();
         }
     }
 
@@ -166,7 +166,7 @@ public final class Credits {
     @CommandMethod("<operation> <amount> <username>")
     @CommandPermission("mcmmocredits.modify.other")
     public void modifyOther(final CommandExecutor executor, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
-        Optional<User> optionalUser = this.userService.getUser(username);
+        Optional<User> optionalUser = this.service.getUser(username);
         if (optionalUser.isPresent()) {
             CreditTransactionEvent event = new CreditTransactionEvent(executor.sender(), optionalUser.get().uuid(), operation, amount, silent, false);
             this.getExecutor().execute(() -> Bukkit.getPluginManager().callEvent(event));
@@ -201,7 +201,7 @@ public final class Credits {
     @CommandMethod("redeem <amount> <skill> <username>")
     @CommandPermission("mcmmocredits.redeem.other")
     public void redeemOther(final CommandExecutor executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
-        Optional<User> optionalUser = this.userService.getUser(username);
+        Optional<User> optionalUser = this.service.getUser(username);
         if (optionalUser.isPresent()) {
             CreditRedemptionEvent event = new CreditRedemptionEvent(executor.sender(), optionalUser.get().uuid(), skill, amount, silent, false);
             this.getExecutor().execute(() -> Bukkit.getPluginManager().callEvent(event));
@@ -224,14 +224,16 @@ public final class Credits {
     }
 
     /**
-     * /credits menu redeem. Allows user to open a specific menu
+     * /credits menu type. Allows user to open a menu of a specific type.
      * <p>
-     * Note: Users need mcmmocredits.menu and mcmmocredits.menu.type to open the menu.
+     * Note: Users need "mcmmocredits.menu" and "mcmmocredits.menu.type" to open the menu.
+     *
      * @param user Command executor. Must be an online player.
+     * @param type Type of the menu (main, config, redeem)
      */
-    @CommandMethod("menu <type>")
+    @CommandMethod("menu [type]")
     @CommandPermission("mcmmocredits.menu")
-    public void openMenu(final User user, final @Argument(suggestions = "menus") String type) {
+    public void openMenu(final User user, final @Argument(suggestions = "menus", defaultValue = "main") String type) {
         String menuType = type.toLowerCase();
         if (!user.player().hasPermission("mcmmocredits.menu." + menuType)) {
             this.getExecutor().execute(() -> {
@@ -241,9 +243,9 @@ public final class Credits {
         Menu menu = this.menuConfig.getMenu(menuType);
         PlayerViewer viewer = PlayerViewer.of(user.player());
         switch (menuType) {
-            case "main" -> menu.createMainMenu(user, this.clickFactory).open(viewer);
-            case "config" -> menu.createConfigMenu(user, this.config, this.clickFactory).open(viewer);
-            case "redeem" -> menu.createMenu(user, this.clickFactory).open(viewer);
+            case "main" -> menu.createMainMenu(user, this.factory).open(viewer);
+            case "config" -> menu.createConfigMenu(user, this.config, this.factory).open(viewer);
+            case "redeem" -> menu.createMenu(user, this.factory).open(viewer);
             default -> throw new IllegalArgumentException("Invalid menu type passed! Value: " + menuType);
         }
     }
@@ -261,7 +263,9 @@ public final class Credits {
     }
 
     /**
-     * Utility method to call on main thread.
+     * Utility method to return the Main thread Executor.
+     *
+     * @return the Executor.
      */
     private Executor getExecutor() {
         return Bukkit.getScheduler().getMainThreadExecutor(this.plugin);

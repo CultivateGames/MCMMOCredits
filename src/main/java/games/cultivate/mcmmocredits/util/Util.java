@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import games.cultivate.mcmmocredits.menu.ClickTypes;
+import games.cultivate.mcmmocredits.menu.ClickType;
 import games.cultivate.mcmmocredits.menu.Item;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -127,7 +127,7 @@ public final class Util {
      * @param type     type of the click.
      * @return Built item for Menu Config.
      */
-    public static Item createConfigItem(final Material material, final ClickTypes type) {
+    public static Item createConfigItem(final Material material, final ClickType type) {
         return Item.builder().item(new ItemStack(material, 1)).slot(-1).type(type).lore(List.of("<gray>Click here to edit this config option!")).build();
     }
 
@@ -142,7 +142,7 @@ public final class Util {
      * @return Built item for Menu Config.
      */
     public static Item createCommandItem(final Material material, final String name, final String lore, final String command, final int slot) {
-        return Item.builder().item(new ItemStack(material, 1)).name(name).lore(List.of(lore)).slot(slot).type(ClickTypes.COMMAND).data(command).build();
+        return Item.builder().item(new ItemStack(material, 1)).name(name).lore(List.of(lore)).slot(slot).type(ClickType.COMMAND).data(command).build();
     }
 
     /**
@@ -155,7 +155,7 @@ public final class Util {
      */
     public static Item createRedeemItem(final Material material, final String skill, final int slot) {
         List<String> lore = List.of("<yellow><sender>, click here to redeem!");
-        return Item.builder().item(new ItemStack(material, 1)).name("<yellow>" + Util.capitalizeWord(skill)).lore(lore).type(ClickTypes.REDEEM).slot(slot).build();
+        return Item.builder().item(new ItemStack(material, 1)).name("<yellow>" + Util.capitalizeWord(skill)).lore(lore).type(ClickType.REDEEM).slot(slot).build();
     }
 
     /**

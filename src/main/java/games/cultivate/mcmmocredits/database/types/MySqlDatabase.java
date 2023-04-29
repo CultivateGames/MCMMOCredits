@@ -97,7 +97,7 @@ public final class MySqlDatabase implements Database {
         }
 
         @Override
-        protected Argument build(UUID value, ConfigRegistry config) {
+        protected Argument build(final UUID value, final ConfigRegistry config) {
             return (p, s, c) -> s.setString(p, value.toString());
         }
     }

@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.menu.ClickTypes;
+import games.cultivate.mcmmocredits.menu.ClickType;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.util.Util;
@@ -88,8 +88,8 @@ public class MenuConfig extends Config {
         private Map<String, Item> items = new HashMap<>();
 
         protected ConfigMenu() {
-            this.items.put("messages", Util.createConfigItem(Material.WRITABLE_BOOK, ClickTypes.EDIT_MESSAGE));
-            this.items.put("settings", Util.createConfigItem(Material.REDSTONE, ClickTypes.EDIT_SETTING));
+            this.items.put("messages", Util.createConfigItem(Material.WRITABLE_BOOK, ClickType.EDIT_MESSAGE));
+            this.items.put("settings", Util.createConfigItem(Material.REDSTONE, ClickType.EDIT_SETTING));
             this.items.put("fill", FILLER_ITEM);
             this.items.put("navigation", NAVIGATION_ITEM.withSlot(49));
         }

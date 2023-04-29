@@ -131,7 +131,7 @@ public final class ClickFactory {
     }
 
     /**
-     * Retrieves a ClickHandler based on the specified ClickTypes and associated data.
+     * Retrieves a ClickHandler based on the specified ClickType and associated data.
      *
      * @param type     the type of click
      * @param data     the associated data (e.g. skill name or command)
@@ -139,7 +139,7 @@ public final class ClickFactory {
      * @return The ClickHandler.
      */
     public ClickHandler<ChestPane, InventoryClickEvent, PlayerViewer,
-            ClickContext<ChestPane, InventoryClickEvent, PlayerViewer>> getClick(final ClickTypes type, final String data, final Resolver resolver) {
+            ClickContext<ChestPane, InventoryClickEvent, PlayerViewer>> getClick(final ClickType type, final String data, final Resolver resolver) {
         return switch (type) {
             case FILL -> ClickHandler.cancel();
             case REDEEM -> this.buildRedeemClick(resolver, data);
