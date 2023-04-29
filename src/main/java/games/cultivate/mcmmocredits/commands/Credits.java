@@ -28,6 +28,8 @@ import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.specifier.Range;
+import cloud.commandframework.exceptions.NoPermissionException;
+import cloud.commandframework.permission.Permission;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.MainConfig;
@@ -43,12 +45,12 @@ import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.CreditOperation;
 import org.bukkit.Bukkit;
-import org.bukkit.event.Event;
 import org.incendo.interfaces.paper.PlayerViewer;
 
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 
 /**
  * Handles all commands. Prefix is customizable via config.
@@ -149,7 +151,7 @@ public final class Credits {
     @CommandPermission("mcmmocredits.modify.self")
     public void modify(final User user, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount) {
         CreditTransactionEvent event = new CreditTransactionEvent(user.player(), user.uuid(), operation, amount, true, false);
-        this.runEvent(event);
+        this.getExecutor().execute(() -> Bukkit.getPluginManager().callEvent(event));
     }
 
     /**
@@ -167,7 +169,7 @@ public final class Credits {
         Optional<User> optionalUser = this.userService.getUser(username);
         if (optionalUser.isPresent()) {
             CreditTransactionEvent event = new CreditTransactionEvent(executor.sender(), optionalUser.get().uuid(), operation, amount, silent, false);
-            this.runEvent(event);
+            this.getExecutor().execute(() -> Bukkit.getPluginManager().callEvent(event));
             return;
         }
         this.playerUnknownError(executor, username);
@@ -184,7 +186,7 @@ public final class Credits {
     @CommandPermission("mcmmocredits.redeem.self")
     public void redeem(final User user, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
         CreditRedemptionEvent event = new CreditRedemptionEvent(user.player(), user.uuid(), skill, amount, true, false);
-        this.runEvent(event);
+        this.getExecutor().execute(() -> Bukkit.getPluginManager().callEvent(event));
     }
 
     /**
@@ -202,7 +204,7 @@ public final class Credits {
         Optional<User> optionalUser = this.userService.getUser(username);
         if (optionalUser.isPresent()) {
             CreditRedemptionEvent event = new CreditRedemptionEvent(executor.sender(), optionalUser.get().uuid(), skill, amount, silent, false);
-            this.runEvent(event);
+            this.getExecutor().execute(() -> Bukkit.getPluginManager().callEvent(event));
             return;
         }
         this.playerUnknownError(executor, username);
@@ -222,46 +224,20 @@ public final class Credits {
     }
 
     /**
-     * /credits menu main. Allows user to open the Main Menu.
-     *
+     * /credits menu redeem. Allows user to open a specific menu
+     * <p>
+     * Note: Users need mcmmocredits.menu and mcmmocredits.menu.type to open the menu.
      * @param user Command executor. Must be an online player.
      */
-    @CommandMethod("menu main")
-    @CommandPermission("mcmmocredits.menu.main")
-    public void mainMenu(final User user) {
-        this.handleMenu(user, "main");
-    }
-
-    /**
-     * /credits menu config. Allows user to open the Configuration Menu.
-     *
-     * @param user Command executor. Must be an online player.
-     */
-    @CommandMethod("menu config")
-    @CommandPermission("mcmmocredits.menu.config")
-    public void configMenu(final User user) {
-        this.handleMenu(user, "config");
-    }
-
-    /**
-     * /credits menu redeem. Allows user to open the Redeem Menu.
-     *
-     * @param user Command executor. Must be an online player.
-     */
-    @CommandMethod("menu redeem")
-    @CommandPermission("mcmmocredits.menu.redeem")
-    public void redeemMenu(final User user) {
-        this.handleMenu(user, "redeem");
-    }
-
-    /**
-     * Displays a {@link Menu} to a User.
-     *
-     * @param user The executor of the command.
-     * @param type Menu Type from command input.
-     */
-    private void handleMenu(final User user, final String type) {
+    @CommandMethod("menu <type>")
+    @CommandPermission("mcmmocredits.menu")
+    public void openMenu(final User user, final @Argument(suggestions = "menus") String type) {
         String menuType = type.toLowerCase();
+        if (!user.player().hasPermission("mcmmocredits.menu." + menuType)) {
+            this.getExecutor().execute(() -> {
+                throw new NoPermissionException(Permission.of("mcmmocredits.menu." + menuType), user, List.of());
+            });
+        }
         Menu menu = this.menuConfig.getMenu(menuType);
         PlayerViewer viewer = PlayerViewer.of(user.player());
         switch (menuType) {
@@ -285,11 +261,9 @@ public final class Credits {
     }
 
     /**
-     * Utility method to call events synchronously.
-     *
-     * @param event The event.
+     * Utility method to call on main thread.
      */
-    private void runEvent(final Event event) {
-        Bukkit.getScheduler().getMainThreadExecutor(this.plugin).execute(() -> Bukkit.getPluginManager().callEvent(event));
+    private Executor getExecutor() {
+        return Bukkit.getScheduler().getMainThreadExecutor(this.plugin);
     }
 }
