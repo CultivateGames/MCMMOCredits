@@ -25,7 +25,6 @@ package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.converters.ConverterType;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import games.cultivate.mcmmocredits.util.Util;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.nio.file.Path;
@@ -114,16 +113,10 @@ public class MainConfig extends Config {
         private boolean enabled = false;
         private ConverterType type = ConverterType.INTERNAL_SQLITE;
         private InternalConversion internal = new InternalConversion();
-        private ExternalConversion external = new ExternalConversion();
     }
 
     @ConfigSerializable
     static class InternalConversion {
         private DatabaseProperties properties = DatabaseProperties.defaults();
-    }
-
-    @ConfigSerializable
-    static class ExternalConversion {
-        private Path csvPath = Util.getPluginPath().resolve("userdata.csv");
     }
 }

@@ -26,6 +26,8 @@ package games.cultivate.mcmmocredits.user;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.statement.PreparedBatch;
 import org.jdbi.v3.sqlobject.SqlObject;
+import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
+import org.jdbi.v3.sqlobject.customizer.BindMethods;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
@@ -45,14 +47,14 @@ public interface UserDAO extends SqlObject {
      * @return True if the transaction was successful, false otherwise.
      */
     @SqlUpdate("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed);")
-    boolean addUser(User user);
+    boolean addUser(@BindMethods User user);
 
     /**
      * Adds a collection of users to the database.
      *
      * @param users The users to add.
      */
-    default void addUsers(Collection<User> users) {
+    default void addUsers(@BindMethods Collection<User> users) {
         try (Handle handle = this.getHandle()) {
             PreparedBatch batch = handle.prepareBatch("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed)");
             for (User u : users) {
@@ -72,6 +74,7 @@ public interface UserDAO extends SqlObject {
      * @return An Optional User which contains the user if found.
      */
     @SqlQuery("SELECT * FROM MCMMOCredits WHERE username LIKE :username LIMIT 1;")
+    @RegisterConstructorMapper(User.class)
     Optional<User> getUser(String username);
 
     /**
@@ -81,6 +84,7 @@ public interface UserDAO extends SqlObject {
      * @return An Optional User which contains the user if found.
      */
     @SqlQuery("SELECT * FROM MCMMOCredits WHERE uuid = :uuid;")
+    @RegisterConstructorMapper(User.class)
     Optional<User> getUser(UUID uuid);
 
     /**
@@ -150,6 +154,7 @@ public interface UserDAO extends SqlObject {
      * @return A list of users.
      */
     @SqlQuery("SELECT * FROM MCMMOCredits ORDER BY credits DESC LIMIT :limit OFFSET :offset")
+    @RegisterConstructorMapper(User.class)
     List<User> getPageOfUsers(int limit, int offset);
 
     /**

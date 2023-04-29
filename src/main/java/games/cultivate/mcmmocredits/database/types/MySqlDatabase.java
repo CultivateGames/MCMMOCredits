@@ -27,12 +27,16 @@ import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import games.cultivate.mcmmocredits.database.UUIDMapper;
 import games.cultivate.mcmmocredits.user.UserDAO;
 import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.argument.AbstractArgumentFactory;
+import org.jdbi.v3.core.argument.Argument;
+import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import javax.inject.Inject;
+import java.sql.Types;
+import java.util.UUID;
 
 public final class MySqlDatabase implements Database {
     private final HikariDataSource source;
@@ -65,8 +69,9 @@ public final class MySqlDatabase implements Database {
 
     public void load() {
         if (this.dao == null) {
-            Jdbi jdbi = Jdbi.create(this.source).installPlugin(new SqlObjectPlugin());
-            jdbi.registerColumnMapper(new UUIDMapper());
+            Jdbi jdbi = Jdbi.create(this.source)
+                    .installPlugin(new SqlObjectPlugin())
+                    .registerArgument(new UUIDArgumentFactory());
             String query = this.findQuery("CREATE-TABLE-MYSQL");
             jdbi.useHandle(x -> x.execute(query));
             this.dao = jdbi.onDemand(UserDAO.class);
@@ -84,5 +89,16 @@ public final class MySqlDatabase implements Database {
     public UserDAO get() {
         this.load();
         return this.dao;
+    }
+
+    static class UUIDArgumentFactory extends AbstractArgumentFactory<UUID> {
+        protected UUIDArgumentFactory() {
+            super(Types.VARCHAR);
+        }
+
+        @Override
+        protected Argument build(UUID value, ConfigRegistry config) {
+            return (p, s, c) -> s.setString(p, value.toString());
+        }
     }
 }
