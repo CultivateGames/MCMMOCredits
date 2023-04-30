@@ -224,20 +224,12 @@ public final class MCMMOCredits extends JavaPlugin {
     }
 
     /**
-     * Handles shutdown of the plugin. Duration is tracked if debug is enabled.
+     * Handles shutdown of the plugin.
      */
     @Override
     public void onDisable() {
-        long start = System.nanoTime();
         this.injector.getInstance(MainConfig.class).save();
         this.injector.getInstance(MenuConfig.class).save();
         this.injector.getInstance(Database.class).disable();
-        if (this.config.getBoolean("converter", "enabled")) {
-            this.logger.warn("Converter is still enabled!! Disable converter before the next server startup to avoid running conversion again!");
-        }
-        long end = System.nanoTime();
-        if (this.config.getBoolean("settings", "debug")) {
-            this.logger.info("Plugin disabled! Shutdown took: {}s.", (double) (end - start) / 1000000000);
-        }
     }
 }
