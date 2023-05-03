@@ -136,7 +136,7 @@ public final class Credits {
         for (int i = 1; i <= limit; i++) {
             resolver.addUser(users.get(i - 1), "target");
             resolver.addIntTag("rank", i + offset);
-            Text.forOneUser(executor, this.config.getString("leaderboard-entry")).send();
+            Text.fromString(executor, this.config.getString("leaderboard-entry"), resolver).send();
         }
     }
 
