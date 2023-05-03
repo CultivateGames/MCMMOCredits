@@ -34,13 +34,6 @@ dependencies {
     implementation("org.jdbi:jdbi3-core:3.38.0")
     implementation("org.jdbi:jdbi3-sqlite:3.38.0")
     implementation("org.jdbi:jdbi3-sqlobject:3.38.0")
-    //upstream seems to "leak" dependencies, exclude them.
-    implementation("org.enginehub:squirrelid:0.3.2") {
-        exclude(module = "sqlite-jdbc")
-        exclude(module = "paper-api")
-        exclude(module = "jsr305")
-        exclude(module = "guava")
-    }
 
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
         exclude(module = "paper-api")

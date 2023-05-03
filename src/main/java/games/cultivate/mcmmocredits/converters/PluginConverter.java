@@ -143,7 +143,7 @@ public final class PluginConverter implements Converter {
         String result = response.body();
         int responseCode = response.statusCode();
         JsonElement element = JsonParser.parseString(result);
-        if (!element.isJsonObject() || responseCode != 402) {
+        if (!element.isJsonObject() || responseCode != 200) {
             this.logConversionError(uuid, responseCode);
             Thread.sleep(this.retryDelay);
             this.sendMojangRequest(uuid);
