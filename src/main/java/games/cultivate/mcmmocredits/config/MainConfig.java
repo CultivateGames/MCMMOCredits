@@ -113,10 +113,17 @@ public class MainConfig extends Config {
         private boolean enabled = false;
         private ConverterType type = ConverterType.INTERNAL_SQLITE;
         private InternalConversion internal = new InternalConversion();
+        private ExternalConversion external = new ExternalConversion();
     }
 
     @ConfigSerializable
     static class InternalConversion {
         private DatabaseProperties properties = DatabaseProperties.defaults();
+    }
+
+    @ConfigSerializable
+    static class ExternalConversion {
+        private long retryDelay = 60000L;
+        private long attemptDelay = 100L;
     }
 }

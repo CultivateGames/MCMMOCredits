@@ -267,6 +267,15 @@ public class Config {
         return this.get(ConverterType.class, null, path);
     }
 
+    /**
+     * Gets an int from the configuration.
+     *
+     * @param path Node path where the value is found.
+     * @return The value.
+     */
+    public long getLong(final Object... path) {
+        return this.get(long.class, 0L, path);
+    }
 
     /**
      * Updates the list of configuration node paths as strings, sorted in the order they were encountered.

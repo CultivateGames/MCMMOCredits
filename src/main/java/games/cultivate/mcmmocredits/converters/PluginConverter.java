@@ -23,25 +23,29 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-import com.google.common.collect.ImmutableList;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.database.DatabaseType;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserDAO;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.enginehub.squirrelid.Profile;
-import org.enginehub.squirrelid.resolver.HttpRepositoryService;
-import org.enginehub.squirrelid.resolver.ProfileService;
 
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
 
 /**
  * Data converter used to add Users from external plugin data.
@@ -50,6 +54,9 @@ public final class PluginConverter implements Converter {
     private final MainConfig config;
     private final UserDAO destinationDAO;
     private final ConverterType type;
+    private final HttpClient client;
+    private final long retryDelay;
+    private final long attemptDelay;
     private List<User> sourceUsers;
 
     @Inject
@@ -57,6 +64,9 @@ public final class PluginConverter implements Converter {
         this.config = config;
         this.destinationDAO = destinationDAO;
         this.type = config.getConverterType("converter", "type");
+        this.client = HttpClient.newHttpClient();
+        this.retryDelay = this.config.getLong("converter", "external", "retry-delay");
+        this.attemptDelay = this.config.getLong("converter", "external", "attempt-delay");
     }
 
     /**
@@ -77,17 +87,22 @@ public final class PluginConverter implements Converter {
             int redeemed = this.type == ConverterType.EXTERNAL_GRM ? 0 : conf.getInt("Credits_Spent");
             userMap.put(UUID.fromString(f.getName().replace(".yml", "")), new int[]{credits, redeemed});
         }
-        ProfileService resolver = HttpRepositoryService.forMinecraft();
-        ImmutableList<Profile> profiles;
-        try {
-            profiles = resolver.findAllByUuid(userMap.keySet());
-        } catch (IOException | InterruptedException ex) {
-            ex.printStackTrace();
-            return false;
+        Map<UUID, String> users = new HashMap<>();
+        int mapSize = userMap.keySet().size();
+        for (UUID uuid : userMap.keySet()) {
+            try {
+                users.put(uuid, this.sendMojangRequest(uuid));
+                Thread.sleep(this.attemptDelay);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if (users.size() % 50 == 0) {
+                Bukkit.getLogger().log(Level.INFO, "Progress: {0}/{1}", new Object[]{users.size(), mapSize});
+            }
         }
-        this.sourceUsers = profiles.stream().map(x -> {
-            int[] stat = userMap.get(x.getUniqueId());
-            return new User(x.getUniqueId(), x.getName(), stat[0], stat[1]);
+        this.sourceUsers = users.entrySet().stream().map(x -> {
+            int[] stat = userMap.get(x.getKey());
+            return new User(x.getKey(), x.getValue(), stat[0], stat[1]);
         }).toList();
         return true;
     }
@@ -119,5 +134,31 @@ public final class PluginConverter implements Converter {
     @Override
     public void disable() {
         //nothing to clean up for plugins.
+    }
+
+    private String sendMojangRequest(final UUID uuid) throws IOException, InterruptedException {
+        URI uri = URI.create("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid.toString());
+        HttpRequest request = HttpRequest.newBuilder(uri).GET().build();
+        HttpResponse<String> response = this.client.send(request, BodyHandlers.ofString());
+        String result = response.body();
+        int responseCode = response.statusCode();
+        JsonElement element = JsonParser.parseString(result);
+        if (!element.isJsonObject() || responseCode != 402) {
+            this.logConversionError(uuid, responseCode);
+            Thread.sleep(this.retryDelay);
+            this.sendMojangRequest(uuid);
+        }
+        return element.getAsJsonObject().get("name").getAsString();
+    }
+
+    private void logConversionError(final UUID uuid, int responseCode) {
+        String log = String.format("""
+                Malformed result, waiting to resume! Do not shut off the server.
+                Check this UUID when conversion is done %s.
+                HTTP Response Code from Mojang Request: %d.
+                If this occurs multiple times, check if the UUID is valid.
+                If it is not valid, delete the UUID and restart the process.
+                """, uuid, responseCode);
+        Bukkit.getLogger().log(Level.WARNING, log);
     }
 }
