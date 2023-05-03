@@ -35,9 +35,6 @@ import games.cultivate.mcmmocredits.converters.InternalConverter;
 import games.cultivate.mcmmocredits.converters.PluginConverter;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import games.cultivate.mcmmocredits.database.types.H2Database;
-import games.cultivate.mcmmocredits.database.types.MySqlDatabase;
-import games.cultivate.mcmmocredits.database.types.SqlLiteDatabase;
 import games.cultivate.mcmmocredits.menu.ClickFactory;
 import games.cultivate.mcmmocredits.user.UserCache;
 import games.cultivate.mcmmocredits.user.UserDAO;
@@ -71,22 +68,29 @@ public final class PluginModule extends AbstractModule {
         this.bind(UserCache.class).asEagerSingleton();
         this.bind(ChatQueue.class).asEagerSingleton();
         this.bind(ClickFactory.class).asEagerSingleton();
+        this.bind(Database.class).asEagerSingleton();
     }
 
-    @Provides
-    public Database provideDatabase(final MainConfig config, final Injector injector) {
-        DatabaseProperties properties = config.getDatabaseProperties("settings", "database");
-        return switch (properties.type()) {
-            case SQLITE -> injector.getProvider(SqlLiteDatabase.class).get();
-            case MYSQL -> injector.getProvider(MySqlDatabase.class).get();
-            case H2 -> injector.getProvider(H2Database.class).get();
-        };
-    }
-
+    /**
+     * Provides the DAO as configured in config.
+     *
+     * @param database The injected Database object.
+     * @return The UserDAO.
+     */
     @Provides
     @Singleton
     public UserDAO provideDAO(final Database database) {
         return database.get();
+    }
+
+    /**
+     * Provides the DatabaseProperties from the config.
+     *
+     * @return The DatabaseProperties.
+     */
+    @Provides
+    public DatabaseProperties provideProperties(final MainConfig config) {
+        return config.getDatabaseProperties("settings", "database");
     }
 
     /**

@@ -23,6 +23,9 @@
 //
 package games.cultivate.mcmmocredits.database;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import games.cultivate.mcmmocredits.util.Util;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
@@ -40,5 +43,53 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 public record DatabaseProperties(DatabaseType type, String host, String name, String user, String password, int port, boolean ssl) {
     public static DatabaseProperties defaults() {
         return new DatabaseProperties(DatabaseType.SQLITE, "127.0.0.1", "database", "root", "passw0rd+", 3306, true);
+    }
+
+    public HikariDataSource toDataSource() {
+        return switch (this.type) {
+            case MYSQL -> this.createMySQLDataSource();
+            case H2 -> this.createH2DataSource();
+            case SQLITE -> this.createSQLiteDataSource();
+        };
+    }
+
+    private HikariDataSource createMySQLDataSource() {
+        HikariConfig config = new HikariConfig();
+        String url = String.format("jdbc:mysql://%s:%d/%s?useSSL=%s", this.host(), this.port(), this.name(), this.ssl());
+        config.setPoolName("MCMMOCredits MYSQL");
+        config.setJdbcUrl(url);
+        //https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration
+        config.addDataSourceProperty("cachePrepStmts", true);
+        config.addDataSourceProperty("prepStmtCacheSize", 250);
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", 2048);
+        config.addDataSourceProperty("useServerPrepStmts", true);
+        config.addDataSourceProperty("rewriteBatchedStatements", true);
+        config.addDataSourceProperty("cacheResultSetMetadata", true);
+        config.addDataSourceProperty("cacheServerConfiguration", true);
+        config.addDataSourceProperty("elideSetAutoCommits", true);
+        config.addDataSourceProperty("maintainTimeStats", false);
+        config.addDataSourceProperty("user", this.user());
+        config.addDataSourceProperty("password", this.password());
+        return new HikariDataSource(config);
+    }
+
+    private HikariDataSource createSQLiteDataSource() {
+        HikariConfig config = new HikariConfig();
+        String url = "jdbc:sqlite:" + Util.getPluginPath().resolve("database.db");
+        config.setPoolName("MCMMOCredits SQLITE");
+        config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
+        config.addDataSourceProperty("url", url);
+        Util.createFile("database.db");
+        return new HikariDataSource(config);
+    }
+
+    private HikariDataSource createH2DataSource() {
+        HikariConfig config = new HikariConfig();
+        String url = "jdbc:h2:file:./" + Util.getPluginPath().resolve("database") + ";DB_CLOSE_DELAY=-1;MODE=MYSQL";
+        config.setPoolName("MCMMOCredits H2");
+        config.setDataSourceClassName("org.h2.jdbcx.JdbcDataSource");
+        config.addDataSourceProperty("url", url);
+        Util.createFile("database.mv.db");
+        return new HikariDataSource(config);
     }
 }
