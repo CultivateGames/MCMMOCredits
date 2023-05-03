@@ -63,14 +63,14 @@ import java.util.function.Function;
  * Main class of the application. Handles startup and shutdown logic.
  */
 public final class MCMMOCredits extends JavaPlugin {
-    private static UserService userService;
+    private static MCMMOCreditsAPI api;
     private Injector injector;
     private MainConfig config;
     private Logger logger;
 
     @SuppressWarnings("unused")
-    public static UserService getAPI() {
-        return userService;
+    public static MCMMOCreditsAPI getAPI() {
+        return api;
     }
 
     /**
@@ -86,7 +86,7 @@ public final class MCMMOCredits extends JavaPlugin {
         this.runConversionProcess();
         this.loadCommands();
         this.registerListeners();
-        userService = this.injector.getInstance(UserService.class);
+        api = this.injector.getInstance(MCMMOCreditsAPI.class);
         this.enableMetrics();
         long end = System.nanoTime();
         if (this.config.getBoolean("settings", "debug")) {
@@ -148,7 +148,7 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     private PaperCommandManager<CommandExecutor> loadCommandManager() throws Exception {
         PaperCommandManager<CommandExecutor> manager;
-        Function<CommandSender, CommandExecutor> forwardsMapper = x -> userService.fromSender(x);
+        Function<CommandSender, CommandExecutor> forwardsMapper = x -> this.injector.getInstance(UserService.class).fromSender(x);
         var coordinator = AsynchronousCommandExecutionCoordinator.<CommandExecutor>builder().withAsynchronousParsing().build();
         manager = new PaperCommandManager<>(this, coordinator, forwardsMapper, CommandExecutor::sender);
         manager.registerBrigadier();
