@@ -151,7 +151,7 @@ public final class PluginConverter implements Converter {
         return element.getAsJsonObject().get("name").getAsString();
     }
 
-    private void logConversionError(final UUID uuid, int responseCode) {
+    private void logConversionError(final UUID uuid, final int responseCode) {
         String log = String.format("""
                 Malformed result, waiting to resume! Do not shut off the server.
                 Check this UUID when conversion is done %s.

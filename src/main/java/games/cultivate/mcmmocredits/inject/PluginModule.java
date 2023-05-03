@@ -86,6 +86,7 @@ public final class PluginModule extends AbstractModule {
     /**
      * Provides the DatabaseProperties from the config.
      *
+     * @param config The injected MainConfig.
      * @return The DatabaseProperties.
      */
     @Provides
