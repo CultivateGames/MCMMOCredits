@@ -23,41 +23,23 @@
 //
 package games.cultivate.mcmmocredits;
 
-import cloud.commandframework.annotations.AnnotationParser;
-import cloud.commandframework.annotations.PropertyReplacingStringProcessor;
-import cloud.commandframework.arguments.parser.ParserRegistry;
-import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
-import cloud.commandframework.meta.SimpleCommandMeta;
-import cloud.commandframework.paper.PaperCommandManager;
-import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import games.cultivate.mcmmocredits.commands.CloudExceptionHandler;
-import games.cultivate.mcmmocredits.commands.Credits;
-import games.cultivate.mcmmocredits.commands.SkillParser;
+import games.cultivate.mcmmocredits.commands.CloudCommandHandler;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.converters.Converter;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.placeholders.CreditsExpansion;
-import games.cultivate.mcmmocredits.user.CommandExecutor;
-import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.Listeners;
-import io.leangen.geantyref.TypeToken;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.interfaces.paper.PaperInterfaceListeners;
 import org.incendo.interfaces.paper.utils.PaperUtils;
 import org.slf4j.Logger;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Function;
 
 /**
  * Main class of the application. Handles startup and shutdown logic.
@@ -121,77 +103,12 @@ public final class MCMMOCredits extends JavaPlugin {
     }
 
     /**
-     * Loads the Cloud Command Manager and our commands.
-     *
-     * @see CloudExceptionHandler
+     * Parses and loads our commands.
      */
     private void loadCommands() {
         this.logger.info("Checking Commands...");
-        PaperCommandManager<CommandExecutor> manager;
-        try {
-            manager = this.loadCommandManager();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
-        this.loadCommandParser(manager);
-        this.parseCommands(manager);
-        new CloudExceptionHandler(this.config, manager).apply();
+        this.injector.getInstance(CloudCommandHandler.class).load();
         this.logger.info("Commands loaded!");
-    }
-
-    /**
-     * Loads the actual CommandManager. Currently only compatible with Paper.
-     *
-     * @return The loaded CommandManager.
-     * @throws Exception thrown when initiating the manager.
-     */
-    private PaperCommandManager<CommandExecutor> loadCommandManager() throws Exception {
-        PaperCommandManager<CommandExecutor> manager;
-        Function<CommandSender, CommandExecutor> forwardsMapper = x -> this.injector.getInstance(UserService.class).fromSender(x);
-        var coordinator = AsynchronousCommandExecutionCoordinator.<CommandExecutor>builder().withAsynchronousParsing().build();
-        manager = new PaperCommandManager<>(this, coordinator, forwardsMapper, CommandExecutor::sender);
-        manager.registerBrigadier();
-        Objects.requireNonNull(manager.brigadierManager()).setNativeNumberSuggestions(false);
-        manager.registerAsynchronousCompletions();
-        return manager;
-    }
-
-    /**
-     * Loads the ParserRegistry using the CommandManager.
-     * The CommandManager must be loaded before calling this.
-     *
-     * @param manager The loaded CommandManager.
-     */
-    private void loadCommandParser(final PaperCommandManager<CommandExecutor> manager) {
-        ParserRegistry<CommandExecutor> parser = manager.parserRegistry();
-        parser.registerParserSupplier(TypeToken.get(PrimarySkillType.class), x -> new SkillParser<>());
-        boolean tabCompletion = this.config.getBoolean("settings", "user-tab-complete");
-        parser.registerSuggestionProvider("user", (c, i) -> {
-            if (tabCompletion) {
-                return Bukkit.getOnlinePlayers().stream().filter(x -> !(c.getSender() instanceof Player p) || x.canSee(p)).map(Player::getName).toList();
-            }
-            return List.of();
-        });
-        List<String> menus = List.of("main", "config", "redeem");
-        parser.registerSuggestionProvider("menus", (c, i) -> menus);
-    }
-
-    /**
-     * Parses existing commands using an AnnotationParser, and sets the customizable command prefix.
-     *
-     * @param manager The loaded CommandManager.
-     */
-    private void parseCommands(final PaperCommandManager<CommandExecutor> manager) {
-        AnnotationParser<CommandExecutor> annotationParser = new AnnotationParser<>(manager, CommandExecutor.class, p -> SimpleCommandMeta.empty());
-        String commandPrefix = this.config.getString("command-prefix");
-        annotationParser.stringProcessor(new PropertyReplacingStringProcessor(x -> {
-            if (x.equals("command.prefix")) {
-                return commandPrefix;
-            }
-            return x;
-        }));
-        annotationParser.parse(this.injector.getInstance(Credits.class));
     }
 
     /**

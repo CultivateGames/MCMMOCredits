@@ -50,7 +50,6 @@ import org.incendo.interfaces.paper.PlayerViewer;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Executor;
 
 /**
  * Handles all commands. Prefix is customizable via config.
@@ -151,7 +150,7 @@ public final class Credits {
     @CommandPermission("mcmmocredits.modify.self")
     public void modify(final User user, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount) {
         CreditTransactionEvent event = new CreditTransactionEvent(user.player(), user.uuid(), operation, amount, true, false);
-        this.getExecutor().execute(() -> Bukkit.getPluginManager().callEvent(event));
+        this.execute(() -> Bukkit.getPluginManager().callEvent(event));
     }
 
     /**
@@ -169,7 +168,7 @@ public final class Credits {
         Optional<User> optionalUser = this.service.getUser(username);
         if (optionalUser.isPresent()) {
             CreditTransactionEvent event = new CreditTransactionEvent(executor.sender(), optionalUser.get().uuid(), operation, amount, silent, false);
-            this.getExecutor().execute(() -> Bukkit.getPluginManager().callEvent(event));
+            this.execute(() -> Bukkit.getPluginManager().callEvent(event));
             return;
         }
         this.playerUnknownError(executor, username);
@@ -186,7 +185,7 @@ public final class Credits {
     @CommandPermission("mcmmocredits.redeem.self")
     public void redeem(final User user, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
         CreditRedemptionEvent event = new CreditRedemptionEvent(user.player(), user.uuid(), skill, amount, true, false);
-        this.getExecutor().execute(() -> Bukkit.getPluginManager().callEvent(event));
+        this.execute(() -> Bukkit.getPluginManager().callEvent(event));
     }
 
     /**
@@ -204,7 +203,7 @@ public final class Credits {
         Optional<User> optionalUser = this.service.getUser(username);
         if (optionalUser.isPresent()) {
             CreditRedemptionEvent event = new CreditRedemptionEvent(executor.sender(), optionalUser.get().uuid(), skill, amount, silent, false);
-            this.getExecutor().execute(() -> Bukkit.getPluginManager().callEvent(event));
+            this.execute(() -> Bukkit.getPluginManager().callEvent(event));
             return;
         }
         this.playerUnknownError(executor, username);
@@ -236,7 +235,7 @@ public final class Credits {
     public void openMenu(final User user, final @Argument(suggestions = "menus", defaultValue = "main") String type) {
         String menuType = type.toLowerCase();
         if (!user.player().hasPermission("mcmmocredits.menu." + menuType)) {
-            this.getExecutor().execute(() -> {
+            this.execute(() -> {
                 throw new NoPermissionException(Permission.of("mcmmocredits.menu." + menuType), user, List.of());
             });
         }
@@ -263,11 +262,10 @@ public final class Credits {
     }
 
     /**
-     * Utility method to return the Main thread Executor.
+     * Utility method to execute on the main thread.
      *
-     * @return the Executor.
      */
-    private Executor getExecutor() {
-        return Bukkit.getScheduler().getMainThreadExecutor(this.plugin);
+    private void execute(Runnable command) {
+        Bukkit.getScheduler().getMainThreadExecutor(this.plugin).execute(command);
     }
 }

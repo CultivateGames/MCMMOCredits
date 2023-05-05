@@ -27,6 +27,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
+import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.converters.CSVConverter;
@@ -69,6 +70,7 @@ public final class PluginModule extends AbstractModule {
         this.bind(ChatQueue.class).asEagerSingleton();
         this.bind(ClickFactory.class).asEagerSingleton();
         this.bind(Database.class).asEagerSingleton();
+        this.bind(Credits.class).asEagerSingleton();
     }
 
     /**
