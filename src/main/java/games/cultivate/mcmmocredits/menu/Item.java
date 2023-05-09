@@ -23,17 +23,13 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
+import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.incendo.interfaces.core.transform.TransformContext;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.incendo.interfaces.core.util.Vector2;
-import org.incendo.interfaces.paper.PlayerViewer;
-import org.incendo.interfaces.paper.element.ItemStackElement;
-import org.incendo.interfaces.paper.pane.ChestPane;
 
 import java.util.List;
 import java.util.Objects;
@@ -206,40 +202,22 @@ public final class Item {
     /**
      * Updates the name and lore based on the passed in Player and resolver.
      *
-     * @param player   The viewer of the item.
-     * @param resolver The resolver used to parse the item.
+     * @param user The viewer of the item as a User.
      * @return A Bukkit ItemStack with updated properties.
      */
-    public ItemStack applyProperties(final Player player, final Resolver resolver) {
-        Component display = Text.fromString(player, this.name, resolver).toComponent();
-        var ilore = this.lore.stream().map(x -> Text.fromString(player, x, resolver).toComponent()).toList();
-        ItemStack stackCopy = new ItemStack(this.stack);
-        stackCopy.editMeta(meta -> {
-            if (!this.name.isEmpty()) {
-                meta.displayName(display);
-            }
-            if (this.lore.stream().noneMatch(String::isEmpty)) {
-                meta.lore(ilore);
-            }
-        });
-        return stackCopy;
-    }
-
-    /**
-     * Provides a TransformContext object for the item where
-     * it's name and lore are updated, and a click handler is attached to it.
-     *
-     * @param clickFactory ClickFactory to obtain the click for the item.
-     * @param resolver     Resolver to update the item's name/lore.
-     * @return The TransformContext.
-     */
-    public TransformContext<ChestPane, PlayerViewer> context(final ClickFactory clickFactory, final Resolver resolver) {
-        String info = this.type.name().startsWith("EDIT_") ? this.name() : this.data;
-        var handler = clickFactory.getClick(this.type, info, resolver);
-        return TransformContext.of(0, ((pane, view) -> {
-            ItemStack menuItem = this.applyProperties(view.viewer().player(), resolver);
-            return pane.element(ItemStackElement.of(menuItem, handler), this.slot % 9, this.slot / 9);
-        }));
+    public ItemStack parseUser(final User user) {
+        ItemMeta meta = this.stack.getItemMeta();
+        if (!this.name.isEmpty()) {
+            Component itemName = Text.forOneUser(user, this.name).toComponent();
+            meta.displayName(itemName);
+        }
+        if (!this.lore.stream().allMatch(String::isEmpty)) {
+            List<Component> itemLore = this.lore.stream().map(x -> Text.forOneUser(user, x).toComponent()).toList();
+            meta.lore(itemLore);
+        }
+        ItemStack copy = this.stack.clone();
+        copy.setItemMeta(meta);
+        return copy;
     }
 
     @Override

@@ -26,9 +26,6 @@ package games.cultivate.mcmmocredits.menu;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.incendo.interfaces.core.transform.TransformContext;
-import org.incendo.interfaces.paper.PlayerViewer;
-import org.incendo.interfaces.paper.pane.ChestPane;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,12 +38,12 @@ import static org.mockito.Mockito.mock;
 //TODO: test context and applyProperties
 class ItemTest {
     private Resolver resolver;
-    private ClickFactory clickFactory;
+    private ContextFactory contextFactory;
 
     @BeforeEach
     void setUp() {
         this.resolver = new Resolver();
-        this.clickFactory = mock(ClickFactory.class);
+        this.contextFactory = mock(ContextFactory.class);
     }
 
     @Test
@@ -216,23 +213,5 @@ class ItemTest {
 
         //Act & Assert
         assertEquals(data, item.data());
-    }
-
-    @Test
-    void context_ValidClickFactoryAndResolver_TransformContext() {
-        //Arrange
-        ItemStack stack = new ItemStack(Material.DIAMOND, 1);
-        String name = "Test Item";
-        List<String> lore = List.of("Test lore line 1", "Test lore line 2");
-        ClickType clickType = ClickType.COMMAND;
-        String data = "example_data";
-        Item item = Item.builder().item(stack).name(name).lore(lore).type(clickType).data(data).build();
-
-        //Act
-        TransformContext<ChestPane, PlayerViewer> context = item.context(this.clickFactory, this.resolver);
-
-        //Assert
-        assertNotNull(context);
-        assertEquals(0, context.priority());
     }
 }

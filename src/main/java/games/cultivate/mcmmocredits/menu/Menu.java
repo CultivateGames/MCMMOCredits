@@ -24,7 +24,6 @@
 package games.cultivate.mcmmocredits.menu;
 
 import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.Component;
@@ -56,15 +55,12 @@ public record Menu(Map<String, Item> items, String title, int slots, boolean fil
     //TODO: paginate
     private void addConfigItems(final MainConfig config) {
         List<String> keys = config.filterNodes(x -> x.contains("database") || x.contains("converter"));
-        Item messages = this.items.get("messages");
-        Item settings = this.items.get("settings");
-        this.items.remove("messages");
-        this.items.remove("settings");
-        int x = 0;
-        for (String key : keys) {
-            Item item = (key.contains("settings") ? settings : messages).withName(key).withSlot(x);
-            this.items.put(key, item);
-            x++;
+        Item messages = this.items.remove("messages");
+        Item settings = this.items.remove("settings");
+        for (int i = 0; i < keys.size(); i++) {
+            String key = keys.get(i);
+            Item item = key.contains("settings") ? settings : messages;
+            this.items.put(key, item.withName(key).withSlot(i));
         }
     }
 
@@ -105,10 +101,10 @@ public record Menu(Map<String, Item> items, String title, int slots, boolean fil
      *
      * @param user    The viewer of the menu.
      * @param config  The config being edited.
-     * @param factory The ClickFactory to generate click handlers.
+     * @param factory The ContextFactory to generate click handlers.
      * @return The menu.
      */
-    public ChestInterface createConfigMenu(final User user, final MainConfig config, final ClickFactory factory) {
+    public ChestInterface createConfigMenu(final User user, final MainConfig config, final ContextFactory factory) {
         this.addConfigItems(config);
         return this.createMenu(user, factory);
     }
@@ -117,27 +113,27 @@ public record Menu(Map<String, Item> items, String title, int slots, boolean fil
      * Creates the Main Menu.
      *
      * @param user    The viewer of the menu.
-     * @param factory The ClickFactory to generate click handlers.
+     * @param factory The ContextFactory to generate click handlers.
      * @return The menu.
      */
-    public ChestInterface createMainMenu(final User user, final ClickFactory factory) {
+    public ChestInterface createMainMenu(final User user, final ContextFactory factory) {
         this.checkMenuPermissions(user);
         return this.createMenu(user, factory);
     }
 
     /**
-     * Creates a new ChestInterface for the given user with the specified clickFactory.
+     * Creates a new ChestInterface for the given user with the specified contextFactory.
      *
-     * @param user         The user for which the ChestInterface will be created.
-     * @param clickFactory The factory responsible for creating click actions.
+     * @param user    The user for which the ChestInterface will be created.
+     * @param factory The factory responsible for creating click actions.
      * @return A new ChestInterface instance.
      */
-    public ChestInterface createMenu(final User user, final ClickFactory clickFactory) {
+    public ChestInterface createMenu(final User user, final ContextFactory factory) {
         if (!this.navigation) {
             this.items.remove("navigation");
         }
         this.createFill();
-        var transforms = this.items.values().stream().map(x -> x.context(clickFactory, Resolver.ofUser(user))).toList();
+        var transforms = this.items.values().stream().map(x -> factory.createContext(user, x)).toList();
         Component compTitle = Text.forOneUser(user, this.title).toComponent();
         return new ChestInterface(this.slots / 9, compTitle, transforms, List.of(), true, 10, ClickHandler.cancel());
     }

@@ -36,7 +36,7 @@ import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
-import games.cultivate.mcmmocredits.menu.ClickFactory;
+import games.cultivate.mcmmocredits.menu.ContextFactory;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
@@ -61,7 +61,7 @@ public final class Credits {
     private final MenuConfig menuConfig;
     private final MainConfig config;
     private final UserService service;
-    private final ClickFactory factory;
+    private final ContextFactory factory;
     private final MCMMOCredits plugin;
 
     /**
@@ -70,11 +70,11 @@ public final class Credits {
      * @param config     Instance of MainConfig. Used for messages and reload command.
      * @param menuConfig Instance of MenuConfig. Used for reload command.
      * @param service    Instance of UserService. Used to obtain User info from command.
-     * @param factory    Instance of ClickFactory. Used to construct menus.
+     * @param factory    Instance of ContextFactory. Used to construct menus.
      * @param plugin     Instance of the MCMMOCredits to run events synchronously.
      */
     @Inject
-    public Credits(final MainConfig config, final MenuConfig menuConfig, final UserService service, final ClickFactory factory, final MCMMOCredits plugin) {
+    public Credits(final MainConfig config, final MenuConfig menuConfig, final UserService service, final ContextFactory factory, final MCMMOCredits plugin) {
         this.config = config;
         this.menuConfig = menuConfig;
         this.service = service;
