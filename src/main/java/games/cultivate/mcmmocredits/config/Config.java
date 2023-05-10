@@ -25,10 +25,8 @@ package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.converters.ConverterType;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import games.cultivate.mcmmocredits.menu.ClickType;
-import games.cultivate.mcmmocredits.menu.Item;
-import games.cultivate.mcmmocredits.menu.Menu;
-import games.cultivate.mcmmocredits.serializers.ClickTypeSerializer;
+import games.cultivate.mcmmocredits.ui.item.Item;
+import games.cultivate.mcmmocredits.ui.menu.Menu;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import games.cultivate.mcmmocredits.util.Util;
@@ -94,8 +92,7 @@ public class Config {
         return YamlConfigurationLoader.builder()
                 .defaultOptions(opts -> opts.header(HEADER).serializers(build -> build
                         .register(Item.class, ItemSerializer.INSTANCE)
-                        .register(Menu.class, MenuSerializer.INSTANCE)
-                        .register(ClickType.class, ClickTypeSerializer.INSTANCE)))
+                        .register(Menu.class, MenuSerializer.INSTANCE)))
                 .path(this.path.resolve(this.fileName))
                 .headerMode(HeaderMode.PRESET)
                 .indent(2)
@@ -137,16 +134,6 @@ public class Config {
         } catch (ConfigurateException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Returns a ConfigurationNode linked to the provided path.
-     *
-     * @param path Node path of the new node.
-     * @return A new node.
-     */
-    public CommentedConfigurationNode node(final Object... path) {
-        return this.root.node(path);
     }
 
     /**

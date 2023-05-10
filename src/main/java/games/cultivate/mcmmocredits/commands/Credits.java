@@ -36,10 +36,13 @@ import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
-import games.cultivate.mcmmocredits.menu.ContextFactory;
-import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
+import games.cultivate.mcmmocredits.ui.ContextFactory;
+import games.cultivate.mcmmocredits.ui.menu.BaseMenu;
+import games.cultivate.mcmmocredits.ui.menu.ConfigMenu;
+import games.cultivate.mcmmocredits.ui.menu.MainMenu;
+import games.cultivate.mcmmocredits.ui.menu.Menu;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
@@ -242,9 +245,9 @@ public final class Credits {
         Menu menu = this.menuConfig.getMenu(menuType);
         PlayerViewer viewer = PlayerViewer.of(user.player());
         switch (menuType) {
-            case "main" -> menu.createMainMenu(user, this.factory).open(viewer);
-            case "config" -> menu.createConfigMenu(user, this.config, this.factory).open(viewer);
-            case "redeem" -> menu.createMenu(user, this.factory).open(viewer);
+            case "main" -> MainMenu.of(menu).build(user, this.factory).open(viewer);
+            case "redeem" -> BaseMenu.of(menu).build(user, this.factory).open(viewer);
+            case "config" -> ConfigMenu.of(this.config, menu).build(user, this.factory).open(viewer);
             default -> throw new IllegalArgumentException("Invalid menu type passed! Value: " + menuType);
         }
     }
@@ -263,9 +266,8 @@ public final class Credits {
 
     /**
      * Utility method to execute on the main thread.
-     *
      */
-    private void execute(Runnable command) {
+    private void execute(final Runnable command) {
         Bukkit.getScheduler().getMainThreadExecutor(this.plugin).execute(command);
     }
 }

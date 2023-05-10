@@ -36,7 +36,7 @@ import games.cultivate.mcmmocredits.converters.InternalConverter;
 import games.cultivate.mcmmocredits.converters.PluginConverter;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import games.cultivate.mcmmocredits.menu.ContextFactory;
+import games.cultivate.mcmmocredits.ui.ContextFactory;
 import games.cultivate.mcmmocredits.user.UserCache;
 import games.cultivate.mcmmocredits.user.UserDAO;
 import games.cultivate.mcmmocredits.user.UserService;

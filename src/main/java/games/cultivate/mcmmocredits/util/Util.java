@@ -23,11 +23,7 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import games.cultivate.mcmmocredits.menu.ClickType;
-import games.cultivate.mcmmocredits.menu.Item;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
@@ -118,44 +114,6 @@ public final class Util {
             return string;
         }
         return string.substring(0, 1).toUpperCase() + string.substring(1).toLowerCase();
-    }
-
-    /**
-     * Utility method to create Config Menu items for the Menu Config.
-     *
-     * @param material type of the item.
-     * @param type     type of the click.
-     * @return Built item for Menu Config.
-     */
-    public static Item createConfigItem(final Material material, final ClickType type) {
-        return Item.builder().item(new ItemStack(material, 1)).slot(-1).type(type).lore(List.of("<gray>Click here to edit this config option!")).build();
-    }
-
-    /**
-     * Utility method to create items that execute commands for the Menu Config.
-     *
-     * @param material type of the item.
-     * @param name     name of the item as a string.
-     * @param lore     lore of the item as a List of string.
-     * @param command  command to be executed as a string.
-     * @param slot     location of the item in the menu. 0 based.
-     * @return Built item for Menu Config.
-     */
-    public static Item createCommandItem(final Material material, final String name, final String lore, final String command, final int slot) {
-        return Item.builder().item(new ItemStack(material, 1)).name(name).lore(List.of(lore)).slot(slot).type(ClickType.COMMAND).data(command).build();
-    }
-
-    /**
-     * Utility method to create items that execute credit redemptions for the Menu Config.
-     *
-     * @param material type of the item.
-     * @param skill    skill that will be redeemed into.
-     * @param slot     location of the item in the menu. 0 based.
-     * @return Built item for Menu Config.
-     */
-    public static Item createRedeemItem(final Material material, final String skill, final int slot) {
-        List<String> lore = List.of("<yellow><sender>, click here to redeem!");
-        return Item.builder().item(new ItemStack(material, 1)).name("<yellow>" + Util.capitalizeWord(skill)).lore(lore).type(ClickType.REDEEM).slot(slot).build();
     }
 
     /**
