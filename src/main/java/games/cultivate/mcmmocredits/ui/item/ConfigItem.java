@@ -34,17 +34,32 @@ import org.spongepowered.configurate.NodePath;
 
 import java.util.List;
 
+/**
+ * Represents an Item that edits a configuration value when clicked.
+ */
 public final class ConfigItem extends BaseItem {
     private final NodePath path;
 
     /**
-     * {@inheritDoc}
+     * Constructs the object.
+     *
+     * @param path  The NodePath to be edited.
+     * @param stack The representative ItemStack. Updated with refreshing name/lore.
+     * @param name  Raw name of the item. Always parsed.
+     * @param lore  Raw lore of the item. Always parsed.
+     * @param slot  Location of item in a Menu.
      */
     private ConfigItem(final NodePath path, final ItemStack stack, final String name, final List<String> lore, final int slot) {
         super(stack, name, lore, slot);
         this.path = path;
     }
 
+    /**
+     * Constructs the object from an existing item.
+     *
+     * @param path The NodePath to be edited.
+     * @param item The item to be used for pass-through.
+     */
     public static ConfigItem of(final NodePath path, final Item item) {
         return new ConfigItem(path, item.stack(), item.name(), item.lore(), item.slot());
     }

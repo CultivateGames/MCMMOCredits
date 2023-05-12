@@ -33,19 +33,43 @@ import org.incendo.interfaces.paper.pane.ChestPane;
 
 import java.util.List;
 
+/**
+ * Represents an Item that executes a command when clicked.
+ */
 public final class CommandItem extends BaseItem {
     private final String command;
 
     /**
-     * {@inheritDoc}
+     * Constructs the object.
+     *
+     * @param command The command to execute.
+     * @param stack   The representative ItemStack. Updated with refreshing name/lore.
+     * @param name    Raw name of the item. Always parsed.
+     * @param lore    Raw lore of the item. Always parsed.
+     * @param slot    Location of item in a Menu.
      */
     private CommandItem(final String command, final ItemStack stack, final String name, final List<String> lore, final int slot) {
         super(stack, name, lore, slot);
         this.command = command;
     }
 
+    /**
+     * Constructs the object from an existing item.
+     *
+     * @param command The command to execute.
+     * @param item    The item to be used for pass-through.
+     */
     public static CommandItem of(final String command, final Item item) {
         return new CommandItem(command, item.stack(), item.name(), item.lore(), item.slot());
+    }
+
+    /**
+     * Gets the command.
+     *
+     * @return The command.
+     */
+    public String command() {
+        return this.command;
     }
 
     /**
@@ -54,14 +78,5 @@ public final class CommandItem extends BaseItem {
     @Override
     public void executeClick(final User user, final ContextFactory factory, final ClickContext<ChestPane, InventoryClickEvent, PlayerViewer> ctx) {
         factory.runCommand(user, this.command);
-    }
-
-    /**
-     * Obtains the command.
-     *
-     * @return The command.
-     */
-    public String command() {
-        return this.command;
     }
 }

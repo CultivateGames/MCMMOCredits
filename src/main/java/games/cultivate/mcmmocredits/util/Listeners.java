@@ -56,7 +56,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Event Handlers used to manage the database, and input storage.
+ * Event Handlers used to manage the Database and ChatQueue.
  */
 public class Listeners implements Listener {
     private final ChatQueue queue;
@@ -71,7 +71,7 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Add users to MCMMO Credits database, and updates username for existing records.
+     * Updates usernames for existing users, and add new users if they do not exist.
      *
      * @param e The event.
      */
@@ -97,7 +97,7 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Sends login message to user if enable in configuration.
+     * Sends login message to a user if enabled in configuration.
      *
      * @param e The event.
      */
@@ -110,7 +110,7 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Captures chat of a user if their {@link UUID} is in the {@link ChatQueue}.
+     * Captures chat messages of a user if their UUID is in the ChatQueue.
      *
      * @param e The event.
      */
@@ -130,19 +130,20 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Removes all users from the {@link ChatQueue} if present.
+     * Removes logged-out users from the UserCache and ChatQueue.
      *
      * @param e The event.
      */
     @EventHandler
     public void onPlayerQuit(final PlayerQuitEvent e) {
-        UUID uuid = e.getPlayer().getUniqueId();
-        this.service.removeFromCache(uuid, e.getPlayer().getName());
+        Player player = e.getPlayer();
+        UUID uuid = player.getUniqueId();
+        this.service.removeFromCache(uuid, player.getName());
         this.queue.remove(uuid);
     }
 
     /**
-     * Performs Credit Transaction with information derived from the event.
+     * Performs a Credit Transaction with event supplied information.
      *
      * @param e The event.
      */
@@ -172,7 +173,7 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Performs Credit Redemption with information derived from the event.
+     * Performs a Credit Redemption with event supplied information.
      *
      * @param e The event.
      */
@@ -243,22 +244,22 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Returns if a player will exceed skill cap on a skill if an amount is applied.
+     * Gets if a player will exceed a MCMMO skill cap if a redemption is applied.
      *
-     * @param profile PlayerProfile of the user.
-     * @param skill   MCMMO Skill to check against.
-     * @param amount  The amount of credits to theoretically apply.
-     * @return If the cap will be exceeded.
+     * @param profile User's MCMMO player profile.
+     * @param skill   The affected skill.
+     * @param amount  The amount of credits that may be applied.
+     * @return True if the cap will be exceeded, otherwise false.
      */
     private boolean exceedsSkillCap(final PlayerProfile profile, final PrimarySkillType skill, final int amount) {
         return profile.getSkillLevel(skill) + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill);
     }
 
     /**
-     * Obtains a PlayerProfile from the provided UUID.
+     * Gets a PlayerProfile from the specified UUID.
      *
-     * @param uuid UUID of a user.
-     * @return PlayerProfile, or empty optional if the profile is not loaded.
+     * @param uuid The UUID of a user.
+     * @return The PlayerProfile if it is loaded, otherwise an empty optional.
      */
     private Optional<PlayerProfile> getMCMMOProfile(final UUID uuid) {
         Player player = Bukkit.getPlayer(uuid);

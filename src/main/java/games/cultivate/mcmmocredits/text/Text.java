@@ -33,7 +33,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 
 /**
- * Represents a Message, a tuple of Audience, Resolver and the content as a String.
+ * Represents a chat message that will be parsed and sent to a user.
  */
 public final class Text {
     private static final Component NO_ITALICS = Component.empty().decoration(TextDecoration.ITALIC, false);
@@ -44,9 +44,9 @@ public final class Text {
     /**
      * Constructs the object.
      *
-     * @param audience recipient of the message.
-     * @param content  content of the message.
-     * @param resolver Resolver to use for parsing.
+     * @param audience The message's target.
+     * @param content  The message's content.
+     * @param resolver The message's resolver.
      */
     private Text(final Audience audience, final String content, final Resolver resolver) {
         this.audience = audience;
@@ -55,44 +55,44 @@ public final class Text {
     }
 
     /**
-     * Static factory to create a Text.
+     * Constructs the object.
      *
-     * @param audience recipient of the message.
-     * @param content  content of the message.
-     * @param resolver Resolver to use for parsing.
-     * @return a new Text.
+     * @param audience The message's target.
+     * @param content  The message's content.
+     * @param resolver The message's resolver.
+     * @return the Text.
      */
     public static Text fromString(final Audience audience, final String content, final Resolver resolver) {
         return new Text(audience, content, resolver);
     }
 
     /**
-     * Static factory to create a Text using a {@link CommandExecutor}.
+     * Constructs the object using a CommandExecutor.
      *
-     * @param executor recipient of the message.
-     * @param content  content of the message.
-     * @param resolver Resolver to use for parsing.
-     * @return a new Text.
+     * @param executor The message's target as a CommandExecutor.
+     * @param content  The message's content.
+     * @param resolver The message's resolver.
+     * @return the Text.
      */
     public static Text fromString(final CommandExecutor executor, final String content, final Resolver resolver) {
         return Text.fromString(executor.sender(), content, resolver);
     }
 
     /**
-     * Static factory where the Resolver for the object is derived from the CommandExecutor.
+     * Constructs the object using a CommandExecutor, and it's Resolver.
      *
-     * @param executor recipient of the message.
-     * @param content  content of the message.
-     * @return a new Text.
+     * @param executor The message's target as a CommandExecutor.
+     * @param content  The message's content.
+     * @return the Text.
      */
     public static Text forOneUser(final CommandExecutor executor, final String content) {
         return Text.fromString(executor, content, Resolver.ofUser(executor));
     }
 
     /**
-     * Converts a Text to a Component. Placeholders are parsed and default italics are removed.
+     * Converts the object to a Component. The object is stripped of leading italics and parsed for placeholders.
      *
-     * @return A finished Component.
+     * @return The converted Component.
      */
     public Component toComponent() {
         if (this.audience instanceof Player player) {
@@ -102,7 +102,7 @@ public final class Text {
     }
 
     /**
-     * Sends the Text to the audience. Converts the Text to {@link Component} and sends it to the {@link Audience}.
+     * Sends the Text to the audience.
      */
     public void send() {
         this.audience.sendMessage(this.toComponent());

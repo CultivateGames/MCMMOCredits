@@ -25,10 +25,10 @@ package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.converters.ConverterType;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import games.cultivate.mcmmocredits.ui.item.Item;
-import games.cultivate.mcmmocredits.ui.menu.Menu;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
+import games.cultivate.mcmmocredits.ui.item.Item;
+import games.cultivate.mcmmocredits.ui.menu.Menu;
 import games.cultivate.mcmmocredits.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.CommentedConfigurationNode;
@@ -40,6 +40,7 @@ import org.spongepowered.configurate.util.NamingSchemes;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ import java.util.Queue;
 import java.util.function.Predicate;
 
 /**
- * Represents a Configuration file.
+ * A Configuration file.
  */
 public class Config {
     private static final String HEADER = """
@@ -65,11 +66,11 @@ public class Config {
     private transient List<String> paths;
 
     /**
-     * Constructs the object with properties of the file.
+     * Constructs the object.
      *
-     * @param type     Class of the config.
-     * @param fileName Name of the config.
-     * @param path     Path of the config.
+     * @param type     Config type.
+     * @param fileName Config file name.
+     * @param path     Config file path.
      */
     protected Config(final Class<? extends Config> type, final String fileName, final Path path) {
         this.type = type;
@@ -78,14 +79,20 @@ public class Config {
         this.paths = new ArrayList<>();
     }
 
+    /**
+     * Constructs the object with Bukkit plugin path.
+     *
+     * @param type     Config type.
+     * @param fileName Config file name.
+     */
     protected Config(final Class<? extends Config> type, final String fileName) {
         this(type, fileName, Util.getPluginPath());
     }
 
     /**
-     * Builds the Configuration Loader. Creates the file if missing.
+     * Creates Configuration loader and physical file.
      *
-     * @return The Loader.
+     * @return The Configuration Loader.
      */
     private YamlConfigurationLoader createLoader() {
         Util.createFile(this.path, this.fileName);
@@ -100,7 +107,7 @@ public class Config {
     }
 
     /**
-     * Loads the configuration and list of possible node paths from file. Supports re-loading.
+     * Loads the configuration. Supports reloading.
      */
     public void load() {
         this.loader = this.createLoader();
@@ -122,9 +129,9 @@ public class Config {
     }
 
     /**
-     * Saves the configuration using the provided root node.
+     * Saves the configuration using a provided root node.
      *
-     * @param root The root node.
+     * @param root A root node.
      */
     private void save(final CommentedConfigurationNode root) {
         try {
@@ -140,9 +147,9 @@ public class Config {
      * Modifies the configuration.
      *
      * @param value The value to apply.
-     * @param path  Node path used to locate the value.
+     * @param path  location where the value will be set.
      * @param <T>   Type of the value.
-     * @return If the operation was successful.
+     * @return returns true if successful, false otherwise.
      */
     public <T> boolean set(@NotNull final T value, final Object... path) {
         try {
@@ -156,13 +163,13 @@ public class Config {
     }
 
     /**
-     * Gets a value from the configuration at the provided path.
+     * Gets a value from the configuration.
      *
-     * @param type Class of the value.
-     * @param def  Default value used if value is missing.
-     * @param path Node path where the value is found.
+     * @param type Value type.
+     * @param def  Default value if missing.
+     * @param path location where the value will be obtained.
      * @param <T>  Type of the value.
-     * @return The value.
+     * @return The value, or the default if the value is null.
      */
     private <T> T get(final Class<T> type, final T def, final Object... path) {
         try {
@@ -177,8 +184,8 @@ public class Config {
     /**
      * Gets a boolean from the configuration.
      *
-     * @param path Node path where the value is found.
-     * @return The value.
+     * @param path location where the value is found.
+     * @return The value, or the default if the value is null.
      */
     public boolean getBoolean(final Object... path) {
         return this.get(boolean.class, false, path);
@@ -188,7 +195,7 @@ public class Config {
      * Gets a String from the configuration, with the prefix prepended.
      *
      * @param path Node path where the value is found.
-     * @return The value.
+     * @return The value, or the default if the value is null.
      */
     public String getMessage(final Object... path) {
         return this.get(String.class, "", "prefix") + this.get(String.class, "", path);
@@ -198,7 +205,7 @@ public class Config {
      * Gets a String from the configuration.
      *
      * @param path Node path where the value is found.
-     * @return The value.
+     * @return The value, or the default if the value is null.
      */
     public String getString(final Object... path) {
         return this.get(String.class, "", path);
@@ -208,7 +215,7 @@ public class Config {
      * Gets an int from the configuration.
      *
      * @param path Node path where the value is found.
-     * @return The value.
+     * @return The value, or the default if the value is null.
      */
     public int getInteger(final Object... path) {
         return this.get(int.class, 0, path);
@@ -218,9 +225,9 @@ public class Config {
      * Gets a Menu from the configuration.
      *
      * @param path Node path where the value is found.
-     * @return The value.
+     * @return The value, or the default if the value is null.
      */
-    public Menu getMenu(final Object... path) {
+    public @Nullable Menu getMenu(final Object... path) {
         return this.get(Menu.class, null, path);
     }
 
@@ -228,9 +235,9 @@ public class Config {
      * Gets an Item from the configuration.
      *
      * @param path Node path where the value is found.
-     * @return The value.
+     * @return The value, or the default if the value is null.
      */
-    public Item getItem(final Object... path) {
+    public @Nullable Item getItem(final Object... path) {
         return this.get(Item.class, null, path);
     }
 
@@ -238,7 +245,7 @@ public class Config {
      * Gets the DatabaseProperties object from the configuration.
      *
      * @param path Node path where the value is found.
-     * @return The value.
+     * @return The value, or the default if the value is null.
      */
     public DatabaseProperties getDatabaseProperties(final Object... path) {
         return this.get(DatabaseProperties.class, DatabaseProperties.defaults(), path);
@@ -248,9 +255,9 @@ public class Config {
      * Gets the ConverterType object from the configuration.
      *
      * @param path Node path where the value is found.
-     * @return The value.
+     * @return The value, or the default if the value is null.
      */
-    public ConverterType getConverterType(final Object... path) {
+    public @Nullable ConverterType getConverterType(final Object... path) {
         return this.get(ConverterType.class, null, path);
     }
 
@@ -258,15 +265,14 @@ public class Config {
      * Gets an int from the configuration.
      *
      * @param path Node path where the value is found.
-     * @return The value.
+     * @return The value, or the default if the value is null.
      */
     public long getLong(final Object... path) {
         return this.get(long.class, 0L, path);
     }
 
     /**
-     * Updates the list of configuration node paths as strings, sorted in the order they were encountered.
-     * This method performs a breadth-first traversal of the configuration nodes.
+     * Generates a list of possible paths from the configuration file.
      */
     private void updatePaths() {
         Queue<CommentedConfigurationNode> queue = new ArrayDeque<>(this.root.childrenMap().values());
@@ -283,10 +289,9 @@ public class Config {
     }
 
     /**
-     * Returns the list of configuration node paths as strings.
-     * If the list is empty, it calls the {@link #updatePaths()} method to populate it.
+     * Gets stored list of node paths, or creates it if the list is empty.
      *
-     * @return The list of configuration node paths as strings.
+     * @return The list of node paths.
      */
     public List<String> getPaths() {
         if (this.paths.isEmpty()) {
@@ -296,11 +301,10 @@ public class Config {
     }
 
     /**
-     * Filters the list of configuration node paths based on the provided Predicate.
-     * If the list of paths is empty, it calls the {@link #updatePaths()} method to populate it.
+     * Filters configuration node paths based on the provided Predicate.
      *
-     * @param filter The Predicate to filter the list of paths.
-     * @return A filtered list of configuration node paths as strings.
+     * @param filter Predicate to filter list against.
+     * @return A filtered list of configuration node paths.
      */
     public List<String> filterNodes(final Predicate<? super String> filter) {
         if (this.paths.isEmpty()) {

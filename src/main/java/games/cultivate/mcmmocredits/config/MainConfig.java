@@ -35,6 +35,10 @@ import java.nio.file.Path;
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
 public class MainConfig extends Config {
+    /**
+     * Settings used to modify plugin messages.
+     * Most messages sent with the "prefix" prepended.
+     */
     private String prefix = "<hover:show_text:'<green><sender>: <sender_credits> Credits'><gold><bold>CREDITS</bold> ";
     private String addUser = "<target> has been added to the database!";
     private String argumentParseFailureNoInputWasProvided = "No input was provided";
@@ -83,18 +87,23 @@ public class MainConfig extends Config {
     private Conversion converter = new Conversion();
 
     /**
-     * Constructs the configuration.
+     * Constructs the object with sane defaults.
      */
     public MainConfig() {
         super(MainConfig.class, "config.yml");
     }
 
+    /**
+     * Constructs the object with a custom file path.
+     *
+     * @param path A customized file path.
+     */
     MainConfig(final Path path) {
         super(MainConfig.class, "config.yml", path);
     }
 
     /**
-     * Settings used to control the plugin.
+     * Settings used to modify the plugin's behavior.
      */
     @ConfigSerializable
     static class Settings {
@@ -108,6 +117,9 @@ public class MainConfig extends Config {
         private DatabaseProperties database = DatabaseProperties.defaults();
     }
 
+    /**
+     * Settings used to modify the data conversion process.
+     */
     @ConfigSerializable
     static class Conversion {
         private boolean enabled = false;

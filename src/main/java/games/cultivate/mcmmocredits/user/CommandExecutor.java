@@ -30,7 +30,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Represents a Player or Console that can execute a command.
+ * Represents a Bukkit CommandSender that can execute a command.
  */
 public abstract class CommandExecutor {
     private final UUID uuid;

@@ -37,7 +37,6 @@ import java.util.List;
  * Utility class for methods with no clear association.
  */
 public final class Util {
-    //We are keeping a string list rather than calculating it to reduce complexity.
     @SuppressWarnings("checkstyle:linelength")
     private static final List<String> MCMMO_SKILLS = List.of("acrobatics", "alchemy", "archery", "axes", "excavation", "fishing", "herbalism", "mining", "repair", "swords", "taming", "unarmed", "woodcutting");
     private static Path pluginPath;
@@ -47,37 +46,37 @@ public final class Util {
     }
 
     /**
-     * Returns a list of non-child skill names from MCMMO, formatted in lowercase.
+     * Gets a list of lowercase, eligible MCMMO skills.
      *
-     * @return A List of formatted non-child skill names.
+     * @return The list.
      */
     public static List<String> getSkillNames() {
         return MCMMO_SKILLS;
     }
 
     /**
-     * Returns a list of non-child skill names from MCMMO, joined by a delimiter.
+     * Gets a list of lowercase, eligible MCMMO skills joined by a delimiter.
      *
-     * @return A List of formatted non-child skill names.
+     * @return The list.
      */
     public static String getJoinedSkillNames() {
         return Util.joinString(",", MCMMO_SKILLS);
     }
 
     /**
-     * Creates a file and associated directories if they do not exist, given the file name.
+     * Creates a file and the plugin's directories if they do not exist.
      *
-     * @param fileName Name of the {@link File} to create.
+     * @param fileName Name of the file to be created.
      */
     public static void createFile(final String fileName) {
         createFile(pluginPath, fileName);
     }
 
     /**
-     * Creates a file and associated directories if they do not exist, given the directory path and the file name.
+     * Creates a file and path's directories if they do not exist.
      *
-     * @param dir      The {@link Path} to check for creation.
-     * @param fileName Name of the {@link File} to create.
+     * @param dir      Path of the file to be created.
+     * @param fileName Name of the file to be created.
      */
     public static void createFile(final Path dir, final String fileName) {
         try {
@@ -92,9 +91,9 @@ public final class Util {
     }
 
     /**
-     * Returns the path of the plugin directory.
+     * Gets the plugin's directory as a path.
      *
-     * @return Path of the plugin directory.
+     * @return The path.
      */
     public static Path getPluginPath() {
         if (pluginPath == null) {
@@ -104,9 +103,9 @@ public final class Util {
     }
 
     /**
-     * Capitalizes the first letter of the input string and sets the remaining characters to lowercase.
+     * Capitalizes the first letter of the input and sets the rest of the string to lowercase.
      *
-     * @param string The input string to be capitalized.
+     * @param string The input to be capitalized.
      * @return The capitalized string.
      */
     public static String capitalizeWord(final String string) {
@@ -117,12 +116,12 @@ public final class Util {
     }
 
     /**
-     * Utility method that will join a collection of strings with the provided delimiter.
+     * Joins a collection of strings with the provided delimiter.
      *
-     * @param delimiter string-based delimited.
-     * @param members   collection of object to delimit.
-     * @param <T>       The object being delimited. Converted to string.
-     * @return The combined string.
+     * @param delimiter The delimiter.
+     * @param members   The objects to delimit.
+     * @param <T>       Type of the object being delimited.
+     * @return The delimited string.
      */
     public static <T> String joinString(final String delimiter, final Iterable<T> members) {
         StringBuilder sb = new StringBuilder();
@@ -137,12 +136,12 @@ public final class Util {
     }
 
     /**
-     * Utility method that will join an array of strings with the provided delimiter.
+     * Joins an array of objects with the provided delimiter.
      *
-     * @param delimiter string-based delimited.
-     * @param array     array of object to delimit. Converted to iterable list.
-     * @param <T>       The object being delimited. Converted to string.
-     * @return The combined string.
+     * @param delimiter The delimiter.
+     * @param array     An array of objects to delimit.
+     * @param <T>       Type of the object being delimited.
+     * @return The delimited string.
      */
     public static <T> String joinString(final String delimiter, final T[] array) {
         return Util.joinString(delimiter, Arrays.asList(array));

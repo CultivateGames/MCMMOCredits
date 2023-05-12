@@ -24,7 +24,6 @@
 package games.cultivate.mcmmocredits.events;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import games.cultivate.mcmmocredits.user.User;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -35,10 +34,8 @@ import java.util.UUID;
 
 /**
  * Event that is fired when a redemption is triggered. Does not capture results.
- * Plugins that want to modify this event will have to use EventPriority.MONITOR.
  */
 public final class CreditRedemptionEvent extends Event {
-
     private static final HandlerList HANDLERS = new HandlerList();
     private final CommandSender sender;
     private final UUID uuid;
@@ -48,14 +45,14 @@ public final class CreditRedemptionEvent extends Event {
     private final PrimarySkillType skill;
 
     /**
-     * Constructs the event
+     * Constructs the object.
      *
-     * @param sender       Command executor. Can be from Console.
-     * @param uuid         UUID of the {@link User} being actioned.
-     * @param skill        The skill being actioned.
-     * @param amount       Amount of credits affected by transaction.
-     * @param userSilent   If the event should be "silent" for the user. No feedback is sent if true.
-     * @param senderSilent If the event should be "silent" for the sender. Only feedback related to an error will be sent.
+     * @param sender       Executor of the transaction. Can be Console.
+     * @param uuid         UUID of the transaction target.
+     * @param skill        The affected skill.
+     * @param amount       Amount of credits to apply to skill.
+     * @param userSilent   If process sends feedback to the user. True will silence feedback.
+     * @param senderSilent If process sends feedback to the executor. True will silence feedback except for errors.
      */
     public CreditRedemptionEvent(final CommandSender sender, final UUID uuid, final PrimarySkillType skill, final int amount, final boolean userSilent, final boolean senderSilent) {
         this.sender = sender;
@@ -67,12 +64,12 @@ public final class CreditRedemptionEvent extends Event {
     }
 
     /**
-     * Constructs the Event in an API friendly manner, disabling command executor feedback.
+     * Constructs the object as a self-redemption using a Bukkit player.
      *
-     * @param player     Command Executor. Must be an online player.
-     * @param skill      The skill being actioned.
-     * @param amount     Amount of credits affected by transaction.
-     * @param userSilent If the event should be "silent" for the user. No feedback is sent if true.
+     * @param player     CommandExecutor. Must be an online player.
+     * @param skill      The affected skill.
+     * @param amount     Amount of credits to apply to skill.
+     * @param userSilent If the process should send feedback to the user. True will silence feedback.
      */
     @SuppressWarnings("unused")
     public CreditRedemptionEvent(final Player player, final PrimarySkillType skill, final int amount, final boolean userSilent) {
@@ -91,7 +88,7 @@ public final class CreditRedemptionEvent extends Event {
     }
 
     /**
-     * Returns the Bukkit CommandSender.
+     * Gets the Bukkit CommandSender.
      *
      * @return The CommandSender.
      */
@@ -100,7 +97,7 @@ public final class CreditRedemptionEvent extends Event {
     }
 
     /**
-     * Returns the target's UUID.
+     * Gets the target's UUID.
      *
      * @return The UUID.
      */
@@ -109,7 +106,7 @@ public final class CreditRedemptionEvent extends Event {
     }
 
     /**
-     * Returns the amount of credits used in the transaction.
+     * Gets the amount of credits used in the transaction.
      *
      * @return The amount of credits.
      */
@@ -118,7 +115,7 @@ public final class CreditRedemptionEvent extends Event {
     }
 
     /**
-     * Returns if the transaction is silent for the recipient.
+     * Gets if the transaction is silent for the recipient.
      *
      * @return if the transaction is silent.
      */
@@ -127,7 +124,7 @@ public final class CreditRedemptionEvent extends Event {
     }
 
     /**
-     * Returns if the transaction is silent for the sender.
+     * Gets if the transaction is silent for the sender.
      *
      * @return if the transaction is silent.
      */
@@ -136,7 +133,7 @@ public final class CreditRedemptionEvent extends Event {
     }
 
     /**
-     * The skill being affected by the transaction.
+     * Gets the skill being affected by the transaction.
      *
      * @return The Skill.
      */
@@ -145,11 +142,11 @@ public final class CreditRedemptionEvent extends Event {
     }
 
     /**
-     * Checks if the redemption is performed by the player themselves.
+     * Gets if the executor and target of the transaction are the same.
      *
-     * @return true if the sender is also the recipient of the Credit Redemption.
+     * @return True if entity is the same, false otherwise.
      */
     public boolean isSelfRedemption() {
-       return this.sender instanceof Player p && p.getUniqueId().equals(this.uuid);
+        return this.sender instanceof Player p && p.getUniqueId().equals(this.uuid);
     }
 }

@@ -45,7 +45,7 @@ import games.cultivate.mcmmocredits.util.ChatQueue;
 import javax.inject.Singleton;
 
 /**
- * Adds bindings to Guice.
+ * Handles Guice Dependency Injection.
  */
 public final class PluginModule extends AbstractModule {
     private final MCMMOCredits plugin;
@@ -53,7 +53,7 @@ public final class PluginModule extends AbstractModule {
     /**
      * Constructs the Guice Module.
      *
-     * @param plugin Instance of the plugin. Used to bind a Logger and Path.
+     * @param plugin Instance of the plugin, obtained from initialization logic.
      */
     public PluginModule(final MCMMOCredits plugin) {
         this.plugin = plugin;

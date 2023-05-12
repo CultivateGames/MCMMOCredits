@@ -48,7 +48,8 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 /**
- * Data converter used to add Users from external plugin data.
+ * Data Converter used to add Users from external plugin data.
+ * This converter connects to Mojang to validate username data, as it is not stored by other plugins.
  */
 public final class PluginConverter implements Converter {
     private final MainConfig config;
@@ -77,7 +78,7 @@ public final class PluginConverter implements Converter {
         Path pluginPath = this.type == ConverterType.EXTERNAL_GRM ? Path.of("GuiRedeemMCMMO", "playerdata") : Path.of("MorphRedeem", "PlayerData");
         Path filePath = Bukkit.getPluginsFolder().toPath().resolve(pluginPath);
         File[] files = filePath.toFile().listFiles();
-        if (files.length < 1) {
+        if (files == null || files.length < 1) {
             throw new IllegalStateException("External converter plugin path is empty!");
         }
         Map<UUID, int[]> userMap = new HashMap<>();
@@ -93,8 +94,11 @@ public final class PluginConverter implements Converter {
             try {
                 users.put(uuid, this.sendMojangRequest(uuid));
                 Thread.sleep(this.attemptDelay);
-            } catch (Exception e) {
+            } catch (IOException e) {
                 e.printStackTrace();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
             }
             if (users.size() % 50 == 0) {
                 Bukkit.getLogger().log(Level.INFO, "Progress: {0}/{1}", new Object[]{users.size(), mapSize});
@@ -153,11 +157,10 @@ public final class PluginConverter implements Converter {
 
     private void logConversionError(final UUID uuid, final int responseCode) {
         String log = String.format("""
-                Malformed result, waiting to resume! Do not shut off the server.
+                Malformed result received, waiting to resume! Do not shut off the server.
                 Check this UUID when conversion is done %s.
                 HTTP Response Code from Mojang Request: %d.
-                If this occurs multiple times, check if the UUID is valid.
-                If it is not valid, delete the UUID and restart the process.
+                If this repeatedly occurs, check validity of UUID or send less requests (code 429).
                 """, uuid, responseCode);
         Bukkit.getLogger().log(Level.WARNING, log);
     }

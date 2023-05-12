@@ -28,7 +28,6 @@ import games.cultivate.mcmmocredits.ui.item.BaseItem;
 import games.cultivate.mcmmocredits.ui.item.CommandItem;
 import games.cultivate.mcmmocredits.ui.item.Item;
 import games.cultivate.mcmmocredits.ui.item.RedeemItem;
-import games.cultivate.mcmmocredits.ui.menu.Menu;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -40,30 +39,45 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Configuration used to adjust properties of all {@link Menu} instances.
+ * Configuration used to adjust menu properties.
  */
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
 public class MenuConfig extends Config {
-    private ConfigMenu config = new ConfigMenu();
-    private MainMenu main = new MainMenu();
-    private RedeemMenu redeem = new RedeemMenu();
+    private ConfigMenuSettings config = new ConfigMenuSettings();
+    private MainMenuSettings main = new MainMenuSettings();
+    private RedeemMenuSettings redeem = new RedeemMenuSettings();
 
     /**
-     * Constructs the configuration.
+     * Constructs the object with sane defaults.
      */
     public MenuConfig() {
         super(MenuConfig.class, "menus.yml");
     }
 
+    /**
+     * Constructs the object with a custom file path.
+     *
+     * @param path A customized file path.
+     */
     MenuConfig(final Path path) {
         super(MenuConfig.class, "menus.yml", path);
     }
 
+    /**
+     * Creates default fill item.
+     *
+     * @return The created item.
+     */
     private static BaseItem createFill() {
         return BaseItem.of(Material.BLACK_STAINED_GLASS_PANE);
     }
 
+    /**
+     * Creates default navigation item.
+     *
+     * @return The created item.
+     */
     private static CommandItem createCompass(final int slot) {
         String command = "credits menu main";
         String name = "<red>Previous Menu";
@@ -72,22 +86,22 @@ public class MenuConfig extends Config {
     }
 
     /**
-     * Config options that customize the Main Menu.
+     * Settings used to modify the Main Menu (/credits menu main).
      */
     @ConfigSerializable
-    static class MainMenu {
+    static class MainMenuSettings {
         private String title = "<#ff253c><bold>MCMMO Credits";
         private int slots = 54;
         private boolean fill = false;
         private boolean navigation = false;
         private Map<String, Item> items = new HashMap<>();
-
-        protected MainMenu() {
-            this.items.put("config", createConfigShortcut());
-            this.items.put("redeem", createRedeemShortcut());
+        private MainMenuSettings() {
+            this.items.put("config", this.createConfigShortcut());
+            this.items.put("redeem", this.createRedeemShortcut());
             this.items.put("fill", createFill());
             this.items.put("navigation", createCompass(40));
         }
+
         private CommandItem createConfigShortcut() {
             String command = "credits menu config";
             String name = "<#FF253C>Edit Config";
@@ -104,39 +118,38 @@ public class MenuConfig extends Config {
     }
 
     /**
-     * Config options that customize the Configuration Menu.
+     * Settings used to modify the Config Menu (/credits menu config).
      */
     @ConfigSerializable
-    static class ConfigMenu {
+    static class ConfigMenuSettings {
         private String title = "<dark_gray>Edit Your Configuration...";
         private int slots = 54;
         private boolean fill = false;
         private boolean navigation = false;
         private Map<String, Item> items = new HashMap<>();
-
-        protected ConfigMenu() {
-            this.items.put("messages", createConfigItem(Material.WRITABLE_BOOK));
-            this.items.put("settings", createConfigItem(Material.REDSTONE));
+        private ConfigMenuSettings() {
+            this.items.put("messages", this.createConfigItem(Material.WRITABLE_BOOK));
+            this.items.put("settings", this.createConfigItem(Material.REDSTONE));
             this.items.put("fill", createFill());
             this.items.put("navigation", createCompass(49));
         }
+
         private BaseItem createConfigItem(final Material material) {
             return BaseItem.of(new ItemStack(material, 1), "", List.of("<gray>Click here to edit this config option!"), -1);
         }
     }
 
     /**
-     * Config options that customize the Redemption Menu.
+     * Settings used to modify the Redeem Menu (/credits menu redeem).
      */
     @ConfigSerializable
-    static class RedeemMenu {
+    static class RedeemMenuSettings {
         private String title = "<dark_gray>Redeem Your Credits...";
         private int slots = 45;
         private boolean fill = false;
         private boolean navigation = false;
         private Map<String, Item> items = new HashMap<>();
-
-        protected RedeemMenu() {
+        private RedeemMenuSettings() {
             this.items.put("acrobatics", createRedeemItem(Material.NETHERITE_BOOTS, "ACROBATICS", 10));
             this.items.put("alchemy", createRedeemItem(Material.BREWING_STAND, "ALCHEMY", 11));
             this.items.put("archery", createRedeemItem(Material.BOW, "ARCHERY", 12));

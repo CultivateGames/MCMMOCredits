@@ -24,8 +24,9 @@
 package games.cultivate.mcmmocredits.converters;
 
 /**
- * Potential Converter data sources. Conversions are one-way, data cannot be exported to an external source.
+ * Represents different Data Converter process types.
+ * Internal conversions source data from the plugin. External conversions source data from external sources.
  */
 public enum ConverterType {
-    INTERNAL_SQLITE, INTERNAL_H2, INTERNAL_MYSQL, EXTERNAL_MORPH, EXTERNAL_GRM, EXTERNAL_CSV;
+    INTERNAL_SQLITE, INTERNAL_H2, INTERNAL_MYSQL, EXTERNAL_MORPH, EXTERNAL_GRM, EXTERNAL_CSV
 }

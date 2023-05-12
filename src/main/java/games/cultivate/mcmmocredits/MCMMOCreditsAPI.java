@@ -29,53 +29,61 @@ import games.cultivate.mcmmocredits.util.CreditOperation;
 import javax.inject.Inject;
 import java.util.UUID;
 
+/**
+ * Handles basic user modification for 3rd party applications, without exposing all impl details.
+ */
 @SuppressWarnings("unused")
 public class MCMMOCreditsAPI {
     private final UserService service;
 
+    /**
+     * Constructs the object.
+     *
+     * @param service UserService, used to apply actions within the API.
+     */
     @Inject
     public MCMMOCreditsAPI(final UserService service) {
         this.service = service;
     }
 
     /**
-     * Retrieves the number of credits for the specified user.
+     * Gets the credit balance of a user with the specified UUID.
      *
-     * @param uuid the UUID of the user to retrieve credits for
-     * @return the number of credits for the specified user, or 0 if the user does not exist
+     * @param uuid The UUID of the user.
+     * @return The credit balance of the user.
      */
     public int getCredits(final UUID uuid) {
         return this.service.getCredits(uuid);
     }
 
     /**
-     * Adds specified amount of credits to a User.
+     * Adds credits to the credit balance of a user with the specified UUID.
      *
-     * @param uuid   UUID of the user.
-     * @param amount amount of credits to redeem.
-     * @return if transaction was successful.
+     * @param uuid   The UUID of the user.
+     * @param amount The amount of credits to add.
+     * @return True if the transaction was successful, otherwise false.
      */
     public boolean addCredits(final UUID uuid, final int amount) {
         return this.service.modifyCredits(uuid, CreditOperation.ADD, amount) != null;
     }
 
     /**
-     * Set user's credit balance to specified amount.
+     * Sets the credit balance of a user with the specified UUID.
      *
-     * @param uuid   UUID of the user.
-     * @param amount amount of credits to redeem.
-     * @return if transaction was successful.
+     * @param uuid   The UUID of the user.
+     * @param amount The new amount of credits.
+     * @return True if the transaction was successful, otherwise false.
      */
     public boolean setCredits(final UUID uuid, final int amount) {
         return this.service.modifyCredits(uuid, CreditOperation.SET, amount) != null;
     }
 
     /**
-     * Takes specified amount of credits from a user's balance.
+     * Removes credits from the credit balance of a user with the specified UUID.
      *
-     * @param uuid   UUID of the user.
-     * @param amount amount of credits to redeem.
-     * @return if transaction was successful.
+     * @param uuid   The UUID of the user.
+     * @param amount The amount of credits to remove.
+     * @return True if the transaction was successful, otherwise false.
      */
     public boolean takeCredits(final UUID uuid, final int amount) {
         return this.service.modifyCredits(uuid, CreditOperation.TAKE, amount) != null;

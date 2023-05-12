@@ -39,17 +39,28 @@ import javax.inject.Provider;
 import java.sql.Types;
 import java.util.UUID;
 
+/**
+ * Handles connecting to the database via configured settings, and providing the DAO based off of that connection.
+ */
 public final class Database implements Provider<UserDAO> {
     private static final ClasspathSqlLocator LOCATOR = ClasspathSqlLocator.create();
     private final DatabaseProperties properties;
     private HikariDataSource source;
     private UserDAO dao;
 
+    /**
+     * Constructs the object.
+     *
+     * @param properties Properties of the database from config.
+     */
     @Inject
     public Database(final DatabaseProperties properties) {
         this.properties = properties;
     }
 
+    /**
+     * Loads the DAO.
+     */
     public void load() {
         this.source = this.properties.toDataSource();
         Jdbi jdbi = this.createJDBI();
@@ -57,12 +68,18 @@ public final class Database implements Provider<UserDAO> {
         this.dao = jdbi.onDemand(UserDAO.class);
     }
 
+    /**
+     * Disables the connection. Reserved for shutdown.
+     */
     public void disable() {
         if (this.source != null) {
             this.source.close();
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public UserDAO get() {
         if (this.dao == null) {
@@ -71,6 +88,11 @@ public final class Database implements Provider<UserDAO> {
         return this.dao;
     }
 
+    /**
+     * Creates an instance of JDBI based on the provided DatabaseProperties.
+     *
+     * @return a modified JDBI instance.
+     */
     private Jdbi createJDBI() {
         Jdbi jdbi = Jdbi.create(this.source).installPlugin(new SqlObjectPlugin());
         return switch (this.properties.type()) {
@@ -80,16 +102,27 @@ public final class Database implements Provider<UserDAO> {
         };
     }
 
+    /**
+     * Fetches a query from the plugin's resource folder.
+     *
+     * @return The query.
+     */
     private String getQuery() {
         String result = this.properties.type() == DatabaseType.SQLITE ? "CREATE-TABLE-SQLITE" : "CREATE-TABLE-MYSQL";
         return LOCATOR.getResource(this.getClass().getClassLoader(), result + ".sql");
     }
 
+    /**
+     * Argument Factory required for better MySQL compatibility with UUID data type.
+     */
     static class UUIDArgumentFactory extends AbstractArgumentFactory<UUID> {
         protected UUIDArgumentFactory() {
             super(Types.VARCHAR);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         protected Argument build(final UUID value, final ConfigRegistry config) {
             return (p, s, c) -> s.setString(p, value.toString());

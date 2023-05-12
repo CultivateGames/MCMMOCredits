@@ -30,13 +30,13 @@ import org.bukkit.entity.Player;
 import java.util.UUID;
 
 /**
- * CommandExecutor which is an instance of Console. Separated from the DAO/Database layer.
+ * Represents a Bukkit ConsoleCommandSender.
  */
 public final class Console extends CommandExecutor {
     public static final Console INSTANCE = new Console();
 
     /**
-     * Constructs the Console. Console's instance is a singleton.
+     * Constructs the object.
      */
     private Console() {
         super(new UUID(0, 0), "CONSOLE", 0, 0);

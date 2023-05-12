@@ -24,22 +24,37 @@
 package games.cultivate.mcmmocredits.ui.menu;
 
 import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.ui.ContextFactory;
 import games.cultivate.mcmmocredits.ui.item.BaseItem;
 import games.cultivate.mcmmocredits.ui.item.ConfigItem;
 import games.cultivate.mcmmocredits.ui.item.Item;
-import games.cultivate.mcmmocredits.user.User;
-import org.incendo.interfaces.paper.type.ChestInterface;
 import org.spongepowered.configurate.NodePath;
 
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Represents the menu provided by executing /credits menu config.
+ */
 public final class ConfigMenu extends BaseMenu {
-    private ConfigMenu(Map<String, Item> items, final String title, final int slots, final boolean fill, final boolean navigation) {
+    /**
+     * Constructs the object.
+     *
+     * @param items      The items and their keys in a map.
+     * @param title      Unparsed title of the Inventory.
+     * @param slots      Size of the Inventory.
+     * @param fill       Whether the inventory will have fill border items.
+     * @param navigation Whether the inventory will have a navigation item.
+     */
+    private ConfigMenu(final Map<String, Item> items, final String title, final int slots, final boolean fill, final boolean navigation) {
         super(items, title, slots, fill, navigation);
     }
 
+    /**
+     * Constructs the object from an existing Menu.
+     *
+     * @param config MainConfig to derive menu items.
+     * @param menu   The existing Menu.
+     */
     public static ConfigMenu of(final MainConfig config, final Menu menu) {
         ConfigMenu cmenu = new ConfigMenu(menu.items(), menu.title(), menu.slots(), menu.fill(), menu.navigation());
         cmenu.addConfigKeys(config.filterNodes(x -> x.contains("database") || x.contains("converter")));
@@ -47,14 +62,10 @@ public final class ConfigMenu extends BaseMenu {
     }
 
     /**
-     * {@inheritDoc}
+     * Calculates menu items based on the provided config keys.
+     *
+     * @param keys Config node paths as strings.
      */
-    @Override
-    public ChestInterface build(final User user, final ContextFactory factory) {
-        return super.build(user, factory);
-    }
-
-    //TODO: paginate
     private void addConfigKeys(final List<String> keys) {
         ConfigItem messages = (ConfigItem) this.items().remove("messages");
         ConfigItem settings = (ConfigItem) this.items().remove("settings");

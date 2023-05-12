@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.events;
 
-import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.util.CreditOperation;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -34,11 +33,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 /**
- * Event that is fired when a {@link CreditOperation} is triggered. Does not capture results.
- * Plugins that want to modify this event will have to use EventPriority.MONITOR.
+ * Event that is fired when a credit transaction (add, set, take) is triggered. Does not capture results.
  */
 public final class CreditTransactionEvent extends Event {
-
     private static final HandlerList HANDLERS = new HandlerList();
     private final CommandSender sender;
     private final UUID uuid;
@@ -48,14 +45,14 @@ public final class CreditTransactionEvent extends Event {
     private final boolean senderSilent;
 
     /**
-     * Constructs the event.
+     * Constructs the object.
      *
      * @param sender       Command executor. Can be from Console.
-     * @param uuid         UUID of the {@link User} being actioned.
-     * @param operation    The type of transaction taking place.
-     * @param amount       Amount of credits affected by transaction.
-     * @param userSilent   If the event should be "silent" for the user. No feedback is sent if true.
-     * @param senderSilent If the event should be "silent" for the sender. Only feedback related to an error will be sent.
+     * @param uuid         UUID of the transaction target.
+     * @param operation    Credit operation type.
+     * @param amount       Amount of credits to apply to skill.
+     * @param userSilent   If process sends feedback to the user. True will silence feedback.
+     * @param senderSilent If process sends feedback to the executor. True will silence feedback except for errors.
      */
     public CreditTransactionEvent(final CommandSender sender, final UUID uuid, final CreditOperation operation, final int amount, final boolean userSilent, final boolean senderSilent) {
         this.sender = sender;
@@ -67,12 +64,12 @@ public final class CreditTransactionEvent extends Event {
     }
 
     /**
-     * Constructs the Event in an API friendly manner, disabling command executor feedback.
+     * Constructs the object as a self-transaction using a Bukkit player.
      *
-     * @param player     Command Executor. Must be an online player.
-     * @param operation  The type of transaction occurring.
-     * @param amount     Amount of credits affected by transaction.
-     * @param userSilent If the event should be "silent" for the user. No feedback is sent if true.
+     * @param player     CommandExecutor. Must be an online player.
+     * @param operation  Credit operation type.
+     * @param amount     Amount of credits to apply to skill.
+     * @param userSilent If the process should send feedback to the user. True will silence feedback.
      */
     @SuppressWarnings("unused")
     public CreditTransactionEvent(final Player player, final CreditOperation operation, final int amount, final boolean userSilent) {
@@ -91,7 +88,7 @@ public final class CreditTransactionEvent extends Event {
     }
 
     /**
-     * Returns the Bukkit CommandSender.
+     * Gets the Bukkit CommandSender.
      *
      * @return The CommandSender.
      */
@@ -100,7 +97,7 @@ public final class CreditTransactionEvent extends Event {
     }
 
     /**
-     * Returns the target's UUID.
+     * Gets the target's UUID.
      *
      * @return The UUID.
      */
@@ -109,16 +106,7 @@ public final class CreditTransactionEvent extends Event {
     }
 
     /**
-     * Returns the type of transaction occurring.
-     *
-     * @return The transaction type.
-     */
-    public CreditOperation operation() {
-        return this.operation;
-    }
-
-    /**
-     * Returns the amount of credits used in the transaction.
+     * Gets the amount of credits used in the transaction.
      *
      * @return The amount of credits.
      */
@@ -127,7 +115,7 @@ public final class CreditTransactionEvent extends Event {
     }
 
     /**
-     * Returns if the transaction is silent for the recipient.
+     * Gets if the transaction is silent for the recipient.
      *
      * @return if the transaction is silent.
      */
@@ -136,7 +124,7 @@ public final class CreditTransactionEvent extends Event {
     }
 
     /**
-     * Returns if the transaction is silent for the sender.
+     * Gets if the transaction is silent for the sender.
      *
      * @return if the transaction is silent.
      */
@@ -145,9 +133,18 @@ public final class CreditTransactionEvent extends Event {
     }
 
     /**
-     * Checks if the redemption is performed by the player themselves.
+     * Gets the Credit operation type.
      *
-     * @return true if the sender is also the recipient of the Credit Redemption.
+     * @return The operation type.
+     */
+    public CreditOperation operation() {
+        return this.operation;
+    }
+
+    /**
+     * Gets if the executor and target of the transaction are the same.
+     *
+     * @return True if entity is the same, false otherwise.
      */
     public boolean isSelfTransaction() {
         return this.sender instanceof Player p && p.getUniqueId().equals(this.uuid);

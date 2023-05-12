@@ -32,19 +32,25 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
  * Properties used in creation of the {@linkplain Database}
  *
  * @param type     Type of the Database.
- * @param host     Host of the Database. Typically, an IP address.
+ * @param host     Host of the Database.
  * @param name     Name of the Database.
- * @param user     Name of the Database user.
+ * @param user     Username for the Database user.
  * @param password Password for the Database user.
- * @param port     Port where the Database instance is located.
- * @param ssl      If useSSL is used in the connection URL.
+ * @param port     Port of the Database.
+ * @param ssl      If useSSL should be set to "true" in the JDBC connection url.
  */
 @ConfigSerializable
-public record DatabaseProperties(DatabaseType type, String host, String name, String user, String password, int port, boolean ssl) {
+public record DatabaseProperties(DatabaseType type, String host, String name, String user, String password, int port,
+                                 boolean ssl) {
     public static DatabaseProperties defaults() {
         return new DatabaseProperties(DatabaseType.SQLITE, "127.0.0.1", "database", "root", "passw0rd+", 3306, true);
     }
 
+    /**
+     * Converts the object into a HikariDataSource.
+     *
+     * @return The configured HikariDataSource.
+     */
     public HikariDataSource toDataSource() {
         return switch (this.type) {
             case MYSQL -> this.createMySQLDataSource();
@@ -53,9 +59,14 @@ public record DatabaseProperties(DatabaseType type, String host, String name, St
         };
     }
 
+    /**
+     * Creates a HikariDataSource for the MySQL database type.
+     *
+     * @return The configured HikariDataSource.
+     */
     private HikariDataSource createMySQLDataSource() {
         HikariConfig config = new HikariConfig();
-        String url = String.format("jdbc:mysql://%s:%d/%s?useSSL=%s", this.host(), this.port(), this.name(), this.ssl());
+        String url = String.format("jdbc:mysql://%s:%d/%s?useSSL=%s", this.host, this.port, this.name, this.ssl);
         config.setPoolName("MCMMOCredits MYSQL");
         config.setJdbcUrl(url);
         //https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration
@@ -68,11 +79,15 @@ public record DatabaseProperties(DatabaseType type, String host, String name, St
         config.addDataSourceProperty("cacheServerConfiguration", true);
         config.addDataSourceProperty("elideSetAutoCommits", true);
         config.addDataSourceProperty("maintainTimeStats", false);
-        config.addDataSourceProperty("user", this.user());
-        config.addDataSourceProperty("password", this.password());
+        config.addDataSourceProperty("user", this.user);
+        config.addDataSourceProperty("password", this.password);
         return new HikariDataSource(config);
     }
-
+    /**
+     * Creates a HikariDataSource for the SQLite database type.
+     *
+     * @return The configured HikariDataSource.
+     */
     private HikariDataSource createSQLiteDataSource() {
         HikariConfig config = new HikariConfig();
         String url = "jdbc:sqlite:" + Util.getPluginPath().resolve("database.db");
@@ -83,6 +98,11 @@ public record DatabaseProperties(DatabaseType type, String host, String name, St
         return new HikariDataSource(config);
     }
 
+    /**
+     * Creates a HikariDataSource for the H2 database type.
+     *
+     * @return The configured HikariDataSource.
+     */
     private HikariDataSource createH2DataSource() {
         HikariConfig config = new HikariConfig();
         String url = "jdbc:h2:file:./" + Util.getPluginPath().resolve("database") + ";DB_CLOSE_DELAY=-1;MODE=MYSQL";

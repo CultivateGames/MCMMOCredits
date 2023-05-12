@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.serializers;
 
-import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.ui.item.Item;
 import games.cultivate.mcmmocredits.ui.menu.BaseMenu;
 import games.cultivate.mcmmocredits.ui.menu.Menu;
@@ -38,19 +37,13 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Handles serialization/deserialization of {@link Menu} from {@link Config}.
- * The Menu deserialized here is incomplete and is transferred to the MenuFactory.
+ * Handles serialization/deserialization of a Menu.
  */
 public final class MenuSerializer implements TypeSerializer<Menu> {
     public static final MenuSerializer INSTANCE = new MenuSerializer();
 
     /**
-     * Deserializes a Menu from configuration by iterating the item map, and directly reading all other properties.
-     *
-     * @param type the type of return value required
-     * @param node the node containing serialized data
-     * @return The deserialized Menu.
-     * @throws SerializationException Thrown when getting the Item from node map.
+     * {@inheritDoc}
      */
     @Override
     public Menu deserialize(final Type type, final ConfigurationNode node) throws SerializationException {

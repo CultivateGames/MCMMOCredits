@@ -30,16 +30,16 @@ import org.bukkit.entity.Player;
 import java.util.UUID;
 
 /**
- * Command Executor which is a Player. Interacted with through the {@link UserDAO}
+ * Represents a Bukkit Player.
  */
 public final class User extends CommandExecutor {
     /**
-     * Constructs the User. Users are immutable.
+     * Constructs the object.
      *
-     * @param uuid     The UUID of the executor.
-     * @param username The username of the executor.
-     * @param credits  The default credit balance of the executor.
-     * @param redeemed The default redeemed statistic of the executor.
+     * @param uuid     UUID of the user.
+     * @param username Username of the user.
+     * @param credits  Default credit balance of the user.
+     * @param redeemed Default credit redeemed stat of the user.
      */
     public User(final UUID uuid, final String username, final int credits, final int redeemed) {
         super(uuid, username, credits, redeemed);
@@ -78,30 +78,30 @@ public final class User extends CommandExecutor {
     }
 
     /**
-     * Provides copy of existing User with updated credit balance.
+     * Provides a copy of the User with an updated credit amount.
      *
-     * @param credits credit balance to apply.
-     * @return An updated copy of the User.
+     * @param credits credit amount to set on the User.
+     * @return An updated User.
      */
     public User withCredits(final int credits) {
         return new User(this.uuid(), this.username(), credits, this.redeemed());
     }
 
     /**
-     * Provides copy of existing User with updated credit balance.
+     * Provides a copy of the User with a new username.
      *
-     * @param username new username to apply.
-     * @return An updated copy of the User.
+     * @param username New username to set on the User.
+     * @return An updated User.
      */
     public User withUsername(final String username) {
         return new User(this.uuid(), username, this.credits(), this.redeemed());
     }
 
     /**
-     * Provides copy of existing User with updated redeemed credit balance.
+     * Provides a copy of the User with an updated redeemed amount.
      *
-     * @param redeemed redeemed credit balance to apply.
-     * @return An updated copy of the User.
+     * @param redeemed credit redeemed amount to set on the User.
+     * @return An updated User.
      */
     public User withRedeemed(final int redeemed) {
         return new User(this.uuid(), this.username(), this.credits(), redeemed);

@@ -35,7 +35,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-//TODO: test ofRedemption method.
 class ResolverTest {
     private static final MiniMessage PARSER = MiniMessage.miniMessage();
     private final UUID senderUUID = new UUID(1, 1);

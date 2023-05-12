@@ -31,11 +31,28 @@ import org.incendo.interfaces.paper.type.ChestInterface;
 
 import java.util.Map;
 
+/**
+ * Represents the menu provided by executing /credits menu main.
+ */
 public final class MainMenu extends BaseMenu {
+    /**
+     * Constructs the object.
+     *
+     * @param items      The items and their keys in a map.
+     * @param title      Unparsed title of the Inventory.
+     * @param slots      Size of the Inventory.
+     * @param fill       Whether the inventory will have fill border items.
+     * @param navigation Whether the inventory will have a navigation item.
+     */
     private MainMenu(final Map<String, Item> items, final String title, final int slots, final boolean fill, final boolean navigation) {
         super(items, title, slots, fill, navigation);
     }
 
+    /**
+     * Constructs the object from an existing Menu.
+     *
+     * @param menu The existing Menu.
+     */
     public static MainMenu of(final Menu menu) {
         return new MainMenu(menu.items(), menu.title(), menu.slots(), menu.fill(), menu.navigation());
     }

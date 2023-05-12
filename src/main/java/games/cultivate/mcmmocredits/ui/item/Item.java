@@ -33,49 +33,52 @@ import org.incendo.interfaces.paper.pane.ChestPane;
 
 import java.util.List;
 
+/**
+ * Represents an ItemStack and an action to be performed when clicked inside a menu.
+ */
 public interface Item {
     /**
-     * Updates the name and lore based on the passed in Player and resolver.
+     * Updates the name and lore based on the provided User.
      *
      * @param user The viewer of the item as a User.
      * @return A Bukkit ItemStack with updated properties.
      */
-    ItemStack parseUser(final User user);
+    ItemStack parseUser(User user);
 
     /**
      * Executes an action if a click is performed on this Item within a Menu.
      *
-     * @param user    The affected user.
+     * @param user    The viewer of the item as a User.
      * @param factory The ContextFactory used to run click actions.
      * @param ctx     The context of the click.
      */
-    void executeClick(final User user, final ContextFactory factory, final ClickContext<ChestPane, InventoryClickEvent, PlayerViewer> ctx);
+    void executeClick(User user, ContextFactory factory, ClickContext<ChestPane, InventoryClickEvent, PlayerViewer> ctx);
 
     /**
      * Gets the raw item name.
      *
-     * @return The Item's name.
+     * @return The item's name.
      */
     String name();
 
     /**
      * Gets the raw item lore.
      *
-     * @return The Item's lore.
+     * @return The item's lore.
      */
     List<String> lore();
 
     /**
      * Gets the Item's assigned slot in a Menu.
      *
-     * @return The Item's slot
+     * @return The item's slot
      */
     int slot();
 
     /**
-     * Gets the base ItemStack.
+     * Gets the Bukkit ItemStack.
      *
-     * @return The ItemStack.
+     * @return The Bukkit ItemStack.
      */
     ItemStack stack();
 }

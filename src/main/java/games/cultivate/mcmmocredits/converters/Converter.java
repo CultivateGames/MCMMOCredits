@@ -26,28 +26,28 @@ package games.cultivate.mcmmocredits.converters;
 import org.slf4j.Logger;
 
 /**
- * Interface to represent a data converter.
+ * Represents a Data Converter.
  */
 public interface Converter {
     /**
-     * Load or obtain all required elements for conversion here.
+     * Loads all required user data for conversion.
      *
-     * @return True if loading process was successful.
+     * @return Returns true if successful, false otherwise.
      */
     boolean load();
 
     /**
-     * Convert all data here. This may include action such as writing to another database.
-     * Note: Flat file conversions will have data flushed to disk. MySQL will not.
+     * Converts user data between sources. May include writing to another database.
+     * Flat file conversions will have data flushed to disk. MySQL will use default behavior.
      *
-     * @return True if conversion process was successful. Does not guarantee data equality.
+     * @return Returns true if successful, false otherwise. Does not guarantee data equality.
      */
     boolean convert();
 
     /**
-     * Verify that the conversion was successful by checking data from previous and current source.
+     * Verifies that user data conversion was successful by checking if data is present in destination database.
      *
-     * @return True if all previous data can be found in the new data source.
+     * @return Returns true if all previous data can be found in the new data source, false otherwise.
      */
     boolean verify();
 
@@ -56,6 +56,11 @@ public interface Converter {
      */
     void disable();
 
+    /**
+     * Runs the data conversion process.
+     *
+     * @param logger The logger used to log current status of the converter.
+     */
     default void run(final Logger logger) {
         logger.warn("Data Converter enabled in configuration! Loading...");
         if (!this.load()) {

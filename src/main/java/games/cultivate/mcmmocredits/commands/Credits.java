@@ -24,6 +24,7 @@
 package games.cultivate.mcmmocredits.commands;
 
 import cloud.commandframework.annotations.Argument;
+import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.Flag;
@@ -68,13 +69,13 @@ public final class Credits {
     private final MCMMOCredits plugin;
 
     /**
-     * Constructs the command object via injection.
+     * Constructs the object.
      *
-     * @param config     Instance of MainConfig. Used for messages and reload command.
-     * @param menuConfig Instance of MenuConfig. Used for reload command.
-     * @param service    Instance of UserService. Used to obtain User info from command.
-     * @param factory    Instance of ContextFactory. Used to construct menus.
-     * @param plugin     Instance of the MCMMOCredits to run events synchronously.
+     * @param config     MainConfig to obtain messages and for usage in reload command.
+     * @param menuConfig MenuConfig to obtain menus and for usage in reload command.
+     * @param service    UserService to obtain Users from cache/database.
+     * @param factory    ContextFactory to assist in menu creation.
+     * @param plugin     Plugin instance to obtain main thread executor.
      */
     @Inject
     public Credits(final MainConfig config, final MenuConfig menuConfig, final UserService service, final ContextFactory factory, final MCMMOCredits plugin) {
@@ -86,24 +87,26 @@ public final class Credits {
     }
 
     /**
-     * /credits balance. Allows the user to check statistics (balance, redeemed).
+     * Processes the {@literal /credits balance} command.
      *
-     * @param user Command executor. Must be an online player.
+     * @param user CommandExecutor. Must be an online player.
      */
     @CommandMethod("balance")
     @CommandPermission("mcmmocredits.balance.self")
+    @CommandDescription("Allows user to check credit statistics.")
     public void balance(final User user) {
         Text.forOneUser(user, this.config.getMessage("balance")).send();
     }
 
     /**
-     * /credits balance username. Allows the user to check the statistics of someone else.
+     * Processes the {@literal /credits balance <username>} command.
      *
-     * @param executor Command executor. Can be from Console.
-     * @param username Username of the {@link User} being actioned.
+     * @param executor CommandExecutor. Can be Console.
+     * @param username Username of the user to check.
      */
     @CommandMethod("balance <username>")
     @CommandPermission("mcmmocredits.balance.other")
+    @CommandDescription("Allows user to check someone else's credit statistics.")
     public void balanceOther(final CommandExecutor executor, final @Argument(suggestions = "user") String username) {
         Optional<User> user = this.service.getUser(username);
         if (user.isPresent()) {
@@ -114,13 +117,14 @@ public final class Credits {
     }
 
     /**
-     * /credits top page. Sends leaderboard rankings to the user who triggers the command.
+     * Processes the {@literal /credits top <page>} command.
      *
-     * @param executor the CommandExecutor to send the leaderboard message to
-     * @param page     the page number of the leaderboard to retrieve
+     * @param executor CommandExecutor. Can be Console.
+     * @param page     Page number of the leaderboard.
      */
     @CommandMethod("top <page>")
     @CommandPermission("mcmmocredits.leaderboard")
+    @CommandDescription("Shows the specified page of the leaderboard.")
     public void top(final CommandExecutor executor, final @Argument @Range(min = "1") int page) {
         if (!this.config.getBoolean("settings", "leaderboard-enabled")) {
             Text.forOneUser(executor, this.config.getMessage("invalid-leaderboard")).send();
@@ -143,30 +147,32 @@ public final class Credits {
     }
 
     /**
-     * /credits add|set|take number. Allows a user to modify their own credit balance.
+     * Processes the {@literal /credits <add|set|take> <amount>} command.
      *
-     * @param user      Command executor. Must be an online player.
-     * @param operation Operation that is performed on the balance.
-     * @param amount    Amount of credits affected by transaction.
+     * @param user      CommandExecutor. Must be an online player.
+     * @param operation Operation applied to credit balance (add, set, take).
+     * @param amount    Amount of credits to apply to balance.
      */
     @CommandMethod("<operation> <amount>")
     @CommandPermission("mcmmocredits.modify.self")
+    @CommandDescription("Allows user to modify their own credit balance.")
     public void modify(final User user, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount) {
         CreditTransactionEvent event = new CreditTransactionEvent(user.player(), user.uuid(), operation, amount, true, false);
         this.execute(() -> Bukkit.getPluginManager().callEvent(event));
     }
 
     /**
-     * /credits add|set|take number username [--s]. Allows a user to modify someone else's balance.
+     * Processes the {@literal /credits <add|set|take> <username> [--s]} command.
      *
-     * @param executor  Command executor. Can be from Console.
-     * @param operation Operation that is performed on the balance.
-     * @param amount    Amount of credits affected by transaction.
-     * @param username  Username of the {@link User} being actioned.
-     * @param silent    If command should be "silent". User will not get feedback upon completion if true.
+     * @param executor  CommandExecutor. Can be Console.
+     * @param operation Operation applied to credit balance (add, set, take).
+     * @param amount    Amount of credits to apply to balance.
+     * @param username  Username of the user to modify.
+     * @param silent    If the process should send feedback to the user based on presence.
      */
     @CommandMethod("<operation> <amount> <username>")
     @CommandPermission("mcmmocredits.modify.other")
+    @CommandDescription("Allows user to modify someone else's credit balance.")
     public void modifyOther(final CommandExecutor executor, final @Argument CreditOperation operation, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
         Optional<User> optionalUser = this.service.getUser(username);
         if (optionalUser.isPresent()) {
@@ -178,14 +184,15 @@ public final class Credits {
     }
 
     /**
-     * /credits redeem amount skill. Allows a user to redeem credits for MCMMO Skill levels.
+     * Processes the {@literal /credits <redeem> <amount> <skill>} command.
      *
-     * @param user   Command executor. Must be an online player.
-     * @param skill  The skill being actioned.
-     * @param amount Amount of credits affected by transaction.
+     * @param user   CommandExecutor. Must be an online player.
+     * @param skill  The affected skill.
+     * @param amount Amount of credits to apply to skill.
      */
     @CommandMethod("redeem <amount> <skill>")
     @CommandPermission("mcmmocredits.redeem.self")
+    @CommandDescription("Allows user to redeem credits for MCMMO Skill levels.")
     public void redeem(final User user, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
         CreditRedemptionEvent event = new CreditRedemptionEvent(user.player(), user.uuid(), skill, amount, true, false);
         this.execute(() -> Bukkit.getPluginManager().callEvent(event));
@@ -194,14 +201,15 @@ public final class Credits {
     /**
      * /credits redeem amount skill username [--s]. Allows a user to redeem credits for someone else.
      *
-     * @param executor Command executor. Can be from Console.
-     * @param skill    The skill being actioned.
-     * @param amount   Amount of credits affected by transaction.
-     * @param username Username of the {@link User} being actioned.
-     * @param silent   If command should be "silent". User will not get feedback upon completion if true.
+     * @param executor CommandExecutor. Can be Console.
+     * @param skill    The affected skill.
+     * @param amount   Amount of credits to apply to skill.
+     * @param username Username of the user being modified.
+     * @param silent   If the process should send feedback to the user based on presence.
      */
     @CommandMethod("redeem <amount> <skill> <username>")
     @CommandPermission("mcmmocredits.redeem.other")
+    @CommandDescription("Allows user to modify their own credit balance.")
     public void redeemOther(final CommandExecutor executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
         Optional<User> optionalUser = this.service.getUser(username);
         if (optionalUser.isPresent()) {
@@ -213,12 +221,13 @@ public final class Credits {
     }
 
     /**
-     * /credits reload. Reloads the configuration files with any changes applied.
+     * Processes the {@literal /credits reload} command.
      *
-     * @param executor Command executor. Can be from Console.
+     * @param executor CommandExecutor. Can be Console.
      */
     @CommandMethod("reload")
     @CommandPermission("mcmmocredits.admin")
+    @CommandDescription("Reloads the configuration files with most changes applied.")
     public void reload(final CommandExecutor executor) {
         this.config.load();
         this.menuConfig.load();
@@ -226,15 +235,15 @@ public final class Credits {
     }
 
     /**
-     * /credits menu type. Allows user to open a menu of a specific type.
-     * <p>
-     * Note: Users need "mcmmocredits.menu" and "mcmmocredits.menu.type" to open the menu.
+     * Processes the {@literal /credits menu [type]} command.
+     * Users need "mcmmocredits.menu" and "mcmmocredits.menu.type" permissions to open.
      *
-     * @param user Command executor. Must be an online player.
-     * @param type Type of the menu (main, config, redeem)
+     * @param user CommandExecutor. Must be an online player.
+     * @param type Menu type to be opened (main, config, redeem).
      */
     @CommandMethod("menu [type]")
     @CommandPermission("mcmmocredits.menu")
+    @CommandDescription("Allows user to open a menu of a specific type.")
     public void openMenu(final User user, final @Argument(suggestions = "menus", defaultValue = "main") String type) {
         String menuType = type.toLowerCase();
         if (!user.player().hasPermission("mcmmocredits.menu." + menuType)) {
@@ -253,10 +262,10 @@ public final class Credits {
     }
 
     /**
-     * Sends a message when a user is unknown.
+     * Handles message parsing when a User is unknown.
      *
-     * @param executor Command executor. Can be from Console.
-     * @param username Username of unknown user.
+     * @param executor CommandExecutor. Can be Console.
+     * @param username Username of the unknown user.
      */
     private void playerUnknownError(final CommandExecutor executor, final String username) {
         Resolver resolver = Resolver.ofUser(executor);
@@ -265,7 +274,9 @@ public final class Credits {
     }
 
     /**
-     * Utility method to execute on the main thread.
+     * Ensures runnable execution is on the main thread.
+     *
+     * @param command Runnable to execute on the main thread.
      */
     private void execute(final Runnable command) {
         Bukkit.getScheduler().getMainThreadExecutor(this.plugin).execute(command);

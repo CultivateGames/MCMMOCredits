@@ -34,15 +34,34 @@ import org.incendo.interfaces.paper.pane.ChestPane;
 
 import java.util.List;
 
+/**
+ * Represents an Item that starts a credit redemption when clicked.
+ */
 public final class RedeemItem extends BaseItem {
     private final PrimarySkillType skill;
 
     /**
-     * {@inheritDoc}
+     * Constructs the object.
+     *
+     * @param skill The skill to use in a redemption.
+     * @param stack The representative ItemStack. Updated with refreshing name/lore.
+     * @param name  Raw name of the item. Always parsed.
+     * @param lore  Raw lore of the item. Always parsed.
+     * @param slot  Location of item in a Menu.
      */
     private RedeemItem(final PrimarySkillType skill, final ItemStack stack, final String name, final List<String> lore, final int slot) {
         super(stack, name, lore, slot);
         this.skill = skill;
+    }
+
+    /**
+     * Constructs the object from an existing Item.
+     *
+     * @param skill The skill to use in a redemption.
+     * @param item  The item to be used for pass-through.
+     */
+    public static RedeemItem of(final PrimarySkillType skill, final Item item) {
+        return new RedeemItem(skill, item.stack(), item.name(), item.lore(), item.slot());
     }
 
     /**
@@ -52,9 +71,5 @@ public final class RedeemItem extends BaseItem {
     public void executeClick(final User user, final ContextFactory factory, final ClickContext<ChestPane, InventoryClickEvent, PlayerViewer> ctx) {
         ctx.viewer().close();
         factory.runRedeem(user, this.skill);
-    }
-
-    public static RedeemItem of(final PrimarySkillType skill, final Item item) {
-        return new RedeemItem(skill, item.stack(), item.name(), item.lore(), item.slot());
     }
 }

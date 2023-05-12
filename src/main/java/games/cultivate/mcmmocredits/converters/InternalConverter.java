@@ -34,7 +34,7 @@ import javax.inject.Inject;
 import java.util.List;
 
 /**
- * Data converter used to switch between database types.
+ * Data Converter used to switch between internal database types.
  */
 public final class InternalConverter implements Converter {
     private final UserDAO destinationDAO;

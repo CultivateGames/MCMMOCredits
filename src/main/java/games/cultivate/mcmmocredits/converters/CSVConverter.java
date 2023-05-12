@@ -37,13 +37,19 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Data converter used to add users from CSV.
+ * Data Converter that reads data from a CSV file.
  */
 public final class CSVConverter implements Converter {
     private final MainConfig config;
     private final UserDAO destinationDAO;
     private List<User> sourceUsers;
 
+    /**
+     * Constructs the object.
+     *
+     * @param config         MainConfig in order to read converter settings.
+     * @param destinationDAO Destination database.
+     */
     @Inject
     public CSVConverter(final MainConfig config, final UserDAO destinationDAO) {
         this.config = config;
@@ -96,7 +102,7 @@ public final class CSVConverter implements Converter {
     }
 
     /**
-     * Parses User from CSV line.
+     * Parses User from line of a CSV file.
      *
      * @param line The line of text from CSV file.
      * @return The parsed User.

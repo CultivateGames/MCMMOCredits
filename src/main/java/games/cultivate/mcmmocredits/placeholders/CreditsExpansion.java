@@ -25,7 +25,6 @@ package games.cultivate.mcmmocredits.placeholders;
 
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
-import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
@@ -34,11 +33,16 @@ import javax.inject.Inject;
 import java.util.Optional;
 
 /**
- * Handles registration with {@link PlaceholderAPI}
+ * Handles PlaceholderAPI expansion registration.
  */
 public final class CreditsExpansion extends PlaceholderExpansion {
     private final UserService service;
 
+    /**
+     * Constructs the object.
+     *
+     * @param service UserService to obtain User information.
+     */
     @Inject
     public CreditsExpansion(final UserService service) {
         this.service = service;
@@ -77,11 +81,7 @@ public final class CreditsExpansion extends PlaceholderExpansion {
     }
 
     /**
-     * Handles placeholder parsing by loading the User and exposing all properties of it.
-     *
-     * @param player Instance of the user.
-     * @param id     suffix of the placeholder key. ex. "credits" in %mcmmocredits_credits%
-     * @return The placeholder value
+     * {@inheritDoc}
      */
     @Override
     public String onRequest(final OfflinePlayer player, final @NotNull String id) {

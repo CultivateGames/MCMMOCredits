@@ -37,6 +37,9 @@ import org.incendo.interfaces.paper.pane.ChestPane;
 
 import java.util.List;
 
+/**
+ * Represents a basic Item.
+ */
 public class BaseItem implements Item {
     private final ItemStack stack;
     private final String name;
@@ -58,10 +61,23 @@ public class BaseItem implements Item {
         this.slot = slot;
     }
 
+    /**
+     * Constructs the object.
+     *
+     * @param stack The representative ItemStack. Updated with refreshing name/lore.
+     * @param name  Raw name of the item. Always parsed.
+     * @param lore  Raw lore of the item. Always parsed.
+     * @param slot  Location of item in a Menu.
+     */
     public static BaseItem of(final ItemStack stack, final String name, final List<String> lore, final int slot) {
         return new BaseItem(stack, name, lore, slot);
     }
 
+    /**
+     * Constructs the object with sane defaults.
+     *
+     * @param material The type of the Item.
+     */
     public static BaseItem of(final Material material) {
         return new BaseItem(new ItemStack(material, 1), "", List.of(), -1);
     }

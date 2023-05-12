@@ -50,6 +50,11 @@ public final class MCMMOCredits extends JavaPlugin {
     private MainConfig config;
     private Logger logger;
 
+    /**
+     * Gets an instance of the API. Allows basic user modification.
+     *
+     * @return the API.
+     */
     @SuppressWarnings("unused")
     public static MCMMOCreditsAPI getAPI() {
         return api;
@@ -77,9 +82,8 @@ public final class MCMMOCredits extends JavaPlugin {
     }
 
     /**
-     * Checks that all required software is present. Registers our Placeholder expansion if PlaceholderAPI is present.
-     *
-     * @see CreditsExpansion
+     * Checks that all required software is present.
+     * Registers PlaceholderAPI placeholders if it is present.
      */
     @SuppressWarnings("UnstableApiUsage")
     private void checkForDependencies() {
@@ -121,6 +125,9 @@ public final class MCMMOCredits extends JavaPlugin {
         this.logger.info("Listeners registered!");
     }
 
+    /**
+     * Enables BStats if it is enabled in configuration.
+     */
     private void enableMetrics() {
         if (this.config.getBoolean("settings", "bstats-metrics-enabled")) {
             this.logger.info("Enabling Bstats.. To disable metrics, set bstats-metrics-enabled to false in config.yml");
@@ -130,6 +137,9 @@ public final class MCMMOCredits extends JavaPlugin {
         this.logger.info("Bstats is disabled, skipping initialization...");
     }
 
+    /**
+     * Runs a Data Converter if it is enabled in configuration.
+     */
     private void runConversionProcess() {
         if (this.config.getBoolean("converter", "enabled")) {
             long start = System.nanoTime();

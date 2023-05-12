@@ -62,6 +62,9 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
+/**
+ * Loads the Command system.
+ */
 public final class CloudCommandHandler {
     private static final Pattern TO_PATH = Pattern.compile("[.|_]");
     private final Credits commands;
@@ -81,6 +84,14 @@ public final class CloudCommandHandler {
             BukkitCaptionKeys.ARGUMENT_PARSE_FAILURE_PLAYER);
     private PaperCommandManager<CommandExecutor> manager;
 
+    /**
+     * Constructs the object.
+     *
+     * @param commands Command class used for registration.
+     * @param service  UserService to get CommandExecutor instances from cache.
+     * @param config   MainConfig to load relevant settings.
+     * @param plugin   Plugin instance to register the CommandManager.
+     */
     @Inject
     public CloudCommandHandler(final Credits commands, final UserService service, final MainConfig config, final MCMMOCredits plugin) {
         this.commands = commands;
@@ -90,7 +101,7 @@ public final class CloudCommandHandler {
     }
 
     /**
-     * Loads the actual CommandManager. Currently only compatible with Paper.
+     * Loads the CommandManager.
      */
     public void load() {
         Function<CommandSender, CommandExecutor> forwardsMapper = this.service::fromSender;
@@ -104,19 +115,18 @@ public final class CloudCommandHandler {
         this.manager.registerBrigadier();
         Objects.requireNonNull(this.manager.brigadierManager()).setNativeNumberSuggestions(false);
         this.manager.registerAsynchronousCompletions();
-        this.loadCommandParser(this.manager);
-        this.parseCommands(this.manager);
+        this.loadCommandParser();
+        this.parseCommands();
         this.registerExceptions();
     }
 
     /**
      * Loads the ParserRegistry using the CommandManager.
+     * <p>
      * The CommandManager must be loaded before calling this.
-     *
-     * @param manager The loaded CommandManager.
      */
-    private void loadCommandParser(final PaperCommandManager<CommandExecutor> manager) {
-        ParserRegistry<CommandExecutor> parser = manager.parserRegistry();
+    private void loadCommandParser() {
+        ParserRegistry<CommandExecutor> parser = this.manager.parserRegistry();
         parser.registerParserSupplier(TypeToken.get(PrimarySkillType.class), x -> new SkillParser<>());
         boolean tabCompletion = this.config.getBoolean("settings", "user-tab-complete");
         parser.registerSuggestionProvider("user", (c, i) -> {
@@ -130,12 +140,12 @@ public final class CloudCommandHandler {
     }
 
     /**
-     * Parses existing commands using an AnnotationParser, and sets the customizable command prefix.
-     *
-     * @param manager The loaded CommandManager.
+     * Parses existing commands using an AnnotationParser. Sets the customizable command prefix.
+     * <p>
+     * The CommandManager must be loaded before calling this.
      */
-    private void parseCommands(final PaperCommandManager<CommandExecutor> manager) {
-        AnnotationParser<CommandExecutor> annotationParser = new AnnotationParser<>(manager, CommandExecutor.class, p -> SimpleCommandMeta.empty());
+    private void parseCommands() {
+        AnnotationParser<CommandExecutor> annotationParser = new AnnotationParser<>(this.manager, CommandExecutor.class, p -> SimpleCommandMeta.empty());
         String commandPrefix = this.config.getString("command-prefix");
         annotationParser.stringProcessor(new PropertyReplacingStringProcessor(x -> {
             if (x.equals("command.prefix")) {
@@ -148,6 +158,8 @@ public final class CloudCommandHandler {
 
     /**
      * Registers the Exception Handlers, and creates the Caption Registry.
+     * <p>
+     * The CommandManager must be loaded before calling this.
      */
     private void registerExceptions() {
         this.register(InvalidSyntaxException.class, "invalid-syntax", "correct_syntax", (c, e) -> "/" + e.getCorrectSyntax());
@@ -167,13 +179,13 @@ public final class CloudCommandHandler {
     }
 
     /**
-     * Registers the Exception in the CommandManager.
+     * Registers an Exception to the CommandManager.
      *
      * @param ex    The class of the exception.
-     * @param path  The config path for the message to send to the user.
-     * @param key   key of placeholder to add to Resolver.
-     * @param value function that calculates the value of the placeholder.
-     * @param <E>   The exception.
+     * @param path  The config path of the message sent to user.
+     * @param key   Placeholder key. Used with {@literal <>} formatting.
+     * @param value Function to calculate placeholder value.
+     * @param <E>   The Exception type. Differs per registration.
      */
     private <E extends Exception> void register(final Class<E> ex, final String path, final String key, final BiFunction<CommandExecutor, E, String> value) {
         this.manager.registerExceptionHandler(ex, (c, e) -> {
@@ -184,16 +196,16 @@ public final class CloudCommandHandler {
     }
 
     /**
-     * Formatter of Cloud captions that uses {@literal <>} instead of {} for consistency.
+     * Formatter of captions that uses {@literal <>} instead of {}.
      */
     private static final class CaptionFormatter implements CaptionVariableReplacementHandler {
         @Override
-        @SuppressWarnings("checkstyle:finalparameters")
-        public @NotNull String replaceVariables(@NotNull String string, @NotNull final CaptionVariable... variables) {
+        public @NotNull String replaceVariables(@NotNull final String string, @NotNull final CaptionVariable... variables) {
+            String replacement = string;
             for (final CaptionVariable variable : variables) {
-                string = string.replace(String.format("<%s>", variable.getKey()), variable.getValue());
+                replacement = replacement.replace(String.format("<%s>", variable.getKey()), variable.getValue());
             }
-            return string;
+            return replacement;
         }
     }
 }

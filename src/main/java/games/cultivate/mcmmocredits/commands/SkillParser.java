@@ -31,7 +31,6 @@ import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.exceptions.parsing.NoInputProvidedException;
 import cloud.commandframework.exceptions.parsing.ParserException;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.util.Util;
 import org.jetbrains.annotations.NotNull;
 
@@ -40,12 +39,11 @@ import java.util.List;
 import java.util.Queue;
 
 /**
- * Argument Parser for MCMMO Skills to filter out child skills universally.
+ * Argument Parser for MCMMO skill types.
  *
- * @param <C> The command sender. In this case, will always be {@link CommandExecutor}.
+ * @param <C> CommandExecutor.
  */
 public final class SkillParser<C> implements ArgumentParser<C, PrimarySkillType> {
-
     /**
      * {@inheritDoc}
      */
@@ -71,9 +69,7 @@ public final class SkillParser<C> implements ArgumentParser<C, PrimarySkillType>
     }
 
     /**
-     * Parser Exception thrown when Skills are "child skills".
-     *
-     * @see Util#getSkillNames()
+     * Exception thrown when an unknown result is parsed.
      */
     @SuppressWarnings("java:S110")
     public static final class SkillParseException extends ParserException {

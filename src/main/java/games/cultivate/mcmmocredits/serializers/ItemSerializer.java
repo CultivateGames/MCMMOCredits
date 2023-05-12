@@ -26,12 +26,11 @@ package games.cultivate.mcmmocredits.serializers;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.ui.item.BaseItem;
-import games.cultivate.mcmmocredits.ui.item.ConfigItem;
-import games.cultivate.mcmmocredits.ui.item.RedeemItem;
 import games.cultivate.mcmmocredits.ui.item.CommandItem;
+import games.cultivate.mcmmocredits.ui.item.ConfigItem;
 import games.cultivate.mcmmocredits.ui.item.Item;
+import games.cultivate.mcmmocredits.ui.item.RedeemItem;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -50,18 +49,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Handles serialization/deserialization of {@link Item} from {@link Config}
+ * Handles serialization/deserialization of an Item.
  */
 public final class ItemSerializer implements TypeSerializer<Item> {
     public static final ItemSerializer INSTANCE = new ItemSerializer();
 
     /**
-     * Deserializes an Item from the configuration.
-     *
-     * @param type the type of return value required
-     * @param node the node containing serialized data
-     * @return The deserialized Item.
-     * @throws SerializationException Thrown when trying to get ClickType from a node.
+     * {@inheritDoc}
      */
     @Override
     public Item deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
@@ -95,12 +89,7 @@ public final class ItemSerializer implements TypeSerializer<Item> {
     }
 
     /**
-     * Serializes an Item to the configuration.
-     *
-     * @param type the type of the input object
-     * @param item the object to be serialized
-     * @param node the node to write to
-     * @throws SerializationException Thrown when setting nodes to a value.
+     * {@inheritDoc}
      */
     @Override
     public void serialize(final Type type, final Item item, final ConfigurationNode node) throws SerializationException {
@@ -120,11 +109,11 @@ public final class ItemSerializer implements TypeSerializer<Item> {
     }
 
     /**
-     * Creates Skull Meta if Item (de)serialization requires it.
+     * Creates SkullMeta from provided ItemMeta and texture string.
      *
-     * @param meta    The current Item Meta.
-     * @param texture The skull texture.
-     * @return Skull Meta with supplied options.
+     * @param meta    The current ItemMeta.
+     * @param texture The texture string.
+     * @return SkullMeta with texture string applied.
      */
     private SkullMeta createSkullMeta(final ItemMeta meta, final String texture) {
         SkullMeta skullMeta = (SkullMeta) meta;
@@ -135,7 +124,7 @@ public final class ItemSerializer implements TypeSerializer<Item> {
     }
 
     /**
-     * Gets String texture from Skull Meta.
+     * Gets String texture from provided SkullMeta.
      *
      * @param meta The item meta.
      * @return The texture string.

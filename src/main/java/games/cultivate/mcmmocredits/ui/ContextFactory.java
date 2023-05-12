@@ -33,7 +33,6 @@ import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.util.ChatQueue;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
-import org.incendo.interfaces.core.click.ClickHandler;
 import org.incendo.interfaces.core.transform.Transform;
 import org.incendo.interfaces.paper.PlayerViewer;
 import org.incendo.interfaces.paper.element.ItemStackElement;
@@ -43,7 +42,7 @@ import org.incendo.interfaces.paper.transform.PaperTransform;
 import javax.inject.Inject;
 
 /**
- * Used to encapsulate building {@link ClickHandler} instances.
+ * Handles creation of click actions when Items are clicked inside of Menus.
  */
 public final class ContextFactory {
     private final ChatQueue queue;
@@ -53,9 +52,9 @@ public final class ContextFactory {
     /**
      * Constructs the object.
      *
-     * @param config Instance of the MainConfig.
-     * @param queue  Instance of the ChatQueue.
-     * @param plugin Instance of the plugin.
+     * @param config Config instance, used to run config modification process.
+     * @param queue  ChatQueue, used to execute redeem and config modification processes.
+     * @param plugin Plugin instance, used to execute processes on the main thread if needed.
      */
     @Inject
     public ContextFactory(final ChatQueue queue, final MainConfig config, final MCMMOCredits plugin) {
@@ -65,8 +64,7 @@ public final class ContextFactory {
     }
 
     /**
-     * Provides a TransformContext object for the item
-     * where name and lore are updated, and a click handler is attached to it.
+     * Creates a TransformContext for an item where display details are updated, and a ClickHandler is attached to it.
      *
      * @return The TransformContext.
      */
@@ -78,8 +76,8 @@ public final class ContextFactory {
     /**
      * Redeem credits into the provided skill.
      *
-     * @param user  The user.
-     * @param skill the skill name to be redeemed (if applicable).
+     * @param user  The menu viewer.
+     * @param skill The affected skill.
      */
     public void runRedeem(final User user, final PrimarySkillType skill) {
         Resolver resolver = Resolver.ofUser(user);
@@ -91,8 +89,8 @@ public final class ContextFactory {
     /**
      * Edits a specified config node when the corresponding item is clicked.
      *
-     * @param user The user.
-     * @param path the path to the configuration setting or message to be edited
+     * @param user The menu viewer.
+     * @param path The config node to be modified.
      */
     public void runEditConfig(final User user, final Object... path) {
         Resolver resolver = Resolver.ofUser(user);
@@ -108,8 +106,8 @@ public final class ContextFactory {
     /**
      * Executes commands using the main thread executor.
      *
-     * @param user    The user.
-     * @param command The command to execute.
+     * @param user    The menu viewer.
+     * @param command The command to be executed.
      */
     public void runCommand(final User user, final String command) {
         Bukkit.getScheduler().getMainThreadExecutor(this.plugin).execute(() -> Bukkit.dispatchCommand(user.player(), command));

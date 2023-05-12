@@ -34,6 +34,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Represents a basic Menu.
+ */
 public class BaseMenu implements Menu {
     private final Map<String, Item> items;
     private final String title;
@@ -41,6 +44,15 @@ public class BaseMenu implements Menu {
     private final boolean fill;
     private final boolean navigation;
 
+    /**
+     * Constructs the object.
+     *
+     * @param items      The items and their keys in a map.
+     * @param title      Unparsed title of the Inventory.
+     * @param slots      Size of the Inventory.
+     * @param fill       Whether the inventory will have fill border items.
+     * @param navigation Whether the inventory will have a navigation item.
+     */
     BaseMenu(final Map<String, Item> items, final String title, final int slots, final boolean fill, final boolean navigation) {
         this.items = items;
         this.title = title;
@@ -49,10 +61,24 @@ public class BaseMenu implements Menu {
         this.navigation = navigation;
     }
 
+    /**
+     * Constructs the object.
+     *
+     * @param items      The items and their keys in a map.
+     * @param title      Unparsed title of the Inventory.
+     * @param slots      Size of the Inventory.
+     * @param fill       Whether the inventory will have fill border items.
+     * @param navigation Whether the inventory will have a navigation item.
+     */
     public static BaseMenu of(final Map<String, Item> items, final String title, final int slots, final boolean fill, final boolean navigation) {
         return new BaseMenu(items, title, slots, fill, navigation);
     }
 
+    /**
+     * Constructs the object from an existing Menu.
+     *
+     * @param menu The existing Menu.
+     */
     public static BaseMenu of(final Menu menu) {
         return new BaseMenu(menu.items(), menu.title(), menu.slots(), menu.fill(), menu.navigation());
     }
