@@ -126,20 +126,22 @@ public final class Credits {
     @CommandPermission("mcmmocredits.leaderboard")
     @CommandDescription("Shows the specified page of the leaderboard.")
     public void top(final CommandExecutor executor, final @Argument @Range(min = "1") int page) {
+        Text invalid = Text.forOneUser(executor, this.config.getMessage("invalid-leaderboard"));
         if (!this.config.getBoolean("settings", "leaderboard-enabled")) {
-            Text.forOneUser(executor, this.config.getMessage("invalid-leaderboard")).send();
+            invalid.send();
             return;
         }
         int limit = this.config.getInteger("settings", "leaderboard-page-size");
         int offset = Math.max(0, (page - 1) * limit);
         List<User> users = this.service.getPageOfUsers(limit, offset);
-        if (users.isEmpty()) {
-            Text.forOneUser(executor, this.config.getMessage("invalid-leaderboard")).send();
+        int size = users.size();
+        if (size == 0) {
+            invalid.send();
             return;
         }
         Text.forOneUser(executor, this.config.getString("leaderboard-title")).send();
         Resolver resolver = Resolver.ofUser(executor);
-        for (int i = 1; i <= limit; i++) {
+        for (int i = 1; i <= size; i++) {
             resolver.addUser(users.get(i - 1), "target");
             resolver.addIntTag("rank", i + offset);
             Text.fromString(executor, this.config.getString("leaderboard-entry"), resolver).send();
