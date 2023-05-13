@@ -40,8 +40,12 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
  * @param ssl      If useSSL should be set to "true" in the JDBC connection url.
  */
 @ConfigSerializable
-public record DatabaseProperties(DatabaseType type, String host, String name, String user, String password, int port,
-                                 boolean ssl) {
+public record DatabaseProperties(DatabaseType type, String host, String name, String user, String password, int port, boolean ssl) {
+    /**
+     * Constructs the object with sane defaults.
+     *
+     * @return The object.
+     */
     public static DatabaseProperties defaults() {
         return new DatabaseProperties(DatabaseType.SQLITE, "127.0.0.1", "database", "root", "passw0rd+", 3306, true);
     }
@@ -83,6 +87,7 @@ public record DatabaseProperties(DatabaseType type, String host, String name, St
         config.addDataSourceProperty("password", this.password);
         return new HikariDataSource(config);
     }
+
     /**
      * Creates a HikariDataSource for the SQLite database type.
      *
