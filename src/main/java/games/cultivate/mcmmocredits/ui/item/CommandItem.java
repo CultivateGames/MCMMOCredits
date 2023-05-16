@@ -58,6 +58,7 @@ public final class CommandItem extends BaseItem {
      *
      * @param command The command to execute.
      * @param item    The item to be used for pass-through.
+     * @return The item.
      */
     public static CommandItem of(final String command, final Item item) {
         return new CommandItem(command, item.stack(), item.name(), item.lore(), item.slot());

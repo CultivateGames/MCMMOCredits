@@ -76,6 +76,12 @@ public final class SkillParser<C> implements ArgumentParser<C, PrimarySkillType>
         @Serial
         private static final long serialVersionUID = 3489324098342876342L;
 
+        /**
+         * Constructs the object.
+         *
+         * @param input   Current input of the command.
+         * @param context Current context of the command.
+         */
         public SkillParseException(final String input, final CommandContext<?> context) {
             super(SkillParser.class, context, StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_ENUM, CaptionVariable.of("input", input), CaptionVariable.of("acceptableValues", Util.getJoinedSkillNames()));
         }

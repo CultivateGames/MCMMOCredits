@@ -59,6 +59,13 @@ public class Listeners implements Listener {
     private final UserService service;
     private final MainConfig config;
 
+    /**
+     * Constructs the object.
+     *
+     * @param config  MainConfig, used to read properties for event handlers.
+     * @param queue   ChatQueue, used to listen for relevant chat messages.
+     * @param service UserService, required to modify users.
+     */
     @Inject
     public Listeners(final MainConfig config, final ChatQueue queue, final UserService service) {
         this.config = config;
@@ -161,7 +168,7 @@ public class Listeners implements Listener {
     /**
      * Cancels shift-clicking inside of Interfaces due to a bug in the library.
      * Can be removed if <a href="https://github.com/Incendo/interfaces/issues/69">this</a> is patched.
-     * <p></p>
+     * <br><br>
      * Note: The current solution will likely affect any Inventory that is a {@link ChestView}
      *
      * @param e The event.
@@ -176,7 +183,7 @@ public class Listeners implements Listener {
     /**
      * Cancels dragging inside of Interfaces due to a bug in the library.
      * Can be removed if <a href="https://github.com/Incendo/interfaces/issues/69">this</a> is patched.
-     * <p></p>
+     * <br><br>
      * Note: The current solution will likely affect any Inventory that is a {@link ChestView}
      *
      * @param e The event.

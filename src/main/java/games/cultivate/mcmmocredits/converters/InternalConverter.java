@@ -44,6 +44,12 @@ public final class InternalConverter implements Converter {
     private Database sourceDatabase;
     private List<User> sourceUsers;
 
+    /**
+     * Constructs the object.
+     *
+     * @param config         The config to read converter properties.
+     * @param destinationDAO The current UserDAO to write users.
+     */
     @Inject
     public InternalConverter(final MainConfig config, final UserDAO destinationDAO) {
         this.destinationDAO = destinationDAO;

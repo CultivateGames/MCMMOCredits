@@ -40,7 +40,11 @@ public interface Menu {
     void addExtraItems();
 
     /**
-     * Creates a new ChestInterface for the given user with the specified contextFactory.
+     * Creates a new ChestInterface for the specified user.
+     *
+     * @param user    The user to build the interface for.
+     * @param factory The ContextFactory required to help build item clicks.
+     * @return The ChestInterface.
      */
     ChestInterface build(User user, ContextFactory factory);
 

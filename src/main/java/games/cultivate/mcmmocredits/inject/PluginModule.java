@@ -122,6 +122,13 @@ public final class PluginModule extends AbstractModule {
         return config;
     }
 
+    /**
+     * Provides the Converter for injection.
+     *
+     * @param config   The config used to read converter properties.
+     * @param injector The injector to grab a specific instance of the Converter.
+     * @return A Converter.
+     */
     @Provides
     @Singleton
     public Converter provideConverter(final MainConfig config, final Injector injector) {

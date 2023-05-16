@@ -50,11 +50,19 @@ public class CreditTransactionEvent extends Event {
         this.senderFeedback = senderFeedback;
     }
 
+    /**
+     * Required method for Paper event classes.
+     *
+     * @return The HandlerList of the event.
+     */
     @SuppressWarnings("unused")
     public static HandlerList getHandlerList() {
         return HANDLERS;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @SuppressWarnings("java:S4144")
     public @NotNull HandlerList getHandlers() {

@@ -69,6 +69,7 @@ public class BaseMenu implements Menu {
      * @param slots      Size of the Inventory.
      * @param fill       Whether the inventory will have fill border items.
      * @param navigation Whether the inventory will have a navigation item.
+     * @return The menu.
      */
     public static BaseMenu of(final Map<String, Item> items, final String title, final int slots, final boolean fill, final boolean navigation) {
         return new BaseMenu(items, title, slots, fill, navigation);
@@ -78,6 +79,7 @@ public class BaseMenu implements Menu {
      * Constructs the object from an existing Menu.
      *
      * @param menu The existing Menu.
+     * @return The menu.
      */
     public static BaseMenu of(final Menu menu) {
         return new BaseMenu(menu.items(), menu.title(), menu.slots(), menu.fill(), menu.navigation());

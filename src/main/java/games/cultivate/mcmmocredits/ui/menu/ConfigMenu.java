@@ -54,6 +54,7 @@ public final class ConfigMenu extends BaseMenu {
      *
      * @param config MainConfig to derive menu items.
      * @param menu   The existing Menu.
+     * @return The menu.
      */
     public static ConfigMenu of(final MainConfig config, final Menu menu) {
         ConfigMenu cmenu = new ConfigMenu(menu.items(), menu.title(), menu.slots(), menu.fill(), menu.navigation());

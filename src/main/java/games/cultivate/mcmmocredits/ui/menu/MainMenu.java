@@ -52,6 +52,7 @@ public final class MainMenu extends BaseMenu {
      * Constructs the object from an existing Menu.
      *
      * @param menu The existing Menu.
+     * @return The menu.
      */
     public static MainMenu of(final Menu menu) {
         return new MainMenu(menu.items(), menu.title(), menu.slots(), menu.fill(), menu.navigation());

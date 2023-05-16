@@ -59,6 +59,7 @@ public final class RedeemItem extends BaseItem {
      *
      * @param skill The skill to use in a redemption.
      * @param item  The item to be used for pass-through.
+     * @return The item.
      */
     public static RedeemItem of(final PrimarySkillType skill, final Item item) {
         return new RedeemItem(skill, item.stack(), item.name(), item.lore(), item.slot());

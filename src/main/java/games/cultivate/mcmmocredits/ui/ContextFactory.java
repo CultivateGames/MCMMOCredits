@@ -66,6 +66,8 @@ public final class ContextFactory {
     /**
      * Creates a TransformContext for an item where display details are updated, and a ClickHandler is attached to it.
      *
+     * @param user The user who will be viewing the item.
+     * @param item The item to parse.
      * @return The TransformContext.
      */
     public Transform<ChestPane, PlayerViewer> createContext(final User user, final Item item) {

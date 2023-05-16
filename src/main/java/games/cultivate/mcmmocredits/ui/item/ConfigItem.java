@@ -59,6 +59,7 @@ public final class ConfigItem extends BaseItem {
      *
      * @param path The NodePath to be edited.
      * @param item The item to be used for pass-through.
+     * @return The item.
      */
     public static ConfigItem of(final NodePath path, final Item item) {
         return new ConfigItem(path, item.stack(), item.name(), item.lore(), item.slot());

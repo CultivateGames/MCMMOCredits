@@ -60,6 +60,12 @@ public final class PluginConverter implements Converter {
     private final long attemptDelay;
     private List<User> sourceUsers;
 
+    /**
+     * Constructs the object.
+     *
+     * @param config         The config to read converter properties.
+     * @param destinationDAO The current UserDAO to write users.
+     */
     @Inject
     public PluginConverter(final MainConfig config, final UserDAO destinationDAO) {
         this.config = config;
