@@ -76,10 +76,21 @@ public final class UserCache {
         if (user == null) {
             throw new IllegalArgumentException("User not found in database!");
         }
-        this.remove(uuid, user.username());
+        this.remove(uuid);
         User updatedUser = action.apply(user);
         this.add(updatedUser);
         return updatedUser;
+    }
+
+    /**
+     * Updates the user found at the specified UUID with the provided user.
+     *
+     * @param uuid The UUID to check.
+     * @param user The user to replace with.
+     * @return The updated user.
+     */
+    public User update(final UUID uuid, final User user) {
+        return this.update(uuid, x -> user);
     }
 
     /**
@@ -103,12 +114,11 @@ public final class UserCache {
     /**
      * Removes a user from the cache.
      *
-     * @param uuid     The UUID to remove.
-     * @param username The username to remove.
+     * @param uuid The UUID to remove.
      */
-    public void remove(final UUID uuid, final String username) {
-        this.uuidCache.remove(uuid);
-        this.stringCache.remove(username);
+    public void remove(final UUID uuid) {
+        User removed = this.uuidCache.remove(uuid);
+        this.stringCache.remove(removed.username());
     }
 
     /**

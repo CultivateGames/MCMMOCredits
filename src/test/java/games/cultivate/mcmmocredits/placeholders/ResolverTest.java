@@ -23,6 +23,9 @@
 //
 package games.cultivate.mcmmocredits.placeholders;
 
+import games.cultivate.mcmmocredits.transaction.BasicTransaction;
+import games.cultivate.mcmmocredits.transaction.BasicTransactionType;
+import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -93,9 +96,10 @@ class ResolverTest {
     void ofTransaction_SenderAndTargetAndAmount_ContainsSenderAndTargetPlaceholdersWithAmount() {
         //Arrange
         int amount = 25;
+        Transaction transaction = BasicTransaction.of(this.sender, this.target, BasicTransactionType.SET, amount);
 
         //Act
-        Resolver resolver = Resolver.ofTransaction(this.sender, this.target, amount);
+        Resolver resolver = Resolver.ofTransaction(transaction);
         TagResolver tagResolver = resolver.toTagResolver();
 
         //Assert

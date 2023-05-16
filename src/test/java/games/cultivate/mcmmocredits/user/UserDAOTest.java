@@ -112,50 +112,50 @@ class UserDAOTest {
         assertEquals(newCredits, updatedCredits);
     }
 
-    @Test
-    void addCredits_ExistingUser_CreditsIncreased() {
-        // Arrange
-        int addedCredits = 50;
-
-        // Act
-        boolean addCreditsResult = this.userDAO.addCredits(this.uuid, addedCredits);
-        int updatedCredits = this.userDAO.getCredits(this.uuid);
-
-        // Assert
-        assertTrue(addCreditsResult);
-        assertEquals(this.user.credits() + addedCredits, updatedCredits);
-    }
-
-    @Test
-    void takeCredits_ExistingUser_CreditsDecreased() {
-        // Arrange
-        int takenCredits = 50;
-
-        // Act
-        boolean takeCreditsResult = this.userDAO.takeCredits(this.uuid, takenCredits);
-        int updatedCredits = this.userDAO.getCredits(this.uuid);
-
-        // Assert
-        assertTrue(takeCreditsResult);
-        assertEquals(this.user.credits() - takenCredits, updatedCredits);
-    }
-
-    @Test
-    void redeemCredits_ExistingUser_CreditsRedeemed() {
-        // Arrange
-        int redeemedCredits = 50;
-
-        // Act
-        boolean redeemCreditsResult = this.userDAO.redeemCredits(this.uuid, redeemedCredits);
-        int updatedCredits = this.userDAO.getCredits(this.uuid);
-        Optional<User> updatedUser = this.userDAO.getUser(this.uuid);
-
-        // Assert
-        assertTrue(redeemCreditsResult);
-        assertTrue(updatedUser.isPresent());
-        assertEquals(this.user.credits() - redeemedCredits, updatedCredits);
-        assertEquals(this.user.redeemed() + redeemedCredits, updatedUser.get().redeemed());
-    }
+//    @Test
+//    void addCredits_ExistingUser_CreditsIncreased() {
+//        // Arrange
+//        int addedCredits = 50;
+//
+//        // Act
+//        boolean addCreditsResult = this.userDAO.addCredits(this.uuid, addedCredits);
+//        int updatedCredits = this.userDAO.getCredits(this.uuid);
+//
+//        // Assert
+//        assertTrue(addCreditsResult);
+//        assertEquals(this.user.credits() + addedCredits, updatedCredits);
+//    }
+//
+//    @Test
+//    void takeCredits_ExistingUser_CreditsDecreased() {
+//        // Arrange
+//        int takenCredits = 50;
+//
+//        // Act
+//        boolean takeCreditsResult = this.userDAO.takeCredits(this.uuid, takenCredits);
+//        int updatedCredits = this.userDAO.getCredits(this.uuid);
+//
+//        // Assert
+//        assertTrue(takeCreditsResult);
+//        assertEquals(this.user.credits() - takenCredits, updatedCredits);
+//    }
+//
+//    @Test
+//    void redeemCredits_ExistingUser_CreditsRedeemed() {
+//        // Arrange
+//        int redeemedCredits = 50;
+//
+//        // Act
+//        boolean redeemCreditsResult = this.userDAO.redeemCredits(this.uuid, redeemedCredits);
+//        int updatedCredits = this.userDAO.getCredits(this.uuid);
+//        Optional<User> updatedUser = this.userDAO.getUser(this.uuid);
+//
+//        // Assert
+//        assertTrue(redeemCreditsResult);
+//        assertTrue(updatedUser.isPresent());
+//        assertEquals(this.user.credits() - redeemedCredits, updatedCredits);
+//        assertEquals(this.user.redeemed() + redeemedCredits, updatedUser.get().redeemed());
+//    }
 
     @Test
     void getPageOfUsers_ThreeUsers_UsersRetrieved() {

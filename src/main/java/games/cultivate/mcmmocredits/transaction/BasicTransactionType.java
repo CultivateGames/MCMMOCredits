@@ -21,15 +21,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.util;
+package games.cultivate.mcmmocredits.transaction;
 
 import java.util.function.IntBinaryOperator;
 
 /**
- * Represents different types of credit transactions.
+ * Represents different types of basic credit transactions.
  */
-public enum CreditOperation {
-    ADD(Integer::sum),
+public enum BasicTransactionType {
+    ADD(Math::addExact),
     TAKE(Math::subtractExact),
     SET((a, b) -> b);
 
@@ -40,7 +40,7 @@ public enum CreditOperation {
      *
      * @param operator Operators that represent how credits should be modified.
      */
-    CreditOperation(final IntBinaryOperator operator) {
+    BasicTransactionType(final IntBinaryOperator operator) {
         this.operator = operator;
     }
 

@@ -24,13 +24,13 @@
 package games.cultivate.mcmmocredits;
 
 import games.cultivate.mcmmocredits.user.UserService;
-import games.cultivate.mcmmocredits.util.CreditOperation;
 
 import javax.inject.Inject;
 import java.util.UUID;
 
 /**
- * Handles basic user modification for 3rd party applications, without exposing all impl details.
+ * Handles basic user modification for 3rd party applications.
+ * Method calls in this class will not trigger the CreditTransactionEvent.
  */
 @SuppressWarnings("unused")
 public class MCMMOCreditsAPI {
@@ -64,7 +64,8 @@ public class MCMMOCreditsAPI {
      * @return True if the transaction was successful, otherwise false.
      */
     public boolean addCredits(final UUID uuid, final int amount) {
-        return this.service.modifyCredits(uuid, CreditOperation.ADD, amount) != null;
+        int result = this.getCredits(uuid) + amount;
+        return result >= 0 && this.service.setCredits(uuid, result) != null;
     }
 
     /**
@@ -75,7 +76,7 @@ public class MCMMOCreditsAPI {
      * @return True if the transaction was successful, otherwise false.
      */
     public boolean setCredits(final UUID uuid, final int amount) {
-        return this.service.modifyCredits(uuid, CreditOperation.SET, amount) != null;
+        return amount >= 0 && this.service.setCredits(uuid, amount) != null;
     }
 
     /**
@@ -86,6 +87,7 @@ public class MCMMOCreditsAPI {
      * @return True if the transaction was successful, otherwise false.
      */
     public boolean takeCredits(final UUID uuid, final int amount) {
-        return this.service.modifyCredits(uuid, CreditOperation.TAKE, amount) != null;
+        int result = this.getCredits(uuid) - amount;
+        return result >= 0 && this.service.setCredits(uuid, result) != null;
     }
 }

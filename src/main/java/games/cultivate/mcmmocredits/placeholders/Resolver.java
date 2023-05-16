@@ -24,6 +24,9 @@
 package games.cultivate.mcmmocredits.placeholders;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import games.cultivate.mcmmocredits.transaction.RedeemTransaction;
+import games.cultivate.mcmmocredits.transaction.Transaction;
+import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.util.Util;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -74,29 +77,30 @@ public final class Resolver {
     /**
      * Creates a Resolver with the provided transaction properties.
      *
-     * @param sender A user.
-     * @param target Another user.
-     * @param amount Transaction amount.
+     * @param transaction The transaction to parse.
      * @return The Resolver.
      */
-    public static Resolver ofTransaction(final CommandExecutor sender, final CommandExecutor target, final int amount) {
-        Resolver resolver = Resolver.ofUsers(sender, target);
-        resolver.addAmount(amount);
+    public static Resolver ofTransaction(final Transaction transaction) {
+        Resolver resolver = Resolver.ofUsers(transaction.executor(), transaction.target());
+        resolver.addAmount(transaction.amount());
+        if (transaction instanceof RedeemTransaction tr) {
+            resolver.addSkill(tr.skill());
+        }
         return resolver;
     }
-
     /**
-     * Creates a Resolver with the provided redemption properties.
+     * Creates a Resolver with the provided transaction result.
      *
-     * @param sender A user.
-     * @param target Another user.
-     * @param skill  The affected skill.
-     * @param amount Transaction amount.
+     * @param result The result of a transaction to parse.
      * @return The Resolver.
      */
-    public static Resolver ofRedemption(final CommandExecutor sender, final CommandExecutor target, final PrimarySkillType skill, final int amount) {
-        Resolver resolver = Resolver.ofTransaction(sender, target, amount);
-        resolver.addSkill(skill);
+    public static Resolver ofTransactionResult(final TransactionResult result) {
+        Resolver resolver = Resolver.ofUsers(result.executor(), result.target());
+        Transaction transaction = result.transaction();
+        resolver.addAmount(transaction.amount());
+        if (transaction instanceof RedeemTransaction tr) {
+            resolver.addSkill(tr.skill());
+        }
         return resolver;
     }
 

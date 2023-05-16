@@ -23,22 +23,18 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import com.gmail.nossr50.datatypes.player.PlayerProfile;
-import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import com.gmail.nossr50.mcMMO;
-import com.gmail.nossr50.util.player.UserManager;
 import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
-import games.cultivate.mcmmocredits.user.CommandExecutor;
+import games.cultivate.mcmmocredits.transaction.FailureReason;
+import games.cultivate.mcmmocredits.transaction.Transaction;
+import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import games.cultivate.mcmmocredits.user.Console;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -138,79 +134,28 @@ public class Listeners implements Listener {
     public void onPlayerQuit(final PlayerQuitEvent e) {
         Player player = e.getPlayer();
         UUID uuid = player.getUniqueId();
-        this.service.removeFromCache(uuid, player.getName());
+        this.service.removeFromCache(uuid);
         this.queue.remove(uuid);
     }
 
     /**
-     * Performs a Credit Transaction with event supplied information.
+     * Performs a transaction with event supplied information.
      *
      * @param e The event.
      */
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void performTransaction(final CreditTransactionEvent e) {
-        CommandExecutor executor = this.service.fromSender(e.sender());
-        User target = this.service.getUser(e.uuid()).orElseThrow();
-        int amount = e.amount();
-        CreditOperation operation = e.operation();
-        Resolver resolver = Resolver.ofTransaction(executor, target, amount);
-        target = this.service.modifyCredits(target.uuid(), operation, amount);
-        if (target == null) {
-            Text.fromString(executor, this.config.getMessage("not-enough-credits"), resolver).send();
+    public void onTransaction(final CreditTransactionEvent e) {
+        Transaction transaction = e.transaction();
+        Optional<FailureReason> failure = transaction.executable();
+        if (failure.isPresent()) {
+            String key = failure.get().getKey();
+            Resolver resolver = Resolver.ofTransaction(transaction);
+            Text.fromString(transaction.executor(), this.config.getMessage(key), resolver).send();
             return;
         }
-        //TODO: refactor
-        if (e.isSelfTransaction()) {
-            executor = target;
-        }
-        resolver = Resolver.ofTransaction(executor, target, amount);
-        if (!e.silentForSender()) {
-            Text.fromString(executor, this.config.getMessage(operation.getMessageKey()), resolver).send();
-        }
-        if (target.player() != null && !e.silentForUser()) {
-            Text.fromString(target, this.config.getMessage(operation.getUserMessageKey()), resolver).send();
-        }
-    }
-
-    /**
-     * Performs a Credit Redemption with event supplied information.
-     *
-     * @param e The event.
-     */
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void performRedemption(final CreditRedemptionEvent e) {
-        CommandExecutor executor = this.service.fromSender(e.sender());
-        User target = this.service.getUser(e.uuid()).orElseThrow();
-        int amount = e.amount();
-        PrimarySkillType skill = e.skill();
-        Resolver resolver = Resolver.ofRedemption(executor, target, skill, amount);
-        if (target.credits() < amount) {
-            Text.fromString(executor, this.config.getMessage("not-enough-credits"), resolver).send();
-            return;
-        }
-        Optional<PlayerProfile> optionalProfile = this.getMCMMOProfile(e.uuid());
-        if (optionalProfile.isEmpty()) {
-            Text.fromString(executor, this.config.getMessage("mcmmo-profile-fail"), resolver).send();
-            return;
-        }
-        PlayerProfile profile = optionalProfile.get();
-        if (this.exceedsSkillCap(profile, skill, amount)) {
-            Text.fromString(executor, this.config.getMessage("mcmmo-skill-cap"), resolver).send();
-            return;
-        }
-        target = this.service.redeemCredits(target.uuid(), amount);
-        if (target != null) {
-            profile.addLevels(skill, amount);
-            profile.save(true);
-            resolver = Resolver.ofRedemption(executor, target, skill, amount);
-            if (!e.silentForSender()) {
-                String key = e.isSelfRedemption() ? "redeem" : "redeem-sudo";
-                Text.fromString(executor, this.config.getMessage(key), resolver).send();
-            }
-            if (!e.silentForUser() && target.player() != null) {
-                Text.fromString(target, this.config.getMessage("redeem-sudo-user"), resolver).send();
-            }
-        }
+        TransactionResult result = transaction.execute();
+        this.service.processTransaction(result);
+        result.sendFeedback(this.config, e.senderFeedback(), e.userFeedback());
     }
 
     /**
@@ -241,29 +186,5 @@ public class Listeners implements Listener {
         if (e.getInventory().getHolder() instanceof ChestView) {
             e.setCancelled(true);
         }
-    }
-
-    /**
-     * Gets if a player will exceed a MCMMO skill cap if a redemption is applied.
-     *
-     * @param profile User's MCMMO player profile.
-     * @param skill   The affected skill.
-     * @param amount  The amount of credits that may be applied.
-     * @return True if the cap will be exceeded, otherwise false.
-     */
-    private boolean exceedsSkillCap(final PlayerProfile profile, final PrimarySkillType skill, final int amount) {
-        return profile.getSkillLevel(skill) + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill);
-    }
-
-    /**
-     * Gets a PlayerProfile from the specified UUID.
-     *
-     * @param uuid The UUID of a user.
-     * @return The PlayerProfile if it is loaded, otherwise an empty optional.
-     */
-    private Optional<PlayerProfile> getMCMMOProfile(final UUID uuid) {
-        Player player = Bukkit.getPlayer(uuid);
-        PlayerProfile profile = player == null ? mcMMO.getDatabaseManager().loadPlayerProfile(uuid) : UserManager.getPlayer(player).getProfile();
-        return profile.isLoaded() ? Optional.of(profile) : Optional.empty();
     }
 }
