@@ -118,7 +118,9 @@ public final class UserCache {
      */
     public void remove(final UUID uuid) {
         User removed = this.uuidCache.remove(uuid);
-        this.stringCache.remove(removed.username());
+        if (removed != null) {
+            this.stringCache.remove(removed.username());
+        }
     }
 
     /**

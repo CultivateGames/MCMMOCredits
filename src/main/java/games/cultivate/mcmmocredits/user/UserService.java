@@ -28,6 +28,7 @@ import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
@@ -124,9 +125,8 @@ public final class UserService {
      * @param username The username of a user.
      * @return The updated user, or null if the update failed.
      */
-    public User setUsername(final UUID uuid, final String username) {
-        this.dao.setUsername(uuid, username);
-        return this.cache.update(uuid, u -> u.withUsername(username));
+    public @Nullable User setUsername(final UUID uuid, final String username) {
+        return this.dao.setUsername(uuid, username) ? this.cache.update(uuid, u -> u.withUsername(username)) : null;
     }
 
     /**
@@ -136,9 +136,18 @@ public final class UserService {
      * @param amount Amount of credits to apply to balance.
      * @return The updated user, or null if the update failed.
      */
-    public User setCredits(final UUID uuid, final int amount) {
-        this.dao.setCredits(uuid, amount);
-        return this.cache.update(uuid, u -> u.withCredits(amount));
+    public @Nullable User setCredits(final UUID uuid, final int amount) {
+        return this.dao.setCredits(uuid, amount) ? this.cache.update(uuid, u -> u.withCredits(amount)) : null;
+    }
+
+    /**
+     * Updates an existing user in the DAO/Cache with the provided user.
+     *
+     * @param user The user to use in update.
+     * @return The updated user, or null if the update failed.
+     */
+    public @Nullable User updateUser(final User user) {
+        return this.dao.updateUser(user) ? this.cache.update(user.uuid(), user) : null;
     }
 
     /**
@@ -150,13 +159,12 @@ public final class UserService {
         Transaction transaction = result.transaction();
         User current = result.target();
         if (transaction.target() != current) {
-            this.dao.updateUser(current);
-            this.cache.update(current.uuid(), current);
+            this.updateUser(current);
         }
-        if (result.executor().isPlayer() && !transaction.isSelfTransaction() && transaction.executor() != result.executor()) {
-            User currentExecutor = (User) result.executor();
-            this.dao.updateUser(currentExecutor);
-            this.cache.update(currentExecutor.uuid(), currentExecutor);
+        CommandExecutor exec = result.executor();
+        if (exec.isPlayer() && !transaction.isSelfTransaction() && transaction.executor() != exec) {
+            User currentExecutor = (User) exec;
+            this.updateUser(currentExecutor);
         }
     }
 

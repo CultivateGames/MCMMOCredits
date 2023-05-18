@@ -36,87 +36,53 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 class TextTest {
-    private CommandSender audience;
-    private Resolver resolver;
-    private CommandExecutor executor;
     private final String testContent = "Test content";
+    private final Resolver resolver = new Resolver();
+    private CommandSender audience;
+    private CommandExecutor executor;
 
     @BeforeEach
     void setUp() {
         this.audience = mock(CommandSender.class);
-        this.resolver = new Resolver();
-        //Mock the user to return our command sender.
-        this.executor = mock(User.class);
-        when(this.executor.credits()).thenReturn(0);
-        when(this.executor.username()).thenReturn("testUsername");
-        when(this.executor.redeemed()).thenReturn(0);
-        when(this.executor.uuid()).thenReturn(UUID.randomUUID());
-        when(this.executor.sender()).thenReturn(this.audience);
+        this.executor = spy(new User(UUID.randomUUID(), "testUsername", 100, 10));
+        doReturn(this.audience).when(this.executor).sender();
     }
 
     @Test
     void fromString_AudienceContentResolver_SendsMessageToAudience() {
-        //Arrange
-        Text text = Text.fromString(this.audience, this.testContent, this.resolver);
-
-        //Act
-        text.send();
-
-        //Assert
+        Text.fromString(this.audience, this.testContent, this.resolver).send();
         verify(this.audience).sendMessage(any(Component.class));
     }
 
     @Test
     void fromString_CommandExecutorContentResolver_SendsMessageToAudience() {
-        //Arrange
-        Text text = Text.fromString(this.executor, this.testContent, this.resolver);
-
-        //Act
-        text.send();
-
-        //Assert
+        Text.fromString(this.executor, this.testContent, this.resolver).send();
         verify(this.audience).sendMessage(any(Component.class));
     }
 
     @Test
     void forOneUser_CommandExecutorContent_SendsMessageToAudience() {
-        //Arrange
-        Text text = Text.forOneUser(this.executor, this.testContent);
-
-        //Act
-        text.send();
-
-        //Assert
+        Text.forOneUser(this.executor, this.testContent).send();
         verify(this.audience).sendMessage(any(Component.class));
     }
 
     @Test
-    void toComponent_AudienceContentResolver_ReturnsComponent() {
-        //Arrange
-        Text text = Text.fromString(this.audience, this.testContent, this.resolver);
-
-        //Act
-        Component component = text.toComponent();
-
-        //Assert
-        Component expectedComponent = Component.empty().decoration(TextDecoration.ITALIC, false).append(Component.text(this.testContent));
-        assertEquals(expectedComponent, component);
+    void toComponent_AudienceContentResolver_ReturnsParsedComponent() {
+        String content = "<sender> <credits> <redeemed>!";
+        Component component = Text.fromString(this.audience, content, this.resolver).toComponent();
+        Component expected = Component.empty().decoration(TextDecoration.ITALIC, false).append(Component.text("<sender> <credits> <redeemed>!"));
+        assertEquals(expected, component);
     }
 
     @Test
     void send_AudienceContentResolver_SendsMessageToAudience() {
-        //Arrange
-        Text text = Text.fromString(this.audience, this.testContent, this.resolver);
-
-        //Act
-        text.send();
-
-        //Assert
+        Text.fromString(this.audience, this.testContent, this.resolver).send();
         verify(this.audience).sendMessage(any(Component.class));
     }
 }

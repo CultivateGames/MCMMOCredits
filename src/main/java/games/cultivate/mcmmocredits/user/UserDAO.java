@@ -133,7 +133,8 @@ public interface UserDAO extends SqlObject {
      * Updates an existing user in the database with the provided user.
      *
      * @param user The user to update.
+     * @return True if the transaction was successful, otherwise false.
      */
     @SqlUpdate("UPDATE MCMMOCredits SET username = :username, credits = :credits, redeemed = :redeemed WHERE UUID = :uuid;")
-    void updateUser(@BindMethods User user);
+    boolean updateUser(@BindMethods User user);
 }

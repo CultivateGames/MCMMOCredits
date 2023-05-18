@@ -21,24 +21,19 @@ repositories {
 
 dependencies {
     paperweight.paperDevBundle("1.19.4-R0.1-SNAPSHOT")
-    implementation ("org.bstats:bstats-bukkit:3.0.2")
-
+    implementation("org.bstats:bstats-bukkit:3.0.2")
     implementation("cloud.commandframework:cloud-annotations:1.8.3")
     implementation("cloud.commandframework:cloud-paper:1.8.3")
-
     implementation("org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT")
-
     implementation("com.h2database:h2:2.1.214")
     implementation("com.google.inject:guice:5.1.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.jdbi:jdbi3-core:3.38.0")
-    implementation("org.jdbi:jdbi3-sqlite:3.38.0")
-    implementation("org.jdbi:jdbi3-sqlobject:3.38.0")
-
+    implementation("org.jdbi:jdbi3-core:3.38.2")
+    implementation("org.jdbi:jdbi3-sqlite:3.38.2")
+    implementation("org.jdbi:jdbi3-sqlobject:3.38.2")
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
         exclude(module = "paper-api")
     }
-
     compileOnly("me.clip:placeholderapi:2.11.3") {
         exclude(group = "net.kyori")
     }
@@ -46,9 +41,11 @@ dependencies {
         exclude("com.sk89q.worldguard")
         exclude("com.sk89q.worldedit")
     }
-
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
-    testImplementation("org.mockito:mockito-inline:5.2.0")
+    testImplementation("org.jdbi:jdbi3-testing:3.38.2")
+    testImplementation(platform("org.junit:junit-bom:5.9.3"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.mockito:mockito-core:5.3.1")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.3.1")
 }
 
 java {
@@ -111,6 +108,12 @@ signing {
     val signingPassword: String? by project
     useInMemoryPgpKeys(signingKey, signingPassword)
     sign(publishing.publications)
+}
+
+configurations {
+    testImplementation {
+        extendsFrom(compileOnly.get())
+    }
 }
 
 tasks {

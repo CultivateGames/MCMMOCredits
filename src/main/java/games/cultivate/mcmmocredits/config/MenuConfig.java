@@ -76,6 +76,7 @@ public class MenuConfig extends Config {
     /**
      * Creates default navigation item.
      *
+     * @param slot The slot location of the created item.
      * @return The created item.
      */
     private static CommandItem createCompass(final int slot) {
@@ -89,12 +90,13 @@ public class MenuConfig extends Config {
      * Settings used to modify the Main Menu (/credits menu main).
      */
     @ConfigSerializable
-    static class MainMenuSettings {
+    static final class MainMenuSettings {
         private String title = "<#ff253c><bold>MCMMO Credits";
         private int slots = 54;
         private boolean fill = false;
         private boolean navigation = false;
         private Map<String, Item> items = new HashMap<>();
+
         private MainMenuSettings() {
             this.items.put("config", this.createConfigShortcut());
             this.items.put("redeem", this.createRedeemShortcut());
@@ -121,12 +123,13 @@ public class MenuConfig extends Config {
      * Settings used to modify the Config Menu (/credits menu config).
      */
     @ConfigSerializable
-    static class ConfigMenuSettings {
+    static final class ConfigMenuSettings {
         private String title = "<dark_gray>Edit Your Configuration...";
         private int slots = 54;
         private boolean fill = false;
         private boolean navigation = false;
         private Map<String, Item> items = new HashMap<>();
+
         private ConfigMenuSettings() {
             this.items.put("messages", this.createConfigItem(Material.WRITABLE_BOOK));
             this.items.put("settings", this.createConfigItem(Material.REDSTONE));
@@ -143,12 +146,13 @@ public class MenuConfig extends Config {
      * Settings used to modify the Redeem Menu (/credits menu redeem).
      */
     @ConfigSerializable
-    static class RedeemMenuSettings {
+    static final class RedeemMenuSettings {
         private String title = "<dark_gray>Redeem Your Credits...";
         private int slots = 45;
         private boolean fill = false;
         private boolean navigation = false;
         private Map<String, Item> items = new HashMap<>();
+
         private RedeemMenuSettings() {
             this.items.put("acrobatics", createRedeemItem(Material.NETHERITE_BOOTS, "ACROBATICS", 10));
             this.items.put("alchemy", createRedeemItem(Material.BREWING_STAND, "ALCHEMY", 11));

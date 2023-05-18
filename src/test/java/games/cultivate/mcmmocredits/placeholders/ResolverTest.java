@@ -23,12 +23,17 @@
 //
 package games.cultivate.mcmmocredits.placeholders;
 
+import com.gmail.nossr50.config.GeneralConfig;
+import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import com.gmail.nossr50.mcMMO;
 import games.cultivate.mcmmocredits.transaction.BasicTransaction;
 import games.cultivate.mcmmocredits.transaction.BasicTransactionType;
+import games.cultivate.mcmmocredits.transaction.RedeemTransaction;
 import games.cultivate.mcmmocredits.transaction.Transaction;
+import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import games.cultivate.mcmmocredits.user.User;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,80 +42,142 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ResolverTest {
-    private static final MiniMessage PARSER = MiniMessage.miniMessage();
-    private final UUID senderUUID = new UUID(1, 1);
-    private final String senderUsername = "Sender";
-    private final int senderCredits = 100;
-    private final int senderRedeemed = 50;
-    private final UUID targetUUID = new UUID(2, 2);
-    private final String targetUsername = "Target";
-    private final int targetCredits = 200;
-    private final int targetRedeemed = 75;
     private User sender;
     private User target;
 
-    private static String convert(final String input, final TagResolver resolver) {
-        Component comp = PARSER.deserialize(input, resolver);
-        return PlainTextComponentSerializer.plainText().serialize(comp);
-    }
-
     @BeforeEach
     void setUp() {
-        this.sender = new User(this.senderUUID, this.senderUsername, this.senderCredits, this.senderRedeemed);
-        this.target = new User(this.targetUUID, this.targetUsername, this.targetCredits, this.targetRedeemed);
+        this.sender = new User(new UUID(1, 1), "Executor", 1000, 10);
+        this.target = new User(new UUID(2, 2), "Target", 500, 50);
     }
 
     @Test
     void ofUsers_SenderAndTarget_ContainsSenderAndTargetPlaceholders() {
-        //Act
         Resolver resolver = Resolver.ofUsers(this.sender, this.target);
-        TagResolver tagResolver = resolver.toTagResolver();
-
-        //Assert
-        assertEquals(this.senderUsername, convert("<sender>", tagResolver));
-        assertEquals(this.senderUUID.toString(), convert("<sender_uuid>", tagResolver));
-        assertEquals(String.valueOf(this.senderCredits), convert("<sender_credits>", tagResolver));
-        assertEquals(String.valueOf(this.senderRedeemed), convert("<sender_redeemed>", tagResolver));
-        assertEquals(this.targetUsername, convert("<target>", tagResolver));
-        assertEquals(this.targetUUID.toString(), convert("<target_uuid>", tagResolver));
-        assertEquals(String.valueOf(this.targetCredits), convert("<target_credits>", tagResolver));
-        assertEquals(String.valueOf(this.targetRedeemed), convert("<target_redeemed>", tagResolver));
+        assertEquals(this.sender.username(), this.convert("<sender>", resolver));
+        assertEquals(this.sender.uuid().toString(), this.convert("<sender_uuid>", resolver));
+        assertEquals(this.sender.credits(), Integer.parseInt(this.convert("<sender_credits>", resolver)));
+        assertEquals(this.sender.redeemed(), Integer.parseInt(this.convert("<sender_redeemed>", resolver)));
+        assertEquals(this.target.username(), this.convert("<target>", resolver));
+        assertEquals(this.target.uuid().toString(), this.convert("<target_uuid>", resolver));
+        assertEquals(this.target.credits(), Integer.parseInt(this.convert("<target_credits>", resolver)));
+        assertEquals(this.target.redeemed(), Integer.parseInt(this.convert("<target_redeemed>", resolver)));
     }
 
     @Test
     void ofUser_Sender_ContainsSenderPlaceholders() {
-        //Act
         Resolver resolver = Resolver.ofUser(this.sender);
-        TagResolver tagResolver = resolver.toTagResolver();
-
-        //Assert
-        assertEquals(this.senderUsername, convert("<sender>", tagResolver));
-        assertEquals(this.senderUUID.toString(), convert("<sender_uuid>", tagResolver));
-        assertEquals(String.valueOf(this.senderCredits), convert("<sender_credits>", tagResolver));
-        assertEquals(String.valueOf(this.senderRedeemed), convert("<sender_redeemed>", tagResolver));
+        assertEquals(this.sender.username(), this.convert("<sender>", resolver));
+        assertEquals(this.sender.uuid().toString(), this.convert("<sender_uuid>", resolver));
+        assertEquals(this.sender.credits(), Integer.parseInt(this.convert("<sender_credits>", resolver)));
+        assertEquals(this.sender.redeemed(), Integer.parseInt(this.convert("<sender_redeemed>", resolver)));
     }
 
     @Test
-    void ofTransaction_SenderAndTargetAndAmount_ContainsSenderAndTargetPlaceholdersWithAmount() {
-        //Arrange
-        int amount = 25;
-        Transaction transaction = BasicTransaction.of(this.sender, this.target, BasicTransactionType.SET, amount);
+    void addUser() {
+        Resolver resolver = new Resolver();
+        resolver.addUser(this.sender, "silly");
+        assertEquals(this.sender.username(), this.convert("<silly>", resolver));
+        assertEquals(this.sender.uuid().toString(), this.convert("<silly_uuid>", resolver));
+        assertEquals(this.sender.credits(), Integer.parseInt(this.convert("<silly_credits>", resolver)));
+        assertEquals(this.sender.redeemed(), Integer.parseInt(this.convert("<silly_redeemed>", resolver)));
+    }
 
-        //Act
+    @Test
+    void addUsername() {
+        Resolver resolver = new Resolver();
+        resolver.addUsername("testuser69");
+        assertEquals("testuser69", this.convert("<target>", resolver));
+    }
+
+    @Test
+    void addAmount_AddsAmountToResolver() {
+        Resolver resolver = new Resolver();
+        resolver.addAmount(100);
+        assertEquals(100, Integer.parseInt(this.convert("<amount>", resolver)));
+    }
+
+    @Test
+    void addSkill_AddsSkillToResolver() {
+        mcMMO.p = mock(mcMMO.class);
+        GeneralConfig config = mock(GeneralConfig.class);
+        when(mcMMO.p.getGeneralConfig()).thenReturn(config);
+        when(config.getLevelCap(PrimarySkillType.HERBALISM)).thenReturn(1000);
+        Resolver resolver = new Resolver();
+        resolver.addSkill(PrimarySkillType.HERBALISM);
+        assertEquals("Herbalism", this.convert("<skill>", resolver));
+        assertEquals("1000", this.convert("<cap>", resolver));
+    }
+
+    @Test
+    void addTag_AddsStringTagToResolver() {
+        Resolver resolver = new Resolver();
+        resolver.addTag("helloworld", "Hello world!");
+        assertEquals("Hello world!", this.convert("<helloworld>", resolver));
+    }
+
+    @Test
+    void addTag_AddsIntTagToResolver() {
+        Resolver resolver = new Resolver();
+        resolver.addTag("number", 10500);
+        assertEquals("10500", this.convert("<number>", resolver));
+    }
+
+    @Test
+    void toTagResolver_ValidTags_BuildsCorrectResolver() {
+        String key1 = "hello";
+        String key2 = "testkey";
+        String val1 = "hello world!";
+        String val2 = "123";
+        Resolver resolver = new Resolver();
+        resolver.addTag(key1, val1);
+        resolver.addTag(key2, val2);
+        TagResolver tagResolver = TagResolver.builder().tag(key1, Tag.preProcessParsed(val1)).tag(key2, Tag.preProcessParsed(val2)).build();
+        assertEquals(tagResolver, resolver.toTagResolver());
+    }
+
+    @Test
+    void ofTransaction_ValidRedeemTransaction_BuildsCorrectResolver() {
+        mcMMO.p = mock(mcMMO.class);
+        GeneralConfig config = mock(GeneralConfig.class);
+        when(mcMMO.p.getGeneralConfig()).thenReturn(config);
+        when(config.getLevelCap(PrimarySkillType.HERBALISM)).thenReturn(1000);
+        Transaction transaction = RedeemTransaction.of(this.sender, this.target, PrimarySkillType.HERBALISM, 25);
         Resolver resolver = Resolver.ofTransaction(transaction);
-        TagResolver tagResolver = resolver.toTagResolver();
+        assertEquals(this.sender.username(), this.convert("<sender>", resolver));
+        assertEquals(this.sender.uuid().toString(), this.convert("<sender_uuid>", resolver));
+        assertEquals(this.sender.credits(), Integer.parseInt(this.convert("<sender_credits>", resolver)));
+        assertEquals(this.sender.redeemed(), Integer.parseInt(this.convert("<sender_redeemed>", resolver)));
+        assertEquals(this.target.username(), this.convert("<target>", resolver));
+        assertEquals(this.target.uuid().toString(), this.convert("<target_uuid>", resolver));
+        assertEquals(this.target.credits(), Integer.parseInt(this.convert("<target_credits>", resolver)));
+        assertEquals(this.target.redeemed(), Integer.parseInt(this.convert("<target_redeemed>", resolver)));
+        assertEquals(25, Integer.parseInt(this.convert("<amount>", resolver)));
+        assertEquals("Herbalism", this.convert("<skill>", resolver));
+        assertEquals("1000", this.convert("<cap>", resolver));
+    }
 
-        //Assert
-        assertEquals(this.senderUsername, convert("<sender>", tagResolver));
-        assertEquals(this.senderUUID.toString(), convert("<sender_uuid>", tagResolver));
-        assertEquals(String.valueOf(this.senderCredits), convert("<sender_credits>", tagResolver));
-        assertEquals(String.valueOf(this.senderRedeemed), convert("<sender_redeemed>", tagResolver));
-        assertEquals(String.valueOf(amount), convert("<amount>", tagResolver));
-        assertEquals(this.targetUsername, convert("<target>", tagResolver));
-        assertEquals(this.targetUUID.toString(), convert("<target_uuid>", tagResolver));
-        assertEquals(String.valueOf(this.targetCredits), convert("<target_credits>", tagResolver));
-        assertEquals(String.valueOf(this.targetRedeemed), convert("<target_redeemed>", tagResolver));
+    @Test
+    void ofTransactionResult_ValidTransactionResult_BuildsCorrectResolver() {
+        Transaction transaction = BasicTransaction.of(this.sender, this.target, BasicTransactionType.SET, 25);
+        TransactionResult result = TransactionResult.of(transaction, this.sender, this.target);
+        Resolver resolver = Resolver.ofTransactionResult(result);
+        assertEquals(this.sender.username(), this.convert("<sender>", resolver));
+        assertEquals(this.sender.uuid().toString(), this.convert("<sender_uuid>", resolver));
+        assertEquals(this.sender.credits(), Integer.parseInt(this.convert("<sender_credits>", resolver)));
+        assertEquals(this.sender.redeemed(), Integer.parseInt(this.convert("<sender_redeemed>", resolver)));
+        assertEquals(this.target.username(), this.convert("<target>", resolver));
+        assertEquals(this.target.uuid().toString(), this.convert("<target_uuid>", resolver));
+        assertEquals(this.target.credits(), Integer.parseInt(this.convert("<target_credits>", resolver)));
+        assertEquals(this.target.redeemed(), Integer.parseInt(this.convert("<target_redeemed>", resolver)));
+        assertEquals(25, Integer.parseInt(this.convert("<amount>", resolver)));
+    }
+
+    private String convert(final String input, final Resolver resolver) {
+        return PlainTextComponentSerializer.plainText().serialize(MiniMessage.miniMessage().deserialize(input, resolver.toTagResolver()));
     }
 }

@@ -42,105 +42,100 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class UserTest {
-    private UUID testUUID;
+    private final UUID uuid = new UUID(2, 2);
+    private final String username = "TestUser";
+    private final int credits = 100;
+    private final int redeemed = 50;
     private User user;
 
     @BeforeEach
     void setUp() {
-        this.testUUID = UUID.randomUUID();
-        this.user = new User(this.testUUID, "TestUser", 100, 50);
+        this.user = new User(this.uuid, this.username, this.credits, this.redeemed);
+    }
+
+    @Test
+    void credits_ReturnsCorrectCredits() {
+        assertEquals(this.credits, this.user.credits());
+    }
+
+    @Test
+    void username_ReturnsCorrectCredits() {
+        assertEquals(this.username, this.user.username());
+    }
+
+    @Test
+    void redeemed_ReturnsCorrectCredits() {
+        assertEquals(this.redeemed, this.user.redeemed());
+    }
+
+    @Test
+    void uuid_ReturnsCorrectCredits() {
+        assertEquals(this.uuid, this.user.uuid());
     }
 
     @Test
     void isPlayer_ReturnsTrue() {
-        //Assert
         assertTrue(this.user.isPlayer());
     }
 
     @Test
     void isConsole_ReturnsFalse() {
-        //Assert
         assertFalse(this.user.isConsole());
     }
 
     @Test
     void sender_ReturnsPlayer() {
-        //Arrange
-        try (MockedStatic<Bukkit> mockedBukkit = Mockito.mockStatic(Bukkit.class)) {
+        try (MockedStatic<Bukkit> mock = Mockito.mockStatic(Bukkit.class)) {
             Player player = mock(Player.class);
-            mockedBukkit.when(() -> Bukkit.getPlayer(this.testUUID)).thenReturn(player);
-
-            //Act
-            CommandSender test = this.user.sender();
-
-            //Assert
-            assertNotNull(test);
-            assertTrue(test instanceof Player);
+            mock.when(() -> Bukkit.getPlayer(this.uuid)).thenReturn(player);
+            CommandSender sender = this.user.sender();
+            assertNotNull(sender);
+            assertTrue(sender instanceof Player);
         }
     }
 
     @Test
     void player_ReturnsPlayerWithSameUUID() {
-        //Arrange
-        try (MockedStatic<Bukkit> mockedBukkit = Mockito.mockStatic(Bukkit.class)) {
+        try (MockedStatic<Bukkit> mock = Mockito.mockStatic(Bukkit.class)) {
             Player player = mock(Player.class);
-            when(player.getUniqueId()).thenReturn(this.testUUID);
-            mockedBukkit.when(() -> Bukkit.getPlayer(this.testUUID)).thenReturn(player);
-
-            //Act
-            Player returnedPlayer = this.user.player();
-
-            //Assert
-            assertNotNull(returnedPlayer);
-            assertEquals(this.testUUID, returnedPlayer.getUniqueId());
+            when(player.getUniqueId()).thenReturn(this.uuid);
+            mock.when(() -> Bukkit.getPlayer(this.uuid)).thenReturn(player);
+            Player uplayer = this.user.player();
+            assertNotNull(uplayer);
+            assertEquals(this.uuid, uplayer.getUniqueId());
         }
     }
 
     @Test
-    void withCredits_ReturnsUserWithUpdatedCredits() {
-        //Arrange
+    void withCredits_ReturnsSameUserWithUpdatedCredits() {
         int newCredits = 200;
-
-        //Act
         User updatedUser = this.user.withCredits(newCredits);
-
-        //Assert
         assertNotEquals(this.user, updatedUser);
-        assertEquals(this.user.uuid(), updatedUser.uuid());
-        assertEquals(this.user.username(), updatedUser.username());
         assertEquals(newCredits, updatedUser.credits());
-        assertEquals(this.user.redeemed(), updatedUser.redeemed());
+        assertEquals(this.uuid, updatedUser.uuid());
+        assertEquals(this.username, updatedUser.username());
+        assertEquals(this.redeemed, updatedUser.redeemed());
     }
 
     @Test
-    void withUsername_ReturnsUserWithUpdatedUsername() {
-        //Arrange
+    void withUsername_ReturnsSameUserWithUpdatedUsername() {
         String newUsername = "UpdatedUser";
-
-        //Act
         User updatedUser = this.user.withUsername(newUsername);
-
-        //Assert
         assertNotEquals(this.user, updatedUser);
-        assertEquals(this.user.uuid(), updatedUser.uuid());
         assertEquals(newUsername, updatedUser.username());
-        assertEquals(this.user.credits(), updatedUser.credits());
-        assertEquals(this.user.redeemed(), updatedUser.redeemed());
+        assertEquals(this.uuid, updatedUser.uuid());
+        assertEquals(this.credits, updatedUser.credits());
+        assertEquals(this.redeemed, updatedUser.redeemed());
     }
 
     @Test
     void withRedeemed_ReturnsUserWithUpdatedRedeemed() {
-        //Arrange
         int newRedeemed = 75;
-
-        //Act
         User updatedUser = this.user.withRedeemed(newRedeemed);
-
-        //Assert
         assertNotEquals(this.user, updatedUser);
-        assertEquals(this.user.uuid(), updatedUser.uuid());
-        assertEquals(this.user.username(), updatedUser.username());
-        assertEquals(this.user.credits(), updatedUser.credits());
         assertEquals(newRedeemed, updatedUser.redeemed());
+        assertEquals(this.uuid, updatedUser.uuid());
+        assertEquals(this.username, updatedUser.username());
+        assertEquals(this.credits, updatedUser.credits());
     }
 }

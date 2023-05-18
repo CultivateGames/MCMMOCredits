@@ -96,10 +96,10 @@ public final class ContextFactory {
      */
     public void runEditConfig(final User user, final Object... path) {
         Resolver resolver = Resolver.ofUser(user);
-        resolver.addStringTag("setting", Util.joinString(".", path));
+        resolver.addTag("setting", Util.joinString(".", path));
         Text.fromString(user, this.config.getMessage("edit-config-prompt"), resolver).send();
         this.queue.act(user.uuid(), i -> {
-            resolver.addStringTag("change", i);
+            resolver.addTag("change", i);
             boolean status = this.config.set(i, path);
             Text.fromString(user, this.config.getMessage(status ? "edit-config" : "edit-config-fail"), resolver).send();
         });

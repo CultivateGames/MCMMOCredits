@@ -38,172 +38,138 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserCacheTest {
-    private UserCache userCache;
-    private UUID testUUID;
-    private String testUsername;
-    private User testUser;
+    private final UUID uuid = new UUID(2, 2);
+    private final String username = "TestUser";
+    private final int credits = 100;
+    private final int redeemed = 50;
+    private UserCache cache;
+    private User user;
 
     @BeforeEach
     void setUp() {
-        this.userCache = new UserCache();
-        this.testUUID = UUID.randomUUID();
-        this.testUsername = "testUsername";
-        this.testUser = new User(this.testUUID, this.testUsername, 100, 50);
+        this.cache = new UserCache();
+        this.user = new User(this.uuid, this.username, this.credits, this.redeemed);
     }
 
     @Test
     void add_AddsNewUser_UserIsCached() {
-        //Act
-        this.userCache.add(this.testUser);
-
-        //Assert
-        assertTrue(this.userCache.contains(this.testUUID));
-        assertTrue(this.userCache.contains(this.testUsername));
+        this.cache.add(this.user);
+        assertTrue(this.cache.contains(this.uuid));
+        assertTrue(this.cache.contains(this.username));
     }
 
     @Test
     void add_AddsUserWithSameUUID_ReplacesExistingUser() {
-        //Arrange
-        User anotherUserWithSameUUID = new User(this.testUUID, "anotherUsername", 150, 30);
-        this.userCache.add(this.testUser);
-
-        //Act
-        this.userCache.add(anotherUserWithSameUUID);
-
-        //Assert
-        assertFalse(this.userCache.contains(this.testUsername));
-        assertTrue(this.userCache.contains(anotherUserWithSameUUID.username()));
-        assertTrue(this.userCache.contains(this.testUUID));
+        this.cache.add(this.user);
+        User updatedUser = new User(this.uuid, "anotherUsername", 150, 30);
+        this.cache.add(updatedUser);
+        assertNotEquals(this.user, updatedUser);
+        assertFalse(this.cache.contains(this.username));
+        assertTrue(this.cache.contains(updatedUser.username()));
+        assertTrue(this.cache.contains(this.uuid));
     }
 
     @Test
     void add_AddsUserWithSameUsername_ReplacesExistingUser() {
-        //Arrange
-        User anotherUserWithSameUsername = new User(UUID.randomUUID(), this.testUsername, 150, 30);
-        this.userCache.add(this.testUser);
-
-        //Act
-        this.userCache.add(anotherUserWithSameUsername);
-
-        //Assert
-        assertFalse(this.userCache.contains(this.testUUID));
-        assertTrue(this.userCache.contains(anotherUserWithSameUsername.uuid()));
-        assertTrue(this.userCache.contains(this.testUsername));
+        this.cache.add(this.user);
+        User updatedUser = new User(UUID.randomUUID(), this.username, 150, 30);
+        this.cache.add(updatedUser);
+        assertNotEquals(this.user, updatedUser);
+        assertFalse(this.cache.contains(this.uuid));
+        assertTrue(this.cache.contains(updatedUser.uuid()));
+        assertTrue(this.cache.contains(this.username));
     }
 
     @Test
     void add_AddsUserWithSameUUIDAndUsername_ReplacesExistingUser() {
-        //Arrange
-        User anotherUserWithSameUUIDAndUsername = new User(this.testUUID, this.testUsername, 150, 30);
-        this.userCache.add(this.testUser);
-
-        //Act
-        this.userCache.add(anotherUserWithSameUUIDAndUsername);
-
-        //Assert
-        assertTrue(this.userCache.contains(this.testUUID));
-        assertTrue(this.userCache.contains(this.testUsername));
-        assertNotEquals(this.testUser, this.userCache.get(this.testUsername));
-        assertEquals(anotherUserWithSameUUIDAndUsername, this.userCache.get(this.testUsername));
+        this.cache.add(this.user);
+        User updatedUser = new User(this.uuid, this.username, 150, 30);
+        this.cache.add(updatedUser);
+        assertNotEquals(this.user, updatedUser);
+        assertTrue(this.cache.contains(this.uuid));
+        assertTrue(this.cache.contains(this.username));
+        assertEquals(150, this.cache.get(this.uuid).credits());
+        assertEquals(30, this.cache.get(this.uuid).redeemed());
     }
 
     @Test
     void add_AddsMultipleUsersToCache() {
-        //Arrange
+        this.cache.add(this.user);
         User anotherUser = new User(UUID.randomUUID(), "anotherUsername", 150, 30);
-        this.userCache.add(this.testUser);
-
-        //Act
-        this.userCache.add(anotherUser);
-
-        //Assert
-        assertTrue(this.userCache.contains(this.testUsername));
-        assertTrue(this.userCache.contains(this.testUUID));
-        assertTrue(this.userCache.contains(anotherUser.username()));
-        assertTrue(this.userCache.contains(anotherUser.uuid()));
+        this.cache.add(anotherUser);
+        assertTrue(this.cache.contains(this.username));
+        assertTrue(this.cache.contains(this.uuid));
+        assertTrue(this.cache.contains(anotherUser.username()));
+        assertTrue(this.cache.contains(anotherUser.uuid()));
     }
 
     @Test
     void remove_NonExistentUser_NoException() {
-        //Arrange/Act (removal), Assert it doesn't throw.
-        assertDoesNotThrow(() -> this.userCache.remove(this.testUUID, this.testUsername));
+        assertDoesNotThrow(() -> this.cache.remove(this.uuid));
     }
 
     @Test
     void remove_RemovesUserFromCache() {
-        //Arrange
-        this.userCache.add(this.testUser);
-
-        //Act
-        this.userCache.remove(this.testUUID, this.testUsername);
-
-        //Assert
-        assertFalse(this.userCache.contains(this.testUsername));
-        assertFalse(this.userCache.contains(this.testUUID));
+        this.cache.add(this.user);
+        this.cache.remove(this.uuid);
+        assertFalse(this.cache.contains(this.username));
+        assertFalse(this.cache.contains(this.uuid));
     }
 
     @Test
-    void get_WithUUID_ReturnsUser() {
-        //Arrange
-        this.userCache.add(this.testUser);
-
-        //Act
-        User retrievedUser = this.userCache.get(this.testUUID);
-
-        //Assert
-        assertEquals(this.testUser, retrievedUser);
+    void get_WithUUID_ReturnsCorrectUser() {
+        this.cache.add(this.user);
+        User retrievedUser = this.cache.get(this.uuid);
+        assertEquals(this.user, retrievedUser);
+        assertEquals(this.uuid, retrievedUser.uuid());
+        assertEquals(this.username, retrievedUser.username());
+        assertEquals(this.credits, retrievedUser.credits());
+        assertEquals(this.redeemed, retrievedUser.redeemed());
     }
 
     @Test
-    void get_WithUsername_ReturnsUser() {
-        //Arrange
-        this.userCache.add(this.testUser);
-
-        //Act
-        User retrievedUser = this.userCache.get(this.testUsername);
-
-        //Assert
-        assertEquals(this.testUser, retrievedUser);
+    void get_WithUsername_ReturnsCorrectUser() {
+        this.cache.add(this.user);
+        User retrievedUser = this.cache.get(this.username);
+        assertEquals(this.user, retrievedUser);
+        assertEquals(this.uuid, retrievedUser.uuid());
+        assertEquals(this.username, retrievedUser.username());
+        assertEquals(this.credits, retrievedUser.credits());
+        assertEquals(this.redeemed, retrievedUser.redeemed());
     }
 
     @Test
     void get_WithNonExistentUUID_ReturnsNull() {
-        //Act
-        User retrievedUser = this.userCache.get(this.testUUID);
-
-        //Assert
-        assertNull(retrievedUser);
+        assertNull(this.cache.get(this.uuid));
     }
 
     @Test
     void get_WithNonExistentUsername_ReturnsNull() {
-        //Act
-        User retrievedUser = this.userCache.get(this.testUsername);
-
-        //Assert
-        assertNull(retrievedUser);
+        assertNull(this.cache.get(this.uuid));
     }
 
     @Test
-    void update_UpdatesUserInCache() {
-        //Arrange
-        this.userCache.add(this.testUser);
+    void update_UpdateUserInCache_ReturnsUpdatedUser() {
+        this.cache.add(this.user);
         UnaryOperator<User> updateUserCredits = user -> user.withCredits(200);
-
-        //Act
-        User updatedUser = this.userCache.update(this.testUUID, updateUserCredits);
-
-        //Assert
+        User updatedUser = this.cache.update(this.uuid, updateUserCredits);
         assertEquals(200, updatedUser.credits());
-        assertNotEquals(this.testUser.credits(), updatedUser.credits());
+        assertNotEquals(this.user.credits(), updatedUser.credits());
+    }
+
+    @Test
+    void update_UpdateWithCompletedUser_ReturnsUpdatedUser() {
+        this.cache.add(this.user);
+        User anotherUser = new User(UUID.randomUUID(), "anotherUsername", 150, 30);
+        User updatedUser = this.cache.update(this.uuid, anotherUser);
+        assertEquals(anotherUser, updatedUser);
+        assertFalse(this.cache.contains(this.username));
+        assertFalse(this.cache.contains(this.uuid));
     }
 
     @Test
     void update_ThrowsExceptionWhenUserNotFound() {
-        //Arrange
         UnaryOperator<User> updateUserCredits = user -> user.withCredits(200);
-
-        //Act/Assert
-        assertThrows(IllegalArgumentException.class, () -> this.userCache.update(this.testUUID, updateUserCredits));
+        assertThrows(IllegalArgumentException.class, () -> this.cache.update(this.uuid, updateUserCredits));
     }
 }

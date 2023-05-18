@@ -220,7 +220,7 @@ public final class Credits {
         Resolver resolver = Resolver.ofUser(executor);
         for (int i = 1; i <= size; i++) {
             resolver.addUser(users.get(i - 1), "target");
-            resolver.addIntTag("rank", i + offset);
+            resolver.addTag("rank", i + offset);
             Text.fromString(executor, this.config.getString("leaderboard-entry"), resolver).send();
         }
     }

@@ -190,7 +190,7 @@ public final class CloudCommandHandler {
     private <E extends Exception> void register(final Class<E> ex, final String path, final String key, final BiFunction<CommandExecutor, E, String> value) {
         this.manager.registerExceptionHandler(ex, (c, e) -> {
             Resolver resolver = Resolver.ofUser(c);
-            resolver.addStringTag(key, value.apply(c, e));
+            resolver.addTag(key, value.apply(c, e));
             Text.fromString(c, this.config.getMessage(path), resolver).send();
         });
     }

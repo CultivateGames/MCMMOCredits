@@ -24,6 +24,7 @@
 package games.cultivate.mcmmocredits.placeholders;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import com.gmail.nossr50.mcMMO;
 import games.cultivate.mcmmocredits.transaction.RedeemTransaction;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
@@ -104,24 +105,8 @@ public final class Resolver {
         return resolver;
     }
 
-    /**
-     * Adds a key-value pair with a String-based value to the Resolver.
-     *
-     * @param key   The key.
-     * @param value The value.
-     */
-    public void addStringTag(final String key, final String value) {
-        this.placeholders.put(key, value);
-    }
-
-    /**
-     * Adds a key-value pair with a integer-based value to the Resolver.
-     *
-     * @param key   The key.
-     * @param value The value.
-     */
-    public void addIntTag(final String key, final int value) {
-        this.placeholders.put(key, String.valueOf(value));
+    public <T> void addTag(final String key, final T value) {
+        this.placeholders.put(key, value.toString());
     }
 
     /**
@@ -131,10 +116,10 @@ public final class Resolver {
      * @param prefix Prefix to apply to the placeholder keys.
      */
     public void addUser(final CommandExecutor user, final String prefix) {
-        this.addStringTag(prefix, user.username());
-        this.addStringTag(prefix + "_uuid", user.uuid().toString());
-        this.addIntTag(prefix + "_credits", user.credits());
-        this.addIntTag(prefix + "_redeemed", user.redeemed());
+        this.addTag(prefix, user.username());
+        this.addTag(prefix + "_uuid", user.uuid().toString());
+        this.addTag(prefix + "_credits", user.credits());
+        this.addTag(prefix + "_redeemed", user.redeemed());
     }
 
     /**
@@ -142,10 +127,9 @@ public final class Resolver {
      *
      * @param skill The skill.
      */
-    @SuppressWarnings("deprecation")
     public void addSkill(final PrimarySkillType skill) {
-        this.addStringTag("skill", Util.capitalizeWord(skill.name()));
-        this.addIntTag("cap", skill.getMaxLevel());
+        this.addTag("skill", Util.capitalizeWord(skill.name()));
+        this.addTag("cap", mcMMO.p.getGeneralConfig().getLevelCap(skill));
     }
 
     /**
@@ -154,7 +138,7 @@ public final class Resolver {
      * @param amount The amount.
      */
     public void addAmount(final int amount) {
-        this.addIntTag("amount", amount);
+        this.addTag("amount", amount);
     }
 
     /**
@@ -163,7 +147,7 @@ public final class Resolver {
      * @param username The username.
      */
     public void addUsername(final String username) {
-        this.addStringTag("target", username);
+        this.addTag("target", username);
     }
 
     /**

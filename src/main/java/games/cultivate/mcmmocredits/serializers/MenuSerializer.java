@@ -26,7 +26,6 @@ package games.cultivate.mcmmocredits.serializers;
 import games.cultivate.mcmmocredits.ui.item.Item;
 import games.cultivate.mcmmocredits.ui.menu.BaseMenu;
 import games.cultivate.mcmmocredits.ui.menu.Menu;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.serialize.TypeSerializer;
@@ -62,7 +61,7 @@ public final class MenuSerializer implements TypeSerializer<Menu> {
      * {@inheritDoc}
      */
     @Override
-    public void serialize(final Type type, @Nullable final Menu obj, final ConfigurationNode node) {
+    public void serialize(final Type type, final Menu obj, final ConfigurationNode node) {
         throw new UnsupportedOperationException("Cannot serialize Menu");
     }
 }
