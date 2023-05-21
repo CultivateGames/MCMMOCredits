@@ -23,9 +23,6 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import org.bukkit.Bukkit;
-
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -39,7 +36,6 @@ import java.util.List;
 public final class Util {
     @SuppressWarnings("checkstyle:linelength")
     private static final List<String> MCMMO_SKILLS = List.of("acrobatics", "alchemy", "archery", "axes", "excavation", "fishing", "herbalism", "mining", "repair", "swords", "taming", "unarmed", "woodcutting");
-    private static Path pluginPath;
 
     private Util() {
         throw new AssertionError("Util cannot be instantiated!");
@@ -64,42 +60,23 @@ public final class Util {
     }
 
     /**
-     * Creates a file and the plugin's directories if they do not exist.
-     *
-     * @param fileName Name of the file to be created.
-     */
-    public static void createFile(final String fileName) {
-        createFile(pluginPath, fileName);
-    }
-
-    /**
      * Creates a file and path's directories if they do not exist.
      *
      * @param dir      Path of the file to be created.
      * @param fileName Name of the file to be created.
+     * @return the path of the created file.
      */
-    public static void createFile(final Path dir, final String fileName) {
+    public static Path createFile(final Path dir, final String fileName) {
         try {
-            if (!Files.exists(dir)) {
+            if (Files.notExists(dir)) {
                 Files.createDirectories(dir);
             }
-            Files.createFile(dir.resolve(fileName));
+            return Files.createFile(dir.resolve(fileName));
         } catch (FileAlreadyExistsException ignored) { //Ignore if file already exists.
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Gets the plugin's directory as a path.
-     *
-     * @return The path.
-     */
-    public static Path getPluginPath() {
-        if (pluginPath == null) {
-            pluginPath = new File(Bukkit.getPluginsFolder(), "MCMMOCredits").toPath();
-        }
-        return pluginPath;
+        return dir.resolve(fileName);
     }
 
     /**

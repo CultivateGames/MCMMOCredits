@@ -27,14 +27,12 @@ import games.cultivate.mcmmocredits.converters.ConverterType;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
-import java.nio.file.Path;
-
 /**
  * Configuration used to modify settings and messages.
  */
-@ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
-public class MainConfig extends Config {
+@ConfigSerializable
+public class MainConfig extends BaseConfig {
     /**
      * Settings used to modify plugin messages.
      * Most messages sent with the "prefix" prepended.
@@ -82,25 +80,8 @@ public class MainConfig extends Config {
     private String redeemSudo = "<green>Redemption Successful! You have redeemed <amount> Credits into <skill> for <target>. They have <target_credits> Credits remaining.";
     private String redeemSudoUser = "<green>Redemption Successful! <sender> has redeemed <amount> Credits into <skill> for you! You have <target_credits> Credits remaining.";
     private String reload = "<green>The configuration file has been reloaded.";
-
     private Settings settings = new Settings();
     private Conversion converter = new Conversion();
-
-    /**
-     * Constructs the object with sane defaults.
-     */
-    public MainConfig() {
-        super(MainConfig.class, "config.yml");
-    }
-
-    /**
-     * Constructs the object with a custom file path.
-     *
-     * @param path A customized file path.
-     */
-    MainConfig(final Path path) {
-        super(MainConfig.class, "config.yml", path);
-    }
 
     /**
      * Settings used to modify the plugin's behavior.
@@ -123,16 +104,14 @@ public class MainConfig extends Config {
     @ConfigSerializable
     static class Conversion {
         private boolean enabled = false;
-        private ConverterType type = ConverterType.INTERNAL_SQLITE;
-        private InternalConversion internal = new InternalConversion();
+        private ConverterType type = ConverterType.INTERNAL;
         private ExternalConversion external = new ExternalConversion();
+        private DatabaseProperties oldInternalProperties = DatabaseProperties.defaults();
     }
 
-    @ConfigSerializable
-    static class InternalConversion {
-        private DatabaseProperties properties = DatabaseProperties.defaults();
-    }
-
+    /**
+     * Settings used to modify the data conversion process for external types.
+     */
     @ConfigSerializable
     static class ExternalConversion {
         private long retryDelay = 60000L;

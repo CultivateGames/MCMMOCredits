@@ -26,6 +26,7 @@ package games.cultivate.mcmmocredits.inject;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.name.Names;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.config.MainConfig;
@@ -42,7 +43,9 @@ import games.cultivate.mcmmocredits.user.UserDAO;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
+import java.nio.file.Path;
 
 /**
  * Handles Guice Dependency Injection.
@@ -65,24 +68,13 @@ public final class PluginModule extends AbstractModule {
     @Override
     protected void configure() {
         this.bind(MCMMOCredits.class).toInstance(this.plugin);
+        this.bind(Path.class).annotatedWith(Names.named("plugin")).toInstance(this.plugin.getDataFolder().toPath());
         this.bind(UserService.class).asEagerSingleton();
         this.bind(UserCache.class).asEagerSingleton();
         this.bind(ChatQueue.class).asEagerSingleton();
         this.bind(ContextFactory.class).asEagerSingleton();
-        this.bind(Database.class).asEagerSingleton();
+        this.bind(UserDAO.class).toProvider(Database.class).in(Singleton.class);
         this.bind(Credits.class).asEagerSingleton();
-    }
-
-    /**
-     * Provides the DAO as configured in config.
-     *
-     * @param database The injected Database object.
-     * @return The UserDAO.
-     */
-    @Provides
-    @Singleton
-    public UserDAO provideDAO(final Database database) {
-        return database.get();
     }
 
     /**
@@ -99,26 +91,28 @@ public final class PluginModule extends AbstractModule {
     /**
      * Provides the MainConfig for injection. Loads the config first.
      *
+     * @param path The plugin's data folder path.
      * @return The loaded MainConfig.
      */
     @Provides
     @Singleton
-    public MainConfig provideConfig() {
+    public MainConfig provideMainConfig(@Named("plugin") final Path path) {
         MainConfig config = new MainConfig();
-        config.load();
+        config.load(path, "config.yml");
         return config;
     }
 
     /**
      * Provides the MenuConfig for injection. Loads the config first.
      *
+     * @param path The plugin's data folder path.
      * @return The loaded MenuConfig.
      */
     @Provides
     @Singleton
-    public MenuConfig provideMenuConfig() {
+    public MenuConfig provideMenuConfig(@Named("plugin") final Path path) {
         MenuConfig config = new MenuConfig();
-        config.load();
+        config.load(path, "menus.yml");
         return config;
     }
 
@@ -135,7 +129,7 @@ public final class PluginModule extends AbstractModule {
         return switch (config.getConverterType("converter", "type")) {
             case EXTERNAL_GRM, EXTERNAL_MORPH -> injector.getInstance(PluginConverter.class);
             case EXTERNAL_CSV -> injector.getInstance(CSVConverter.class);
-            case INTERNAL_SQLITE, INTERNAL_H2, INTERNAL_MYSQL -> injector.getInstance(InternalConverter.class);
+            case INTERNAL -> injector.getInstance(InternalConverter.class);
         };
     }
 }

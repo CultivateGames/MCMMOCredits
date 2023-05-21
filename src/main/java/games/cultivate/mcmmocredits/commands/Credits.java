@@ -54,6 +54,7 @@ import org.bukkit.Bukkit;
 import org.incendo.interfaces.paper.PlayerViewer;
 
 import javax.inject.Inject;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -261,8 +262,9 @@ public final class Credits {
     @CommandPermission("mcmmocredits.admin")
     @CommandDescription("Reloads the configuration files with most changes applied.")
     public void reload(final CommandExecutor executor) {
-        this.config.load();
-        this.menuConfig.load();
+        Path path = this.plugin.getDataFolder().toPath();
+        this.config.load(path, "config.yml");
+        this.menuConfig.load(path, "menus.yml");
         Text.forOneUser(executor, this.config.getMessage("reload")).send();
     }
 

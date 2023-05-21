@@ -61,7 +61,13 @@ public final class MenuSerializer implements TypeSerializer<Menu> {
      * {@inheritDoc}
      */
     @Override
-    public void serialize(final Type type, final Menu obj, final ConfigurationNode node) {
-        throw new UnsupportedOperationException("Cannot serialize Menu");
+    public void serialize(final Type type, final Menu menu, final ConfigurationNode node) throws SerializationException {
+        node.node("title").set(menu.title());
+        node.node("slots").set(menu.slots());
+        node.node("fill").set(menu.fill());
+        node.node("navigation").set(menu.navigation());
+        for (Map.Entry<String, Item> entry : menu.items().entrySet()) {
+            node.node("items", entry.getKey()).set(Item.class, entry.getValue());
+        }
     }
 }

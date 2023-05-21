@@ -24,12 +24,13 @@
 package games.cultivate.mcmmocredits.converters;
 
 import games.cultivate.mcmmocredits.config.MainConfig;
+import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import games.cultivate.mcmmocredits.database.DatabaseType;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserDAO;
-import games.cultivate.mcmmocredits.util.Util;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,8 +41,9 @@ import java.util.UUID;
  * Data Converter that reads data from a CSV file.
  */
 public final class CSVConverter implements Converter {
-    private final MainConfig config;
     private final UserDAO destinationDAO;
+    private final Path path;
+    private final DatabaseProperties properties;
     private List<User> sourceUsers;
 
     /**
@@ -51,9 +53,10 @@ public final class CSVConverter implements Converter {
      * @param destinationDAO Destination database.
      */
     @Inject
-    public CSVConverter(final MainConfig config, final UserDAO destinationDAO) {
-        this.config = config;
+    public CSVConverter(final MainConfig config, final UserDAO destinationDAO, @Named("plugin") Path path) {
         this.destinationDAO = destinationDAO;
+        this.path = path;
+        this.properties = config.getDatabaseProperties("settings", "database");
     }
 
     /**
@@ -61,9 +64,8 @@ public final class CSVConverter implements Converter {
      */
     @Override
     public boolean load() {
-        Path path = Util.getPluginPath().resolve("database.csv");
         try {
-            List<String> lines = Files.readAllLines(path);
+            List<String> lines = Files.readAllLines(this.path.resolve("database.csv"));
             this.sourceUsers = lines.stream().map(this::userFromCSV).toList();
             return !this.sourceUsers.isEmpty();
         } catch (IOException e) {
@@ -78,7 +80,7 @@ public final class CSVConverter implements Converter {
     @Override
     public boolean convert() {
         this.destinationDAO.addUsers(this.sourceUsers);
-        if (this.config.getDatabaseProperties("settings", "database").type() == DatabaseType.H2) {
+        if (this.properties.type() == DatabaseType.H2) {
             this.destinationDAO.useHandle(x -> x.execute("CHECKPOINT SYNC"));
         }
         return true;

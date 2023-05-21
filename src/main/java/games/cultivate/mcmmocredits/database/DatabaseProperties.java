@@ -28,6 +28,8 @@ import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.util.Util;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
+import java.nio.file.Path;
+
 /**
  * Properties used in creation of the {@linkplain Database}
  *
@@ -55,11 +57,11 @@ public record DatabaseProperties(DatabaseType type, String host, String name, St
      *
      * @return The configured HikariDataSource.
      */
-    public HikariDataSource toDataSource() {
+    public HikariDataSource toDataSource(final Path path) {
         return switch (this.type) {
             case MYSQL -> this.createMySQLDataSource();
-            case H2 -> this.createH2DataSource();
-            case SQLITE -> this.createSQLiteDataSource();
+            case H2 -> this.createH2DataSource(path);
+            case SQLITE -> this.createSQLiteDataSource(path);
         };
     }
 
@@ -93,13 +95,12 @@ public record DatabaseProperties(DatabaseType type, String host, String name, St
      *
      * @return The configured HikariDataSource.
      */
-    private HikariDataSource createSQLiteDataSource() {
+    private HikariDataSource createSQLiteDataSource(final Path path) {
         HikariConfig config = new HikariConfig();
-        String url = "jdbc:sqlite:" + Util.getPluginPath().resolve("database.db");
+        String url = "jdbc:sqlite:" + Util.createFile(path, "database.db");
         config.setPoolName("MCMMOCredits SQLITE");
         config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
         config.addDataSourceProperty("url", url);
-        Util.createFile("database.db");
         return new HikariDataSource(config);
     }
 
@@ -108,13 +109,13 @@ public record DatabaseProperties(DatabaseType type, String host, String name, St
      *
      * @return The configured HikariDataSource.
      */
-    private HikariDataSource createH2DataSource() {
+    private HikariDataSource createH2DataSource(final Path path) {
         HikariConfig config = new HikariConfig();
-        String url = "jdbc:h2:file:./" + Util.getPluginPath().resolve("database") + ";DB_CLOSE_DELAY=-1;MODE=MYSQL";
+        String h2Path = Util.createFile(path, "database.mv.db").toString().replace(".mv.db", "");
+        String url = String.format("jdbc:h2:file:./%s;DB_CLOSE_DELAY=-1;MODE=MYSQL", h2Path);
         config.setPoolName("MCMMOCredits H2");
         config.setDataSourceClassName("org.h2.jdbcx.JdbcDataSource");
         config.addDataSourceProperty("url", url);
-        Util.createFile("database.mv.db");
         return new HikariDataSource(config);
     }
 }

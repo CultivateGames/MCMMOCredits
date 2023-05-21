@@ -65,7 +65,7 @@ public final class ItemSerializer implements TypeSerializer<Item> {
         List<String> lore = node.node("lore").getList(String.class);
         int slot = node.node("slot").getInt();
         String texture = node.node("texture").getString("");
-        int customModelData = node.node("custom-model-data").getInt();
+        int customModelData = node.node("custom-model-data").getInt(0);
         ItemStack stack = new ItemStack(material, amount);
         ItemMeta meta = stack.getItemMeta();
         if (node.node("glow").getBoolean(false)) {
@@ -101,7 +101,7 @@ public final class ItemSerializer implements TypeSerializer<Item> {
         node.node("amount").set(stack.getAmount());
         ItemMeta meta = stack.getItemMeta();
         node.node("texture").set(meta instanceof SkullMeta skullMeta ? this.getTexture(skullMeta) : "");
-        node.node("custom-model-data").set(meta.getCustomModelData());
+        node.node("custom-model-data").set(meta.hasCustomModelData() ? meta.getCustomModelData() : 0);
         node.node("glow").set(!stack.getEnchantments().isEmpty());
         if (item instanceof CommandItem citem) {
             node.node("command").set(citem.command());

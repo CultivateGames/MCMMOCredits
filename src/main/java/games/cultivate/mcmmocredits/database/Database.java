@@ -35,7 +35,9 @@ import org.jdbi.v3.sqlite3.SQLitePlugin;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
+import java.nio.file.Path;
 import java.sql.Types;
 import java.util.UUID;
 
@@ -45,6 +47,7 @@ import java.util.UUID;
 public final class Database implements Provider<UserDAO> {
     private static final ClasspathSqlLocator LOCATOR = ClasspathSqlLocator.create();
     private final DatabaseProperties properties;
+    private final Path path;
     private HikariDataSource source;
     private UserDAO dao;
 
@@ -54,15 +57,16 @@ public final class Database implements Provider<UserDAO> {
      * @param properties Properties of the database from config.
      */
     @Inject
-    public Database(final DatabaseProperties properties) {
+    public Database(final DatabaseProperties properties, @Named("plugin") Path path) {
         this.properties = properties;
+        this.path = path;
     }
 
     /**
      * Loads the DAO.
      */
     public void load() {
-        this.source = this.properties.toDataSource();
+        this.source = this.properties.toDataSource(this.path);
         Jdbi jdbi = this.createJDBI();
         jdbi.useHandle(x -> x.execute(this.getQuery()));
         this.dao = jdbi.onDemand(UserDAO.class);

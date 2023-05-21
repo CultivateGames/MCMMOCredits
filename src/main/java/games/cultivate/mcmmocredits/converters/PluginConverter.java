@@ -26,6 +26,7 @@ package games.cultivate.mcmmocredits.converters;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import games.cultivate.mcmmocredits.config.MainConfig;
+import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import games.cultivate.mcmmocredits.database.DatabaseType;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserDAO;
@@ -52,13 +53,13 @@ import java.util.regex.Pattern;
  * This converter connects to Mojang to validate username data, as it is not stored by other plugins.
  */
 public final class PluginConverter implements Converter {
-    private final MainConfig config;
     private final UserDAO destinationDAO;
     private final ConverterType type;
     private final HttpClient client;
     private final long retryDelay;
     private final long attemptDelay;
     private final List<User> sourceUsers;
+    private final DatabaseProperties properties;
 
     /**
      * Constructs the object.
@@ -68,13 +69,13 @@ public final class PluginConverter implements Converter {
      */
     @Inject
     public PluginConverter(final MainConfig config, final UserDAO destinationDAO) {
-        this.config = config;
         this.destinationDAO = destinationDAO;
-        this.type = config.getConverterType("converter", "type");
-        this.client = HttpClient.newHttpClient();
-        this.retryDelay = this.config.getLong("converter", "external", "retry-delay");
-        this.attemptDelay = this.config.getLong("converter", "external", "attempt-delay");
         this.sourceUsers = new ArrayList<>();
+        this.client = HttpClient.newHttpClient();
+        this.type = config.getConverterType("converter", "type");
+        this.properties = config.getDatabaseProperties("settings", "database");
+        this.retryDelay = config.getLong("converter", "external", "retry-delay");
+        this.attemptDelay = config.getLong("converter", "external", "attempt-delay");
     }
 
     /**
@@ -116,7 +117,7 @@ public final class PluginConverter implements Converter {
     @Override
     public boolean convert() {
         this.destinationDAO.addUsers(this.sourceUsers);
-        if (this.config.getDatabaseProperties("settings", "database").type() == DatabaseType.H2) {
+        if (this.properties.type() == DatabaseType.H2) {
             this.destinationDAO.useHandle(x -> x.execute("CHECKPOINT SYNC"));
         }
         return true;

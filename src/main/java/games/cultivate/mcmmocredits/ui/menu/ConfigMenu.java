@@ -65,7 +65,7 @@ public final class ConfigMenu extends BaseMenu {
     /**
      * Calculates menu items based on the provided config keys.
      *
-     * @param keys Config node paths as strings.
+     * @param keys BaseConfig node paths as strings.
      */
     private void addConfigKeys(final List<String> keys) {
         ConfigItem messages = (ConfigItem) this.items().remove("messages");

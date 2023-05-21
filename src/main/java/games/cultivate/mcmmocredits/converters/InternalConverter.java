@@ -31,6 +31,8 @@ import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserDAO;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -38,9 +40,9 @@ import java.util.List;
  */
 public final class InternalConverter implements Converter {
     private final UserDAO destinationDAO;
-    private final ConverterType type;
     private final DatabaseProperties destinationProperties;
     private final DatabaseProperties sourceProperties;
+    private final Path path;
     private List<User> sourceUsers;
 
     /**
@@ -50,10 +52,10 @@ public final class InternalConverter implements Converter {
      * @param destinationDAO The current UserDAO to write users.
      */
     @Inject
-    public InternalConverter(final MainConfig config, final UserDAO destinationDAO) {
+    public InternalConverter(final MainConfig config, final UserDAO destinationDAO, @Named("plugin") Path path) {
         this.destinationDAO = destinationDAO;
-        this.type = config.getConverterType("converter", "type");
-        this.sourceProperties = config.getDatabaseProperties("converter", "internal", "properties");
+        this.path = path;
+        this.sourceProperties = config.getDatabaseProperties("converter", "old-internal-properties");
         this.destinationProperties = config.getDatabaseProperties("settings", "database");
     }
 
@@ -62,10 +64,10 @@ public final class InternalConverter implements Converter {
      */
     @Override
     public boolean load() {
-        if (this.destinationProperties.type().name().contains(this.type.name().split("_")[1])) {
+        if (this.sourceProperties.type() == this.destinationProperties.type()) {
             throw new IllegalStateException("Database types must be different!");
         }
-        Database sourceDatabase = new Database(this.sourceProperties);
+        Database sourceDatabase = new Database(this.sourceProperties, this.path);
         this.sourceUsers = sourceDatabase.get().getAllUsers();
         sourceDatabase.disable();
         return this.sourceUsers != null && !this.sourceUsers.isEmpty();

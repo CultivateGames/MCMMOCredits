@@ -52,7 +52,7 @@ public final class ContextFactory {
     /**
      * Constructs the object.
      *
-     * @param config Config instance, used to run config modification process.
+     * @param config BaseConfig instance, used to run config modification process.
      * @param queue  ChatQueue, used to execute redeem and config modification processes.
      * @param plugin Plugin instance, used to execute processes on the main thread if needed.
      */
