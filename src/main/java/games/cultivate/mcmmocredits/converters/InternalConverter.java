@@ -41,7 +41,6 @@ public final class InternalConverter implements Converter {
     private final ConverterType type;
     private final DatabaseProperties destinationProperties;
     private final DatabaseProperties sourceProperties;
-    private Database sourceDatabase;
     private List<User> sourceUsers;
 
     /**
@@ -66,8 +65,9 @@ public final class InternalConverter implements Converter {
         if (this.destinationProperties.type().name().contains(this.type.name().split("_")[1])) {
             throw new IllegalStateException("Database types must be different!");
         }
-        this.sourceDatabase = new Database(this.sourceProperties);
-        this.sourceUsers = this.sourceDatabase.get().getAllUsers();
+        Database sourceDatabase = new Database(this.sourceProperties);
+        this.sourceUsers = sourceDatabase.get().getAllUsers();
+        sourceDatabase.disable();
         return this.sourceUsers != null && !this.sourceUsers.isEmpty();
     }
 
@@ -90,13 +90,5 @@ public final class InternalConverter implements Converter {
     public boolean verify() {
         List<User> updatedCurrentUsers = this.destinationDAO.getAllUsers();
         return this.sourceUsers.parallelStream().allMatch(updatedCurrentUsers::contains);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void disable() {
-        this.sourceDatabase.disable();
     }
 }

@@ -52,11 +52,6 @@ public interface Converter {
     boolean verify();
 
     /**
-     * Shutdown any running processes or schedulers. Indicates completion of the conversion.
-     */
-    void disable();
-
-    /**
      * Runs the data conversion process.
      *
      * @param logger The logger used to log current status of the converter.
@@ -78,6 +73,5 @@ public interface Converter {
             return;
         }
         logger.info("Conversion has been verified! Disabling conversion...");
-        this.disable();
     }
 }

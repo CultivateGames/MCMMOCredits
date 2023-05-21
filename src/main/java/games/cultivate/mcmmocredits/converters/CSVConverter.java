@@ -94,14 +94,6 @@ public final class CSVConverter implements Converter {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void disable() {
-        //nothing to clean up for csv.
-    }
-
-    /**
      * Parses User from line of a CSV file.
      *
      * @param line The line of text from CSV file.
