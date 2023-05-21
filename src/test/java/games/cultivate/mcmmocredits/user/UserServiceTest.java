@@ -49,7 +49,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -63,6 +62,10 @@ class UserServiceTest {
     private UserService service;
     @Mock
     private UserDAO dao;
+    @Mock
+    private MockedStatic<Bukkit> mockBukkit;
+    @Mock
+    private Player mockPlayer;
 
     @BeforeEach
     void setUp() {
@@ -117,19 +120,17 @@ class UserServiceTest {
     @Test
     void setUsername_UsernameUpdated_ReturnsUpdatedUser() {
         this.cache.add(this.user);
-        String newUsername = "newUsername";
-        when(this.dao.setUsername(this.uuid, newUsername)).thenReturn(true);
-        User result = this.service.setUsername(this.uuid, newUsername);
+        when(this.dao.setUsername(this.uuid, "newUsername")).thenReturn(true);
+        User result = this.service.setUsername(this.uuid, "newUsername");
         assertNotNull(result);
-        assertEquals(newUsername, result.username());
+        assertEquals("newUsername", result.username());
     }
 
     @Test
     void setUsername_UsernameNotUpdated_ReturnsNull() {
         this.cache.add(this.user);
-        String newUsername = "newUsername";
-        when(this.dao.setUsername(this.uuid, newUsername)).thenReturn(false);
-        assertNull(this.service.setUsername(this.uuid, newUsername));
+        when(this.dao.setUsername(this.uuid, "newUsername")).thenReturn(false);
+        assertNull(this.service.setUsername(this.uuid, "newUsername"));
     }
 
     @Test
@@ -186,16 +187,13 @@ class UserServiceTest {
 
     @Test
     void fromSender_SenderIsPlayer_ReturnsUser() {
-        try (MockedStatic<Bukkit> mock = mockStatic(Bukkit.class)) {
-            this.cache.add(this.user);
-            Player player = mock(Player.class);
-            when(player.getUniqueId()).thenReturn(this.uuid);
-            mock.when(() -> Bukkit.getPlayer(this.uuid)).thenReturn(player);
-            CommandExecutor test = this.service.fromSender(player);
-            assertNotNull(test);
-            assertTrue(test instanceof User);
-            assertEquals(this.user, test);
-        }
+        this.cache.add(this.user);
+        this.mockBukkit.when(() -> Bukkit.getPlayer(this.uuid)).thenReturn(this.mockPlayer);
+        when(this.mockPlayer.getUniqueId()).thenReturn(this.uuid);
+        CommandExecutor test = this.service.fromSender(this.mockPlayer);
+        assertNotNull(test);
+        assertTrue(test instanceof User);
+        assertEquals(this.user, test);
     }
 
     @Test

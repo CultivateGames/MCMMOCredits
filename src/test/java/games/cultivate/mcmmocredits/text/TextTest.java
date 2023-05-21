@@ -29,30 +29,27 @@ import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.command.CommandSender;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
+@ExtendWith(MockitoExtension.class)
 class TextTest {
     private final String testContent = "Test content";
     private final Resolver resolver = new Resolver();
+    @Spy
+    private final CommandExecutor executor = new User(UUID.randomUUID(), "testUsername", 100, 10);
+    @Mock
     private CommandSender audience;
-    private CommandExecutor executor;
-
-    @BeforeEach
-    void setUp() {
-        this.audience = mock(CommandSender.class);
-        this.executor = spy(new User(UUID.randomUUID(), "testUsername", 100, 10));
-        doReturn(this.audience).when(this.executor).sender();
-    }
 
     @Test
     void fromString_AudienceContentResolver_SendsMessageToAudience() {
@@ -62,12 +59,14 @@ class TextTest {
 
     @Test
     void fromString_CommandExecutorContentResolver_SendsMessageToAudience() {
+        doReturn(this.audience).when(this.executor).sender();
         Text.fromString(this.executor, this.testContent, this.resolver).send();
         verify(this.audience).sendMessage(any(Component.class));
     }
 
     @Test
     void forOneUser_CommandExecutorContent_SendsMessageToAudience() {
+        doReturn(this.audience).when(this.executor).sender();
         Text.forOneUser(this.executor, this.testContent).send();
         verify(this.audience).sendMessage(any(Component.class));
     }

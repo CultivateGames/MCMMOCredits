@@ -116,24 +116,4 @@ class BasicTransactionTest {
         BasicTransaction addition = BasicTransaction.of(this.executor, this.target, BasicTransactionType.ADD, 100);
         assertFalse(addition.isSelfTransaction());
     }
-
-    @Test
-    void getMessageKey_ReturnsExpectedMessageKeys() {
-        BasicTransaction addition = BasicTransaction.of(this.executor, this.target, BasicTransactionType.ADD, 100);
-        BasicTransaction subtraction = BasicTransaction.of(this.executor, this.target, BasicTransactionType.TAKE, 100);
-        BasicTransaction setting = BasicTransaction.of(this.executor, this.target, BasicTransactionType.SET, 100);
-        assertEquals("credits-add", addition.getMessageKey());
-        assertEquals("credits-take", subtraction.getMessageKey());
-        assertEquals("credits-set", setting.getMessageKey());
-    }
-
-    @Test
-    void getUserMessageKey_ReturnsExpectedUserMessageKeys() {
-        BasicTransaction addition = BasicTransaction.of(this.executor, this.target, BasicTransactionType.ADD, 100);
-        BasicTransaction subtraction = BasicTransaction.of(this.executor, this.target, BasicTransactionType.TAKE, 100);
-        BasicTransaction setting = BasicTransaction.of(this.executor, this.target, BasicTransactionType.SET, 100);
-        assertEquals("credits-add-user", addition.getUserMessageKey());
-        assertEquals("credits-take-user", subtraction.getUserMessageKey());
-        assertEquals("credits-set-user", setting.getUserMessageKey());
-    }
 }

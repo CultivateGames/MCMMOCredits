@@ -34,75 +34,74 @@ import games.cultivate.mcmmocredits.user.Console;
 import games.cultivate.mcmmocredits.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-//TODO: determine if there's a better method to unit testing MCMMO code.
+@ExtendWith(MockitoExtension.class)
 class RedeemTransactionTest {
     private final CommandExecutor executor = Console.INSTANCE;
     private final UUID uuid = new UUID(0, 1);
     private User target;
-    private PlayerProfile profile;
-    private Player player;
+    @Mock
+    private PlayerProfile mockProfile;
+    @Mock
+    private Player mockPlayer;
+    @Mock
     private MockedStatic<Bukkit> mockBukkit;
+    @Mock
     private MockedStatic<UserManager> mockUser;
+    @Mock
+    private McMMOPlayer mockMCMMOPlayer;
+    @Mock
+    private mcMMO mockMCMMO;
+    @Mock
+    private GeneralConfig mockConfig;
 
     @BeforeEach
     void setUp() {
         this.target = new User(this.uuid, "tester1", 1000, 100);
-        this.mockUser = mockStatic(UserManager.class);
-        this.mockBukkit = mockStatic(Bukkit.class);
-        this.player = mock(Player.class);
-        McMMOPlayer mcMMOPlayer = mock(McMMOPlayer.class);
-        this.profile = mock(PlayerProfile.class);
-        this.mockBukkit.when(() -> Bukkit.getPlayer(this.uuid)).thenReturn(this.player);
-        this.mockUser.when(() -> UserManager.getPlayer(player)).thenReturn(mcMMOPlayer);
-        when(this.player.getUniqueId()).thenReturn(this.uuid);
-        when(mcMMOPlayer.getProfile()).thenReturn(this.profile);
-    }
-
-    @AfterEach
-    void tearDown() {
-        this.mockUser.close();
-        this.mockBukkit.close();
+        this.mockBukkit.when(() -> Bukkit.getPlayer(this.uuid)).thenReturn(this.mockPlayer);
+        this.mockUser.when(() -> UserManager.getPlayer(this.mockPlayer)).thenReturn(this.mockMCMMOPlayer);
+        mcMMO.p = this.mockMCMMO;
     }
 
     @Test
     void execute_ValidUser_TransactionApplied() {
+        when(this.mockMCMMOPlayer.getProfile()).thenReturn(this.mockProfile);
         RedeemTransaction herbalism = RedeemTransaction.of(this.target, PrimarySkillType.HERBALISM, 100);
         TransactionResult result = herbalism.execute();
         assertEquals(900, result.target().credits());
-        verify(this.profile).addLevels(PrimarySkillType.HERBALISM, 100);
-        verify(this.profile).save(true);
+        verify(this.mockProfile).addLevels(PrimarySkillType.HERBALISM, 100);
+        verify(this.mockProfile).save(true);
     }
 
     @Test
     void execute_ValidUsers_TransactionApplied() {
+        when(this.mockMCMMOPlayer.getProfile()).thenReturn(this.mockProfile);
         RedeemTransaction herbalism = RedeemTransaction.of(this.executor, this.target, PrimarySkillType.HERBALISM, 100);
         TransactionResult result = herbalism.execute();
         assertEquals(900, result.target().credits());
-        verify(this.profile).addLevels(PrimarySkillType.HERBALISM, 100);
-        verify(this.profile).save(true);
+        verify(this.mockProfile).addLevels(PrimarySkillType.HERBALISM, 100);
+        verify(this.mockProfile).save(true);
     }
 
     @Test
     void executable_ValidTransaction_ReturnsNoFailure() {
-        when(this.profile.isLoaded()).thenReturn(true);
-        mcMMO.p = mock(mcMMO.class);
-        GeneralConfig config = mock(GeneralConfig.class);
-        when(mcMMO.p.getGeneralConfig()).thenReturn(config);
-        when(config.getLevelCap(PrimarySkillType.HERBALISM)).thenReturn(10000);
+        when(this.mockMCMMOPlayer.getProfile()).thenReturn(this.mockProfile);
+        when(this.mockProfile.isLoaded()).thenReturn(true);
+        when(mcMMO.p.getGeneralConfig()).thenReturn(this.mockConfig);
+        when(this.mockConfig.getLevelCap(PrimarySkillType.HERBALISM)).thenReturn(10000);
         RedeemTransaction herbalism = RedeemTransaction.of(this.executor, this.target, PrimarySkillType.HERBALISM, 100);
         assertEquals(Optional.empty(), herbalism.executable());
     }
@@ -115,17 +114,17 @@ class RedeemTransactionTest {
 
     @Test
     void executable_ProfileNotLoaded_ReturnsFailure() {
+        when(this.mockMCMMOPlayer.getProfile()).thenReturn(this.mockProfile);
         RedeemTransaction profileNotLoaded = RedeemTransaction.of(this.executor, this.target, PrimarySkillType.HERBALISM, 100);
         assertEquals(Optional.of(FailureReason.MCMMO_PROFILE_FAIL), profileNotLoaded.executable());
     }
 
     @Test
     void executable_SkillLevelCap_ReturnsFailure() {
-        when(this.profile.isLoaded()).thenReturn(true);
-        mcMMO.p = mock(mcMMO.class);
-        GeneralConfig config = mock(GeneralConfig.class);
-        when(mcMMO.p.getGeneralConfig()).thenReturn(config);
-        when(config.getLevelCap(PrimarySkillType.HERBALISM)).thenReturn(99);
+        when(this.mockMCMMOPlayer.getProfile()).thenReturn(this.mockProfile);
+        when(this.mockProfile.isLoaded()).thenReturn(true);
+        when(mcMMO.p.getGeneralConfig()).thenReturn(this.mockConfig);
+        when(this.mockConfig.getLevelCap(PrimarySkillType.HERBALISM)).thenReturn(99);
         RedeemTransaction profileNotLoaded = RedeemTransaction.of(this.executor, this.target, PrimarySkillType.HERBALISM, 100);
         assertEquals(Optional.of(FailureReason.MCMMO_SKILL_CAP), profileNotLoaded.executable());
     }

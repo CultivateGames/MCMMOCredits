@@ -30,10 +30,12 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.spongepowered.configurate.BasicConfigurationNode;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.ConfigurationOptions;
@@ -44,29 +46,25 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 //TODO: edge cases
+@ExtendWith(MockitoExtension.class)
 class ItemSerializerTest {
     private ConfigurationNode node;
+    @Mock
     private MockedStatic<Bukkit> mockBukkit;
+    @Mock
+    private ItemFactory mockFactory;
+    @Mock
+    private ItemMeta mockMeta;
 
     @BeforeEach
     void setUp() {
         this.node = BasicConfigurationNode.root(ConfigurationOptions.defaults().serializers(b -> b.register(Item.class, ItemSerializer.INSTANCE)));
-        this.mockBukkit = mockStatic(Bukkit.class);
-        ItemFactory factory = mock(ItemFactory.class);
-        ItemMeta meta = mock(ItemMeta.class);
-        this.mockBukkit.when(Bukkit::getItemFactory).thenReturn(factory);
-        when(factory.getItemMeta(Material.STONE)).thenReturn(meta);
-        when(meta.getCustomModelData()).thenReturn(1);
-    }
-
-    @AfterEach
-    void tearDown() {
-        this.mockBukkit.close();
+        this.mockBukkit.when(Bukkit::getItemFactory).thenReturn(this.mockFactory);
+        when(this.mockFactory.getItemMeta(Material.STONE)).thenReturn(this.mockMeta);
+        when(this.mockMeta.getCustomModelData()).thenReturn(1);
     }
 
     @Test
@@ -80,7 +78,7 @@ class ItemSerializerTest {
         itemNode.node("custom-model-data").set(int.class, 1);
         itemNode.node("texture").set("");
         itemNode.node("glow").set(false);
-        Item item = this.node.options().serializers().get(Item.class).deserialize(Item.class, itemNode);
+        Item item = ItemSerializer.INSTANCE.deserialize(Item.class, itemNode);
         assertEquals("test item!", item.name());
         assertEquals(List.of("the lore."), item.lore());
         assertEquals(1, item.stack().getItemMeta().getCustomModelData());
@@ -96,7 +94,7 @@ class ItemSerializerTest {
         ItemStack stack = new ItemStack(Material.STONE, 1);
         stack.editMeta(m -> m.setCustomModelData(1));
         Item item = BaseItem.of(stack, "test item!", List.of("the lore."), 5);
-        this.node.options().serializers().get(Item.class).serialize(Item.class, item, itemNode);
+        ItemSerializer.INSTANCE.serialize(Item.class, item, itemNode);
         assertEquals("test item!", itemNode.node("name").getString());
         assertEquals(List.of("the lore."), itemNode.node("lore").getList(String.class, List.of()));
         assertEquals(1, itemNode.node("custom-model-data").getInt());

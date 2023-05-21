@@ -28,8 +28,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
@@ -38,15 +40,19 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class UserTest {
     private final UUID uuid = new UUID(2, 2);
     private final String username = "TestUser";
     private final int credits = 100;
     private final int redeemed = 50;
     private User user;
+    @Mock
+    private MockedStatic<Bukkit> mockBukkit;
+    @Mock
+    private Player mockPlayer;
 
     @BeforeEach
     void setUp() {
@@ -85,25 +91,19 @@ class UserTest {
 
     @Test
     void sender_ReturnsPlayer() {
-        try (MockedStatic<Bukkit> mock = Mockito.mockStatic(Bukkit.class)) {
-            Player player = mock(Player.class);
-            mock.when(() -> Bukkit.getPlayer(this.uuid)).thenReturn(player);
-            CommandSender sender = this.user.sender();
-            assertNotNull(sender);
-            assertTrue(sender instanceof Player);
-        }
+        this.mockBukkit.when(() -> Bukkit.getPlayer(this.uuid)).thenReturn(this.mockPlayer);
+        CommandSender sender = this.user.sender();
+        assertNotNull(sender);
+        assertTrue(sender instanceof Player);
     }
 
     @Test
     void player_ReturnsPlayerWithSameUUID() {
-        try (MockedStatic<Bukkit> mock = Mockito.mockStatic(Bukkit.class)) {
-            Player player = mock(Player.class);
-            when(player.getUniqueId()).thenReturn(this.uuid);
-            mock.when(() -> Bukkit.getPlayer(this.uuid)).thenReturn(player);
-            Player uplayer = this.user.player();
-            assertNotNull(uplayer);
-            assertEquals(this.uuid, uplayer.getUniqueId());
-        }
+        this.mockBukkit.when(() -> Bukkit.getPlayer(this.uuid)).thenReturn(this.mockPlayer);
+        when(this.mockPlayer.getUniqueId()).thenReturn(this.uuid);
+        Player uplayer = this.user.player();
+        assertNotNull(uplayer);
+        assertEquals(this.uuid, uplayer.getUniqueId());
     }
 
     @Test

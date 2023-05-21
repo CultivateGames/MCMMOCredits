@@ -25,6 +25,7 @@ package games.cultivate.mcmmocredits.transaction;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -43,7 +44,7 @@ class BasicTransactionTypeTest {
     void apply_AllOperations_InvalidCreditAmountThrowsException() {
         assertThrows(ArithmeticException.class, () -> BasicTransactionType.ADD.apply(this.a, Integer.MAX_VALUE));
         assertThrows(ArithmeticException.class, () -> BasicTransactionType.TAKE.apply(Integer.MIN_VALUE, this.b));
-        //SET is not tested because SET inherently cannot cause an overflow.
+        assertDoesNotThrow(() -> BasicTransactionType.SET.apply(0, Integer.MAX_VALUE + 1));
     }
 
     @Test

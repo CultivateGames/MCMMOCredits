@@ -27,17 +27,23 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 
+@ExtendWith(MockitoExtension.class)
 class ConsoleTest {
     private final Console console = Console.INSTANCE;
+    @Mock
+    private MockedStatic<Bukkit> mockBukkit;
+    @Mock
+    private ConsoleCommandSender mockSender;
 
     @Test
     void isPlayer_ReturnsFalse() {
@@ -51,13 +57,10 @@ class ConsoleTest {
 
     @Test
     void sender_ReturnsConsoleSender() {
-        try (MockedStatic<Bukkit> mockedBukkit = Mockito.mockStatic(Bukkit.class)) {
-            ConsoleCommandSender sender = mock(ConsoleCommandSender.class);
-            mockedBukkit.when(Bukkit::getConsoleSender).thenReturn(sender);
-            CommandSender test = this.console.sender();
-            assertNotNull(test);
-            assertTrue(test instanceof ConsoleCommandSender);
-        }
+        this.mockBukkit.when(Bukkit::getConsoleSender).thenReturn(this.mockSender);
+        CommandSender test = this.console.sender();
+        assertNotNull(test);
+        assertTrue(test instanceof ConsoleCommandSender);
     }
 
     @Test
