@@ -131,7 +131,7 @@ public final class Credits {
     @CommandDescription("Allows user to modify their own credit balance.")
     public void modify(final User user, final @Argument BasicTransactionType type, final @Argument @Range(min = "0") int amount) {
         Transaction transaction = BasicTransaction.of(user, type, amount);
-        this.execute(() -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false)));
+        this.plugin.execute(() -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false)));
     }
 
     /**
@@ -150,7 +150,7 @@ public final class Credits {
         Optional<User> optionalUser = this.service.getUser(username);
         if (optionalUser.isPresent()) {
             Transaction transaction = BasicTransaction.of(executor, optionalUser.get(), type, amount);
-            this.execute(() -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false)));
+            this.plugin.execute(() -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false)));
             return;
         }
         this.playerUnknownError(executor, username);
@@ -168,7 +168,7 @@ public final class Credits {
     @CommandDescription("Allows user to redeem credits for MCMMO Skill levels.")
     public void redeem(final User user, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
         Transaction transaction = RedeemTransaction.of(user, skill, amount);
-        this.execute(() -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false)));
+        this.plugin.execute(() -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false)));
     }
 
     /**
@@ -187,7 +187,7 @@ public final class Credits {
         Optional<User> optionalUser = this.service.getUser(username);
         if (optionalUser.isPresent()) {
             Transaction transaction = RedeemTransaction.of(executor, optionalUser.get(), skill, amount);
-            this.execute(() -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, silent, false)));
+            this.plugin.execute(() -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, silent, false)));
             return;
         }
         this.playerUnknownError(executor, username);
@@ -238,7 +238,7 @@ public final class Credits {
     public void openMenu(final User user, final @Argument(suggestions = "menus", defaultValue = "main") String type) {
         String menuType = type.toLowerCase();
         if (!user.player().hasPermission("mcmmocredits.menu." + menuType)) {
-            this.execute(() -> {
+            this.plugin.execute(() -> {
                 throw new NoPermissionException(Permission.of("mcmmocredits.menu." + menuType), user, List.of());
             });
         }
@@ -276,14 +276,5 @@ public final class Credits {
         Resolver resolver = Resolver.ofUser(executor);
         resolver.addUsername(username);
         Text.fromString(executor, this.config.getMessage("player-unknown"), resolver).send();
-    }
-
-    /**
-     * Ensures runnable execution is on the main thread.
-     *
-     * @param command Runnable to execute on the main thread.
-     */
-    private void execute(final Runnable command) {
-        Bukkit.getScheduler().getMainThreadExecutor(this.plugin).execute(command);
     }
 }

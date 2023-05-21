@@ -112,6 +112,6 @@ public final class ContextFactory {
      * @param command The command to be executed.
      */
     public void runCommand(final User user, final String command) {
-        Bukkit.getScheduler().getMainThreadExecutor(this.plugin).execute(() -> Bukkit.dispatchCommand(user.player(), command));
+        this.plugin.execute(() -> Bukkit.dispatchCommand(user.player(), command));
     }
 }
