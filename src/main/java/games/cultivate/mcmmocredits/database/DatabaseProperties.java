@@ -31,14 +31,14 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import java.nio.file.Path;
 
 /**
- * Properties used in creation of the {@linkplain Database}
+ * Properties used in creation of the Database.
  *
- * @param type     Type of the Database.
- * @param host     Host of the Database.
- * @param name     Name of the Database.
- * @param user     Username for the Database user.
- * @param password Password for the Database user.
- * @param port     Port of the Database.
+ * @param type     Type of the AbstractDatabase.
+ * @param host     Host of the AbstractDatabase.
+ * @param name     Name of the AbstractDatabase.
+ * @param user     Username for the AbstractDatabase user.
+ * @param password Password for the AbstractDatabase user.
+ * @param port     Port of the AbstractDatabase.
  * @param ssl      If useSSL should be set to "true" in the JDBC connection url.
  */
 @ConfigSerializable
@@ -55,6 +55,7 @@ public record DatabaseProperties(DatabaseType type, String host, String name, St
     /**
      * Converts the object into a HikariDataSource.
      *
+     * @param path The plugin's data path.
      * @return The configured HikariDataSource.
      */
     public HikariDataSource toDataSource(final Path path) {

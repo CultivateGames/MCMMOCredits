@@ -50,9 +50,10 @@ public final class InternalConverter implements Converter {
      *
      * @param config         The config to read converter properties.
      * @param destinationDAO The current UserDAO to write users.
+     * @param path           The plugin's data path.
      */
     @Inject
-    public InternalConverter(final MainConfig config, final UserDAO destinationDAO, @Named("plugin") Path path) {
+    public InternalConverter(final MainConfig config, final UserDAO destinationDAO, final @Named("plugin") Path path) {
         this.destinationDAO = destinationDAO;
         this.path = path;
         this.sourceProperties = config.getDatabaseProperties("converter", "old-internal-properties");

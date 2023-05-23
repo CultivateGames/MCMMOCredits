@@ -43,13 +43,13 @@ import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.ConfigurationOptions;
 import org.spongepowered.configurate.serialize.SerializationException;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 //TODO: edge cases
@@ -68,6 +68,9 @@ class MenuSerializerTest {
         ConfigurationOptions opts = ConfigurationOptions.defaults().serializers(b -> b.register(Item.class, ItemSerializer.INSTANCE).register(Menu.class, MenuSerializer.INSTANCE));
         this.node = BasicConfigurationNode.root(opts);
         this.mockBukkit.when(Bukkit::getItemFactory).thenReturn(this.mockFactory);
+        when(this.mockFactory.getItemMeta(any(Material.class))).thenReturn(this.mockMeta);
+        when(this.mockMeta.hasCustomModelData()).thenReturn(true);
+        when(this.mockMeta.getCustomModelData()).thenReturn(1);
     }
 
     @Test
@@ -93,9 +96,17 @@ class MenuSerializerTest {
     }
 
     @Test
-    void serialize_ThrowsException() {
-        Menu menu = BaseMenu.of(new HashMap<>(), "Menu title!", 9, false, true);
+    void serialize_ValidMenu_ReturnsCorrectNode() throws SerializationException {
+        BaseItem fill = BaseItem.of(new ItemStack(Material.STONE, 1), "fill item!", List.of("the lore."), -1);
+        BaseItem navigation = BaseItem.of(new ItemStack(Material.STONE, 1), "navigation item!", List.of("the lore."), -1);
+        Menu menu = BaseMenu.of(Map.of("fill", fill, "navigation", navigation), "Menu title!", 9, false, true);
         ConfigurationNode menuNode = this.node.node("menu");
-        assertThrows(UnsupportedOperationException.class, () -> MenuSerializer.INSTANCE.serialize(Menu.class, menu, menuNode));
+        MenuSerializer.INSTANCE.serialize(Menu.class, menu, menuNode);
+        assertEquals("Menu title!", menuNode.node("title").getString());
+        assertEquals(9, menuNode.node("slots").getInt());
+        assertFalse(menuNode.node("fill").getBoolean());
+        assertTrue(menuNode.node("navigation").getBoolean());
+        assertEquals("fill item!", menuNode.node("items", "fill").get(Item.class).name());
+        assertEquals("navigation item!", menuNode.node("items", "navigation").get(Item.class).name());
     }
 }

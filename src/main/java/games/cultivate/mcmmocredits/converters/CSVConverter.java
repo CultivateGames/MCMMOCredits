@@ -51,9 +51,10 @@ public final class CSVConverter implements Converter {
      *
      * @param config         MainConfig in order to read converter settings.
      * @param destinationDAO Destination database.
+     * @param path           The plugin's data path.
      */
     @Inject
-    public CSVConverter(final MainConfig config, final UserDAO destinationDAO, @Named("plugin") Path path) {
+    public CSVConverter(final MainConfig config, final UserDAO destinationDAO, final @Named("plugin") Path path) {
         this.destinationDAO = destinationDAO;
         this.path = path;
         this.properties = config.getDatabaseProperties("settings", "database");

@@ -5,10 +5,16 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.nio.file.Path;
 
+/**
+ * Represents basic functionality of a configuration.
+ */
 @ConfigSerializable
 public interface Config {
     /**
      * Loads the configuration. Supports reloading.
+     *
+     * @param path     The path of the configuration.
+     * @param fileName The name of the configuration file.
      */
     void load(Path path, String fileName);
 

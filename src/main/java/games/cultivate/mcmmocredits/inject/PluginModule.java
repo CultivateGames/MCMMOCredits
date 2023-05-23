@@ -50,6 +50,7 @@ import java.nio.file.Path;
 /**
  * Handles Guice Dependency Injection.
  */
+//Do not change path injection.
 public final class PluginModule extends AbstractModule {
     private final MCMMOCredits plugin;
 

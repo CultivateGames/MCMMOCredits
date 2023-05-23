@@ -90,6 +90,7 @@ class ItemSerializerTest {
 
     @Test
     void serialize_ValidItem_ReturnsCorrectNode() throws SerializationException {
+        when(this.mockMeta.hasCustomModelData()).thenReturn(true);
         ConfigurationNode itemNode = this.node.node("item");
         ItemStack stack = new ItemStack(Material.STONE, 1);
         stack.editMeta(m -> m.setCustomModelData(1));

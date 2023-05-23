@@ -121,7 +121,7 @@ public class BaseConfig implements Config {
      * {@inheritDoc}
      */
     @Override
-    public <T> T get(Class<T> type, T def, Object... path) {
+    public <T> T get(final Class<T> type, final T def, final Object... path) {
         try {
             T value = this.root.node(path).get(type);
             return value != null ? value : def;
@@ -134,6 +134,8 @@ public class BaseConfig implements Config {
     /**
      * Creates Configuration loader and physical file.
      *
+     * @param path     The path of the configuration.
+     * @param fileName The name of the configuration file.
      * @return The Configuration Loader.
      */
     private YamlConfigurationLoader createLoader(final Path path, final String fileName) {
