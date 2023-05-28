@@ -24,49 +24,25 @@
 package games.cultivate.mcmmocredits.user;
 
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
 /**
- * Represents a Bukkit Player.
+ * Represents a human.
+ *
+ * @param uuid     UUID of the user.
+ * @param username Username of the user.
+ * @param credits  Default credit balance of the user.
+ * @param redeemed Default credit redeemed stat of the user.
  */
-public final class User extends CommandExecutor {
-    /**
-     * Constructs the object.
-     *
-     * @param uuid     UUID of the user.
-     * @param username Username of the user.
-     * @param credits  Default credit balance of the user.
-     * @param redeemed Default credit redeemed stat of the user.
-     */
-    public User(final UUID uuid, final String username, final int credits, final int redeemed) {
-        super(uuid, username, credits, redeemed);
-    }
-
+public record User(UUID uuid, String username, int credits, int redeemed) implements CommandExecutor {
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean isPlayer() {
         return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isConsole() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public CommandSender sender() {
-        return this.player();
     }
 
     /**
@@ -84,7 +60,7 @@ public final class User extends CommandExecutor {
      * @return An updated User.
      */
     public User withCredits(final int credits) {
-        return new User(this.uuid(), this.username(), credits, this.redeemed());
+        return new User(this.uuid, this.username, credits, this.redeemed);
     }
 
     /**
@@ -94,7 +70,7 @@ public final class User extends CommandExecutor {
      * @return An updated User.
      */
     public User withUsername(final String username) {
-        return new User(this.uuid(), username, this.credits(), this.redeemed());
+        return new User(this.uuid, username, this.credits, this.redeemed);
     }
 
     /**
@@ -104,6 +80,6 @@ public final class User extends CommandExecutor {
      * @return An updated User.
      */
     public User withRedeemed(final int redeemed) {
-        return new User(this.uuid(), this.username(), this.credits(), redeemed);
+        return new User(this.uuid, this.username, this.credits, redeemed);
     }
 }

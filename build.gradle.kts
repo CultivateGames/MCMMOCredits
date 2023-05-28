@@ -8,7 +8,6 @@ plugins {
     id("signing")
     id("xyz.jpenilla.run-paper") version "2.0.1"
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("io.papermc.paperweight.userdev") version "1.5.5"
 }
 
 repositories {
@@ -16,11 +15,9 @@ repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://nexus.neetgames.com/repository/maven-releases/")
-    maven("https://maven.enginehub.org/repo/")
 }
 
 dependencies {
-    paperweight.paperDevBundle("1.19.4-R0.1-SNAPSHOT")
     implementation("org.bstats:bstats-bukkit:3.0.2")
     implementation("cloud.commandframework:cloud-annotations:1.8.3")
     implementation("cloud.commandframework:cloud-paper:1.8.3")
@@ -34,6 +31,7 @@ dependencies {
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
         exclude(module = "paper-api")
     }
+    compileOnly("io.papermc.paper:paper-api:1.19.4-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.11.3") {
         exclude(group = "net.kyori")
     }
@@ -58,9 +56,6 @@ publishing {
     publications {
         create<MavenPublication>("MCMMOCredits") {
             from(components["java"])
-            afterEvaluate {
-                artifactId = tasks.jar.get().archiveBaseName.get()
-            }
             repositories {
                 maven {
                     name = "OSSRH"
@@ -118,7 +113,7 @@ configurations {
 
 tasks {
     assemble {
-        dependsOn(reobfJar)
+        dependsOn(shadowJar)
     }
 
     test {
@@ -154,7 +149,10 @@ tasks {
         fun reloc(pkg: String) = relocate(pkg, "games.cultivate.mcmmocredits.relocate.$pkg")
         reloc("cloud.commandframework")
         reloc("com.github")
-        reloc("com.typesafe")
+        reloc("com.google.common")
+        reloc("com.google.inject")
+        reloc("com.google.errorprone")
+        reloc("com.google.j2objc")
         reloc("com.zaxxer")
         reloc("io.leangen")
         reloc("javax.annotation")
@@ -162,7 +160,6 @@ tasks {
         reloc("org.aopalliance")
         reloc("org.bstats")
         reloc("org.checkerframework")
-        reloc("org.enginehub")
         reloc("org.jdbi")
         reloc("org.incendo")
         reloc("org.spongepowered")

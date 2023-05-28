@@ -36,7 +36,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -82,11 +81,6 @@ class UserTest {
     @Test
     void isPlayer_ReturnsTrue() {
         assertTrue(this.user.isPlayer());
-    }
-
-    @Test
-    void isConsole_ReturnsFalse() {
-        assertFalse(this.user.isConsole());
     }
 
     @Test

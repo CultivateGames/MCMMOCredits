@@ -51,11 +51,6 @@ class ConsoleTest {
     }
 
     @Test
-    void isConsole_ReturnsTrue() {
-        assertTrue(this.console.isConsole());
-    }
-
-    @Test
     void sender_ReturnsConsoleSender() {
         this.mockBukkit.when(Bukkit::getConsoleSender).thenReturn(this.mockSender);
         CommandSender test = this.console.sender();

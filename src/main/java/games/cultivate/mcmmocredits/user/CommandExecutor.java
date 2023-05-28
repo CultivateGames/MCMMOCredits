@@ -23,126 +23,64 @@
 //
 package games.cultivate.mcmmocredits.user;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Represents a Bukkit CommandSender that can execute a command.
+ * Represents a user of the application.
  */
-public abstract class CommandExecutor {
-    private final UUID uuid;
-    private final String username;
-    private final int credits;
-    private final int redeemed;
-
-    /**
-     * Constructs the object.
-     *
-     * @param uuid     The UUID of the executor.
-     * @param username The username of the executor.
-     * @param credits  The default credit balance of the executor.
-     * @param redeemed The default redeemed statistic of the executor.
-     */
-    CommandExecutor(final UUID uuid, final String username, final int credits, final int redeemed) {
-        this.uuid = uuid;
-        this.username = username;
-        this.credits = credits;
-        this.redeemed = redeemed;
-    }
-
-    /**
-     * Gets the UUID of the executor.
-     *
-     * @return the UUID.
-     */
-    public UUID uuid() {
-        return this.uuid;
-    }
-
-    /**
-     * Gets the username of the executor.
-     *
-     * @return the username.
-     */
-    public String username() {
-        return this.username;
-    }
-
-    /**
-     * Gets the current credit balance of the executor.
-     *
-     * @return the credit balance.
-     */
-    public int credits() {
-        return this.credits;
-    }
-
-    /**
-     * Gets the current redemption statistic of the executor.
-     *
-     * @return the redeemed statistic.
-     */
-    public int redeemed() {
-        return this.redeemed;
-    }
-
+public interface CommandExecutor {
     /**
      * Determines if the CommandExecutor is a {@link Player}
      *
      * @return if this is a Player.
      */
-    public abstract boolean isPlayer();
-
-    /**
-     * Determines if the CommandExecutor is an instance of Console.
-     *
-     * @return if this is Console.
-     */
-    public abstract boolean isConsole();
-
-    /**
-     * Gets the Bukkit CommandSender from this CommandExecutor.
-     *
-     * @return the CommandSender.
-     */
-    public abstract CommandSender sender();
+    boolean isPlayer();
 
     /**
      * Gets the Bukkit Player from this CommandExecutor.
      *
      * @return the Player.
      */
-    public abstract Player player();
+    Player player();
 
     /**
-     * {@inheritDoc}
+     * Gets the UUID of the executor.
+     *
+     * @return the UUID.
      */
-    @Override
-    @SuppressWarnings("checkstyle:needbraces")
-    public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        CommandExecutor executor = (CommandExecutor) o;
-
-        if (this.credits != executor.credits) return false;
-        if (this.redeemed != executor.redeemed) return false;
-        if (!Objects.equals(this.uuid, executor.uuid)) return false;
-        return Objects.equals(this.username, executor.username);
-    }
+    UUID uuid();
 
     /**
-     * {@inheritDoc}
+     * Gets the username of the executor.
+     *
+     * @return the username.
      */
-    @Override
-    public int hashCode() {
-        int result = this.uuid != null ? this.uuid.hashCode() : 0;
-        result = 31 * result + (this.username != null ? this.username.hashCode() : 0);
-        result = 31 * result + this.credits;
-        result = 31 * result + this.redeemed;
-        return result;
+    String username();
+
+    /**
+     * Gets the current credit balance of the executor.
+     *
+     * @return the credit balance.
+     */
+    int credits();
+
+    /**
+     * Gets the current redemption statistic of the executor.
+     *
+     * @return the redeemed statistic.
+     */
+    int redeemed();
+
+    /**
+     * Gets the Bukkit CommandSender from this CommandExecutor.
+     *
+     * @return the CommandSender.
+     */
+    default CommandSender sender() {
+        return this.isPlayer() ? this.player() : Bukkit.getConsoleSender();
     }
 }
