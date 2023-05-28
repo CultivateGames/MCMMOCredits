@@ -83,7 +83,7 @@ public final class SkillParser<C> implements ArgumentParser<C, PrimarySkillType>
          * @param context Current context of the command.
          */
         public SkillParseException(final String input, final CommandContext<?> context) {
-            super(SkillParser.class, context, StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_ENUM, CaptionVariable.of("input", input), CaptionVariable.of("acceptableValues", Util.getJoinedSkillNames()));
+            super(SkillParser.class, context, StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_ENUM, CaptionVariable.of("input", input), CaptionVariable.of("acceptableValues", Util.joinString(",", Util.getSkillNames())));
         }
     }
 }

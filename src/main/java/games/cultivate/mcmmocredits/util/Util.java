@@ -51,15 +51,6 @@ public final class Util {
     }
 
     /**
-     * Gets a list of lowercase, eligible MCMMO skills joined by a delimiter.
-     *
-     * @return The list.
-     */
-    public static String getJoinedSkillNames() {
-        return Util.joinString(",", MCMMO_SKILLS);
-    }
-
-    /**
      * Creates a file and path's directories if they do not exist.
      *
      * @param dir      Path of the file to be created.

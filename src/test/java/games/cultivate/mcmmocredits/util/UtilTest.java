@@ -40,12 +40,6 @@ class UtilTest {
     }
 
     @Test
-    void getJoinedSkillNames_ReturnsCorrectStrings() {
-        String result = "acrobatics,alchemy,archery,axes,excavation,fishing,herbalism,mining,repair,swords,taming,unarmed,woodcutting";
-        assertEquals(result, Util.getJoinedSkillNames());
-    }
-
-    @Test
     void capitalizeWord_ValidInput_CapitalizesFirstLetter() {
         assertEquals("Testinput", Util.capitalizeWord("testInput"));
     }
