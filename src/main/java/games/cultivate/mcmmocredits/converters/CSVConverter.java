@@ -23,88 +23,44 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import games.cultivate.mcmmocredits.database.DatabaseType;
+import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
+import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.user.User;
-import games.cultivate.mcmmocredits.user.UserDAO;
+import games.cultivate.mcmmocredits.util.Dir;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.UUID;
+import java.util.Set;
 
 /**
  * Data Converter that reads data from a CSV file.
  */
-public final class CSVConverter implements Converter {
-    private final UserDAO destinationDAO;
+public final class CSVConverter extends AbstractConverter {
     private final Path path;
-    private final DatabaseProperties properties;
-    private List<User> sourceUsers;
 
     /**
      * Constructs the object.
      *
-     * @param config         MainConfig in order to read converter settings.
-     * @param destinationDAO Destination database.
-     * @param path           The plugin's data path.
+     * @param database   The current Database.
+     * @param properties Properties of the Converter.
+     * @param path       The plugin's data path.
      */
     @Inject
-    public CSVConverter(final MainConfig config, final UserDAO destinationDAO, final @Named("plugin") Path path) {
-        this.destinationDAO = destinationDAO;
+    public CSVConverter(final Database database, final ConverterProperties properties, final @Dir Path path) {
+        super(database, properties);
         this.path = path;
-        this.properties = config.getDatabaseProperties("settings", "database");
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean load() {
-        try {
-            List<String> lines = Files.readAllLines(this.path.resolve("database.csv"));
-            this.sourceUsers = lines.stream().map(this::userFromCSV).toList();
-            return !this.sourceUsers.isEmpty();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean convert() {
-        this.destinationDAO.addUsers(this.sourceUsers);
-        if (this.properties.type() == DatabaseType.H2) {
-            this.destinationDAO.useHandle(x -> x.execute("CHECKPOINT SYNC"));
-        }
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean verify() {
-        List<User> updatedCurrentUsers = this.destinationDAO.getAllUsers();
-        return this.sourceUsers.parallelStream().allMatch(updatedCurrentUsers::contains);
-    }
-
-    /**
-     * Parses User from line of a CSV file.
-     *
-     * @param line The line of text from CSV file.
-     * @return The parsed User.
-     */
-    private User userFromCSV(final String line) {
-        String[] arr = line.split(",");
-        UUID uuid = UUID.fromString(arr[0]);
-        return new User(uuid, arr[1], Integer.parseInt(arr[2]), Integer.parseInt(arr[3]));
+    public void load() throws IOException, InterruptedException {
+        Set<User> set = this.getUsers();
+        List<String> lines = Files.readAllLines(this.path.resolve("database.csv"));
+        set.addAll(lines.stream().map(User::fromCSV).toList());
     }
 }

@@ -23,113 +23,45 @@
 //
 package games.cultivate.mcmmocredits.database;
 
-import com.zaxxer.hikari.HikariDataSource;
+import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.user.UserDAO;
-import org.jdbi.v3.core.Jdbi;
-import org.jdbi.v3.core.argument.AbstractArgumentFactory;
-import org.jdbi.v3.core.argument.Argument;
-import org.jdbi.v3.core.config.ConfigRegistry;
-import org.jdbi.v3.core.h2.H2DatabasePlugin;
-import org.jdbi.v3.core.locator.ClasspathSqlLocator;
-import org.jdbi.v3.sqlite3.SQLitePlugin;
-import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 import java.nio.file.Path;
-import java.sql.Types;
-import java.util.UUID;
 
 /**
- * Handles connecting to the database via configured settings, and providing the DAO based off of that connection.
+ * Represents a Database connection and provider of the UserDAO.
  */
-public final class Database implements Provider<UserDAO> {
-    private static final ClasspathSqlLocator LOCATOR = ClasspathSqlLocator.create();
-    private final DatabaseProperties properties;
-    private final Path path;
-    private HikariDataSource source;
-    private UserDAO dao;
-
+public interface Database extends Provider<UserDAO> {
     /**
-     * Constructs the object.
+     * Returns a Database from the provided parameters.
      *
-     * @param properties Properties of the database from config.
+     * @param properties The database's properties.
+     * @param path       The plugin's data path.
+     * @return The Database.
      */
-    @Inject
-    public Database(final DatabaseProperties properties, @Named("plugin") Path path) {
-        this.properties = properties;
-        this.path = path;
+    static Database getDatabase(final DatabaseProperties properties, final Path path) {
+        return switch (properties.type()) {
+            case H2 -> new H2Database(properties, path);
+            case SQLITE -> new SQLiteDatabase(properties, path);
+            case MYSQL -> new MySQLDatabase(properties);
+        };
     }
 
     /**
      * Loads the DAO.
      */
-    public void load() {
-        this.source = this.properties.toDataSource(this.path);
-        Jdbi jdbi = this.createJDBI();
-        jdbi.useHandle(x -> x.execute(this.getQuery()));
-        this.dao = jdbi.onDemand(UserDAO.class);
-    }
+    void load();
 
     /**
      * Disables the connection. Reserved for shutdown.
      */
-    public void disable() {
-        if (this.source != null) {
-            this.source.close();
-        }
-    }
+    void disable();
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public UserDAO get() {
-        if (this.dao == null) {
-            this.load();
-        }
-        return this.dao;
-    }
-
-    /**
-     * Creates an instance of JDBI based on the provided DatabaseProperties.
+     * Gets the underlying DatabaseProperties.
      *
-     * @return a modified JDBI instance.
+     * @return The properties.
      */
-    private Jdbi createJDBI() {
-        Jdbi jdbi = Jdbi.create(this.source).installPlugin(new SqlObjectPlugin());
-        return switch (this.properties.type()) {
-            case SQLITE -> jdbi.installPlugin(new SQLitePlugin());
-            case H2 -> jdbi.installPlugin(new H2DatabasePlugin());
-            case MYSQL -> jdbi.registerArgument(new UUIDArgumentFactory());
-        };
-    }
-
-    /**
-     * Fetches a query from the plugin's resource folder.
-     *
-     * @return The query.
-     */
-    private String getQuery() {
-        String result = this.properties.type() == DatabaseType.SQLITE ? "CREATE-TABLE-SQLITE" : "CREATE-TABLE-MYSQL";
-        return LOCATOR.getResource(this.getClass().getClassLoader(), result + ".sql");
-    }
-
-    /**
-     * Argument Factory required for better MySQL compatibility with UUID data type.
-     */
-    static class UUIDArgumentFactory extends AbstractArgumentFactory<UUID> {
-        protected UUIDArgumentFactory() {
-            super(Types.VARCHAR);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected Argument build(final UUID value, final ConfigRegistry config) {
-            return (p, s, c) -> s.setString(p, value.toString());
-        }
-    }
+    DatabaseProperties getProperties();
 }

@@ -25,11 +25,9 @@ package games.cultivate.mcmmocredits.converters;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import games.cultivate.mcmmocredits.database.DatabaseType;
+import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
+import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.user.User;
-import games.cultivate.mcmmocredits.user.UserDAO;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -41,125 +39,86 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.nio.file.Path;
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Data Converter used to add Users from external plugin data.
- * This converter connects to Mojang to validate username data, as it is not stored by other plugins.
+ * This converter connects to Mojang to validate username data, as it is not always stored by other plugins.
  */
-public final class PluginConverter implements Converter {
-    private final UserDAO destinationDAO;
-    private final ConverterType type;
+public final class PluginConverter extends AbstractConverter {
     private final HttpClient client;
-    private final long retryDelay;
-    private final long attemptDelay;
-    private final List<User> sourceUsers;
-    private final DatabaseProperties properties;
 
     /**
      * Constructs the object.
      *
-     * @param config         The config to read converter properties.
-     * @param destinationDAO The current UserDAO to write users.
+     * @param database   The current UserDAO to write users.
+     * @param properties The properties of the converter.
      */
     @Inject
-    public PluginConverter(final MainConfig config, final UserDAO destinationDAO) {
-        this.destinationDAO = destinationDAO;
-        this.sourceUsers = new ArrayList<>();
+    public PluginConverter(final Database database, final ConverterProperties properties) {
+        super(database, properties);
         this.client = HttpClient.newHttpClient();
-        this.type = config.getConverterType("converter", "type");
-        this.properties = config.getDatabaseProperties("settings", "database");
-        this.retryDelay = config.getLong("converter", "external", "retry-delay");
-        this.attemptDelay = config.getLong("converter", "external", "attempt-delay");
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean load() {
-        Path pluginPath = this.type == ConverterType.EXTERNAL_GRM ? Path.of("GuiRedeemMCMMO", "playerdata") : Path.of("MorphRedeem", "PlayerData");
-        Path filePath = Bukkit.getPluginsFolder().toPath().resolve(pluginPath);
-        File[] files = filePath.toFile().listFiles();
-        if (files == null || files.length < 1) {
-            throw new IllegalStateException("External converter plugin path is empty!");
-        }
-        Pattern yml = Pattern.compile(".yml");
-        for (File f : files) {
-            YamlConfiguration userConf = YamlConfiguration.loadConfiguration(f);
-            int credits = userConf.getInt("Credits");
-            int redeemed = userConf.getInt("Credits_Spent");
-            UUID uuid = UUID.fromString(yml.matcher(f.getName()).replaceAll(""));
-            try {
-                this.sourceUsers.add(new User(uuid, this.sendMojangRequest(uuid), credits, redeemed));
-                if (this.sourceUsers.size() % 100 == 0) {
-                    Bukkit.getLogger().log(Level.INFO, "Progress: {0}/{1}", new Object[]{this.sourceUsers.size(), files.length});
-                }
-                Thread.sleep(this.attemptDelay);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return false;
+    public void load() throws IOException, InterruptedException {
+        Map<UUID, String> cached = this.loadCache();
+        Set<User> users = this.getUsers();
+        List<File> files = Arrays.asList(this.getConverterProperties().getExternalPath().toFile().listFiles());
+        int size = files.size();
+        for (File file : files) {
+            UUID uuid = UUID.fromString(file.getName().substring(0, file.getName().length() - 4));
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+            String username = cached.containsKey(uuid) ? cached.get(uuid) : this.getName(uuid);
+            users.add(new User(uuid, username, config.getInt("Credits", 0), config.getInt("Credits_Spent", 0)));
+            if (users.size() % 100 == 0) {
+                Bukkit.getLogger().info("Progress: " + users.size() + "/" + size);
             }
+            Thread.sleep(this.getConverterProperties().requestDelay());
         }
-        return true;
     }
 
     /**
-     * {@inheritDoc}
+     * Loads the usercache.json to grab names locally before requesting from Mojang.
+     *
+     * @return A map representing usercache.json.
+     * @throws IOException If there is an issue loading the file.
      */
-    @Override
-    public boolean convert() {
-        this.destinationDAO.addUsers(this.sourceUsers);
-        if (this.properties.type() == DatabaseType.H2) {
-            this.destinationDAO.useHandle(x -> x.execute("CHECKPOINT SYNC"));
-        }
-        return true;
+    private Map<UUID, String> loadCache() throws IOException {
+        String json = new String(Files.readAllBytes(new File(new File("."), "usercache.json").toPath()));
+        return JsonParser.parseString(json).getAsJsonArray().asList().stream()
+                .map(JsonElement::getAsJsonObject)
+                .collect(Collectors.toMap(x -> UUID.fromString(x.get("uuid").getAsString()), y -> y.get("name").getAsString()));
     }
 
     /**
-     * {@inheritDoc}
+     * Requests a username from Mojang using the provided UUID.
+     *
+     * @param uuid The UUID.
+     * @return The username.
+     * @throws IOException          Thrown if there is an issue reading the response.
+     * @throws InterruptedException Thrown if the sleep between attempts is interrupted.
      */
-    @Override
-    public boolean verify() {
-        List<User> updatedCurrentUsers = this.destinationDAO.getAllUsers();
-        return this.sourceUsers.parallelStream().allMatch(updatedCurrentUsers::contains);
-    }
-
-    private String sendMojangRequest(final UUID uuid) throws IOException, InterruptedException {
-        URI uri = URI.create("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid.toString());
-        HttpRequest request = HttpRequest.newBuilder(uri).GET().build();
-        HttpResponse<String> response = this.client.send(request, BodyHandlers.ofString());
-        String result = response.body();
+    private String getName(final UUID uuid) throws IOException, InterruptedException {
+        HttpRequest req = HttpRequest.newBuilder(URI.create("https://api.mojang.com/user/profile/" + uuid)).GET().build();
+        HttpResponse<String> response = this.client.send(req, BodyHandlers.ofString());
         int responseCode = response.statusCode();
-        JsonElement element = JsonParser.parseString(result);
+        JsonElement element = JsonParser.parseString(response.body());
         if (!element.isJsonObject() || responseCode != 200) {
-            this.logConversionError(uuid, responseCode);
-            Thread.sleep(this.retryDelay);
-            this.sendMojangRequest(uuid);
+            Bukkit.getLogger().log(Level.WARNING, () -> String.format("Bad response received Retrying shortly. UUID: %s, Response Code: %d.", uuid, responseCode));
+            Thread.sleep(this.getConverterProperties().failureDelay());
+            this.getName(uuid);
         }
         return element.getAsJsonObject().get("name").getAsString();
-    }
-
-    /**
-     * Logs an error when conversion has failed.
-     *
-     * @param uuid         UUID of the user who couldn't be converted.
-     * @param responseCode HTTP Response Code sent in the response.
-     */
-    private void logConversionError(final UUID uuid, final int responseCode) {
-        String log = String.format("""
-                Malformed result received, waiting to resume! Do not shut off the server.
-                Check this UUID when conversion is done %s.
-                HTTP Response Code from Mojang Request: %d.
-                If this repeatedly occurs, check validity of UUID or send less requests (code 429).
-                """, uuid, responseCode);
-        Bukkit.getLogger().log(Level.WARNING, log);
     }
 }

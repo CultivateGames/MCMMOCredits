@@ -21,14 +21,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.converters;
+package games.cultivate.mcmmocredits.config.properties;
+
+import games.cultivate.mcmmocredits.database.DatabaseType;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
- * Namespace for Data Converters.
- * CSV: Data is sourced from a file named database.csv in the plugin's directory.
- * GUI_REDEEM_MCMMO: Data is sourced from GuiRedeemMCMMO user data.
- * INTERNAL: Data is sourced from another plugin database type (ex. SQLITE to H2)
+ * Properties used in creation of the Database.
+ *
+ * @param type     Type of the Database.
+ * @param url      URL of the database for remote databases. Ignored for H2/SQLite.
+ * @param user     Username for the Database user.
+ * @param password Password for the Database user.
  */
-public enum ConverterType {
-    CSV, GUI_REDEEM_MCMMO, INTERNAL, MORPH_REDEEM;
+@ConfigSerializable
+public record DatabaseProperties(DatabaseType type, String url, String user, String password) {
+    /**
+     * Constructs the object with sane defaults.
+     *
+     * @return The object.
+     */
+    public static DatabaseProperties defaults() {
+        return new DatabaseProperties(DatabaseType.SQLITE, "jdbc:mysql://127.0.0.1:3306/DATABASE_NAME", "root", "passw0rd+");
+    }
 }

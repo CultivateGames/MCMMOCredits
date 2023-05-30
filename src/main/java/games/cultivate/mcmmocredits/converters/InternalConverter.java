@@ -23,75 +23,42 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-import games.cultivate.mcmmocredits.config.MainConfig;
+import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
 import games.cultivate.mcmmocredits.database.Database;
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import games.cultivate.mcmmocredits.database.DatabaseType;
 import games.cultivate.mcmmocredits.user.User;
-import games.cultivate.mcmmocredits.user.UserDAO;
+import games.cultivate.mcmmocredits.util.Dir;
 
 import javax.inject.Inject;
-import javax.inject.Named;
+import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Set;
 
 /**
  * Data Converter used to switch between internal database types.
  */
-public final class InternalConverter implements Converter {
-    private final UserDAO destinationDAO;
-    private final DatabaseProperties destinationProperties;
-    private final DatabaseProperties sourceProperties;
-    private final Path path;
-    private List<User> sourceUsers;
+public final class InternalConverter extends AbstractConverter {
+    private final Database oldDatabase;
 
     /**
      * Constructs the object.
      *
-     * @param config         The config to read converter properties.
-     * @param destinationDAO The current UserDAO to write users.
-     * @param path           The plugin's data path.
+     * @param database   The current Database.
+     * @param properties The properties of the converter.
+     * @param path       The plugin's data path.
      */
     @Inject
-    public InternalConverter(final MainConfig config, final UserDAO destinationDAO, final @Named("plugin") Path path) {
-        this.destinationDAO = destinationDAO;
-        this.path = path;
-        this.sourceProperties = config.getDatabaseProperties("converter", "old-internal-properties");
-        this.destinationProperties = config.getDatabaseProperties("settings", "database");
+    public InternalConverter(final Database database, final ConverterProperties properties, final @Dir Path path) {
+        super(database, properties);
+        this.oldDatabase = properties.getOldDatabase(path);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean load() {
-        if (this.sourceProperties.type() == this.destinationProperties.type()) {
-            throw new IllegalStateException("Database types must be different!");
-        }
-        Database sourceDatabase = new Database(this.sourceProperties, this.path);
-        this.sourceUsers = sourceDatabase.get().getAllUsers();
-        sourceDatabase.disable();
-        return this.sourceUsers != null && !this.sourceUsers.isEmpty();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean convert() {
-        this.destinationDAO.addUsers(this.sourceUsers);
-        if (this.destinationProperties.type() == DatabaseType.H2) {
-            this.destinationDAO.useHandle(x -> x.execute("CHECKPOINT SYNC"));
-        }
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean verify() {
-        List<User> updatedCurrentUsers = this.destinationDAO.getAllUsers();
-        return this.sourceUsers.parallelStream().allMatch(updatedCurrentUsers::contains);
+    public void load() throws IOException, InterruptedException {
+        Set<User> set = this.getUsers();
+        set.addAll(this.oldDatabase.get().getAllUsers());
+        this.oldDatabase.disable();
     }
 }

@@ -26,31 +26,31 @@ package games.cultivate.mcmmocredits.inject;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
-import com.google.inject.name.Names;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
+import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
+import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.converters.CSVConverter;
 import games.cultivate.mcmmocredits.converters.Converter;
 import games.cultivate.mcmmocredits.converters.InternalConverter;
 import games.cultivate.mcmmocredits.converters.PluginConverter;
 import games.cultivate.mcmmocredits.database.Database;
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import games.cultivate.mcmmocredits.ui.ContextFactory;
 import games.cultivate.mcmmocredits.user.UserCache;
 import games.cultivate.mcmmocredits.user.UserDAO;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
+import games.cultivate.mcmmocredits.util.Dir;
 
-import javax.inject.Named;
 import javax.inject.Singleton;
 import java.nio.file.Path;
+import java.util.Objects;
 
 /**
  * Handles Guice Dependency Injection.
  */
-//Do not change path injection.
 public final class PluginModule extends AbstractModule {
     private final MCMMOCredits plugin;
 
@@ -69,13 +69,37 @@ public final class PluginModule extends AbstractModule {
     @Override
     protected void configure() {
         this.bind(MCMMOCredits.class).toInstance(this.plugin);
-        this.bind(Path.class).annotatedWith(Names.named("plugin")).toInstance(this.plugin.getDataFolder().toPath());
+        this.bind(Path.class).annotatedWith(Dir.class).toInstance(this.plugin.getDataFolder().toPath());
         this.bind(UserService.class).asEagerSingleton();
         this.bind(UserCache.class).asEagerSingleton();
         this.bind(ChatQueue.class).asEagerSingleton();
         this.bind(ContextFactory.class).asEagerSingleton();
         this.bind(UserDAO.class).toProvider(Database.class).in(Singleton.class);
         this.bind(Credits.class).asEagerSingleton();
+    }
+
+    /**
+     * Provides the Database from DatabaseProperties.
+     *
+     * @param properties The properties of the database.
+     * @param path       The plugin's data path.
+     * @return The Database.
+     */
+    @Provides
+    @Singleton
+    public Database provideDatabase(final DatabaseProperties properties, @Dir final Path path) {
+        return Database.getDatabase(properties, path);
+    }
+
+    /**
+     * Provides the ConverterProperties from the config.
+     *
+     * @param config The injected MainConfig.
+     * @return The ConverterProperties.
+     */
+    @Provides
+    public ConverterProperties provideConverterProperties(final MainConfig config) {
+        return config.getConverterProperties("converter");
     }
 
     /**
@@ -97,7 +121,7 @@ public final class PluginModule extends AbstractModule {
      */
     @Provides
     @Singleton
-    public MainConfig provideMainConfig(@Named("plugin") final Path path) {
+    public MainConfig provideMainConfig(@Dir final Path path) {
         MainConfig config = new MainConfig();
         config.load(path, "config.yml");
         return config;
@@ -111,7 +135,7 @@ public final class PluginModule extends AbstractModule {
      */
     @Provides
     @Singleton
-    public MenuConfig provideMenuConfig(@Named("plugin") final Path path) {
+    public MenuConfig provideMenuConfig(@Dir final Path path) {
         MenuConfig config = new MenuConfig();
         config.load(path, "menus.yml");
         return config;
@@ -120,16 +144,16 @@ public final class PluginModule extends AbstractModule {
     /**
      * Provides the Converter for injection.
      *
-     * @param config   The config used to read converter properties.
-     * @param injector The injector to grab a specific instance of the Converter.
+     * @param properties The converter's properties.
+     * @param injector   The injector to grab a specific instance of the Converter.
      * @return A Converter.
      */
     @Provides
     @Singleton
-    public Converter provideConverter(final MainConfig config, final Injector injector) {
-        return switch (config.getConverterType("converter", "type")) {
-            case EXTERNAL_GRM, EXTERNAL_MORPH -> injector.getInstance(PluginConverter.class);
-            case EXTERNAL_CSV -> injector.getInstance(CSVConverter.class);
+    public Converter provideConverter(final ConverterProperties properties, final Injector injector) {
+        return switch (Objects.requireNonNull(properties.type())) {
+            case GUI_REDEEM_MCMMO, MORPH_REDEEM -> injector.getInstance(PluginConverter.class);
+            case CSV -> injector.getInstance(CSVConverter.class);
             case INTERNAL -> injector.getInstance(InternalConverter.class);
         };
     }

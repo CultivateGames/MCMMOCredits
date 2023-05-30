@@ -23,8 +23,9 @@
 //
 package games.cultivate.mcmmocredits.config;
 
+import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
+import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.converters.ConverterType;
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import games.cultivate.mcmmocredits.ui.menu.Menu;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -96,8 +97,8 @@ class ConfigTest {
     }
 
     @Test
-    void getConverterType_ReturnsCorrectValue() {
-        assertEquals(ConverterType.INTERNAL, this.config.getConverterType("converter-type"));
+    void getConverterProperties_ReturnsCorrectValue() {
+        assertEquals(ConverterProperties.defaults(), this.config.getConverterProperties("converter"));
     }
 
     @Test
@@ -113,7 +114,7 @@ class ConfigTest {
 
     @Test
     void get_ReturnsDefaultOnBadSection() {
-        assertEquals(ConverterType.EXTERNAL_CSV, this.config.get(ConverterType.class, ConverterType.EXTERNAL_CSV, "fake-section", "converter-type"));
+        assertEquals(ConverterType.CSV, this.config.get(ConverterType.class, ConverterType.CSV, "fake-section", "converter-type"));
     }
 
     @Test
@@ -126,7 +127,9 @@ class ConfigTest {
 
     @Test
     void filterNodes_FiltersCorrectNodes() {
-        assertTrue(this.config.filterNodes(x -> false).contains("converter-type"));
-        assertFalse(this.config.filterNodes(x -> x.contains("converter-type")).contains("converter-type"));
+        assertTrue(this.config.filterNodes(x -> false).contains("retry-delay"));
+        assertTrue(this.config.filterNodes(x -> false).contains("converter.type"));
+        assertFalse(this.config.filterNodes(x -> x.contains("retry")).contains("retry-delay"));
+        assertFalse(this.config.filterNodes(x -> x.contains("converter.type")).contains("converter.type"));
     }
 }

@@ -23,8 +23,8 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.converters.ConverterType;
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
+import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
+import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import games.cultivate.mcmmocredits.ui.item.Item;
@@ -166,7 +166,7 @@ public class BaseConfig implements Config {
      * @return The value, or the default if the value is null.
      */
     public boolean getBoolean(final Object... path) {
-        return this.get(boolean.class, false, path);
+        return this.root.node(path).getBoolean(false);
     }
 
     /**
@@ -176,7 +176,7 @@ public class BaseConfig implements Config {
      * @return The value, or the default if the value is null.
      */
     public String getMessage(final Object... path) {
-        return this.get(String.class, "", "prefix") + this.get(String.class, "", path);
+        return this.getString("prefix") + this.getString(path);
     }
 
     /**
@@ -186,7 +186,7 @@ public class BaseConfig implements Config {
      * @return The value, or the default if the value is null.
      */
     public String getString(final Object... path) {
-        return this.get(String.class, "", path);
+        return this.root.node(path).getString("");
     }
 
     /**
@@ -196,7 +196,7 @@ public class BaseConfig implements Config {
      * @return The value, or the default if the value is null.
      */
     public int getInteger(final Object... path) {
-        return this.get(int.class, 0, path);
+        return this.root.node(path).getInt(0);
     }
 
     /**
@@ -220,13 +220,14 @@ public class BaseConfig implements Config {
     }
 
     /**
-     * Gets the ConverterType object from the configuration.
+     * Gets the ConverterProperties object from the configuration.
+     * A default is not returned to prevent execution of a conversion.
      *
      * @param path Node path where the value is found.
-     * @return The value, or the default if the value is null.
+     * @return The value, or null.
      */
-    public @Nullable ConverterType getConverterType(final Object... path) {
-        return this.get(ConverterType.class, null, path);
+    public @Nullable ConverterProperties getConverterProperties(final Object... path) {
+        return this.get(ConverterProperties.class, null, path);
     }
 
     /**

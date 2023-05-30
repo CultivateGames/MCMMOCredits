@@ -37,6 +37,18 @@ import java.util.UUID;
  * @param redeemed Default credit redeemed stat of the user.
  */
 public record User(UUID uuid, String username, int credits, int redeemed) implements CommandExecutor {
+
+    /**
+     * Parses User from line of a CSV file.
+     *
+     * @param line The line of text from CSV file.
+     * @return The parsed User.
+     */
+    public static User fromCSV(final String line) {
+        String[] arr = line.split(",");
+        return new User(UUID.fromString(arr[0]), arr[1], Integer.parseInt(arr[2]), Integer.parseInt(arr[3]));
+    }
+
     /**
      * {@inheritDoc}
      */

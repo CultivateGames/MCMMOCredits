@@ -23,8 +23,8 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.converters.ConverterType;
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
+import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
+import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import games.cultivate.mcmmocredits.ui.item.BaseItem;
@@ -59,7 +59,7 @@ final class FakeConfig extends BaseConfig {
     private boolean debug = false;
     private int leaderboardPageSize = 10;
     private DatabaseProperties database = DatabaseProperties.defaults();
-    private ConverterType converterType = ConverterType.INTERNAL;
+    private ConverterProperties converter = ConverterProperties.defaults();
     private long retryDelay = 60000L;
     private Menu menu;
 

@@ -24,7 +24,7 @@
 package games.cultivate.mcmmocredits.database;
 
 /**
- * Represents different database types.
+ * Namespace for database types.
  */
 public enum DatabaseType {
     MYSQL, SQLITE, H2

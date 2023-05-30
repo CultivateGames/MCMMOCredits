@@ -21,14 +21,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.converters;
+package games.cultivate.mcmmocredits.util;
+
+import javax.inject.Qualifier;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Namespace for Data Converters.
- * CSV: Data is sourced from a file named database.csv in the plugin's directory.
- * GUI_REDEEM_MCMMO: Data is sourced from GuiRedeemMCMMO user data.
- * INTERNAL: Data is sourced from another plugin database type (ex. SQLITE to H2)
+ * Annotation to mark MCMMOCredit's data folder.
  */
-public enum ConverterType {
-    CSV, GUI_REDEEM_MCMMO, INTERNAL, MORPH_REDEEM;
-}
+@Qualifier
+@Target({ FIELD, PARAMETER, METHOD })
+@Retention(RUNTIME)
+public @interface Dir {}

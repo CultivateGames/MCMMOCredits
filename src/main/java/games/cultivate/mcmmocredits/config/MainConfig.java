@@ -23,8 +23,8 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.converters.ConverterType;
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
+import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
+import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
@@ -81,7 +81,7 @@ public class MainConfig extends BaseConfig {
     private String redeemSudoUser = "<green>Redemption Successful! <sender> has redeemed <amount> Credits into <skill> for you! You have <target_credits> Credits remaining.";
     private String reload = "<green>The configuration file has been reloaded.";
     private Settings settings = new Settings();
-    private Conversion converter = new Conversion();
+    private ConverterProperties converter = ConverterProperties.defaults();
 
     /**
      * Settings used to modify the plugin's behavior.
@@ -89,32 +89,12 @@ public class MainConfig extends BaseConfig {
     @ConfigSerializable
     static class Settings {
         private boolean addUserMessage = true;
-        private boolean bstatsMetricsEnabled = true;
+        private boolean metricsEnabled = true;
         private boolean debug = false;
         private boolean leaderboardEnabled = true;
         private int leaderboardPageSize = 10;
         private boolean sendLoginMessage = true;
         private boolean userTabComplete = true;
         private DatabaseProperties database = DatabaseProperties.defaults();
-    }
-
-    /**
-     * Settings used to modify the data conversion process.
-     */
-    @ConfigSerializable
-    static class Conversion {
-        private boolean enabled = false;
-        private ConverterType type = ConverterType.INTERNAL;
-        private ExternalConversion external = new ExternalConversion();
-        private DatabaseProperties oldInternalProperties = DatabaseProperties.defaults();
-    }
-
-    /**
-     * Settings used to modify the data conversion process for external types.
-     */
-    @ConfigSerializable
-    static class ExternalConversion {
-        private long retryDelay = 60000L;
-        private long attemptDelay = 100L;
     }
 }
