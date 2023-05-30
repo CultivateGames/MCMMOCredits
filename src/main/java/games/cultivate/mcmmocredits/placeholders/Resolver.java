@@ -89,6 +89,7 @@ public final class Resolver {
         }
         return resolver;
     }
+
     /**
      * Creates a Resolver with the provided transaction result.
      *
@@ -105,6 +106,13 @@ public final class Resolver {
         return resolver;
     }
 
+    /**
+     * Adds a tag to the Resolver.
+     *
+     * @param key   Placeholder key of the tag.
+     * @param value Value of the tag.
+     * @param <T>   Type of the value.
+     */
     public <T> void addTag(final String key, final T value) {
         this.placeholders.put(key, value.toString());
     }
