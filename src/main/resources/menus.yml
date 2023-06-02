@@ -1,7 +1,55 @@
-# MCMMO Credits v0.3.8-SNAPSHOT Configuration
+# MCMMO Credits v0.3.9 Configuration
 # Repository: https://github.com/CultivateGames/MCMMOCredits
 # Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
 
+main:
+  title: <#ff253c><bold>MCMMO Credits
+  slots: 54
+  fill: false
+  navigation: false
+  items:
+    navigation:
+      name: <red>Previous Menu
+      lore:
+      - <gray>Left Click to go back!
+      slot: 49
+      material: COMPASS
+      amount: 1
+      texture: ''
+      custom-model-data: 0
+      glow: false
+      command: credits menu main
+    redeem:
+      name: <green>Redeem MCMMO Credits!
+      lore:
+      - <gray>Left Click to redeem Credits!
+      slot: 15
+      material: EMERALD
+      amount: 1
+      texture: ''
+      custom-model-data: 0
+      glow: false
+      command: credits menu redeem
+    fill:
+      name: ''
+      lore: []
+      slot: -1
+      material: BLACK_STAINED_GLASS_PANE
+      amount: 1
+      texture: ''
+      custom-model-data: 0
+      glow: false
+    config:
+      name: <#FF253C>Edit Config
+      lore:
+      - <gray>Left Click to edit config!
+      slot: 11
+      material: DIAMOND
+      amount: 1
+      texture: ''
+      custom-model-data: 0
+      glow: false
+      command: credits menu config
 config:
   title: <dark_gray>Edit Your Configuration...
   slots: 54
@@ -16,6 +64,7 @@ config:
       material: REDSTONE
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     navigation:
       name: <red>Previous Menu
@@ -25,6 +74,7 @@ config:
       material: COMPASS
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
       command: credits menu main
     messages:
@@ -35,59 +85,17 @@ config:
       material: WRITABLE_BOOK
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     fill:
       name: ''
       lore: []
-      slot: 0
+      slot: -1
       material: BLACK_STAINED_GLASS_PANE
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
-main:
-  title: <#ff253c><bold>MCMMO Credits
-  slots: 54
-  fill: false
-  navigation: false
-  items:
-    navigation:
-      name: <red>Previous Menu
-      lore:
-      - <gray>Left Click to go back!
-      slot: 40
-      material: COMPASS
-      amount: 1
-      texture: ''
-      glow: false
-      command: credits menu main
-    redeem:
-      name: <green>Redeem MCMMO Credits!
-      lore:
-      - <gray>Left Click to redeem Credits!
-      slot: 15
-      material: EMERALD
-      amount: 1
-      texture: ''
-      glow: false
-      command: credits menu redeem
-    fill:
-      name: ''
-      lore: []
-      slot: 0
-      material: BLACK_STAINED_GLASS_PANE
-      amount: 1
-      texture: ''
-      glow: false
-    config:
-      name: <#FF253C>Edit Config
-      lore:
-      - <gray>Left Click to edit config!
-      slot: 11
-      material: DIAMOND
-      amount: 1
-      texture: ''
-      glow: false
-      command: credits menu config
 redeem:
   title: <dark_gray>Redeem Your Credits...
   slots: 45
@@ -102,6 +110,7 @@ redeem:
       material: ANVIL
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     herbalism:
       name: <yellow>Herbalism
@@ -111,6 +120,7 @@ redeem:
       material: SUGAR_CANE
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     fishing:
       name: <yellow>Fishing
@@ -120,6 +130,7 @@ redeem:
       material: FISHING_ROD
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     axes:
       name: <yellow>Axes
@@ -129,6 +140,7 @@ redeem:
       material: NETHERITE_AXE
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     swords:
       name: <yellow>Swords
@@ -138,6 +150,7 @@ redeem:
       material: NETHERITE_SWORD
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     alchemy:
       name: <yellow>Alchemy
@@ -147,6 +160,7 @@ redeem:
       material: BREWING_STAND
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     mining:
       name: <yellow>Mining
@@ -156,14 +170,16 @@ redeem:
       material: NETHERITE_PICKAXE
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     fill:
       name: ''
       lore: []
-      slot: 0
+      slot: -1
       material: BLACK_STAINED_GLASS_PANE
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     acrobatics:
       name: <yellow>Acrobatics
@@ -173,6 +189,7 @@ redeem:
       material: NETHERITE_BOOTS
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     woodcutting:
       name: <yellow>Woodcutting
@@ -182,6 +199,7 @@ redeem:
       material: OAK_LOG
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     navigation:
       name: <red>Previous Menu
@@ -191,6 +209,7 @@ redeem:
       material: COMPASS
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
       command: credits menu main
     excavation:
@@ -201,6 +220,7 @@ redeem:
       material: NETHERITE_SHOVEL
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     unarmed:
       name: <yellow>Unarmed
@@ -210,6 +230,7 @@ redeem:
       material: CARROT_ON_A_STICK
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     archery:
       name: <yellow>Archery
@@ -219,6 +240,7 @@ redeem:
       material: BOW
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false
     taming:
       name: <yellow>Taming
@@ -228,4 +250,5 @@ redeem:
       material: LEAD
       amount: 1
       texture: ''
+      custom-model-data: 0
       glow: false

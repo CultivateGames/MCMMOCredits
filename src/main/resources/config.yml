@@ -1,4 +1,4 @@
-# MCMMO Credits v0.3.8-SNAPSHOT Configuration
+# MCMMO Credits v0.3.9 Configuration
 # Repository: https://github.com/CultivateGames/MCMMOCredits
 # Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
 
@@ -61,29 +61,24 @@ redeem-sudo-user: <green>Redemption Successful! <sender> has redeemed <amount> C
 reload: <green>The configuration file has been reloaded.
 settings:
   add-user-message: true
-  bstats-metrics-enabled: true
+  metrics-enabled: true
   debug: false
   leaderboard-enabled: true
   leaderboard-page-size: 10
   send-login-message: true
   user-tab-complete: true
   database:
-    type: SQLITE
-    host: 127.0.0.1
-    name: database
+    type: H2
+    url: jdbc:mysql://127.0.0.1:3306/DATABASE_NAME
     user: root
     password: passw0rd+
-    port: 3306
-    ssl: true
 converter:
+  type: INTERNAL
+  old-database:
+    type: H2
+    url: jdbc:mysql://127.0.0.1:3306/DATABASE_NAME
+    user: root
+    password: passw0rd+
+  failure-delay: 60000
+  request-delay: 300
   enabled: false
-  type: INTERNAL_SQLITE
-  internal:
-    properties:
-      type: SQLITE
-      host: 127.0.0.1
-      name: database
-      user: root
-      password: passw0rd+
-      port: 3306
-      ssl: true

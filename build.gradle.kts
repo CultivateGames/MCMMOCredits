@@ -1,12 +1,12 @@
 group = "games.cultivate"
-version = "0.3.8-SNAPSHOT"
+version = "0.3.9"
 description = "MCMMOCredits"
 
 plugins {
     id("java-library")
     id("maven-publish")
     id("signing")
-    id("xyz.jpenilla.run-paper") version "2.0.1"
+    id("xyz.jpenilla.run-paper") version "2.1.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 

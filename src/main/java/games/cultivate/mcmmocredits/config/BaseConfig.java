@@ -54,7 +54,7 @@ import java.util.function.Predicate;
  */
 public class BaseConfig implements Config {
     private static final String HEADER = """
-            MCMMO Credits v0.3.8-SNAPSHOT Configuration
+            MCMMO Credits v0.3.9 Configuration
             Repository: https://github.com/CultivateGames/MCMMOCredits
             Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
             """;
@@ -228,16 +228,6 @@ public class BaseConfig implements Config {
      */
     public @Nullable ConverterProperties getConverterProperties(final Object... path) {
         return this.get(ConverterProperties.class, null, path);
-    }
-
-    /**
-     * Gets an int from the configuration.
-     *
-     * @param path Node path where the value is found.
-     * @return The value, or the default if the value is null.
-     */
-    public long getLong(final Object... path) {
-        return this.get(long.class, 0L, path);
     }
 
     /**

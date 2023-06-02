@@ -49,7 +49,7 @@ class CreditExpansionTest {
     @Test
     void onRequest_InvalidUser_NoPlaceholders() {
         String content = "%mcmmocredits_credits%, %mcmmocredits_redeemed%, %mcmmocredits_username%, %mcmmocredits_uuid%, %mcmmocredits_cached%";
-        String expected = MessageFormat.format("{0}, {0}, {0}, {0}, {0}", "Invalid User has been provided!");
+        String expected = MessageFormat.format("{0}, {0}, {0}, {0}, {0}", "0");
         OfflinePlayer player = mock(OfflinePlayer.class);
         doReturn("testUser").when(player).getName();
         assertEquals(expected, this.replace.apply(content, player, this.map::get));

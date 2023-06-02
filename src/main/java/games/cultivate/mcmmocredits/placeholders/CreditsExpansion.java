@@ -69,7 +69,7 @@ public final class CreditsExpansion extends PlaceholderExpansion {
      */
     @Override
     public @NotNull String getVersion() {
-        return "0.3.8-SNAPSHOT";
+        return "0.3.9";
     }
 
     /**
@@ -94,9 +94,9 @@ public final class CreditsExpansion extends PlaceholderExpansion {
                 case "username" -> user.username();
                 case "uuid" -> user.uuid().toString();
                 case "cached" -> String.valueOf(this.service.isCached(user));
-                default -> "Invalid User has been provided!";
+                default -> "0";
             };
         }
-        return "Invalid User has been provided!";
+        return "0";
     }
 }
