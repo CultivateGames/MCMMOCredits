@@ -42,6 +42,6 @@ public record DatabaseProperties(DatabaseType type, String url, String user, Str
      * @return The object.
      */
     public static DatabaseProperties defaults() {
-        return new DatabaseProperties(DatabaseType.SQLITE, "jdbc:mysql://127.0.0.1:3306/DATABASE_NAME", "root", "passw0rd+");
+        return new DatabaseProperties(DatabaseType.H2, "jdbc:mysql://127.0.0.1:3306/DATABASE_NAME", "root", "passw0rd+");
     }
 }

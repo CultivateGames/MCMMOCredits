@@ -129,7 +129,7 @@ public final class MCMMOCredits extends JavaPlugin {
      * Enables BStats if it is enabled in configuration.
      */
     private void enableMetrics() {
-        if (this.config.getBoolean("settings", "bstats-metrics-enabled")) {
+        if (this.config.getBoolean("settings", "metrics-enabled")) {
             this.logger.info("Enabling Bstats.. To disable metrics, set bstats-metrics-enabled to false in config.yml");
             new Metrics(this, 18254);
             return;

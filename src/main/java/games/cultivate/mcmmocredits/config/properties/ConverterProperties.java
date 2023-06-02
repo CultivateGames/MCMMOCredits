@@ -47,7 +47,7 @@ public record ConverterProperties(ConverterType type, DatabaseProperties oldData
      * @return The object.
      */
     public static ConverterProperties defaults() {
-        return new ConverterProperties(ConverterType.INTERNAL, DatabaseProperties.defaults(), 60000L, 4000L, false);
+        return new ConverterProperties(ConverterType.INTERNAL, DatabaseProperties.defaults(), 60000L, 300L, false);
     }
 
     /**
