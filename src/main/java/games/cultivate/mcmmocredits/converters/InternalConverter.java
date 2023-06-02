@@ -23,82 +23,42 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-import games.cultivate.mcmmocredits.config.MainConfig;
+import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
 import games.cultivate.mcmmocredits.database.Database;
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import games.cultivate.mcmmocredits.database.DatabaseType;
-import games.cultivate.mcmmocredits.database.types.H2Database;
-import games.cultivate.mcmmocredits.database.types.MySqlDatabase;
-import games.cultivate.mcmmocredits.database.types.SqlLiteDatabase;
 import games.cultivate.mcmmocredits.user.User;
-import games.cultivate.mcmmocredits.user.UserDAO;
+import games.cultivate.mcmmocredits.util.Dir;
 
 import javax.inject.Inject;
-import java.util.List;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Set;
 
 /**
- * Data converter used to switch between database types.
+ * Data Converter used to switch between internal database types.
  */
-public final class InternalConverter implements Converter {
-    private final UserDAO destinationDAO;
-    private final ConverterType type;
-    private final DatabaseProperties destinationProperties;
-    private final MainConfig config;
-    private Database sourceDatabase;
-    private List<User> sourceUsers;
+public final class InternalConverter extends AbstractConverter {
+    private final Database oldDatabase;
 
+    /**
+     * Constructs the object.
+     *
+     * @param database   The current Database.
+     * @param properties The properties of the converter.
+     * @param path       The plugin's data path.
+     */
     @Inject
-    public InternalConverter(final MainConfig config, final UserDAO destinationDAO) {
-        this.config = config;
-        this.destinationDAO = destinationDAO;
-        this.type = config.getConverterType("converter", "type");
-        this.destinationProperties = config.getDatabaseProperties("settings", "database");
+    public InternalConverter(final Database database, final ConverterProperties properties, final @Dir Path path) {
+        super(database, properties);
+        this.oldDatabase = properties.getOldDatabase(path);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean load() {
-        if (this.destinationProperties.type().name().contains(this.type.name().split("_")[1])) {
-            throw new IllegalStateException("Internal Converter is using similar database types. Check configuration!");
-        }
-        this.sourceDatabase = switch (this.type) {
-            case INTERNAL_H2 -> new H2Database();
-            case INTERNAL_SQLITE -> new SqlLiteDatabase();
-            case INTERNAL_MYSQL -> new MySqlDatabase(this.config);
-            default -> throw new IllegalStateException("External or invalid converter passed to Internal Converter!");
-        };
-        this.sourceUsers = this.sourceDatabase.get().getAllUsers();
-        return this.sourceUsers != null && !this.sourceUsers.isEmpty();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean convert() {
-        this.destinationDAO.addUsers(this.sourceUsers);
-        if (this.destinationProperties.type() == DatabaseType.H2) {
-            this.destinationDAO.useHandle(x -> x.execute("CHECKPOINT SYNC"));
-        }
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean verify() {
-        List<User> updatedCurrentUsers = this.destinationDAO.getAllUsers();
-        return this.sourceUsers.parallelStream().allMatch(updatedCurrentUsers::contains);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void disable() {
-        this.sourceDatabase.disable();
+    public void load() throws IOException, InterruptedException {
+        Set<User> set = this.getUsers();
+        set.addAll(this.oldDatabase.get().getAllUsers());
+        this.oldDatabase.disable();
     }
 }

@@ -24,6 +24,10 @@
 package games.cultivate.mcmmocredits.placeholders;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import com.gmail.nossr50.mcMMO;
+import games.cultivate.mcmmocredits.transaction.RedeemTransaction;
+import games.cultivate.mcmmocredits.transaction.Transaction;
+import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.util.Util;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -33,41 +37,37 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * A class for resolving placeholders with key-value pairs. It is designed to be used with
- * {@link TagResolver} to process and replace placeholders in messages.
- * <p>
- * The class provides methods to add placeholders, users, skills, and transaction amounts.
- * It also offers static factory methods to create instances with pre-populated placeholders.
- * </p>
+ * Represents a map of key-value pairs.
  */
 public final class Resolver {
     private final Map<String, String> placeholders;
 
     /**
-     * Constructs a new Resolver with an empty placeholder map.
+     * Constructs the object.
      */
     public Resolver() {
         this.placeholders = new ConcurrentHashMap<>();
     }
 
     /**
-     * Creates a new Resolver instance with the given sender and target users.
+     * Creates a Resolver with placeholders for the provided users.
      *
-     * @param sender The sender user.
-     * @param target The target user.
-     * @return A new Resolver instance.
+     * @param sender A user.
+     * @param target Another user.
+     * @return The Resolver.
      */
     public static Resolver ofUsers(final CommandExecutor sender, final CommandExecutor target) {
         Resolver resolver = new Resolver();
-        resolver.addUserPair(sender, target);
+        resolver.addUser(sender, "sender");
+        resolver.addUser(target, "target");
         return resolver;
     }
 
     /**
-     * Creates a new Resolver instance with the given sender user.
+     * Creates a Resolver with the provided user.
      *
-     * @param sender The sender user.
-     * @return A new Resolver instance.
+     * @param sender A User.
+     * @return The Resolver.
      */
     public static Resolver ofUser(final CommandExecutor sender) {
         Resolver resolver = new Resolver();
@@ -76,120 +76,92 @@ public final class Resolver {
     }
 
     /**
-     * Creates a new Resolver instance for a transaction with the given sender, target users, and amount.
+     * Creates a Resolver with the provided transaction properties.
      *
-     * @param sender The sender user.
-     * @param target The target user.
-     * @param amount The amount of the transaction.
-     * @return A new Resolver instance.
+     * @param transaction The transaction to parse.
+     * @return The Resolver.
      */
-    public static Resolver ofTransaction(final CommandExecutor sender, final CommandExecutor target, final int amount) {
-        Resolver resolver = Resolver.ofUsers(sender, target);
-        resolver.addAmount(amount);
+    public static Resolver ofTransaction(final Transaction transaction) {
+        Resolver resolver = Resolver.ofUsers(transaction.executor(), transaction.target());
+        resolver.addAmount(transaction.amount());
+        if (transaction instanceof RedeemTransaction tr) {
+            resolver.addSkill(tr.skill());
+        }
         return resolver;
     }
 
     /**
-     * Creates a new Resolver instance for a redemption with the given sender, target users, skill, and amount.
+     * Creates a Resolver with the provided transaction result.
      *
-     * @param sender The sender user.
-     * @param target The target user.
-     * @param skill  The skill for the redemption.
-     * @param amount The amount of the redemption.
-     * @return A new Resolver instance.
+     * @param result The result of a transaction to parse.
+     * @return The Resolver.
      */
-    public static Resolver ofRedemption(final CommandExecutor sender, final CommandExecutor target, final PrimarySkillType skill, final int amount) {
-        Resolver resolver = Resolver.ofTransaction(sender, target, amount);
-        resolver.addSkill(skill);
+    public static Resolver ofTransactionResult(final TransactionResult result) {
+        Resolver resolver = Resolver.ofUsers(result.executor(), result.target());
+        Transaction transaction = result.transaction();
+        resolver.addAmount(transaction.amount());
+        if (transaction instanceof RedeemTransaction tr) {
+            resolver.addSkill(tr.skill());
+        }
         return resolver;
     }
 
     /**
-     * Adds a String tag to the placeholder map.
+     * Adds a tag to the Resolver.
      *
-     * @param key   The key of the placeholder.
-     * @param value The value of the placeholder.
+     * @param key   Placeholder key of the tag.
+     * @param value Value of the tag.
+     * @param <T>   Type of the value.
      */
-    public void addStringTag(final String key, final String value) {
-        this.placeholders.put(key, value);
+    public <T> void addTag(final String key, final T value) {
+        this.placeholders.put(key, value.toString());
     }
 
     /**
-     * Adds an integer tag to the placeholder map.
+     * Adds user info to the Resolver with a specified prefix.
      *
-     * @param key   The key of the placeholder.
-     * @param value The value of the placeholder.
-     */
-    public void addIntTag(final String key, final int value) {
-        this.placeholders.put(key, String.valueOf(value));
-    }
-
-    /**
-     * Adds a CommandExecutor user's information to the placeholder map with the specified prefix.
-     *
-     * @param user   The user whose information is to be added.
-     * @param prefix The prefix for the user's placeholders.
+     * @param user   A user.
+     * @param prefix Prefix to apply to the placeholder keys.
      */
     public void addUser(final CommandExecutor user, final String prefix) {
-        this.addStringTag(prefix, user.username());
-        this.addStringTag(prefix + "_uuid", user.uuid().toString());
-        this.addIntTag(prefix + "_credits", user.credits());
-        this.addIntTag(prefix + "_redeemed", user.redeemed());
+        this.addTag(prefix, user.username());
+        this.addTag(prefix + "_uuid", user.uuid().toString());
+        this.addTag(prefix + "_credits", user.credits());
+        this.addTag(prefix + "_redeemed", user.redeemed());
     }
 
     /**
-     * Adds a pair of CommandExecutor users to the placeholder map with the "sender" and "target" prefixes.
+     * Adds a PrimarySkillType to the Resolver.
      *
-     * @param sender The sender user.
-     * @param target The target user.
+     * @param skill The skill.
      */
-    private void addUserPair(final CommandExecutor sender, final CommandExecutor target) {
-        this.addUser(sender, "sender");
-        this.addUser(target, "target");
-    }
-
-    /**
-     * Adds a PrimarySkillType skill to the placeholder map.
-     *
-     * @param skill The skill to be added.
-     */
-    @SuppressWarnings("deprecation")
     public void addSkill(final PrimarySkillType skill) {
-        this.addStringTag("skill", Util.capitalizeWord(skill.name()));
-        this.addIntTag("cap", skill.getMaxLevel());
+        this.addTag("skill", Util.capitalizeWord(skill.name()));
+        this.addTag("cap", mcMMO.p.getGeneralConfig().getLevelCap(skill));
     }
 
     /**
-     * Adds a skill using its name to the placeholder map.
+     * Adds transaction amount to the Resolver.
      *
-     * @param data The name of the skill to be added.
-     */
-    public void addSkill(final String data) {
-        this.addSkill(PrimarySkillType.valueOf(data));
-    }
-
-    /**
-     * Adds an amount to the placeholder map.
-     *
-     * @param amount The amount to be added.
+     * @param amount The amount.
      */
     public void addAmount(final int amount) {
-        this.addIntTag("amount", amount);
+        this.addTag("amount", amount);
     }
 
     /**
-     * Adds a username to the placeholder map.
+     * Adds a username to the Resolver.
      *
-     * @param username The username to be added.
+     * @param username The username.
      */
     public void addUsername(final String username) {
-        this.addStringTag("target", username);
+        this.addTag("target", username);
     }
 
     /**
-     * Converts the current Resolver instance to a TagResolver.
+     * Converts the Resolver to a TagResolver.
      *
-     * @return A new TagResolver with the current Resolver's placeholders.
+     * @return The built TagResolver.
      */
     public TagResolver toTagResolver() {
         TagResolver.Builder builder = TagResolver.builder();

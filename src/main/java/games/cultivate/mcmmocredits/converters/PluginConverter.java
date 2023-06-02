@@ -23,101 +23,102 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-import com.google.common.collect.ImmutableList;
-import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.database.DatabaseType;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
+import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.user.User;
-import games.cultivate.mcmmocredits.user.UserDAO;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.enginehub.squirrelid.Profile;
-import org.enginehub.squirrelid.resolver.HttpRepositoryService;
-import org.enginehub.squirrelid.resolver.ProfileService;
 
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.HashMap;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /**
- * Data converter used to add Users from external plugin data.
+ * Data Converter used to add Users from external plugin data.
+ * This converter connects to Mojang to validate username data, as it is not always stored by other plugins.
  */
-public final class PluginConverter implements Converter {
-    private final MainConfig config;
-    private final UserDAO destinationDAO;
-    private final ConverterType type;
-    private List<User> sourceUsers;
+public final class PluginConverter extends AbstractConverter {
+    private final HttpClient client;
 
+    /**
+     * Constructs the object.
+     *
+     * @param database   The current UserDAO to write users.
+     * @param properties The properties of the converter.
+     */
     @Inject
-    public PluginConverter(final MainConfig config, final UserDAO destinationDAO) {
-        this.config = config;
-        this.destinationDAO = destinationDAO;
-        this.type = config.getConverterType("converter", "type");
+    public PluginConverter(final Database database, final ConverterProperties properties) {
+        super(database, properties);
+        this.client = HttpClient.newHttpClient();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean load() {
-        Path pluginPath = this.type == ConverterType.EXTERNAL_GRM ? Path.of("GuiRedeemMCMMO", "playerdata") : Path.of("MorphRedeem", "PlayerData");
-        Path filePath = Bukkit.getPluginsFolder().toPath().resolve(pluginPath);
-        File[] files = filePath.toFile().listFiles();
-        if (files.length < 1) {
-            throw new IllegalStateException("External converter plugin path is empty!");
+    public void load() throws IOException, InterruptedException {
+        Map<UUID, String> cached = this.loadCache();
+        Set<User> users = this.getUsers();
+        List<File> files = Arrays.asList(this.getConverterProperties().getExternalPath().toFile().listFiles());
+        int size = files.size();
+        for (File file : files) {
+            UUID uuid = UUID.fromString(file.getName().substring(0, file.getName().length() - 4));
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+            String username = cached.containsKey(uuid) ? cached.get(uuid) : this.getName(uuid);
+            users.add(new User(uuid, username, config.getInt("Credits", 0), config.getInt("Credits_Spent", 0)));
+            if (users.size() % 100 == 0) {
+                Bukkit.getLogger().info("Progress: " + users.size() + "/" + size);
+            }
+            Thread.sleep(this.getConverterProperties().requestDelay());
         }
-        Map<UUID, int[]> userMap = new HashMap<>();
-        for (File f : files) {
-            YamlConfiguration conf = YamlConfiguration.loadConfiguration(f);
-            int credits = conf.getInt("Credits");
-            int redeemed = this.type == ConverterType.EXTERNAL_GRM ? 0 : conf.getInt("Credits_Spent");
-            userMap.put(UUID.fromString(f.getName().replace(".yml", "")), new int[]{credits, redeemed});
-        }
-        ProfileService resolver = HttpRepositoryService.forMinecraft();
-        ImmutableList<Profile> profiles;
-        try {
-            profiles = resolver.findAllByUuid(userMap.keySet());
-        } catch (IOException | InterruptedException ex) {
-            ex.printStackTrace();
-            return false;
-        }
-        this.sourceUsers = profiles.stream().map(x -> {
-            int[] stat = userMap.get(x.getUniqueId());
-            return new User(x.getUniqueId(), x.getName(), stat[0], stat[1]);
-        }).toList();
-        return true;
     }
 
     /**
-     * {@inheritDoc}
+     * Loads the usercache.json to grab names locally before requesting from Mojang.
+     *
+     * @return A map representing usercache.json.
+     * @throws IOException If there is an issue loading the file.
      */
-    @Override
-    public boolean convert() {
-        this.destinationDAO.addUsers(this.sourceUsers);
-        if (this.config.getDatabaseProperties("settings", "database").type() == DatabaseType.H2) {
-            this.destinationDAO.useHandle(x -> x.execute("CHECKPOINT SYNC"));
+    private Map<UUID, String> loadCache() throws IOException {
+        String json = new String(Files.readAllBytes(new File(new File("."), "usercache.json").toPath()));
+        return JsonParser.parseString(json).getAsJsonArray().asList().stream()
+                .map(JsonElement::getAsJsonObject)
+                .collect(Collectors.toMap(x -> UUID.fromString(x.get("uuid").getAsString()), y -> y.get("name").getAsString()));
+    }
+
+    /**
+     * Requests a username from Mojang using the provided UUID.
+     *
+     * @param uuid The UUID.
+     * @return The username.
+     * @throws IOException          Thrown if there is an issue reading the response.
+     * @throws InterruptedException Thrown if the sleep between attempts is interrupted.
+     */
+    private String getName(final UUID uuid) throws IOException, InterruptedException {
+        HttpRequest req = HttpRequest.newBuilder(URI.create("https://api.mojang.com/user/profile/" + uuid)).GET().build();
+        HttpResponse<String> response = this.client.send(req, BodyHandlers.ofString());
+        int responseCode = response.statusCode();
+        JsonElement element = JsonParser.parseString(response.body());
+        if (!element.isJsonObject() || responseCode != 200) {
+            Bukkit.getLogger().log(Level.WARNING, () -> String.format("Bad response received Retrying shortly. UUID: %s, Response Code: %d.", uuid, responseCode));
+            Thread.sleep(this.getConverterProperties().failureDelay());
+            this.getName(uuid);
         }
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean verify() {
-        List<User> updatedCurrentUsers = this.destinationDAO.getAllUsers();
-        return this.sourceUsers.parallelStream().allMatch(updatedCurrentUsers::contains);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void disable() {
-        //nothing to clean up for plugins.
+        return element.getAsJsonObject().get("name").getAsString();
     }
 }

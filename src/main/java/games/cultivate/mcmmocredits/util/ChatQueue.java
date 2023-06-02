@@ -31,20 +31,22 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
- * Represents a chat queue that manages communication using UUIDs and Completable Futures.
- * The class utilizes a map for storing and processing chat messages.
+ * Represents a queue of chat messages. Manages chat-based plugin transactions.
  */
 public final class ChatQueue {
     private final Map<UUID, CompletableFuture<String>> map;
 
+    /**
+     * Constructs the object.
+     */
     public ChatQueue() {
         this.map = new ConcurrentHashMap<>();
     }
 
     /**
-     * Removes a UUID entry from the queue.
+     * Removes an entry from the queue at the specified UUID.
      *
-     * @param uuid The UUID to remove.
+     * @param uuid The UUID of the entry to remove.
      */
     public void remove(final UUID uuid) {
         if (this.contains(uuid)) {
@@ -54,29 +56,29 @@ public final class ChatQueue {
     }
 
     /**
-     * Gets the value from the provided key.
+     * Gets a value from the provided UUID key.
      *
-     * @param uuid The UUID to get.
-     * @return The value from the underlying map, or null if it is not present.
+     * @param uuid The UUID key.
+     * @return Value from the queue if present, otherwise null.
      */
     public @Nullable CompletableFuture<String> get(final UUID uuid) {
         return this.map.get(uuid);
     }
 
     /**
-     * Checks if the queue contains a specific UUID.
+     * Checks if the queue contains a specific UUID key.
      *
-     * @param uuid The UUID to check.
-     * @return true if the UUID exists in the queue; false otherwise.
+     * @param uuid The UUID key to check.
+     * @return True if the UUID exists in the queue, otherwise false.
      */
     public boolean contains(final UUID uuid) {
         return this.map.containsKey(uuid);
     }
 
     /**
-     * Adds a UUID to the queue, replacing any existing entry with the same UUID.
+     * Adds an entry to the queue, with the provided UUID as the key.
      *
-     * @param uuid The UUID to add.
+     * @param uuid The UUID key to add.
      */
     public void add(final UUID uuid) {
         this.remove(uuid);
@@ -84,10 +86,10 @@ public final class ChatQueue {
     }
 
     /**
-     * Applies an action to an existing UUID entry in the queue.
+     * Applies an action to the entry in the queue with the specified UUID key, and removes it upon completion.
      *
-     * @param uuid   The UUID associated with the entry.
-     * @param action The action to apply to the entry's value.
+     * @param uuid   The UUID key.
+     * @param action The action to apply.
      */
     public void act(final UUID uuid, final Consumer<? super String> action) {
         this.add(uuid);
@@ -95,10 +97,10 @@ public final class ChatQueue {
     }
 
     /**
-     * Completes a CompletableFuture associated with a UUID in the queue.
+     * Completes the CompletableFuture associated with the specified UUID key.
      *
-     * @param uuid       The UUID of the entry to complete.
-     * @param completion The completion value.
+     * @param uuid       The UUID key.
+     * @param completion The value to complete the CompletableFuture with.
      */
     public void complete(final UUID uuid, final String completion) {
         if (this.contains(uuid)) {

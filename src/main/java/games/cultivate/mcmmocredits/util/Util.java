@@ -23,13 +23,6 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import games.cultivate.mcmmocredits.menu.ClickType;
-import games.cultivate.mcmmocredits.menu.Item;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
-
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -41,76 +34,46 @@ import java.util.List;
  * Utility class for methods with no clear association.
  */
 public final class Util {
-    //We are keeping a string list rather than calculating it to reduce complexity.
     @SuppressWarnings("checkstyle:linelength")
     private static final List<String> MCMMO_SKILLS = List.of("acrobatics", "alchemy", "archery", "axes", "excavation", "fishing", "herbalism", "mining", "repair", "swords", "taming", "unarmed", "woodcutting");
-    private static Path pluginPath;
 
     private Util() {
         throw new AssertionError("Util cannot be instantiated!");
     }
 
     /**
-     * Returns a list of non-child skill names from MCMMO, formatted in lowercase.
+     * Gets a list of lowercase, eligible MCMMO skills.
      *
-     * @return A List of formatted non-child skill names.
+     * @return The list.
      */
     public static List<String> getSkillNames() {
         return MCMMO_SKILLS;
     }
 
     /**
-     * Returns a list of non-child skill names from MCMMO, joined by a delimiter.
+     * Creates a file and path's directories if they do not exist.
      *
-     * @return A List of formatted non-child skill names.
+     * @param dir      Path of the file to be created.
+     * @param fileName Name of the file to be created.
+     * @return the path of the created file.
      */
-    public static String getJoinedSkillNames() {
-        return Util.joinString(",", MCMMO_SKILLS);
-    }
-
-    /**
-     * Creates a file and associated directories if they do not exist, given the file name.
-     *
-     * @param fileName Name of the {@link File} to create.
-     */
-    public static void createFile(final String fileName) {
-        createFile(pluginPath, fileName);
-    }
-
-    /**
-     * Creates a file and associated directories if they do not exist, given the directory path and the file name.
-     *
-     * @param dir      The {@link Path} to check for creation.
-     * @param fileName Name of the {@link File} to create.
-     */
-    public static void createFile(final Path dir, final String fileName) {
+    public static Path createFile(final Path dir, final String fileName) {
         try {
-            if (!Files.exists(dir)) {
+            if (Files.notExists(dir)) {
                 Files.createDirectories(dir);
             }
-            Files.createFile(dir.resolve(fileName));
+            return Files.createFile(dir.resolve(fileName));
         } catch (FileAlreadyExistsException ignored) { //Ignore if file already exists.
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return dir.resolve(fileName);
     }
 
     /**
-     * Returns the path of the plugin directory.
+     * Capitalizes the first letter of the input and sets the rest of the string to lowercase.
      *
-     * @return Path of the plugin directory.
-     */
-    public static Path getPluginPath() {
-        if (pluginPath == null) {
-            pluginPath = new File(Bukkit.getPluginsFolder(), "MCMMOCredits").toPath();
-        }
-        return pluginPath;
-    }
-
-    /**
-     * Capitalizes the first letter of the input string and sets the remaining characters to lowercase.
-     *
-     * @param string The input string to be capitalized.
+     * @param string The input to be capitalized.
      * @return The capitalized string.
      */
     public static String capitalizeWord(final String string) {
@@ -121,50 +84,12 @@ public final class Util {
     }
 
     /**
-     * Utility method to create Config Menu items for the Menu Config.
+     * Joins a collection of strings with the provided delimiter.
      *
-     * @param material type of the item.
-     * @param type     type of the click.
-     * @return Built item for Menu Config.
-     */
-    public static Item createConfigItem(final Material material, final ClickType type) {
-        return Item.builder().item(new ItemStack(material, 1)).slot(-1).type(type).lore(List.of("<gray>Click here to edit this config option!")).build();
-    }
-
-    /**
-     * Utility method to create items that execute commands for the Menu Config.
-     *
-     * @param material type of the item.
-     * @param name     name of the item as a string.
-     * @param lore     lore of the item as a List of string.
-     * @param command  command to be executed as a string.
-     * @param slot     location of the item in the menu. 0 based.
-     * @return Built item for Menu Config.
-     */
-    public static Item createCommandItem(final Material material, final String name, final String lore, final String command, final int slot) {
-        return Item.builder().item(new ItemStack(material, 1)).name(name).lore(List.of(lore)).slot(slot).type(ClickType.COMMAND).data(command).build();
-    }
-
-    /**
-     * Utility method to create items that execute credit redemptions for the Menu Config.
-     *
-     * @param material type of the item.
-     * @param skill    skill that will be redeemed into.
-     * @param slot     location of the item in the menu. 0 based.
-     * @return Built item for Menu Config.
-     */
-    public static Item createRedeemItem(final Material material, final String skill, final int slot) {
-        List<String> lore = List.of("<yellow><sender>, click here to redeem!");
-        return Item.builder().item(new ItemStack(material, 1)).name("<yellow>" + Util.capitalizeWord(skill)).lore(lore).type(ClickType.REDEEM).slot(slot).build();
-    }
-
-    /**
-     * Utility method that will join a collection of strings with the provided delimiter.
-     *
-     * @param delimiter string-based delimited.
-     * @param members   collection of object to delimit.
-     * @param <T>       The object being delimited. Converted to string.
-     * @return The combined string.
+     * @param delimiter The delimiter.
+     * @param members   The objects to delimit.
+     * @param <T>       Type of the object being delimited.
+     * @return The delimited string.
      */
     public static <T> String joinString(final String delimiter, final Iterable<T> members) {
         StringBuilder sb = new StringBuilder();
@@ -179,12 +104,12 @@ public final class Util {
     }
 
     /**
-     * Utility method that will join an array of strings with the provided delimiter.
+     * Joins an array of objects with the provided delimiter.
      *
-     * @param delimiter string-based delimited.
-     * @param array     array of object to delimit. Converted to iterable list.
-     * @param <T>       The object being delimited. Converted to string.
-     * @return The combined string.
+     * @param delimiter The delimiter.
+     * @param array     An array of objects to delimit.
+     * @param <T>       Type of the object being delimited.
+     * @return The delimited string.
      */
     public static <T> String joinString(final String delimiter, final T[] array) {
         return Util.joinString(delimiter, Arrays.asList(array));

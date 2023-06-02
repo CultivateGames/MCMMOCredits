@@ -23,22 +23,18 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import com.gmail.nossr50.datatypes.player.PlayerProfile;
-import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import com.gmail.nossr50.mcMMO;
-import com.gmail.nossr50.util.player.UserManager;
 import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.events.CreditRedemptionEvent;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
-import games.cultivate.mcmmocredits.user.CommandExecutor;
+import games.cultivate.mcmmocredits.transaction.FailureReason;
+import games.cultivate.mcmmocredits.transaction.Transaction;
+import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import games.cultivate.mcmmocredits.user.Console;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -56,13 +52,20 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Event Handlers used to manage the database, and input storage.
+ * Event Handlers used to manage the Database and ChatQueue.
  */
 public class Listeners implements Listener {
     private final ChatQueue queue;
     private final UserService service;
     private final MainConfig config;
 
+    /**
+     * Constructs the object.
+     *
+     * @param config  MainConfig, used to read properties for event handlers.
+     * @param queue   ChatQueue, used to listen for relevant chat messages.
+     * @param service UserService, required to modify users.
+     */
     @Inject
     public Listeners(final MainConfig config, final ChatQueue queue, final UserService service) {
         this.config = config;
@@ -71,7 +74,7 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Add users to MCMMO Credits database, and updates username for existing records.
+     * Updates usernames for existing users, and add new users if they do not exist.
      *
      * @param e The event.
      */
@@ -97,7 +100,7 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Sends login message to user if enable in configuration.
+     * Sends login message to a user if enabled in configuration.
      *
      * @param e The event.
      */
@@ -110,7 +113,7 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Captures chat of a user if their {@link UUID} is in the {@link ChatQueue}.
+     * Captures chat messages of a user if their UUID is in the ChatQueue.
      *
      * @param e The event.
      */
@@ -130,92 +133,42 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Removes all users from the {@link ChatQueue} if present.
+     * Removes logged-out users from the UserCache and ChatQueue.
      *
      * @param e The event.
      */
     @EventHandler
     public void onPlayerQuit(final PlayerQuitEvent e) {
-        UUID uuid = e.getPlayer().getUniqueId();
-        this.service.removeFromCache(uuid, e.getPlayer().getName());
+        Player player = e.getPlayer();
+        UUID uuid = player.getUniqueId();
+        this.service.removeFromCache(uuid);
         this.queue.remove(uuid);
     }
 
     /**
-     * Performs Credit Transaction with information derived from the event.
+     * Performs a transaction with event supplied information.
      *
      * @param e The event.
      */
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void performTransaction(final CreditTransactionEvent e) {
-        CommandExecutor executor = this.service.fromSender(e.sender());
-        User target = this.service.getUser(e.uuid()).orElseThrow();
-        int amount = e.amount();
-        CreditOperation operation = e.operation();
-        Resolver resolver = Resolver.ofTransaction(executor, target, amount);
-        target = this.service.modifyCredits(target.uuid(), operation, amount);
-        if (target == null) {
-            Text.fromString(executor, this.config.getMessage("not-enough-credits"), resolver).send();
+    public void onTransaction(final CreditTransactionEvent e) {
+        Transaction transaction = e.transaction();
+        Optional<FailureReason> failure = transaction.executable();
+        if (failure.isPresent()) {
+            String key = failure.get().getKey();
+            Resolver resolver = Resolver.ofTransaction(transaction);
+            Text.fromString(transaction.executor(), this.config.getMessage(key), resolver).send();
             return;
         }
-        //TODO: refactor
-        if (e.isSelfTransaction()) {
-            executor = target;
-        }
-        resolver = Resolver.ofTransaction(executor, target, amount);
-        if (!e.silentForSender()) {
-            Text.fromString(executor, this.config.getMessage(operation.getMessageKey()), resolver).send();
-        }
-        if (target.player() != null && !e.silentForUser()) {
-            Text.fromString(target, this.config.getMessage(operation.getUserMessageKey()), resolver).send();
-        }
-    }
-
-    /**
-     * Performs Credit Redemption with information derived from the event.
-     *
-     * @param e The event.
-     */
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void performRedemption(final CreditRedemptionEvent e) {
-        CommandExecutor executor = this.service.fromSender(e.sender());
-        User target = this.service.getUser(e.uuid()).orElseThrow();
-        int amount = e.amount();
-        PrimarySkillType skill = e.skill();
-        Resolver resolver = Resolver.ofRedemption(executor, target, skill, amount);
-        if (target.credits() < amount) {
-            Text.fromString(executor, this.config.getMessage("not-enough-credits"), resolver).send();
-            return;
-        }
-        Optional<PlayerProfile> optionalProfile = this.getMCMMOProfile(e.uuid());
-        if (optionalProfile.isEmpty()) {
-            Text.fromString(executor, this.config.getMessage("mcmmo-profile-fail"), resolver).send();
-            return;
-        }
-        PlayerProfile profile = optionalProfile.get();
-        if (this.exceedsSkillCap(profile, skill, amount)) {
-            Text.fromString(executor, this.config.getMessage("mcmmo-skill-cap"), resolver).send();
-            return;
-        }
-        target = this.service.redeemCredits(target.uuid(), amount);
-        if (target != null) {
-            profile.addLevels(skill, amount);
-            profile.save(true);
-            resolver = Resolver.ofRedemption(executor, target, skill, amount);
-            if (!e.silentForSender()) {
-                String key = e.isSelfRedemption() ? "redeem" : "redeem-sudo";
-                Text.fromString(executor, this.config.getMessage(key), resolver).send();
-            }
-            if (!e.silentForUser() && target.player() != null) {
-                Text.fromString(target, this.config.getMessage("redeem-sudo-user"), resolver).send();
-            }
-        }
+        TransactionResult result = transaction.execute();
+        this.service.processTransaction(result);
+        result.sendFeedback(this.config, e.senderFeedback(), e.userFeedback());
     }
 
     /**
      * Cancels shift-clicking inside of Interfaces due to a bug in the library.
      * Can be removed if <a href="https://github.com/Incendo/interfaces/issues/69">this</a> is patched.
-     * <p></p>
+     * <br><br>
      * Note: The current solution will likely affect any Inventory that is a {@link ChestView}
      *
      * @param e The event.
@@ -230,7 +183,7 @@ public class Listeners implements Listener {
     /**
      * Cancels dragging inside of Interfaces due to a bug in the library.
      * Can be removed if <a href="https://github.com/Incendo/interfaces/issues/69">this</a> is patched.
-     * <p></p>
+     * <br><br>
      * Note: The current solution will likely affect any Inventory that is a {@link ChestView}
      *
      * @param e The event.
@@ -240,29 +193,5 @@ public class Listeners implements Listener {
         if (e.getInventory().getHolder() instanceof ChestView) {
             e.setCancelled(true);
         }
-    }
-
-    /**
-     * Returns if a player will exceed skill cap on a skill if an amount is applied.
-     *
-     * @param profile PlayerProfile of the user.
-     * @param skill   MCMMO Skill to check against.
-     * @param amount  The amount of credits to theoretically apply.
-     * @return If the cap will be exceeded.
-     */
-    private boolean exceedsSkillCap(final PlayerProfile profile, final PrimarySkillType skill, final int amount) {
-        return profile.getSkillLevel(skill) + amount > mcMMO.p.getGeneralConfig().getLevelCap(skill);
-    }
-
-    /**
-     * Obtains a PlayerProfile from the provided UUID.
-     *
-     * @param uuid UUID of a user.
-     * @return PlayerProfile, or empty optional if the profile is not loaded.
-     */
-    private Optional<PlayerProfile> getMCMMOProfile(final UUID uuid) {
-        Player player = Bukkit.getPlayer(uuid);
-        PlayerProfile profile = player == null ? mcMMO.getDatabaseManager().loadPlayerProfile(uuid) : UserManager.getPlayer(player).getProfile();
-        return profile.isLoaded() ? Optional.of(profile) : Optional.empty();
     }
 }

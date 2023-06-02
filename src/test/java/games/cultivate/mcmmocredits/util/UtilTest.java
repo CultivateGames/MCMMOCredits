@@ -30,77 +30,42 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class UtilTest {
+    private static final List<String> MCMMO_SKILLS = List.of("acrobatics", "alchemy", "archery", "axes", "excavation", "fishing", "herbalism", "mining", "repair", "swords", "taming", "unarmed", "woodcutting");
     private final String delimiter = ",";
     private final String empty = "";
 
     @Test
-    void capitalizeWord_ValidInput_CapitalizesFirstLetter() {
-        //Arrange
-        String input = "testInput";
-        //Act
-        String capitalized = Util.capitalizeWord(input);
+    void getSkillNames_ReturnsCorrectSkills() {
+        assertEquals(MCMMO_SKILLS, Util.getSkillNames());
+    }
 
-        //Assert
-        assertEquals("Testinput", capitalized);
+    @Test
+    void capitalizeWord_ValidInput_CapitalizesFirstLetter() {
+        assertEquals("Testinput", Util.capitalizeWord("testInput"));
     }
 
     @Test
     void capitalizeWord_EmptyInput_ReturnsEmptyString() {
-        //Act
-        String capitalized = Util.capitalizeWord(this.empty);
-
-        //Assert
-        assertEquals("", capitalized);
+        assertEquals(this.empty, Util.capitalizeWord(this.empty));
     }
 
     @Test
     void joinString_ValidList_ReturnsJoinedString() {
-        //Arrange
-        List<String> members = List.of("one", "two", "three");
-        String expectedResult = "one,two,three";
-
-        //Act
-        String result = Util.joinString(this.delimiter, members);
-
-        //Assert
-        assertEquals(expectedResult, result);
+        assertEquals("one,two,three", Util.joinString(this.delimiter, List.of("one", "two", "three")));
     }
 
     @Test
     void joinString_EmptyList_ReturnsEmptyString() {
-        //Arrange
-        List<String> members = List.of();
-        String expectedResult = "";
-
-        //Act
-        String result = Util.joinString(this.delimiter, members);
-
-        //Assert
-        assertEquals(expectedResult, result);
+        assertEquals(this.empty, Util.joinString(this.delimiter, List.of()));
     }
 
     @Test
     void joinStringFromArray_ValidArray_ReturnsJoinedString() {
-        //Arrange
-        String[] array = new String[]{"one", "two", "three"};
-        String expectedResult = "one,two,three";
-
-        //Act
-        String result = Util.joinString(this.delimiter, array);
-
-        //Assert
-        assertEquals(expectedResult, result);
+        assertEquals("one,two,three", Util.joinString(this.delimiter, new String[]{"one", "two", "three"}));
     }
 
     @Test
     void joinStringFromArray_EmptyArray_ReturnsEmptyString() {
-        //Arrange
-        String[] array = new String[]{};
-
-        //Act
-        String result = Util.joinString(this.delimiter, array);
-
-        //Assert
-        assertEquals(this.empty, result);
+        assertEquals(this.empty, Util.joinString(this.delimiter, new String[]{}));
     }
 }

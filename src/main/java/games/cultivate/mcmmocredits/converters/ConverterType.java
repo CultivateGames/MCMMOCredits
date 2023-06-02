@@ -24,8 +24,11 @@
 package games.cultivate.mcmmocredits.converters;
 
 /**
- * Potential Converter data sources. Conversions are one-way, data cannot be exported to an external source.
+ * Namespace for Data Converters.
+ * CSV: Data is sourced from a file named database.csv in the plugin's directory.
+ * GUI_REDEEM_MCMMO: Data is sourced from GuiRedeemMCMMO user data.
+ * INTERNAL: Data is sourced from another plugin database type (ex. SQLITE to H2)
  */
 public enum ConverterType {
-    INTERNAL_SQLITE, INTERNAL_H2, INTERNAL_MYSQL, EXTERNAL_MORPH, EXTERNAL_GRM, EXTERNAL_CSV;
+    CSV, GUI_REDEEM_MCMMO, INTERNAL, MORPH_REDEEM;
 }

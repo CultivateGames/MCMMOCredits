@@ -23,7 +23,8 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import games.cultivate.mcmmocredits.util.CreditOperation;
+import games.cultivate.mcmmocredits.transaction.Transaction;
+import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -34,17 +35,17 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Service to get and modify Users.
+ * Handles getting and modifying users.
  */
 public final class UserService {
     private final UserDAO dao;
     private final UserCache cache;
 
     /**
-     * Constructs the service.
+     * Constructs the object.
      *
-     * @param dao   Instance of UserDAO.
-     * @param cache Instance of UserCache.
+     * @param dao   UserDAO, used to interact with the user database.
+     * @param cache UserCache, used to interact with the in-memory cache of users.
      */
     @Inject
     public UserService(final UserDAO dao, final UserCache cache) {
@@ -53,21 +54,10 @@ public final class UserService {
     }
 
     /**
-     * Checks if the user is cached by UUID and username.
+     * Adds a user with the specified UUID and username to the DAO and cache.
      *
-     * @param user The User to check.
-     * @return If the User is cached.
-     * There is no scenario in which a user is only cached by one of the underlying caches.
-     */
-    public boolean isCached(final User user) {
-        return this.cache.contains(user.uuid()) && this.cache.contains(user.username());
-    }
-
-    /**
-     * Adds a new user with the specified UUID and username.
-     *
-     * @param uuid     the UUID of the new user
-     * @param username the username of the new user
+     * @param uuid     The UUID of a new user.
+     * @param username The username of a new user.
      */
     public void addUser(final UUID uuid, final String username) {
         User user = new User(uuid, username, 0, 0);
@@ -76,10 +66,11 @@ public final class UserService {
     }
 
     /**
-     * Retrieves an optional User from the specified username.
+     * Gets a user with the specified username.
+     * The optional is empty if the cache and DAO do not contain the user.
      *
-     * @param username the username of the user to retrieve
-     * @return an optional User object if the user exists, otherwise an empty optional
+     * @param username The username of a user.
+     * @return A user if it exists, otherwise an empty optional.
      */
     public Optional<User> getUser(final String username) {
         if (this.cache.contains(username)) {
@@ -91,10 +82,11 @@ public final class UserService {
     }
 
     /**
-     * Retrieves an optional User from the specified UUID.
+     * Gets a user with the specified UUID.
+     * The optional is empty if the cache and dao do not contain the user.
      *
-     * @param uuid the UUID of the user to retrieve
-     * @return an optional User object if the user exists, otherwise an empty optional
+     * @param uuid The UUID of a user.
+     * @return A user if it exists, otherwise an empty optional.
      */
     public Optional<User> getUser(final UUID uuid) {
         if (this.cache.contains(uuid)) {
@@ -106,89 +98,102 @@ public final class UserService {
     }
 
     /**
-     * Updates the username for the specified user with a new username.
+     * Gets a range of users using the specified limit and offset.
      *
-     * @param uuid     the UUID of the user to update
-     * @param username the new username for the user
-     * @return the updated User object if the update was successful, otherwise null
-     */
-    public @Nullable User setUsername(final UUID uuid, final String username) {
-        if (this.dao.setUsername(uuid, username)) {
-            return this.cache.update(uuid, user -> user.withUsername(username));
-        }
-        return null;
-    }
-
-    /**
-     * Retrieves the number of credits for the specified user.
-     *
-     * @param uuid the UUID of the user to retrieve credits for
-     * @return the number of credits for the specified user, or 0 if the user does not exist
-     */
-    public int getCredits(final UUID uuid) {
-        return this.getUser(uuid).map(User::credits).orElse(0);
-    }
-
-    /**
-     * Modifies credit balance of a User and returns the updated User.
-     *
-     * @param uuid      UUID of the user.
-     * @param operation the operation to apply.
-     * @param amount    amount of credits to redeem.
-     * @return the updated User.
-     */
-    public @Nullable User modifyCredits(final UUID uuid, final CreditOperation operation, final int amount) {
-        boolean status = switch (operation) {
-            case ADD -> this.dao.addCredits(uuid, amount);
-            case SET -> this.dao.setCredits(uuid, amount);
-            case TAKE -> this.dao.takeCredits(uuid, amount);
-        };
-        return status ? this.cache.update(uuid, u -> u.withCredits(operation.apply(u.credits(), amount))) : null;
-    }
-
-    /**
-     * Performs a credit redemption and returns the updated User.
-     *
-     * @param uuid   UUID of the user.
-     * @param amount amount of credits to redeem.
-     * @return the updated User.
-     */
-    public @Nullable User redeemCredits(final UUID uuid, final int amount) {
-        if (this.dao.redeemCredits(uuid, amount)) {
-            return this.cache.update(uuid, user -> user.withCredits(user.credits() - amount).withRedeemed(user.redeemed() + amount));
-        }
-        return null;
-    }
-
-    /**
-     * Retrieves a page of users with the specified limit and offset.
-     *
-     * @param limit  the maximum number of users to retrieve
-     * @param offset the starting index of the page of users
-     * @return a List of User objects representing the page of users
+     * @param limit  The max amount of users to get.
+     * @param offset The starting index of where to start getting users.
+     * @return A list of users within the provided bounds.
      */
     public List<User> getPageOfUsers(final int limit, final int offset) {
         return this.dao.getPageOfUsers(limit, offset);
     }
 
     /**
-     * Returns a CommandExecutor instance based on the provided CommandSender.
+     * Gets the credit balance of a user with the specified UUID.
      *
-     * @param sender The CommandSender.
-     * @return The CommandExecutor, either a User or Console.
+     * @param uuid The UUID of a user.
+     * @return The credit balance of a user, or 0 if the user does not exist.
      */
-    public CommandExecutor fromSender(final CommandSender sender) {
-        return sender instanceof Player p ? this.getUser(p.getUniqueId()).orElseThrow() : Console.INSTANCE;
+    public int getCredits(final UUID uuid) {
+        return this.getUser(uuid).map(User::credits).orElse(0);
     }
 
     /**
-     * Removes the User from cache without adding them back.
-     * Used primarily to handle user logouts.
+     * Updates the username of a user with the specified UUID.
      *
-     * @param uuid     UUID of the user.
-     * @param username String username of the user.
+     * @param uuid     The UUID of a user.
+     * @param username The username of a user.
+     * @return The updated user, or null if the update failed.
      */
-    public void removeFromCache(final UUID uuid, final String username) {
-        this.cache.remove(uuid, username);
+    public @Nullable User setUsername(final UUID uuid, final String username) {
+        return this.dao.setUsername(uuid, username) ? this.cache.update(uuid, u -> u.withUsername(username)) : null;
+    }
+
+    /**
+     * Updates the credit balance of a user with the specified UUID.
+     *
+     * @param uuid   The UUID of a user.
+     * @param amount Amount of credits to apply to balance.
+     * @return The updated user, or null if the update failed.
+     */
+    public @Nullable User setCredits(final UUID uuid, final int amount) {
+        return this.dao.setCredits(uuid, amount) ? this.cache.update(uuid, u -> u.withCredits(amount)) : null;
+    }
+
+    /**
+     * Updates an existing user in the DAO/Cache with the provided user.
+     *
+     * @param user The user to use in update.
+     * @return The updated user, or null if the update failed.
+     */
+    public @Nullable User updateUser(final User user) {
+        return this.dao.updateUser(user) ? this.cache.update(user.uuid(), user) : null;
+    }
+
+    /**
+     * Processes a TransactionResult and applies any changes to DAO and cache.
+     *
+     * @param result The transaction result to process.
+     */
+    public void processTransaction(final TransactionResult result) {
+        Transaction transaction = result.transaction();
+        User current = result.target();
+        if (transaction.target() != current) {
+            this.updateUser(current);
+        }
+        CommandExecutor exec = result.executor();
+        if (exec.isPlayer() && !transaction.isSelfTransaction() && transaction.executor() != exec) {
+            User currentExecutor = (User) exec;
+            this.updateUser(currentExecutor);
+        }
+    }
+
+    /**
+     * Checks if the user is cached by UUID and username.
+     *
+     * @param user The user.
+     * @return True if the user is cached, false otherwise.
+     */
+    public boolean isCached(final User user) {
+        return this.cache.contains(user.uuid()) && this.cache.contains(user.username());
+    }
+
+    /**
+     * Removes a user from the cache.
+     *
+     * @param uuid The UUID of a user.
+     */
+    public void removeFromCache(final UUID uuid) {
+        this.cache.remove(uuid);
+    }
+
+    /**
+     * Maps a Bukkit CommandSender to a CommandExecutor.
+     *
+     * @param sender The Bukkit CommandSender.
+     * @return A user if one exists for the CommandSender, otherwise Console.
+     */
+    public CommandExecutor fromSender(final CommandSender sender) {
+        return sender instanceof Player p ? this.getUser(p.getUniqueId()).orElseThrow() : Console.INSTANCE;
     }
 }

@@ -21,24 +21,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.database;
+package games.cultivate.mcmmocredits.util;
 
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import javax.inject.Qualifier;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Properties used in creation of the {@linkplain Database}
- *
- * @param type     Type of the Database.
- * @param host     Host of the Database. Typically, an IP address.
- * @param name     Name of the Database.
- * @param user     Name of the Database user.
- * @param password Password for the Database user.
- * @param port     Port where the Database instance is located.
- * @param ssl      If useSSL is used in the connection URL.
+ * Annotation to mark MCMMOCredit's data folder.
  */
-@ConfigSerializable
-public record DatabaseProperties(DatabaseType type, String host, String name, String user, String password, int port, boolean ssl) {
-    public static DatabaseProperties defaults() {
-        return new DatabaseProperties(DatabaseType.SQLITE, "127.0.0.1", "database", "root", "passw0rd+", 3306, true);
-    }
-}
+@Qualifier
+@Target({ FIELD, PARAMETER, METHOD })
+@Retention(RUNTIME)
+public @interface Dir {}

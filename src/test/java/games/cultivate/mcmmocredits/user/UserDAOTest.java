@@ -23,156 +23,134 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.h2.H2DatabasePlugin;
+import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
+import org.jdbi.v3.testing.junit5.JdbiExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserDAOTest {
-    private Jdbi jdbi;
-    private UserDAO userDAO;
-    private String username;
-    private UUID uuid;
+    private final String username = "testUsername";
+    private final UUID uuid = UUID.randomUUID();
+    private final int credits = 60;
+    private final int redeemed = 500;
+    private final String query = "CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTO_INCREMENT, UUID VARCHAR(36) NOT NULL, username VARCHAR(16) NOT NULL, credits INT CHECK(credits >= 0), redeemed INT);";
+    @RegisterExtension
+    private final JdbiExtension jdbi = JdbiExtension.h2().withPlugins(new SqlObjectPlugin(), new H2DatabasePlugin()).withInitializer((x, y) -> y.execute(this.query));
+    private UserDAO dao;
     private User user;
 
     @BeforeEach
     void setUp() {
-        this.jdbi = Jdbi.create("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
-        this.jdbi.installPlugin(new SqlObjectPlugin());
-        this.jdbi.useHandle(x -> x.execute("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTO_INCREMENT, UUID VARCHAR NOT NULL, username VARCHAR NOT NULL, credits INT CHECK(credits >= 0), redeemed INT);"));
-        this.userDAO = jdbi.onDemand(UserDAO.class);
-        this.username = "testUsername";
-        this.uuid = UUID.randomUUID();
-        int credits = 60;
-        int redeemed = 500;
-        this.user = new User(this.uuid, this.username, credits, redeemed);
-        this.userDAO.addUser(this.user);
+        this.dao = this.jdbi.getJdbi().onDemand(UserDAO.class);
+        this.user = new User(this.uuid, this.username, this.credits, this.redeemed);
+        this.dao.addUser(this.user);
     }
 
     @AfterEach
     void tearDown() {
-        this.jdbi.useHandle(x -> x.execute("DROP TABLE MCMMOCredits"));
+        this.jdbi.getSharedHandle().execute("DROP TABLE MCMMOCredits");
     }
 
     @Test
     void addUser_NewUser_UserAdded() {
-        // Act
-        Optional<User> optionalUser = this.userDAO.getUser(this.uuid);
+        Optional<User> ouser = this.dao.getUser(this.uuid);
+        assertTrue(ouser.isPresent());
+        assertEquals(this.user, ouser.orElseThrow());
+    }
 
-        // Assert
-        assertTrue(optionalUser.isPresent());
-        assertEquals(this.user, optionalUser.get());
+    @Test
+    void addUsers_NewUsers_UsersAdded() {
+        User first = new User(UUID.randomUUID(), "tester1", 1000, 10);
+        User second = new User(UUID.randomUUID(), "tester2", 2000, 20);
+        this.dao.addUsers(List.of(first, second));
+        assertEquals(first, this.dao.getUser(first.uuid()).orElseThrow());
+        assertEquals(second, this.dao.getUser(second.uuid()).orElseThrow());
+    }
+
+    @Test
+    void getAllUsers_ReturnAllUsers() {
+        User first = new User(UUID.randomUUID(), "tester1", 1000, 10);
+        User second = new User(UUID.randomUUID(), "tester2", 2000, 20);
+        this.dao.addUsers(List.of(first, second));
+        assertTrue(this.dao.getAllUsers().containsAll(List.of(first, second, this.user)));
     }
 
     @Test
     void getUser_ByUsername_UserFound() {
-        // Act
-        Optional<User> optionalUser = this.userDAO.getUser(this.username);
-
-        // Assert
-        assertTrue(optionalUser.isPresent());
-        assertEquals(this.user, optionalUser.get());
-    }
-
-    @Test
-    void setUsername_ExistingUser_UsernameUpdated() {
-        // Arrange
-        String newUsername = "updatedUsername";
-
-        // Act
-        boolean setUsernameResult = this.userDAO.setUsername(this.uuid, newUsername);
-        Optional<User> optionalUser = this.userDAO.getUser(newUsername);
-
-        // Assert
-        assertTrue(setUsernameResult);
-        assertTrue(optionalUser.isPresent());
-        assertEquals(newUsername, optionalUser.get().username());
-    }
-
-    @Test
-    void setCredits_ExistingUser_CreditsUpdated() {
-        // Arrange
-        int newCredits = 200;
-
-        // Act
-        boolean setCreditsResult = this.userDAO.setCredits(this.uuid, newCredits);
-        int updatedCredits = this.userDAO.getCredits(this.uuid);
-
-        // Assert
-        assertTrue(setCreditsResult);
-        assertEquals(newCredits, updatedCredits);
-    }
-
-    @Test
-    void addCredits_ExistingUser_CreditsIncreased() {
-        // Arrange
-        int addedCredits = 50;
-
-        // Act
-        boolean addCreditsResult = this.userDAO.addCredits(this.uuid, addedCredits);
-        int updatedCredits = this.userDAO.getCredits(this.uuid);
-
-        // Assert
-        assertTrue(addCreditsResult);
-        assertEquals(this.user.credits() + addedCredits, updatedCredits);
-    }
-
-    @Test
-    void takeCredits_ExistingUser_CreditsDecreased() {
-        // Arrange
-        int takenCredits = 50;
-
-        // Act
-        boolean takeCreditsResult = this.userDAO.takeCredits(this.uuid, takenCredits);
-        int updatedCredits = this.userDAO.getCredits(this.uuid);
-
-        // Assert
-        assertTrue(takeCreditsResult);
-        assertEquals(this.user.credits() - takenCredits, updatedCredits);
-    }
-
-    @Test
-    void redeemCredits_ExistingUser_CreditsRedeemed() {
-        // Arrange
-        int redeemedCredits = 50;
-
-        // Act
-        boolean redeemCreditsResult = this.userDAO.redeemCredits(this.uuid, redeemedCredits);
-        int updatedCredits = this.userDAO.getCredits(this.uuid);
-        Optional<User> updatedUser = this.userDAO.getUser(this.uuid);
-
-        // Assert
-        assertTrue(redeemCreditsResult);
-        assertTrue(updatedUser.isPresent());
-        assertEquals(this.user.credits() - redeemedCredits, updatedCredits);
-        assertEquals(this.user.redeemed() + redeemedCredits, updatedUser.get().redeemed());
+        Optional<User> ouser = this.dao.getUser(this.username);
+        assertTrue(ouser.isPresent());
+        assertEquals(this.user, ouser.orElseThrow());
     }
 
     @Test
     void getPageOfUsers_ThreeUsers_UsersRetrieved() {
-        //Arrange
-        User firstPlace = new User(UUID.randomUUID(), "firstPlace", 1000, 10);
-        User secondPlace = new User(UUID.randomUUID(), "secondPlace", 100, 10);
-        this.userDAO.addUser(firstPlace);
-        this.userDAO.addUser(secondPlace);
-
-        // Act
-        List<User> users = this.userDAO.getPageOfUsers(3, 0);
-
-        // Assert
-        assertNotNull(users);
+        User first = new User(UUID.randomUUID(), "firstPlace", 1000, 10);
+        User second = new User(UUID.randomUUID(), "secondPlace", 100, 10);
+        this.dao.addUsers(List.of(first, second));
+        List<User> users = this.dao.getPageOfUsers(3, 0);
         assertEquals(3, users.size());
-        assertEquals(firstPlace, users.get(0));
-        assertEquals(secondPlace, users.get(1));
+        assertEquals(first, users.get(0));
+        assertEquals(second, users.get(1));
         assertEquals(this.user, users.get(2));
+    }
+
+    @Test
+    void setUsername_ExistingUser_UsernameUpdated() {
+        String newUsername = "updatedUsername";
+        boolean result = this.dao.setUsername(this.uuid, newUsername);
+        Optional<User> ouser = this.dao.getUser(newUsername);
+        User updatedUser = new User(this.uuid, newUsername, this.credits, this.redeemed);
+        assertTrue(result);
+        assertTrue(ouser.isPresent());
+        assertEquals(updatedUser, ouser.orElseThrow());
+    }
+
+    @Test
+    void setUsername_MissingUser_ReturnsFalse() {
+        assertFalse(this.dao.setUsername(UUID.randomUUID(), "missingUser"));
+    }
+
+    @Test
+    void setCredits_ExistingUser_CreditsUpdated() {
+        int newCredits = 200;
+        boolean result = this.dao.setCredits(this.uuid, newCredits);
+        Optional<User> ouser = this.dao.getUser(this.uuid);
+        User updatedUser = new User(this.uuid, this.username, newCredits, this.redeemed);
+        assertTrue(result);
+        assertTrue(ouser.isPresent());
+        assertEquals(updatedUser, ouser.orElseThrow());
+    }
+
+    @Test
+    void setCredits_MissingUser_ReturnsFalse() {
+        assertFalse(this.dao.setCredits(UUID.randomUUID(), 500));
+    }
+
+    @Test
+    void setCredits_InvalidAmount_ThrowsException() {
+        assertThrows(UnableToExecuteStatementException.class, () -> this.dao.setCredits(this.uuid, -1));
+        assertEquals(this.user, this.dao.getUser(this.uuid).orElseThrow());
+    }
+
+    @Test
+    void updateUser_ExistingUser_ReturnsUpdatedUser() {
+        this.dao.updateUser(new User(this.uuid, this.username, 10000, this.redeemed));
+        User fromDAO = this.dao.getUser(this.uuid).orElseThrow();
+        assertNotEquals(this.user, fromDAO);
+        assertEquals(10000, fromDAO.credits());
     }
 }

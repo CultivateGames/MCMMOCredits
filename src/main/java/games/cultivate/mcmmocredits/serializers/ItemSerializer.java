@@ -25,9 +25,13 @@ package games.cultivate.mcmmocredits.serializers;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
-import games.cultivate.mcmmocredits.config.Config;
-import games.cultivate.mcmmocredits.menu.ClickType;
-import games.cultivate.mcmmocredits.menu.Item;
+import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import games.cultivate.mcmmocredits.ui.item.BaseItem;
+import games.cultivate.mcmmocredits.ui.item.CommandItem;
+import games.cultivate.mcmmocredits.ui.item.ConfigItem;
+import games.cultivate.mcmmocredits.ui.item.Item;
+import games.cultivate.mcmmocredits.ui.item.RedeemItem;
+import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -41,94 +45,92 @@ import org.spongepowered.configurate.serialize.TypeSerializer;
 
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Handles serialization/deserialization of {@link Item} from {@link Config}
+ * Handles serialization/deserialization of an Item.
  */
 public final class ItemSerializer implements TypeSerializer<Item> {
     public static final ItemSerializer INSTANCE = new ItemSerializer();
 
     /**
-     * Deserializes an Item from the configuration.
-     *
-     * @param type the type of return value required
-     * @param node the node containing serialized data
-     * @return The deserialized Item.
-     * @throws SerializationException Thrown when trying to get ClickType from a node.
+     * {@inheritDoc}
      */
     @Override
     public Item deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
         Material material = node.node("material").get(Material.class, Material.STONE);
         int amount = node.node("amount").getInt(1);
-        ItemStack item = new ItemStack(material, amount);
-        ItemMeta meta = item.getItemMeta();
+        String name = node.node("name").getString("");
+        List<String> lore = node.node("lore").getList(String.class);
+        int slot = node.node("slot").getInt();
+        String texture = node.node("texture").getString("");
+        int customModelData = node.node("custom-model-data").getInt(0);
+        ItemStack stack = new ItemStack(material, amount);
+        ItemMeta meta = stack.getItemMeta();
         if (node.node("glow").getBoolean(false)) {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
         }
-        String texture = node.node("texture").getString("");
-        if (material != Material.PLAYER_HEAD || texture.isEmpty()) {
-            item.setItemMeta(meta);
-        } else {
-            SkullMeta skullMeta = (SkullMeta) meta;
-            PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
-            profile.setProperty(new ProfileProperty("textures", texture));
-            skullMeta.setPlayerProfile(profile);
-            item.setItemMeta(skullMeta);
+        meta.setCustomModelData(customModelData);
+        stack.setItemMeta(texture.isEmpty() ? meta : this.createSkullMeta(meta, texture));
+        Item item = BaseItem.of(stack, name, lore, slot);
+        String key = node.key().toString();
+        if (key.equals("messages") || key.equals("settings")) {
+            return ConfigItem.of(node.path(), item);
         }
-        ClickType clickType = node.get(ClickType.class, ClickType.FILL);
-        String data = switch (clickType) {
-            case COMMAND -> node.node("command").getString("");
-            case EDIT_MESSAGE -> "messages";
-            case EDIT_SETTING -> "settings";
-            case REDEEM -> ((String) node.key()).toUpperCase();
-            case FILL -> "";
-        };
-        String name = node.node("name").getString("");
-        List<String> lore = node.node("lore").getList(String.class);
-        int slot = node.node("slot").getInt();
-        return Item.builder()
-                .name(name)
-                .lore(lore)
-                .slot(slot)
-                .item(item)
-                .type(clickType)
-                .data(data)
-                .build();
+        if (!node.node("command").virtual()) {
+            return CommandItem.of(node.node("command").getString(), item);
+        }
+        if (Util.getSkillNames().contains(key)) {
+            return RedeemItem.of(PrimarySkillType.valueOf(key.toUpperCase()), item);
+        }
+        return item;
     }
 
     /**
-     * Serializes an Item to the configuration.
-     *
-     * @param type the type of the input object
-     * @param item the object to be serialized
-     * @param node the node to write to
-     * @throws SerializationException Thrown when setting nodes to a value.
+     * {@inheritDoc}
      */
     @Override
     public void serialize(final Type type, final Item item, final ConfigurationNode node) throws SerializationException {
+        ItemStack stack = item.stack();
         node.node("name").set(item.name());
         node.node("lore").setList(String.class, item.lore());
         node.node("slot").set(item.slot());
-        ItemStack stack = item.stack();
         node.node("material").set(stack.getType());
         node.node("amount").set(stack.getAmount());
-        String texture = "";
-        if (stack.getItemMeta() instanceof SkullMeta skullMeta) {
-            PlayerProfile profile = skullMeta.getPlayerProfile();
-            for (ProfileProperty x : profile.getProperties()) {
-                if (x.getName().equals("textures")) {
-                    texture = x.getValue();
-                    break;
-                }
-            }
-        }
-        node.node("texture").set(texture);
+        ItemMeta meta = stack.getItemMeta();
+        node.node("texture").set(meta instanceof SkullMeta skullMeta ? this.getTexture(skullMeta) : "");
+        node.node("custom-model-data").set(meta.hasCustomModelData() ? meta.getCustomModelData() : 0);
         node.node("glow").set(!stack.getEnchantments().isEmpty());
-        ClickType clickType = item.clickType();
-        if (clickType == ClickType.COMMAND) {
-            node.node("command").set(item.data());
+        if (item instanceof CommandItem citem) {
+            node.node("command").set(citem.command());
         }
+    }
+
+    /**
+     * Creates SkullMeta from provided ItemMeta and texture string.
+     *
+     * @param meta    The current ItemMeta.
+     * @param texture The texture string.
+     * @return SkullMeta with texture string applied.
+     */
+    private SkullMeta createSkullMeta(final ItemMeta meta, final String texture) {
+        SkullMeta skullMeta = (SkullMeta) meta;
+        PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+        profile.setProperty(new ProfileProperty("textures", texture));
+        skullMeta.setPlayerProfile(profile);
+        return skullMeta;
+    }
+
+    /**
+     * Gets String texture from provided SkullMeta.
+     *
+     * @param meta The item meta.
+     * @return The texture string.
+     */
+    private String getTexture(final SkullMeta meta) {
+        Optional<ProfileProperty> property = meta.getPlayerProfile().getProperties().stream().filter(x -> x.getName().equals("texture")).findAny();
+        return property.map(ProfileProperty::getValue).orElse("");
     }
 }

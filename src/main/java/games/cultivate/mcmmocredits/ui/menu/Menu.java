@@ -21,65 +21,65 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.util;
+package games.cultivate.mcmmocredits.ui.menu;
 
+import games.cultivate.mcmmocredits.ui.ContextFactory;
+import games.cultivate.mcmmocredits.ui.item.Item;
 import games.cultivate.mcmmocredits.user.User;
+import org.incendo.interfaces.paper.type.ChestInterface;
 
-import java.util.function.IntBinaryOperator;
+import java.util.Map;
 
 /**
- * Represents different credit transactions in /credits modify add|set|take
+ * Represents an Inventory and it's properties.
  */
-public enum CreditOperation {
-    ADD(Integer::sum),
-    TAKE((a, b) -> a - b),
-    SET((a, b) -> b);
-
-    private final IntBinaryOperator operator;
+public interface Menu {
+    /**
+     * Adds extra items if needed.
+     */
+    void addExtraItems();
 
     /**
-     * Constructs the enum.
+     * Creates a new ChestInterface for the specified user.
      *
-     * @param operator Used to apply transactions to {@link User} credit balances.
+     * @param user    The user to build the interface for.
+     * @param factory The ContextFactory required to help build item clicks.
+     * @return The ChestInterface.
      */
-    CreditOperation(final IntBinaryOperator operator) {
-        this.operator = operator;
-    }
+    ChestInterface build(User user, ContextFactory factory);
 
     /**
-     * Applies the transaction using the provided ints.
+     * Gets a Map of items in the Menu.
      *
-     * @param a An int.
-     * @param b An int.
-     * @return The result of the operation.
+     * @return The map.
      */
-    public int apply(final int a, final int b) {
-        return this.operator.applyAsInt(a, b);
-    }
+    Map<String, Item> items();
 
     /**
-     * Generates the message key for the message sent to the executor of the transaction.
+     * Gets the unparsed title of the inventory.
      *
-     * @return The message key.
+     * @return The title.
      */
-    public String getMessageKey() {
-        return "credits-" + this;
-    }
+    String title();
 
     /**
-     * Generates the message key for the message sent to the recipient of the transaction.
+     * Gets the size of the backing chest inventory.
      *
-     * @return The message key.
+     * @return The size.
      */
-    public String getUserMessageKey() {
-        return this.getMessageKey() + "-user";
-    }
+    int slots();
 
     /**
-     * {@inheritDoc}
+     * Gets if the menu should be filled with border items.
+     *
+     * @return If the Menu has border fill items.
      */
-    @Override
-    public String toString() {
-        return this.name().toLowerCase();
-    }
+    boolean fill();
+
+    /**
+     * Gets if the menu should be filled with border items.
+     *
+     * @return If the Menu has a navigation item.
+     */
+    boolean navigation();
 }

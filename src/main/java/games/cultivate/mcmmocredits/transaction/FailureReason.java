@@ -21,15 +21,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.menu;
+package games.cultivate.mcmmocredits.transaction;
 
 /**
- * Represents all possible click types inside a {@link Menu}
+ * Represents possible reasons for transaction failure.
  */
-public enum ClickType {
-    COMMAND,
-    EDIT_MESSAGE,
-    EDIT_SETTING,
-    FILL,
-    REDEEM
+public enum FailureReason {
+    NOT_ENOUGH_CREDITS("not-enough-credits"),
+    MCMMO_PROFILE_FAIL("mcmmo-profile-fail"),
+    MCMMO_SKILL_CAP("mcmmo-skill-cap");
+
+    private final String key;
+
+    /**
+     * Constructs the object.
+     *
+     * @param key Represents a key to be used to get associated message from config.
+     */
+    FailureReason(final String key) {
+        this.key = key;
+    }
+
+    /**
+     * Gets the config key associated with the failure reason.
+     *
+     * @return The key.
+     */
+    public String getKey() {
+        return this.key;
+    }
 }

@@ -1,14 +1,13 @@
 group = "games.cultivate"
-version = "0.3.7"
+version = "0.3.9"
 description = "MCMMOCredits"
 
 plugins {
     id("java-library")
     id("maven-publish")
     id("signing")
-    id("xyz.jpenilla.run-paper") version "2.0.1"
+    id("xyz.jpenilla.run-paper") version "2.1.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("io.papermc.paperweight.userdev") version "1.5.3"
 }
 
 repositories {
@@ -16,36 +15,23 @@ repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://nexus.neetgames.com/repository/maven-releases/")
-    maven("https://maven.enginehub.org/repo/")
 }
 
 dependencies {
-    paperweight.paperDevBundle("1.19.4-R0.1-SNAPSHOT")
-    implementation ("org.bstats:bstats-bukkit:3.0.2")
-
+    implementation("org.bstats:bstats-bukkit:3.0.2")
     implementation("cloud.commandframework:cloud-annotations:1.8.3")
     implementation("cloud.commandframework:cloud-paper:1.8.3")
-
     implementation("org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT")
-
     implementation("com.h2database:h2:2.1.214")
     implementation("com.google.inject:guice:5.1.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.jdbi:jdbi3-core:3.38.0")
-    implementation("org.jdbi:jdbi3-sqlite:3.38.0")
-    implementation("org.jdbi:jdbi3-sqlobject:3.38.0")
-    //upstream seems to "leak" dependencies, exclude them.
-    implementation("org.enginehub:squirrelid:0.3.2") {
-        exclude(module = "sqlite-jdbc")
-        exclude(module = "paper-api")
-        exclude(module = "jsr305")
-        exclude(module = "guava")
-    }
-
+    implementation("org.jdbi:jdbi3-core:3.38.2")
+    implementation("org.jdbi:jdbi3-sqlite:3.38.2")
+    implementation("org.jdbi:jdbi3-sqlobject:3.38.2")
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
         exclude(module = "paper-api")
     }
-
+    compileOnly("io.papermc.paper:paper-api:1.19.4-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.11.3") {
         exclude(group = "net.kyori")
     }
@@ -53,9 +39,11 @@ dependencies {
         exclude("com.sk89q.worldguard")
         exclude("com.sk89q.worldedit")
     }
-
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
-    testImplementation("org.mockito:mockito-inline:5.2.0")
+    testImplementation("org.jdbi:jdbi3-testing:3.38.2")
+    testImplementation(platform("org.junit:junit-bom:5.9.3"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.mockito:mockito-core:5.3.1")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.3.1")
 }
 
 java {
@@ -68,9 +56,6 @@ publishing {
     publications {
         create<MavenPublication>("MCMMOCredits") {
             from(components["java"])
-            afterEvaluate {
-                artifactId = tasks.jar.get().archiveBaseName.get()
-            }
             repositories {
                 maven {
                     name = "OSSRH"
@@ -120,9 +105,15 @@ signing {
     sign(publishing.publications)
 }
 
+configurations {
+    testImplementation {
+        extendsFrom(compileOnly.get())
+    }
+}
+
 tasks {
     assemble {
-        dependsOn(reobfJar)
+        dependsOn(shadowJar)
     }
 
     test {
@@ -158,7 +149,10 @@ tasks {
         fun reloc(pkg: String) = relocate(pkg, "games.cultivate.mcmmocredits.relocate.$pkg")
         reloc("cloud.commandframework")
         reloc("com.github")
-        reloc("com.typesafe")
+        reloc("com.google.common")
+        reloc("com.google.inject")
+        reloc("com.google.errorprone")
+        reloc("com.google.j2objc")
         reloc("com.zaxxer")
         reloc("io.leangen")
         reloc("javax.annotation")
@@ -166,7 +160,6 @@ tasks {
         reloc("org.aopalliance")
         reloc("org.bstats")
         reloc("org.checkerframework")
-        reloc("org.enginehub")
         reloc("org.jdbi")
         reloc("org.incendo")
         reloc("org.spongepowered")

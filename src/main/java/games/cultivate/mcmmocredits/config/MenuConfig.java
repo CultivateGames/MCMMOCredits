@@ -23,105 +23,109 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.menu.ClickType;
-import games.cultivate.mcmmocredits.menu.Item;
-import games.cultivate.mcmmocredits.menu.Menu;
+import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import games.cultivate.mcmmocredits.ui.item.BaseItem;
+import games.cultivate.mcmmocredits.ui.item.CommandItem;
+import games.cultivate.mcmmocredits.ui.item.Item;
+import games.cultivate.mcmmocredits.ui.item.RedeemItem;
+import games.cultivate.mcmmocredits.ui.menu.BaseMenu;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
-import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * Configuration used to adjust properties of all {@link Menu} instances.
+ * Configuration used to adjust menu properties.
  */
-@ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
-public class MenuConfig extends Config {
-    private static final Item FILLER_ITEM = Item.of(Material.BLACK_STAINED_GLASS_PANE);
-    private static final Item NAVIGATION_ITEM = Util.createCommandItem(Material.COMPASS, "<red>Previous Menu", "<gray>Left Click to go back!", "credits menu main", 40);
-    private ConfigMenu config = new ConfigMenu();
-    private MainMenu main = new MainMenu();
-    private RedeemMenu redeem = new RedeemMenu();
+@ConfigSerializable
+public class MenuConfig extends BaseConfig {
+    private BaseMenu main = BaseMenu.of(this.createMainItems(), "<#ff253c><bold>MCMMO Credits", 54, false, false);
+    private BaseMenu config = BaseMenu.of(this.createConfigItems(), "<dark_gray>Edit Your Configuration...", 54, false, false);
+    private BaseMenu redeem = BaseMenu.of(this.createRedeemItems(), "<dark_gray>Redeem Your Credits...", 45, false, false);
 
-    /**
-     * Constructs the configuration.
-     */
-    public MenuConfig() {
-        super(MenuConfig.class, "menus.yml");
+    private Map<String, Item> createMainItems() {
+        Map<String, Item> items = new HashMap<>();
+        items.put("config", this.createConfigShortcut());
+        items.put("redeem", this.createRedeemShortcut());
+        items.put("fill", this.createFill());
+        items.put("navigation", this.createCompass(49));
+        return items;
     }
 
-    public MenuConfig(final Path path) {
-        super(MenuConfig.class, "menus.yml", path);
+    private Map<String, Item> createConfigItems() {
+        List<String> lore = List.of("<gray>Click here to edit this config option!");
+        Map<String, Item> items = new HashMap<>();
+        items.put("messages", BaseItem.of(new ItemStack(Material.WRITABLE_BOOK, 1), "", lore, -1));
+        items.put("settings", BaseItem.of(new ItemStack(Material.REDSTONE, 1), "", lore, -1));
+        items.put("fill", this.createFill());
+        items.put("navigation", this.createCompass(49));
+        return items;
     }
 
-    /**
-     * Config options that customize the Main Menu.
-     */
-    @ConfigSerializable
-    static class MainMenu {
-        private String title = "<#ff253c><bold>MCMMO Credits";
-        private int slots = 54;
-        private boolean fill = false;
-        private boolean navigation = false;
-        private Map<String, Item> items = new HashMap<>();
-
-        protected MainMenu() {
-            this.items.put("config", Util.createCommandItem(Material.DIAMOND, "<#FF253C>Edit Config", "<gray>Left Click to edit config!", "credits menu config", 11));
-            this.items.put("redeem", Util.createCommandItem(Material.EMERALD, "<green>Redeem MCMMO Credits!", "<gray>Left Click to redeem Credits!", "credits menu redeem", 15));
-            this.items.put("fill", FILLER_ITEM);
-            this.items.put("navigation", NAVIGATION_ITEM);
-        }
-    }
-
-    /**
-     * Config options that customize the Configuration Menu.
-     */
-    @ConfigSerializable
-    static class ConfigMenu {
-        private String title = "<dark_gray>Edit Your Configuration...";
-        private int slots = 54;
-        private boolean fill = false;
-        private boolean navigation = false;
-        private Map<String, Item> items = new HashMap<>();
-
-        protected ConfigMenu() {
-            this.items.put("messages", Util.createConfigItem(Material.WRITABLE_BOOK, ClickType.EDIT_MESSAGE));
-            this.items.put("settings", Util.createConfigItem(Material.REDSTONE, ClickType.EDIT_SETTING));
-            this.items.put("fill", FILLER_ITEM);
-            this.items.put("navigation", NAVIGATION_ITEM.withSlot(49));
-        }
+    private Map<String, Item> createRedeemItems() {
+        Map<String, Item> items = new HashMap<>();
+        items.put("acrobatics", this.createRedeemItem(Material.NETHERITE_BOOTS, PrimarySkillType.ACROBATICS, 10));
+        items.put("alchemy", this.createRedeemItem(Material.BREWING_STAND, PrimarySkillType.ALCHEMY, 11));
+        items.put("archery", this.createRedeemItem(Material.BOW, PrimarySkillType.ARCHERY, 12));
+        items.put("axes", this.createRedeemItem(Material.NETHERITE_AXE, PrimarySkillType.AXES, 13));
+        items.put("excavation", this.createRedeemItem(Material.NETHERITE_SHOVEL, PrimarySkillType.EXCAVATION, 14));
+        items.put("fishing", this.createRedeemItem(Material.FISHING_ROD, PrimarySkillType.FISHING, 15));
+        items.put("herbalism", this.createRedeemItem(Material.SUGAR_CANE, PrimarySkillType.HERBALISM, 16));
+        items.put("mining", this.createRedeemItem(Material.NETHERITE_PICKAXE, PrimarySkillType.MINING, 19));
+        items.put("repair", this.createRedeemItem(Material.ANVIL, PrimarySkillType.REPAIR, 20));
+        items.put("swords", this.createRedeemItem(Material.NETHERITE_SWORD, PrimarySkillType.SWORDS, 21));
+        items.put("taming", this.createRedeemItem(Material.LEAD, PrimarySkillType.TAMING, 23));
+        items.put("unarmed", this.createRedeemItem(Material.CARROT_ON_A_STICK, PrimarySkillType.UNARMED, 24));
+        items.put("woodcutting", this.createRedeemItem(Material.OAK_LOG, PrimarySkillType.WOODCUTTING, 25));
+        items.put("fill", this.createFill());
+        items.put("navigation", this.createCompass(40));
+        return items;
     }
 
     /**
-     * Config options that customize the Redemption Menu.
+     * Creates default fill item.
+     *
+     * @return The created item.
      */
-    @ConfigSerializable
-    static class RedeemMenu {
-        private String title = "<dark_gray>Redeem Your Credits...";
-        private int slots = 45;
-        private boolean fill = false;
-        private boolean navigation = false;
-        private Map<String, Item> items = new HashMap<>();
+    private BaseItem createFill() {
+        return BaseItem.of(Material.BLACK_STAINED_GLASS_PANE);
+    }
 
-        protected RedeemMenu() {
-            this.items.put("acrobatics", Util.createRedeemItem(Material.NETHERITE_BOOTS, "ACROBATICS", 10));
-            this.items.put("alchemy", Util.createRedeemItem(Material.BREWING_STAND, "ALCHEMY", 11));
-            this.items.put("archery", Util.createRedeemItem(Material.BOW, "ARCHERY", 12));
-            this.items.put("axes", Util.createRedeemItem(Material.NETHERITE_AXE, "AXES", 13));
-            this.items.put("excavation", Util.createRedeemItem(Material.NETHERITE_SHOVEL, "EXCAVATION", 14));
-            this.items.put("fishing", Util.createRedeemItem(Material.FISHING_ROD, "FISHING", 15));
-            this.items.put("herbalism", Util.createRedeemItem(Material.SUGAR_CANE, "HERBALISM", 16));
-            this.items.put("mining", Util.createRedeemItem(Material.NETHERITE_PICKAXE, "MINING", 19));
-            this.items.put("repair", Util.createRedeemItem(Material.ANVIL, "REPAIR", 20));
-            this.items.put("swords", Util.createRedeemItem(Material.NETHERITE_SWORD, "SWORDS", 21));
-            this.items.put("taming", Util.createRedeemItem(Material.LEAD, "TAMING", 23));
-            this.items.put("unarmed", Util.createRedeemItem(Material.CARROT_ON_A_STICK, "UNARMED", 24));
-            this.items.put("woodcutting", Util.createRedeemItem(Material.OAK_LOG, "WOODCUTTING", 25));
-            this.items.put("fill", FILLER_ITEM);
-            this.items.put("navigation", NAVIGATION_ITEM);
-        }
+    /**
+     * Creates default navigation item.
+     *
+     * @param slot The slot location of the created item.
+     * @return The created item.
+     */
+    private CommandItem createCompass(final int slot) {
+        String command = "credits menu main";
+        String name = "<red>Previous Menu";
+        List<String> lore = List.of("<gray>Left Click to go back!");
+        return CommandItem.of(command, BaseItem.of(new ItemStack(Material.COMPASS, 1), name, lore, slot));
+    }
+
+    private CommandItem createConfigShortcut() {
+        String command = "credits menu config";
+        String name = "<#FF253C>Edit Config";
+        List<String> lore = List.of("<gray>Left Click to edit config!");
+        return CommandItem.of(command, BaseItem.of(new ItemStack(Material.DIAMOND, 1), name, lore, 11));
+    }
+
+    private CommandItem createRedeemShortcut() {
+        String command = "credits menu redeem";
+        String name = "<green>Redeem MCMMO Credits!";
+        List<String> lore = List.of("<gray>Left Click to redeem Credits!");
+        return CommandItem.of(command, BaseItem.of(new ItemStack(Material.EMERALD, 1), name, lore, 15));
+    }
+
+    private RedeemItem createRedeemItem(final Material material, final PrimarySkillType skill, final int slot) {
+        List<String> lore = List.of("<yellow><sender>, click here to redeem!");
+        Item item = BaseItem.of(new ItemStack(material, 1), "<yellow>" + Util.capitalizeWord(skill.name()), lore, slot);
+        return RedeemItem.of(skill, item);
     }
 }

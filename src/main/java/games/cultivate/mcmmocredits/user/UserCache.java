@@ -37,7 +37,7 @@ public final class UserCache {
     private final Map<String, User> stringCache;
 
     /**
-     * Constructs a new, empty UserCache.
+     * Constructs the object.
      */
     public UserCache() {
         this.uuidCache = new ConcurrentHashMap<>();
@@ -47,8 +47,8 @@ public final class UserCache {
     /**
      * Checks if the cache contains the specified username.
      *
-     * @param username the username to check for
-     * @return true if the username is found in the cache, false otherwise
+     * @param username The username to check.
+     * @return true if the cache contains the username, otherwise false.
      */
     public boolean contains(final String username) {
         return this.stringCache.containsKey(username);
@@ -57,36 +57,46 @@ public final class UserCache {
     /**
      * Checks if the cache contains the specified UUID.
      *
-     * @param id the UUID to check for
-     * @return true if the UUID is found in the cache, false otherwise
+     * @param uuid The UUID to check.
+     * @return true if the cache contains the username, otherwise false.
      */
-    public boolean contains(final UUID id) {
-        return this.uuidCache.containsKey(id);
+    public boolean contains(final UUID uuid) {
+        return this.uuidCache.containsKey(uuid);
     }
 
     /**
-     * Updates a User object in the cache using the given action.
+     * Applies a function to a user, and updates the existing user with the function's result.
      *
-     * @param uuid   the UUID of the User to update
-     * @param action a UnaryOperator function to update the User
-     * @return the updated User object
-     * @throws IllegalArgumentException if the User is not found in the cache
+     * @param uuid   UUID of the user.
+     * @param action Action to apply to the cached user.
+     * @return The updated user.
      */
     public User update(final UUID uuid, final UnaryOperator<User> action) {
         User user = this.get(uuid);
         if (user == null) {
             throw new IllegalArgumentException("User not found in database!");
         }
-        this.remove(uuid, user.username());
+        this.remove(uuid);
         User updatedUser = action.apply(user);
         this.add(updatedUser);
         return updatedUser;
     }
 
     /**
-     * Adds a User object to the cache.
+     * Updates the user found at the specified UUID with the provided user.
      *
-     * @param user the User object to add
+     * @param uuid The UUID to check.
+     * @param user The user to replace with.
+     * @return The updated user.
+     */
+    public User update(final UUID uuid, final User user) {
+        return this.update(uuid, x -> user);
+    }
+
+    /**
+     * Adds a user to the cache.
+     *
+     * @param user The user to add.
      */
     public void add(final User user) {
         if (this.contains(user.uuid())) {
@@ -102,31 +112,32 @@ public final class UserCache {
     }
 
     /**
-     * Removes a User object from the cache using the specified UUID and username.
+     * Removes a user from the cache.
      *
-     * @param uuid     the UUID of the User to remove
-     * @param username the username of the User to remove
+     * @param uuid The UUID to remove.
      */
-    public void remove(final UUID uuid, final String username) {
-        this.uuidCache.remove(uuid);
-        this.stringCache.remove(username);
+    public void remove(final UUID uuid) {
+        User removed = this.uuidCache.remove(uuid);
+        if (removed != null) {
+            this.stringCache.remove(removed.username());
+        }
     }
 
     /**
-     * Retrieves a User object from the cache using the specified UUID.
+     * Gets a user from the cache with the specified UUID.
      *
-     * @param uuid the UUID of the User to retrieve
-     * @return the User object with the specified UUID, or null if not found
+     * @param uuid UUID of the user.
+     * @return The user.
      */
     public User get(final UUID uuid) {
         return this.uuidCache.get(uuid);
     }
 
     /**
-     * Retrieves a User object from the cache using the specified username.
+     * Gets a user from the cache with the specified UUID.
      *
-     * @param username the username of the User to retrieve
-     * @return the User object with the specified username, or null if not found
+     * @param username Username of the user.
+     * @return The user.
      */
     public User get(final String username) {
         return this.stringCache.get(username);

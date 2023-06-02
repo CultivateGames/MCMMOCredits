@@ -23,19 +23,45 @@
 //
 package games.cultivate.mcmmocredits.database;
 
+import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.user.UserDAO;
-import org.jdbi.v3.core.locator.ClasspathSqlLocator;
 
 import javax.inject.Provider;
+import java.nio.file.Path;
 
+/**
+ * Represents a Database connection and provider of the UserDAO.
+ */
 public interface Database extends Provider<UserDAO> {
-    ClasspathSqlLocator LOCATOR = ClasspathSqlLocator.create();
+    /**
+     * Returns a Database from the provided parameters.
+     *
+     * @param properties The database's properties.
+     * @param path       The plugin's data path.
+     * @return The Database.
+     */
+    static Database getDatabase(final DatabaseProperties properties, final Path path) {
+        return switch (properties.type()) {
+            case H2 -> new H2Database(properties, path);
+            case SQLITE -> new SQLiteDatabase(properties, path);
+            case MYSQL -> new MySQLDatabase(properties);
+        };
+    }
 
+    /**
+     * Loads the DAO.
+     */
     void load();
 
+    /**
+     * Disables the connection. Reserved for shutdown.
+     */
     void disable();
 
-    default String findQuery(final String string) {
-        return LOCATOR.getResource(this.getClass().getClassLoader(), string + ".sql");
-    }
+    /**
+     * Gets the underlying DatabaseProperties.
+     *
+     * @return The properties.
+     */
+    DatabaseProperties getProperties();
 }

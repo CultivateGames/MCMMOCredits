@@ -27,7 +27,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,163 +40,103 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ChatQueueTest {
-    private ChatQueue chatQueue;
+    private ChatQueue queue;
     private final UUID uuid = UUID.randomUUID();
     private final String completion = "test";
 
     @BeforeEach
     void setUp() {
-        this.chatQueue = new ChatQueue();
+        this.queue = new ChatQueue();
     }
 
     @Test
     void remove_UUIDInQueue_RemovesEntry() {
-        //Arrange
-        this.chatQueue.add(this.uuid);
-
-        //Act
-        this.chatQueue.remove(this.uuid);
-        boolean contains = this.chatQueue.contains(this.uuid);
-
-        //Assert
-        assertFalse(contains);
+        this.queue.add(this.uuid);
+        this.queue.remove(this.uuid);
+        assertFalse(this.queue.contains(this.uuid));
     }
 
     @Test
     void remove_UUIDNotInQueue_DoesNotThrowException() {
-        //Act
-        this.chatQueue.remove(this.uuid);
-        boolean contains = this.chatQueue.contains(this.uuid);
-
-        //Assert
-        assertFalse(contains);
+        this.queue.remove(this.uuid);
+        assertFalse(this.queue.contains(this.uuid));
     }
 
     @Test
     void get_ExistingUUID_ReturnsCorrectValue() {
-        //Arrange
-        this.chatQueue.add(this.uuid);
-
-        //Act
-        CompletableFuture<String> result = this.chatQueue.get(this.uuid);
-
-        //Assert
-        assertNotNull(result);
+        this.queue.add(this.uuid);
+        assertNotNull(this.queue.get(this.uuid));
     }
 
     @Test
     void get_NonExistingUUID_ReturnsNull() {
-        //Act
-        CompletableFuture<String> result = this.chatQueue.get(this.uuid);
-
-        //Assert
-        assertNull(result);
+        assertNull(this.queue.get(this.uuid));
     }
 
     @Test
     void contains_UUIDInQueue_ReturnsTrue() {
-        //Arrange
-        this.chatQueue.add(this.uuid);
-
-        //Act
-        boolean contains = this.chatQueue.contains(this.uuid);
-
-        //Assert
-        assertTrue(contains);
+        this.queue.add(this.uuid);
+        assertTrue(this.queue.contains(this.uuid));
     }
 
     @Test
     void contains_UUIDNotInQueue_ReturnsFalse() {
-        //Act
-        boolean contains = this.chatQueue.contains(this.uuid);
-
-        //Assert
-        assertFalse(contains);
+        assertFalse(this.queue.contains(this.uuid));
     }
 
     @Test
     void add_NonExistingUUID_AddsNewEntry() {
-        //Arrange
-        this.chatQueue.add(this.uuid);
-
-        //Act
-        boolean contains = this.chatQueue.contains(this.uuid);
-
-        //Assert
-        assertTrue(contains);
+        this.queue.add(this.uuid);
+        assertTrue(this.queue.contains(this.uuid));
     }
 
     @Test
     void add_ExistingUUID_ReplacesExistingEntry() {
-        //Arrange
-        this.chatQueue.add(this.uuid);
-        this.chatQueue.complete(this.uuid, this.completion);
-
-        //Act
-        this.chatQueue.add(this.uuid);
-        CompletableFuture<String> newFuture = this.chatQueue.get(this.uuid);
-
-        //Assert
-        assertThrows(TimeoutException.class, () -> newFuture.get(5L, TimeUnit.MILLISECONDS));
+        this.queue.add(this.uuid);
+        this.queue.complete(this.uuid, this.completion);
+        this.queue.add(this.uuid);
+        assertThrows(TimeoutException.class, () -> this.queue.get(this.uuid).get(5L, TimeUnit.MILLISECONDS));
     }
 
     @Test
     void act_AddsUUIDAndPerformsAction() {
-        //Arrange
         AtomicBoolean actionExecuted = new AtomicBoolean(false);
-        this.chatQueue.add(this.uuid);
-
-        //Act
-        this.chatQueue.act(this.uuid, s -> {
+        this.queue.add(this.uuid);
+        this.queue.act(this.uuid, s -> {
             assertEquals(this.completion, s);
             actionExecuted.set(true);
         });
-        this.chatQueue.complete(this.uuid, this.completion);
-
-        //Assert
+        this.queue.complete(this.uuid, this.completion);
         assertTrue(actionExecuted.get());
     }
 
     @Test
     void act_NonExistingUUID_DoesNotThrowException() {
-        //Act & Assert
-        assertDoesNotThrow(() -> this.chatQueue.act(this.uuid, s -> {}));
+        assertDoesNotThrow(() -> this.queue.act(this.uuid, s -> {}));
     }
 
     @Test
     void act_ExistingUUID_RemovesUUIDAfterAction() {
-        //Arrange
         AtomicBoolean actionExecuted = new AtomicBoolean(false);
-        this.chatQueue.add(this.uuid);
-
-        //Act
-        this.chatQueue.act(this.uuid, s -> {
+        this.queue.add(this.uuid);
+        this.queue.act(this.uuid, s -> {
             assertEquals(this.completion, s);
             actionExecuted.set(true);
         });
-        this.chatQueue.complete(this.uuid, this.completion);
-
-        //Assert
-        assertFalse(this.chatQueue.contains(this.uuid));
+        this.queue.complete(this.uuid, this.completion);
+        assertFalse(this.queue.contains(this.uuid));
         assertTrue(actionExecuted.get());
     }
 
     @Test
     void complete_ExistingUUID_CompletesFuture() {
-        //Arrange
-        this.chatQueue.add(this.uuid);
-
-        //Act
-        this.chatQueue.complete(this.uuid, this.completion);
-        String result = this.chatQueue.get(this.uuid).join();
-
-        //Assert
-        assertEquals(this.completion, result);
+        this.queue.add(this.uuid);
+        this.queue.complete(this.uuid, this.completion);
+        assertEquals(this.completion, this.queue.get(this.uuid).join());
     }
 
     @Test
     void complete_NonExistingUUID_DoesNotThrowException() {
-        //Act & Assert
-        assertDoesNotThrow(() -> this.chatQueue.complete(this.uuid, this.completion));
+        assertDoesNotThrow(() -> this.queue.complete(this.uuid, this.completion));
     }
 }

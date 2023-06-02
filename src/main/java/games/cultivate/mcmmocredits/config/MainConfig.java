@@ -23,18 +23,20 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.converters.ConverterType;
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
+import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
+import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-
-import java.nio.file.Path;
 
 /**
  * Configuration used to modify settings and messages.
  */
-@ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal, unused"})
-public class MainConfig extends Config {
+@ConfigSerializable
+public class MainConfig extends BaseConfig {
+    /**
+     * Settings used to modify plugin messages.
+     * Most messages sent with the "prefix" prepended.
+     */
     private String prefix = "<hover:show_text:'<green><sender>: <sender_credits> Credits'><gold><bold>CREDITS</bold> ";
     private String addUser = "<target> has been added to the database!";
     private String argumentParseFailureNoInputWasProvided = "No input was provided";
@@ -78,45 +80,21 @@ public class MainConfig extends Config {
     private String redeemSudo = "<green>Redemption Successful! You have redeemed <amount> Credits into <skill> for <target>. They have <target_credits> Credits remaining.";
     private String redeemSudoUser = "<green>Redemption Successful! <sender> has redeemed <amount> Credits into <skill> for you! You have <target_credits> Credits remaining.";
     private String reload = "<green>The configuration file has been reloaded.";
-
     private Settings settings = new Settings();
-    private Conversion converter = new Conversion();
+    private ConverterProperties converter = ConverterProperties.defaults();
 
     /**
-     * Constructs the configuration.
-     */
-    public MainConfig() {
-        super(MainConfig.class, "config.yml");
-    }
-
-    public MainConfig(final Path path) {
-        super(MainConfig.class, "config.yml", path);
-    }
-
-    /**
-     * Settings used to control the plugin.
+     * Settings used to modify the plugin's behavior.
      */
     @ConfigSerializable
     static class Settings {
         private boolean addUserMessage = true;
-        private boolean bstatsMetricsEnabled = true;
+        private boolean metricsEnabled = true;
         private boolean debug = false;
         private boolean leaderboardEnabled = true;
         private int leaderboardPageSize = 10;
         private boolean sendLoginMessage = true;
         private boolean userTabComplete = true;
         private DatabaseProperties database = DatabaseProperties.defaults();
-    }
-
-    @ConfigSerializable
-    static class Conversion {
-        private boolean enabled = false;
-        private ConverterType type = ConverterType.INTERNAL_SQLITE;
-        private InternalConversion internal = new InternalConversion();
-    }
-
-    @ConfigSerializable
-    static class InternalConversion {
-        private DatabaseProperties properties = DatabaseProperties.defaults();
     }
 }

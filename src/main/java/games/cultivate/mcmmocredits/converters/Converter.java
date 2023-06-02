@@ -25,54 +25,39 @@ package games.cultivate.mcmmocredits.converters;
 
 import org.slf4j.Logger;
 
+import java.io.IOException;
+
 /**
- * Interface to represent a data converter.
+ * Represents a Data Converter.
  */
 public interface Converter {
     /**
-     * Load or obtain all required elements for conversion here.
+     * Loads all required user data for conversion.
      *
-     * @return True if loading process was successful.
+     * @throws IOException          If there is an issue loading users from file.
+     * @throws InterruptedException If theres an issue obtaining user information.
      */
-    boolean load();
+    void load() throws IOException, InterruptedException;
 
     /**
-     * Convert all data here. This may include action such as writing to another database.
-     * Note: Flat file conversions will have data flushed to disk. MySQL will not.
+     * Converts user data between sources. May include writing to another database.
+     * Flat file conversions will have data flushed to disk. MySQL will use default behavior.
      *
-     * @return True if conversion process was successful. Does not guarantee data equality.
+     * @return Returns true if successful, false otherwise. Does not guarantee data equality.
      */
     boolean convert();
 
     /**
-     * Verify that the conversion was successful by checking data from previous and current source.
+     * Verifies that user data conversion was successful by checking if data is present in destination database.
      *
-     * @return True if all previous data can be found in the new data source.
+     * @return Returns true if all previous data can be found in the new data source, false otherwise.
      */
     boolean verify();
 
     /**
-     * Shutdown any running processes or schedulers. Indicates completion of the conversion.
+     * Runs the data conversion process.
+     *
+     * @param logger The logger used to log current status of the converter.
      */
-    void disable();
-
-    default void run(final Logger logger) {
-        logger.warn("Data Converter enabled in configuration! Loading...");
-        if (!this.load()) {
-            logger.warn("Data Converter failed at the loading stage! Look for possible errors thrown in console!");
-            return;
-        }
-        logger.info("Converter has loaded users from source successfully! Starting conversion, this may take some time.");
-        if (!this.convert()) {
-            logger.warn("Data Converter failed at the conversion stage! Look for possible errors thrown in console!");
-            return;
-        }
-        logger.info("Users have been written to destination database. Starting to verify results...");
-        if (!this.verify()) {
-            logger.warn("Data Converter failed at the verification stage! Look for possible errors thrown in console!");
-            return;
-        }
-        logger.info("Conversion has been verified! Disabling conversion...");
-        this.disable();
-    }
+    void run(Logger logger);
 }

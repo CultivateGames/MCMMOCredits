@@ -23,23 +23,18 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
-/**
- * CommandExecutor which is an instance of Console. Separated from the DAO/Database layer.
- */
-public final class Console extends CommandExecutor {
+public final class Console implements CommandExecutor {
     public static final Console INSTANCE = new Console();
+    private static final UUID UUID = new UUID(0, 0);
+    private static final String USERNAME = "CONSOLE";
+    private static final int CREDITS = 0;
+    private static final int REDEEMED = 0;
 
-    /**
-     * Constructs the Console. Console's instance is a singleton.
-     */
     private Console() {
-        super(new UUID(0, 0), "CONSOLE", 0, 0);
     }
 
     /**
@@ -54,23 +49,27 @@ public final class Console extends CommandExecutor {
      * {@inheritDoc}
      */
     @Override
-    public boolean isConsole() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public CommandSender sender() {
-        return Bukkit.getConsoleSender();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Player player() {
         throw new UnsupportedOperationException("Console is not a player!");
+    }
+
+    @Override
+    public UUID uuid() {
+        return UUID;
+    }
+
+    @Override
+    public String username() {
+        return USERNAME;
+    }
+
+    @Override
+    public int credits() {
+        return CREDITS;
+    }
+
+    @Override
+    public int redeemed() {
+        return REDEEMED;
     }
 }

@@ -23,15 +23,20 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import games.cultivate.mcmmocredits.util.CreditOperation;
+import games.cultivate.mcmmocredits.transaction.BasicTransaction;
+import games.cultivate.mcmmocredits.transaction.BasicTransactionType;
+import games.cultivate.mcmmocredits.transaction.Transaction;
+import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,226 +47,139 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class UserServiceTest {
-    private final String testUsername = "this.testUsername";
-    private final UserDAO mockDao = mock(UserDAO.class);
-    private UUID testUUID;
+    private final UUID uuid = new UUID(2, 2);
+    private final String username = "TestUser";
+    private final int credits = 100;
+    private User user;
     private UserCache cache;
     private UserService service;
-    private User user;
+    @Mock
+    private UserDAO dao;
+    @Mock
+    private MockedStatic<Bukkit> mockBukkit;
+    @Mock
+    private Player mockPlayer;
 
     @BeforeEach
     void setUp() {
-        this.testUUID = UUID.randomUUID();
+        this.user = new User(this.uuid, this.username, this.credits, 50);
         this.cache = new UserCache();
-        this.service = new UserService(this.mockDao, this.cache);
-        this.user = new User(this.testUUID, this.testUsername, 0, 0);
+        this.service = new UserService(this.dao, this.cache);
     }
 
     @Test
     void isCached_UserIsCached_ReturnsTrue() {
-        //Arrange
         this.cache.add(this.user);
-
-        //Act
-        boolean isCached = this.service.isCached(this.user);
-
-        //Assert
-        assertTrue(isCached);
+        assertTrue(this.service.isCached(this.user));
     }
 
     @Test
     void isCached_UserIsNotCached_ReturnsFalse() {
-        //Act
-        boolean isCached = this.service.isCached(user);
-
-        //Assert
-        assertFalse(isCached);
+        assertFalse(this.service.isCached(this.user));
     }
 
     @Test
     void addUser_AddsUserToCacheAndDao() {
-        //Arrange
-        when(this.mockDao.addUser(any())).thenReturn(true);
-
-        //Act
-        this.service.addUser(this.testUUID, this.testUsername);
-
-        //Assert
-        assertTrue(this.cache.contains(this.testUUID));
-        assertTrue(this.cache.contains(this.testUsername));
-        verify(this.mockDao, times(1)).addUser(any());
+        when(this.dao.addUser(any())).thenReturn(true);
+        this.service.addUser(this.uuid, this.username);
+        assertTrue(this.cache.contains(this.uuid));
+        assertTrue(this.cache.contains(this.username));
+        verify(this.dao, atLeastOnce()).addUser(any());
     }
 
     @Test
     void getUser_CachedUser_ReturnsUser() {
-        //Arrange
         this.cache.add(this.user);
-
-        //Act
-        Optional<User> result = this.service.getUser(this.testUsername);
-
-        //Assert
+        Optional<User> result = this.service.getUser(this.username);
         assertTrue(result.isPresent());
         assertEquals(this.user, result.get());
     }
 
     @Test
     void getUser_NotCachedUser_ReturnsUser() {
-        //Arrange
-        when(this.mockDao.getUser(this.testUsername)).thenReturn(Optional.of(this.user));
-
-        //Act
-        Optional<User> result = this.service.getUser(this.testUsername);
-
-        //Assert
+        when(this.dao.getUser(this.username)).thenReturn(Optional.of(this.user));
+        Optional<User> result = this.service.getUser(this.username);
         assertTrue(result.isPresent());
         assertEquals(this.user, result.get());
     }
 
     @Test
     void getUser_NonExistentUser_ReturnsEmptyOptional() {
-        //Arrange
-        when(this.mockDao.getUser(this.testUsername)).thenReturn(Optional.empty());
-
-        //Act
-        Optional<User> result = this.service.getUser(this.testUsername);
-
-        //Assert
+        when(this.dao.getUser(this.username)).thenReturn(Optional.empty());
+        Optional<User> result = this.service.getUser(this.username);
         assertFalse(result.isPresent());
     }
 
     @Test
     void setUsername_UsernameUpdated_ReturnsUpdatedUser() {
-        //Arrange
         this.cache.add(this.user);
-        String newUsername = "newUsername";
-        when(this.mockDao.setUsername(this.testUUID, newUsername)).thenReturn(true);
-
-        //Act
-        User result = this.service.setUsername(this.testUUID, newUsername);
-
-        //Assert
+        when(this.dao.setUsername(this.uuid, "newUsername")).thenReturn(true);
+        User result = this.service.setUsername(this.uuid, "newUsername");
         assertNotNull(result);
-        assertEquals(newUsername, result.username());
+        assertEquals("newUsername", result.username());
     }
 
     @Test
     void setUsername_UsernameNotUpdated_ReturnsNull() {
-        //Arrange
         this.cache.add(this.user);
-        String newUsername = "newUsername";
-        when(this.mockDao.setUsername(this.testUUID, newUsername)).thenReturn(false);
-
-        //Act
-        User result = this.service.setUsername(this.testUUID, newUsername);
-
-        //Assert
-        assertNull(result);
+        when(this.dao.setUsername(this.uuid, "newUsername")).thenReturn(false);
+        assertNull(this.service.setUsername(this.uuid, "newUsername"));
     }
 
     @Test
-    void getCredits_UserExists_ReturnsCredits() {
-        //Arrange
-        User testUser = new User(this.testUUID, this.testUsername, 100, 0);
-        this.cache.add(testUser);
+    void getCredits_UserIsCached_ReturnsCredits() {
+        this.cache.add(this.user);
+        assertEquals(this.credits, this.service.getCredits(this.uuid));
+    }
 
-        //Act
-        int credits = this.service.getCredits(this.testUUID);
-
-        //Assert
-        assertEquals(100, credits);
+    @Test
+    void getCredits_UserIsNotCached_ReturnsCredits() {
+        when(this.dao.getUser(this.uuid)).thenReturn(Optional.of(this.user));
+        assertEquals(this.credits, this.service.getCredits(this.uuid));
     }
 
     @Test
     void getCredits_UserDoesNotExist_ReturnsZero() {
-        //Arrange
-        when(this.mockDao.getUser(this.testUUID)).thenReturn(Optional.empty());
-
-        //Act
-        int credits = this.service.getCredits(this.testUUID);
-
-        //Assert
+        when(this.dao.getUser(this.uuid)).thenReturn(Optional.empty());
+        int credits = this.service.getCredits(this.uuid);
         assertEquals(0, credits);
     }
 
     @Test
-    void modifyCredits_OperationSuccessful_ReturnsUpdatedUser() {
-        //Arrange
-        User testUser = new User(this.testUUID, this.testUsername, 100, 0);
-        this.cache.add(testUser);
-        when(this.mockDao.addCredits(this.testUUID, 50)).thenReturn(true);
-
-        //Act
-        User result = this.service.modifyCredits(this.testUUID, CreditOperation.ADD, 50);
-
-        //Assert
-        assertNotNull(result);
-        assertEquals(150, result.credits());
+    void setCredits_UserExists_ReturnsUpdatedUser() {
+        this.cache.add(this.user);
+        when(this.dao.setCredits(this.uuid, 200)).thenReturn(true);
+        assertEquals(200, this.service.setCredits(this.uuid, 200).credits());
     }
 
     @Test
-    void modifyCredits_OperationUnsuccessful_ReturnsNull() {
-        //Arrange
-        User testUser = new User(this.testUUID, this.testUsername, 100, 0);
-        this.cache.add(testUser);
-        when(this.mockDao.addCredits(this.testUUID, 50)).thenReturn(false);
-
-        //Act
-        User result = this.service.modifyCredits(this.testUUID, CreditOperation.ADD, 50);
-
-        //Assert
-        assertNull(result);
+    void setCredits_UserDoesNotExist_ReturnsNull() {
+        when(this.dao.setCredits(this.uuid, 100)).thenReturn(false);
+        assertNull(this.service.setCredits(this.uuid, 100));
     }
 
     @Test
-    void redeemCredits_RedemptionSuccessful_ReturnsUpdatedUser() {
-        //Arrange
-        User testUser = new User(this.testUUID, this.testUsername, 100, 0);
-        this.cache.add(testUser);
-        when(this.mockDao.redeemCredits(this.testUUID, 50)).thenReturn(true);
-
-        //Act
-        User result = this.service.redeemCredits(this.testUUID, 50);
-
-        //Assert
-        assertNotNull(result);
-        assertEquals(50, result.credits());
-        assertEquals(50, result.redeemed());
-    }
-
-    @Test
-    void redeemCredits_RedemptionUnsuccessful_ReturnsNull() {
-        //Arrange
-        User testUser = new User(this.testUUID, this.testUsername, 100, 0);
-        this.cache.add(testUser);
-        when(this.mockDao.redeemCredits(this.testUUID, 50)).thenReturn(false);
-        //Act
-        User result = this.service.redeemCredits(this.testUUID, 50);
-
-        //Assert
-        assertNull(result);
+    void processTransaction_UserExists_TransactionAppliedToService() {
+        this.cache.add(this.user);
+        Transaction transaction = BasicTransaction.of(this.user, BasicTransactionType.ADD, 1000);
+        TransactionResult result = transaction.execute();
+        when(this.dao.updateUser(result.target())).thenReturn(true);
+        this.service.processTransaction(result);
+        assertEquals(this.credits + 1000, this.service.getUser(this.uuid).orElseThrow().credits());
     }
 
     @Test
     void getPageOfUsers_ReturnsPageOfUsers() {
-        //Arrange
-        List<User> users = Arrays.asList(
-                new User(this.testUUID, this.testUsername, 100, 0),
-                new User(UUID.randomUUID(), "user2", 50, 10)
-        );
-        when(this.mockDao.getPageOfUsers(2, 0)).thenReturn(users);
-
-        //Act
+        List<User> users = List.of(this.user, new User(UUID.randomUUID(), "TestUser", 50, 10));
+        when(this.dao.getPageOfUsers(2, 0)).thenReturn(users);
         List<User> result = this.service.getPageOfUsers(2, 0);
-
-        //Assert
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(users, result);
@@ -269,47 +187,29 @@ class UserServiceTest {
 
     @Test
     void fromSender_SenderIsPlayer_ReturnsUser() {
-        //Arrange
         this.cache.add(this.user);
-        try (MockedStatic<Bukkit> mockedBukkit = mockStatic(Bukkit.class)) {
-            Player player = mock(Player.class);
-            when(player.getUniqueId()).thenReturn(this.testUUID);
-            mockedBukkit.when(() -> Bukkit.getPlayer(this.testUUID)).thenReturn(player);
-
-            //Act
-            CommandExecutor test = this.service.fromSender(player);
-
-            //Assert
-            assertNotNull(test);
-            assertTrue(test instanceof User);
-            assertEquals(this.user, test);
-        }
+        this.mockBukkit.when(() -> Bukkit.getPlayer(this.uuid)).thenReturn(this.mockPlayer);
+        when(this.mockPlayer.getUniqueId()).thenReturn(this.uuid);
+        CommandExecutor test = this.service.fromSender(this.mockPlayer);
+        assertNotNull(test);
+        assertTrue(test instanceof User);
+        assertEquals(this.user, test);
     }
 
     @Test
     void fromSender_SenderIsConsole_ReturnsConsole() {
-        //Arrange
-        CommandSender sender = mock(CommandSender.class);
-
-        //Act
+        ConsoleCommandSender sender = mock(ConsoleCommandSender.class);
         CommandExecutor result = this.service.fromSender(sender);
-
-        //Assert
         assertTrue(result instanceof Console);
         assertEquals(Console.INSTANCE, result);
     }
 
     @Test
     void removeFromCache_UserExists_RemovesFromCache() {
-        //Arrange
-        User testUser = new User(this.testUUID, this.testUsername, 100, 0);
+        User testUser = new User(this.uuid, this.username, 100, 0);
         this.cache.add(testUser);
-
-        //Act
-        this.service.removeFromCache(this.testUUID, this.testUsername);
-
-        //Assert
-        assertFalse(this.cache.contains(this.testUUID));
-        assertFalse(this.cache.contains(this.testUsername));
+        this.service.removeFromCache(this.uuid);
+        assertFalse(this.cache.contains(this.uuid));
+        assertFalse(this.cache.contains(this.username));
     }
 }
