@@ -54,7 +54,7 @@ import java.util.function.Predicate;
  */
 public class BaseConfig implements Config {
     private static final String HEADER = """
-            MCMMO Credits v0.3.9 Configuration
+            MCMMO Credits v0.4.0-SNAPSHOT Configuration
             Repository: https://github.com/CultivateGames/MCMMOCredits
             Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
             """;

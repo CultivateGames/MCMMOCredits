@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.3.9"
+version = "0.4.0-SNAPSHOT"
 description = "MCMMOCredits"
 
 plugins {
