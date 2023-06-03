@@ -40,6 +40,7 @@ import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.transaction.BasicTransaction;
 import games.cultivate.mcmmocredits.transaction.BasicTransactionType;
+import games.cultivate.mcmmocredits.transaction.PayTransaction;
 import games.cultivate.mcmmocredits.transaction.RedeemTransaction;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.ui.ContextFactory;
@@ -136,7 +137,7 @@ public final class Credits {
     }
 
     /**
-     * Processes the {@literal /credits <add|set|take> <username> [--s]} command.
+     * Processes the {@literal /credits <add|set|take> <amount> <username> [--s]} command.
      *
      * @param executor CommandExecutor. Can be Console.
      * @param type     Operation applied to credit balance (add, set, take).
@@ -158,7 +159,7 @@ public final class Credits {
     }
 
     /**
-     * Processes the {@literal /credits <redeem> <amount> <skill>} command.
+     * Processes the {@literal /credits redeem <amount> <skill>} command.
      *
      * @param user   CommandExecutor. Must be an online player.
      * @param skill  The affected skill.
@@ -173,7 +174,7 @@ public final class Credits {
     }
 
     /**
-     * /credits redeem amount skill username [--s]. Allows a user to redeem credits for someone else.
+     * Processes the {@literal /credits redeem <amount> <skill> <username> [--s]} command.
      *
      * @param executor CommandExecutor. Can be Console.
      * @param skill    The affected skill.
@@ -183,7 +184,7 @@ public final class Credits {
      */
     @CommandMethod("redeem <amount> <skill> <username>")
     @CommandPermission("mcmmocredits.redeem.other")
-    @CommandDescription("Allows user to modify their own credit balance.")
+    @CommandDescription("Allows a user to redeem credits for someone else.")
     public void redeemOther(final CommandExecutor executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
         Optional<User> optionalUser = this.service.getUser(username);
         if (optionalUser.isPresent()) {
@@ -192,6 +193,26 @@ public final class Credits {
             return;
         }
         this.playerUnknownError(executor, username);
+    }
+
+    /**
+     * Processes the {@literal /credits pay <amount> <username>} command.
+     *
+     * @param user     CommandExecutor. Must be an online player.
+     * @param amount   Amount of credits to pay.
+     * @param username Username of the user being paid.
+     */
+    @CommandMethod("pay <amount> <username>")
+    @CommandPermission("mcmmocredits.pay")
+    @CommandDescription("Allows user to give their credits to another user.")
+    public void pay(final User user, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username) {
+        Optional<User> optionalUser = this.service.getUser(username);
+        if (optionalUser.isPresent()) {
+            Transaction transaction = PayTransaction.of(user, optionalUser.get(), amount);
+            this.plugin.execute(() -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false)));
+            return;
+        }
+        this.playerUnknownError(user, username);
     }
 
     /**
