@@ -29,7 +29,8 @@ package games.cultivate.mcmmocredits.transaction;
 public enum FailureReason {
     NOT_ENOUGH_CREDITS("not-enough-credits"),
     MCMMO_PROFILE_FAIL("mcmmo-profile-fail"),
-    MCMMO_SKILL_CAP("mcmmo-skill-cap");
+    MCMMO_SKILL_CAP("mcmmo-skill-cap"),
+    SAME_USER("credits-pay-same-user");
 
     private final String key;
 

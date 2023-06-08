@@ -134,7 +134,7 @@ public final class Credits {
     @CommandPermission("mcmmocredits.modify.other")
     @CommandDescription("Allows user to modify someone else's credit balance.")
     public void modifyOther(final CommandExecutor executor, final @Argument BasicTransactionType type, final @Argument @Range(min = "0") int amount, final @Argument User user, final @Flag("s") boolean silent) {
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(BasicTransaction.of(executor, user, type, amount), true, false));
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(BasicTransaction.of(executor, user, type, amount), silent, false));
     }
 
     /**

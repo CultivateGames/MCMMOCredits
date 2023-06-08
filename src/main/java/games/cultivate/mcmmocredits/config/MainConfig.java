@@ -61,6 +61,7 @@ public class MainConfig extends BaseConfig {
     private String creditsTake = "<red>You have taken <amount> Credits from <target>.";
     private String creditsAddUser = "<green><amount> Credits have been added to your balance by <sender>. You have <target_credits> Credits.";
     private String creditsPayUser = "<green><sender> has given you <amount> Credits. You have <target_credits> Credits.";
+    private String creditsPaySameUser = "<red>Users cannot pay themselves! Cancelling transaction...";
     private String creditsSetUser = "<yellow>Your MCMMO Credit balance has been set to <amount> by <sender>.";
     private String creditsTakeUser = "<red>You had <amount> taken out of your Credit balance by <sender>. You now have <target_credits> Credits.";
     private String editConfig = "<green>You have changed <gray><setting> <green>to <gray><change>.";

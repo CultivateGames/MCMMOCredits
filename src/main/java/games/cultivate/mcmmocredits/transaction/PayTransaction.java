@@ -76,12 +76,14 @@ public final class PayTransaction implements Transaction {
      */
     @Override
     public Optional<FailureReason> executable() {
+        if (this.executor.equals(this.target)) {
+            return Optional.of(FailureReason.SAME_USER);
+        }
         try {
             int execBalance = BasicTransactionType.TAKE.apply(this.executor.credits(), this.amount);
             int targetBalance = BasicTransactionType.ADD.apply(this.target.credits(), this.amount);
             return execBalance < 0 || targetBalance < 0 ? Optional.of(FailureReason.NOT_ENOUGH_CREDITS) : Optional.empty();
         } catch (ArithmeticException e) {
-            //TODO: new failure reasons
             return Optional.of(FailureReason.NOT_ENOUGH_CREDITS);
         }
     }

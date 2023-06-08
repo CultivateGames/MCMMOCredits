@@ -45,7 +45,6 @@ public class CreditTransactionEvent extends Event {
      * @param senderFeedback If process sends feedback to the executor. True will silence feedback except for errors.
      */
     public CreditTransactionEvent(final Transaction transaction, final boolean userFeedback, final boolean senderFeedback) {
-        super(true);
         this.transaction = transaction;
         this.userFeedback = userFeedback;
         this.senderFeedback = senderFeedback;
