@@ -139,15 +139,6 @@ public final class Resolver {
     }
 
     /**
-     * Adds a username to the Resolver.
-     *
-     * @param username The username.
-     */
-    public Resolver addUsername(final String username) {
-        return this.addTag("target", username);
-    }
-
-    /**
      * Converts the Resolver to a TagResolver.
      *
      * @return The built TagResolver.

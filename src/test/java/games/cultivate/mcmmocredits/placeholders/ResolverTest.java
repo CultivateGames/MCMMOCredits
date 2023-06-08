@@ -90,12 +90,6 @@ class ResolverTest {
     }
 
     @Test
-    void addUsername_AddsUsernameToResolver() {
-        Resolver resolver = new Resolver().addUsername("testuser69");
-        assertEquals("testuser69", this.convert("<target>", resolver));
-    }
-
-    @Test
     void addAmount_AddsAmountToResolver() {
         Resolver resolver = new Resolver().addAmount(100);
         assertEquals(100, Integer.parseInt(this.convert("<amount>", resolver)));
