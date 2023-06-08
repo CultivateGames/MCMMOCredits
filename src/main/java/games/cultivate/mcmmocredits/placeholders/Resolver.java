@@ -32,6 +32,7 @@ import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.util.Util;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,10 +58,7 @@ public final class Resolver {
      * @return The Resolver.
      */
     public static Resolver ofUsers(final CommandExecutor sender, final CommandExecutor target) {
-        Resolver resolver = new Resolver();
-        resolver.addUser(sender, "sender");
-        resolver.addUser(target, "target");
-        return resolver;
+        return new Resolver().addUser(sender, "sender").addUser(target, "target");
     }
 
     /**
@@ -70,9 +68,7 @@ public final class Resolver {
      * @return The Resolver.
      */
     public static Resolver ofUser(final CommandExecutor sender) {
-        Resolver resolver = new Resolver();
-        resolver.addUser(sender, "sender");
-        return resolver;
+        return new Resolver().addUser(sender, "sender");
     }
 
     /**
@@ -82,12 +78,8 @@ public final class Resolver {
      * @return The Resolver.
      */
     public static Resolver ofTransaction(final Transaction transaction) {
-        Resolver resolver = Resolver.ofUsers(transaction.executor(), transaction.target());
-        resolver.addAmount(transaction.amount());
-        if (transaction instanceof RedeemTransaction tr) {
-            resolver.addSkill(tr.skill());
-        }
-        return resolver;
+        PrimarySkillType skill = transaction instanceof RedeemTransaction tr ? tr.skill() : null;
+        return Resolver.ofUsers(transaction.executor(), transaction.target()).addAmount(transaction.amount()).addSkill(skill);
     }
 
     /**
@@ -97,13 +89,9 @@ public final class Resolver {
      * @return The Resolver.
      */
     public static Resolver ofTransactionResult(final TransactionResult result) {
-        Resolver resolver = Resolver.ofUsers(result.executor(), result.target());
         Transaction transaction = result.transaction();
-        resolver.addAmount(transaction.amount());
-        if (transaction instanceof RedeemTransaction tr) {
-            resolver.addSkill(tr.skill());
-        }
-        return resolver;
+        PrimarySkillType skill = transaction instanceof RedeemTransaction tr ? tr.skill() : null;
+        return Resolver.ofUsers(result.executor(), result.target()).addAmount(transaction.amount()).addSkill(skill);
     }
 
     /**
@@ -113,8 +101,9 @@ public final class Resolver {
      * @param value Value of the tag.
      * @param <T>   Type of the value.
      */
-    public <T> void addTag(final String key, final T value) {
+    public <T> Resolver addTag(final String key, final T value) {
         this.placeholders.put(key, value.toString());
+        return this;
     }
 
     /**
@@ -123,21 +112,21 @@ public final class Resolver {
      * @param user   A user.
      * @param prefix Prefix to apply to the placeholder keys.
      */
-    public void addUser(final CommandExecutor user, final String prefix) {
-        this.addTag(prefix, user.username());
-        this.addTag(prefix + "_uuid", user.uuid().toString());
-        this.addTag(prefix + "_credits", user.credits());
-        this.addTag(prefix + "_redeemed", user.redeemed());
+    public Resolver addUser(final CommandExecutor user, final String prefix) {
+        return this.addTag(prefix, user.username())
+                .addTag(prefix + "_uuid", user.uuid())
+                .addTag(prefix + "_credits", user.credits())
+                .addTag(prefix + "_redeemed", user.redeemed());
     }
 
     /**
      * Adds a PrimarySkillType to the Resolver.
+     * If null is passed, the unmodified resolver is returned.
      *
      * @param skill The skill.
      */
-    public void addSkill(final PrimarySkillType skill) {
-        this.addTag("skill", Util.capitalizeWord(skill.name()));
-        this.addTag("cap", mcMMO.p.getGeneralConfig().getLevelCap(skill));
+    public Resolver addSkill(@Nullable final PrimarySkillType skill) {
+        return skill == null ? this : this.addTag("skill", Util.capitalizeWord(skill.name())).addTag("cap", mcMMO.p.getGeneralConfig().getLevelCap(skill));
     }
 
     /**
@@ -145,8 +134,8 @@ public final class Resolver {
      *
      * @param amount The amount.
      */
-    public void addAmount(final int amount) {
-        this.addTag("amount", amount);
+    public Resolver addAmount(final int amount) {
+        return this.addTag("amount", amount);
     }
 
     /**
@@ -154,8 +143,8 @@ public final class Resolver {
      *
      * @param username The username.
      */
-    public void addUsername(final String username) {
-        this.addTag("target", username);
+    public Resolver addUsername(final String username) {
+        return this.addTag("target", username);
     }
 
     /**

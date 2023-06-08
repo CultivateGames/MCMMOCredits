@@ -72,6 +72,15 @@ class TextTest {
     }
 
     @Test
+    void forOneUser_CustomizedResolver_CorrectMessage() {
+        doReturn(this.audience).when(this.executor).sender();
+        Text.forOneUser(this.executor, this.testContent + "<test_resolver>", r -> r.addTag("test_resolver", 69));
+        Component component = Text.forOneUser(this.executor, this.testContent + "<test_resolver>", r -> r.addTag("test_resolver", 69)).toComponent();
+        Component expected = Component.empty().decoration(TextDecoration.ITALIC, false).append(Component.text(this.testContent + 69));
+        assertEquals(expected, component);
+    }
+
+    @Test
     void toComponent_AudienceContentResolver_ReturnsParsedComponent() {
         String content = "<sender> <credits> <redeemed>!";
         Component component = Text.fromString(this.audience, content, this.resolver).toComponent();

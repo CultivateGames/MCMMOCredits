@@ -23,11 +23,14 @@
 //
 package games.cultivate.mcmmocredits.user;
 
+import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.text.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
+import java.util.function.UnaryOperator;
 
 /**
  * Represents a user of the application.
@@ -82,5 +85,34 @@ public interface CommandExecutor {
      */
     default CommandSender sender() {
         return this.isPlayer() ? this.player() : Bukkit.getConsoleSender();
+    }
+
+    /**
+     * Sends provided message that is parsed with provided resolver.
+     *
+     * @param message  The message to send.
+     * @param resolver The resolver to parse it with.
+     */
+    default void sendText(final String message, final Resolver resolver) {
+        Text.fromString(this, message, resolver).send();
+    }
+
+    /**
+     * Sends provided message that is parsed with auto-generated resolver.
+     *
+     * @param message The message to send.
+     */
+    default void sendText(final String message) {
+        Text.forOneUser(this, message).send();
+    }
+
+    /**
+     * Sends provided message that is parsed with customized resolver.
+     *
+     * @param message  The message to send.
+     * @param operator Function to apply to resolver.
+     */
+    default void sendText(final String message, final UnaryOperator<Resolver> operator) {
+        Text.forOneUser(this, message, operator).send();
     }
 }

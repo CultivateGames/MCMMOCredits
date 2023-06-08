@@ -32,6 +32,8 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 
+import java.util.function.UnaryOperator;
+
 /**
  * Represents a chat message that will be parsed and sent to a user.
  */
@@ -79,7 +81,7 @@ public final class Text {
     }
 
     /**
-     * Constructs the object using a CommandExecutor, and it's Resolver.
+     * Constructs the object using a CommandExecutor, a generic Resolver.
      *
      * @param executor The message's target as a CommandExecutor.
      * @param content  The message's content.
@@ -87,6 +89,18 @@ public final class Text {
      */
     public static Text forOneUser(final CommandExecutor executor, final String content) {
         return Text.fromString(executor, content, Resolver.ofUser(executor));
+    }
+
+    /**
+     * Constructs the object using a CommandExecutor, and a customized Resolver.
+     *
+     * @param executor The message's target as a CommandExecutor.
+     * @param content  The message's content.
+     * @param operator Function to apply to resolver.
+     * @return the Text.
+     */
+    public static Text forOneUser(final CommandExecutor executor, final String content, final UnaryOperator<Resolver> operator) {
+        return Text.fromString(executor, content, operator.apply(Resolver.ofUser(executor)));
     }
 
     /**

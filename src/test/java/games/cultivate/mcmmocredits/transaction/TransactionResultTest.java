@@ -24,10 +24,10 @@
 package games.cultivate.mcmmocredits.transaction;
 
 import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.user.Console;
+import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.Component;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +39,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,9 +47,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class TransactionResultTest {
     @Mock
-    private Console mockExecutor;
-    @Mock
-    private CommandSender mockSender;
+    private CommandExecutor mockExecutor;
     @Mock
     private MainConfig mockConfig;
     @Mock
@@ -69,13 +68,12 @@ class TransactionResultTest {
         User target = new User(new UUID(2, 2), "testUser", 10, 20);
         TransactionResult withSpy = new TransactionResult(BasicTransaction.of(this.mockExecutor, target, BasicTransactionType.ADD, 0), this.mockExecutor, target);
         when(this.mockConfig.getMessage(withSpy.transaction().getMessageKey())).thenReturn("THE MESSAGE");
-        when(this.mockExecutor.sender()).thenReturn(this.mockSender);
         when(this.mockExecutor.username()).thenReturn("username");
         when(this.mockExecutor.uuid()).thenReturn(new UUID(1, 1));
         when(this.mockExecutor.credits()).thenReturn(0);
         when(this.mockExecutor.redeemed()).thenReturn(0);
         withSpy.sendFeedback(this.mockConfig, false, true);
-        verify(this.mockSender).sendMessage(any(Component.class));
+        verify(this.mockExecutor).sendText(eq("THE MESSAGE"), any(Resolver.class));
         verify(this.mockPlayer, times(0)).sendMessage(any(Component.class));
     }
 }

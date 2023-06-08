@@ -37,12 +37,10 @@ import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
-import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.transaction.BasicTransaction;
 import games.cultivate.mcmmocredits.transaction.BasicTransactionType;
 import games.cultivate.mcmmocredits.transaction.PayTransaction;
 import games.cultivate.mcmmocredits.transaction.RedeemTransaction;
-import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.ui.ContextFactory;
 import games.cultivate.mcmmocredits.ui.menu.BaseMenu;
 import games.cultivate.mcmmocredits.ui.menu.ConfigMenu;
@@ -58,7 +56,6 @@ import javax.inject.Inject;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Handles all commands. Prefix is customizable via config.
@@ -67,10 +64,8 @@ import java.util.Optional;
 @CommandMethod("${command.prefix}")
 @SuppressWarnings("checkstyle:linelength")
 public final class Credits {
-    private final MenuConfig menuConfig;
     private final MainConfig config;
-    private final UserService service;
-    private final ContextFactory factory;
+    private final MenuConfig menuConfig;
     private final MCMMOCredits plugin;
 
     /**
@@ -78,16 +73,12 @@ public final class Credits {
      *
      * @param config     MainConfig to obtain messages and for usage in reload command.
      * @param menuConfig MenuConfig to obtain menus and for usage in reload command.
-     * @param service    UserService to obtain Users from cache/database.
-     * @param factory    ContextFactory to assist in menu creation.
      * @param plugin     Plugin instance to obtain main thread executor.
      */
     @Inject
-    public Credits(final MainConfig config, final MenuConfig menuConfig, final UserService service, final ContextFactory factory, final MCMMOCredits plugin) {
+    public Credits(final MainConfig config, final MenuConfig menuConfig, final MCMMOCredits plugin) {
         this.config = config;
         this.menuConfig = menuConfig;
-        this.service = service;
-        this.factory = factory;
         this.plugin = plugin;
     }
 
@@ -100,119 +91,94 @@ public final class Credits {
     @CommandPermission("mcmmocredits.balance.self")
     @CommandDescription("Allows user to check credit statistics.")
     public void balance(final User user) {
-        Text.forOneUser(user, this.config.getMessage("balance")).send();
+        user.sendText(this.config.getMessage("balance"));
     }
 
     /**
-     * Processes the {@literal /credits balance <username>} command.
+     * Processes the {@literal /credits balance <user>} command.
      *
      * @param executor CommandExecutor. Can be Console.
-     * @param username Username of the user to check.
+     * @param user     The user to check. Must be a player, but can be offline/online.
      */
-    @CommandMethod("balance <username>")
+    @CommandMethod("balance <user>")
     @CommandPermission("mcmmocredits.balance.other")
     @CommandDescription("Allows user to check someone else's credit statistics.")
-    public void balanceOther(final CommandExecutor executor, final @Argument(suggestions = "user") String username) {
-        Optional<User> user = this.service.getUser(username);
-        if (user.isPresent()) {
-            Text.fromString(executor, this.config.getMessage("balance-other"), Resolver.ofUsers(executor, user.get())).send();
-            return;
-        }
-        this.playerUnknownError(executor, username);
+    public void balanceOther(final CommandExecutor executor, final @Argument User user) {
+        executor.sendText(this.config.getMessage("balance-other"), Resolver.ofUsers(executor, user));
     }
 
     /**
      * Processes the {@literal /credits <add|set|take> <amount>} command.
      *
-     * @param user   CommandExecutor. Must be an online player.
-     * @param type   Operation applied to credit balance (add, set, take).
-     * @param amount Amount of credits to apply to balance.
+     * @param executor CommandExecutor. Must be an online player.
+     * @param type     Operation applied to credit balance (add, set, take).
+     * @param amount   Amount of credits to apply to balance.
      */
     @CommandMethod("<type> <amount>")
     @CommandPermission("mcmmocredits.modify.self")
     @CommandDescription("Allows user to modify their own credit balance.")
-    public void modify(final User user, final @Argument BasicTransactionType type, final @Argument @Range(min = "0") int amount) {
-        Transaction transaction = BasicTransaction.of(user, type, amount);
-        this.plugin.execute(() -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false)));
+    public void modify(final User executor, final @Argument BasicTransactionType type, final @Argument @Range(min = "0") int amount) {
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(BasicTransaction.of(executor, type, amount), true, false));
     }
 
     /**
-     * Processes the {@literal /credits <add|set|take> <amount> <username> [--s]} command.
+     * Processes the {@literal /credits <add|set|take> <amount> <user> [--s]} command.
      *
      * @param executor CommandExecutor. Can be Console.
      * @param type     Operation applied to credit balance (add, set, take).
      * @param amount   Amount of credits to apply to balance.
-     * @param username Username of the user to modify.
+     * @param user     The user to modify.
      * @param silent   If the process should send feedback to the user based on presence.
      */
-    @CommandMethod("<type> <amount> <username>")
+    @CommandMethod("<type> <amount> <user>")
     @CommandPermission("mcmmocredits.modify.other")
     @CommandDescription("Allows user to modify someone else's credit balance.")
-    public void modifyOther(final CommandExecutor executor, final @Argument BasicTransactionType type, final @Argument @Range(min = "0") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
-        Optional<User> optionalUser = this.service.getUser(username);
-        if (optionalUser.isPresent()) {
-            Transaction transaction = BasicTransaction.of(executor, optionalUser.get(), type, amount);
-            this.plugin.execute(() -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false)));
-            return;
-        }
-        this.playerUnknownError(executor, username);
+    public void modifyOther(final CommandExecutor executor, final @Argument BasicTransactionType type, final @Argument @Range(min = "0") int amount, final @Argument User user, final @Flag("s") boolean silent) {
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(BasicTransaction.of(executor, user, type, amount), true, false));
     }
 
     /**
      * Processes the {@literal /credits redeem <amount> <skill>} command.
      *
-     * @param user   CommandExecutor. Must be an online player.
-     * @param skill  The affected skill.
-     * @param amount Amount of credits to apply to skill.
+     * @param executor CommandExecutor. Must be an online player.
+     * @param skill    The affected skill.
+     * @param amount   Amount of credits to apply to skill.
      */
     @CommandMethod("redeem <amount> <skill>")
     @CommandPermission("mcmmocredits.redeem.self")
     @CommandDescription("Allows user to redeem credits for MCMMO Skill levels.")
-    public void redeem(final User user, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
-        Transaction transaction = RedeemTransaction.of(user, skill, amount);
-        this.plugin.execute(() -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false)));
+    public void redeem(final User executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(RedeemTransaction.of(executor, skill, amount), true, false));
     }
 
     /**
-     * Processes the {@literal /credits redeem <amount> <skill> <username> [--s]} command.
+     * Processes the {@literal /credits redeem <amount> <skill> <user> [--s]} command.
      *
      * @param executor CommandExecutor. Can be Console.
      * @param skill    The affected skill.
      * @param amount   Amount of credits to apply to skill.
-     * @param username Username of the user being modified.
+     * @param user     The user being modified.
      * @param silent   If the process should send feedback to the user based on presence.
      */
-    @CommandMethod("redeem <amount> <skill> <username>")
+    @CommandMethod("redeem <amount> <skill> <user>")
     @CommandPermission("mcmmocredits.redeem.other")
     @CommandDescription("Allows a user to redeem credits for someone else.")
-    public void redeemOther(final CommandExecutor executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username, final @Flag("s") boolean silent) {
-        Optional<User> optionalUser = this.service.getUser(username);
-        if (optionalUser.isPresent()) {
-            Transaction transaction = RedeemTransaction.of(executor, optionalUser.get(), skill, amount);
-            this.plugin.execute(() -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, silent, false)));
-            return;
-        }
-        this.playerUnknownError(executor, username);
+    public void redeemOther(final CommandExecutor executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument User user, final @Flag("s") boolean silent) {
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(RedeemTransaction.of(executor, user, skill, amount), silent, false));
     }
 
     /**
-     * Processes the {@literal /credits pay <amount> <username>} command.
+     * Processes the {@literal /credits pay <amount> <user>} command.
      *
-     * @param user     CommandExecutor. Must be an online player.
+     * @param executor CommandExecutor. Must be an online player.
      * @param amount   Amount of credits to pay.
-     * @param username Username of the user being paid.
+     * @param user     The user being paid.
      */
-    @CommandMethod("pay <amount> <username>")
+    @CommandMethod("pay <amount> <user>")
     @CommandPermission("mcmmocredits.pay")
     @CommandDescription("Allows user to give their credits to another user.")
-    public void pay(final User user, final @Argument @Range(min = "1") int amount, final @Argument(suggestions = "user") String username) {
-        Optional<User> optionalUser = this.service.getUser(username);
-        if (optionalUser.isPresent()) {
-            Transaction transaction = PayTransaction.of(user, optionalUser.get(), amount);
-            this.plugin.execute(() -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false)));
-            return;
-        }
-        this.playerUnknownError(user, username);
+    public void pay(final User executor, final @Argument @Range(min = "1") int amount, final @Argument User user) {
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(PayTransaction.of(executor, user, amount), true, false));
     }
 
     /**
@@ -224,26 +190,23 @@ public final class Credits {
     @CommandMethod("top <page>")
     @CommandPermission("mcmmocredits.leaderboard")
     @CommandDescription("Shows the specified page of the leaderboard.")
-    public void top(final CommandExecutor executor, final @Argument @Range(min = "1") int page) {
-        Text invalid = Text.forOneUser(executor, this.config.getMessage("invalid-leaderboard"));
+    public void top(final CommandExecutor executor, final UserService service, final @Argument @Range(min = "1") int page) {
         if (!this.config.getBoolean("settings", "leaderboard-enabled")) {
-            invalid.send();
+            executor.sendText(this.config.getMessage("invalid-leaderboard"));
             return;
         }
         int limit = this.config.getInteger("settings", "leaderboard-page-size");
         int offset = Math.max(0, (page - 1) * limit);
-        List<User> users = this.service.getPageOfUsers(limit, offset);
-        int size = users.size();
-        if (size == 0) {
-            invalid.send();
+        List<User> users = service.getPageOfUsers(limit, offset);
+        if (users.isEmpty()) {
+            executor.sendText(this.config.getMessage("invalid-leaderboard"));
             return;
         }
-        Text.forOneUser(executor, this.config.getString("leaderboard-title")).send();
+        executor.sendText(this.config.getString("leaderboard-title"));
         Resolver resolver = Resolver.ofUser(executor);
-        for (int i = 1; i <= size; i++) {
-            resolver.addUser(users.get(i - 1), "target");
-            resolver.addTag("rank", i + offset);
-            Text.fromString(executor, this.config.getString("leaderboard-entry"), resolver).send();
+        String entry = this.config.getString("leaderboard-entry");
+        for (int i = 1; i <= users.size(); i++) {
+            executor.sendText(entry, resolver.addUser(users.get(i - 1), "target").addTag("rank", i + offset));
         }
     }
 
@@ -251,25 +214,25 @@ public final class Credits {
      * Processes the {@literal /credits menu [type]} command.
      * Users need "mcmmocredits.menu" and "mcmmocredits.menu.type" permissions to open.
      *
-     * @param user CommandExecutor. Must be an online player.
-     * @param type Menu type to be opened (main, config, redeem).
+     * @param executor CommandExecutor. Must be an online player.
+     * @param type     Menu type to be opened (main, config, redeem).
      */
     @CommandMethod("menu [type]")
     @CommandPermission("mcmmocredits.menu")
     @CommandDescription("Allows user to open a menu of a specific type.")
-    public void openMenu(final User user, final @Argument(suggestions = "menus", defaultValue = "main") String type) {
+    public void openMenu(final User executor, final ContextFactory factory, @Argument(suggestions = "menus", defaultValue = "main") String type) {
         String menuType = type.toLowerCase();
-        if (!user.player().hasPermission("mcmmocredits.menu." + menuType)) {
+        if (!executor.player().hasPermission("mcmmocredits.menu." + menuType)) {
             this.plugin.execute(() -> {
-                throw new NoPermissionException(Permission.of("mcmmocredits.menu." + menuType), user, List.of());
+                throw new NoPermissionException(Permission.of("mcmmocredits.menu." + menuType), executor, List.of());
             });
         }
         Menu menu = Objects.requireNonNull(this.menuConfig.getMenu(menuType));
-        PlayerViewer viewer = PlayerViewer.of(user.player());
+        PlayerViewer viewer = PlayerViewer.of(executor.player());
         switch (menuType) {
-            case "main" -> MainMenu.of(menu).build(user, this.factory).open(viewer);
-            case "redeem" -> BaseMenu.of(menu).build(user, this.factory).open(viewer);
-            case "config" -> ConfigMenu.of(this.config, menu).build(user, this.factory).open(viewer);
+            case "main" -> MainMenu.of(menu).build(executor, factory).open(viewer);
+            case "redeem" -> BaseMenu.of(menu).build(executor, factory).open(viewer);
+            case "config" -> ConfigMenu.of(this.config, menu).build(executor, factory).open(viewer);
             default -> throw new IllegalArgumentException("Invalid menu type passed! Value: " + menuType);
         }
     }
@@ -286,18 +249,6 @@ public final class Credits {
         Path path = this.plugin.getDataFolder().toPath();
         this.config.load(path, "config.yml");
         this.menuConfig.load(path, "menus.yml");
-        Text.forOneUser(executor, this.config.getMessage("reload")).send();
-    }
-
-    /**
-     * Handles message parsing when a User is unknown.
-     *
-     * @param executor CommandExecutor. Can be Console.
-     * @param username Username of the unknown user.
-     */
-    private void playerUnknownError(final CommandExecutor executor, final String username) {
-        Resolver resolver = Resolver.ofUser(executor);
-        resolver.addUsername(username);
-        Text.fromString(executor, this.config.getMessage("player-unknown"), resolver).send();
+        executor.sendText(this.config.getMessage("reload"));
     }
 }

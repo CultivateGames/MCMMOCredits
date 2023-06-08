@@ -25,6 +25,7 @@ package games.cultivate.mcmmocredits.commands;
 
 import cloud.commandframework.annotations.AnnotationParser;
 import cloud.commandframework.annotations.PropertyReplacingStringProcessor;
+import cloud.commandframework.annotations.injection.GuiceInjectionService;
 import cloud.commandframework.arguments.parser.ParserRegistry;
 import cloud.commandframework.bukkit.BukkitCaptionKeys;
 import cloud.commandframework.captions.Caption;
@@ -44,13 +45,11 @@ import cloud.commandframework.paper.PaperCommandManager;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.placeholders.Resolver;
-import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
+import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import io.leangen.geantyref.TypeToken;
 import me.clip.placeholderapi.PlaceholderAPI;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -65,7 +64,7 @@ import java.util.regex.Pattern;
 /**
  * Loads the Command system.
  */
-public final class CloudCommandHandler {
+public final class CommandHandler {
     private static final Pattern TO_PATH = Pattern.compile("[.|_]");
     private final Credits commands;
     private final UserService service;
@@ -93,7 +92,7 @@ public final class CloudCommandHandler {
      * @param plugin   Plugin instance to register the CommandManager.
      */
     @Inject
-    public CloudCommandHandler(final Credits commands, final UserService service, final MainConfig config, final MCMMOCredits plugin) {
+    public CommandHandler(final Credits commands, final UserService service, final MainConfig config, final MCMMOCredits plugin) {
         this.commands = commands;
         this.service = service;
         this.config = config;
@@ -103,7 +102,7 @@ public final class CloudCommandHandler {
     /**
      * Loads the CommandManager.
      */
-    public void load() {
+    public void load(final GuiceInjectionService<CommandExecutor> injectionService) {
         Function<CommandSender, CommandExecutor> forwardsMapper = this.service::fromSender;
         var coordinator = AsynchronousCommandExecutionCoordinator.<CommandExecutor>builder().withAsynchronousParsing().build();
         try {
@@ -115,6 +114,7 @@ public final class CloudCommandHandler {
         this.manager.registerBrigadier();
         Objects.requireNonNull(this.manager.brigadierManager()).setNativeNumberSuggestions(false);
         this.manager.registerAsynchronousCompletions();
+        this.manager.parameterInjectorRegistry().registerInjectionService(injectionService);
         this.loadCommandParser();
         this.parseCommands();
         this.registerExceptions();
@@ -128,13 +128,7 @@ public final class CloudCommandHandler {
     private void loadCommandParser() {
         ParserRegistry<CommandExecutor> parser = this.manager.parserRegistry();
         parser.registerParserSupplier(TypeToken.get(PrimarySkillType.class), x -> new SkillParser<>());
-        boolean tabCompletion = this.config.getBoolean("settings", "user-tab-complete");
-        parser.registerSuggestionProvider("user", (c, i) -> {
-            if (tabCompletion) {
-                return Bukkit.getOnlinePlayers().stream().filter(x -> !(c.getSender() instanceof Player p) || x.canSee(p)).map(Player::getName).toList();
-            }
-            return List.of();
-        });
+        parser.registerParserSupplier(TypeToken.get(User.class), x -> new UserParser<>(this.service, this.config.getBoolean("settings", "user-tab-complete")));
         List<String> menus = List.of("main", "config", "redeem");
         parser.registerSuggestionProvider("menus", (c, i) -> menus);
     }
@@ -147,12 +141,7 @@ public final class CloudCommandHandler {
     private void parseCommands() {
         AnnotationParser<CommandExecutor> annotationParser = new AnnotationParser<>(this.manager, CommandExecutor.class, p -> SimpleCommandMeta.empty());
         String commandPrefix = this.config.getString("command-prefix");
-        annotationParser.stringProcessor(new PropertyReplacingStringProcessor(x -> {
-            if (x.equals("command.prefix")) {
-                return commandPrefix;
-            }
-            return x;
-        }));
+        annotationParser.stringProcessor(new PropertyReplacingStringProcessor(x -> x.equals("command.prefix") ? commandPrefix : x));
         annotationParser.parse(this.commands);
     }
 
@@ -188,11 +177,7 @@ public final class CloudCommandHandler {
      * @param <E>   The Exception type. Differs per registration.
      */
     private <E extends Exception> void register(final Class<E> ex, final String path, final String key, final BiFunction<CommandExecutor, E, String> value) {
-        this.manager.registerExceptionHandler(ex, (c, e) -> {
-            Resolver resolver = Resolver.ofUser(c);
-            resolver.addTag(key, value.apply(c, e));
-            Text.fromString(c, this.config.getMessage(path), resolver).send();
-        });
+        this.manager.registerExceptionHandler(ex, (c, e) -> c.sendText(this.config.getMessage(path), r -> r.addTag(key, value.apply(c, e))));
     }
 
     /**

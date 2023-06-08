@@ -47,7 +47,7 @@ public class MainConfig extends BaseConfig {
     private String argumentParseFailureFlagNoFlagStarted = "No flag started. Don't know what to do with <input>";
     private String argumentParseFailureFlagMissingArgument = "Missing argument for <flag>";
     private String argumentParseFailureNumber = "<input> is not a valid number in the range <min> to <max>";
-    private String argumentParseFailurePlayer = "No player found for input <input>";
+    private String argumentParseFailurePlayer = "<red><input> does not exist in our database!";
     private String argumentParseFailureString = "<input> is not a valid string of type <stringMode>";
     private String argumentParsing = "<red>Argument Error: <argument_error>";
     private String balance = "<green>You have <sender_credits> MCMMO Credits! You have redeemed <sender_redeemed> Credits.";
@@ -76,7 +76,6 @@ public class MainConfig extends BaseConfig {
     private String mcmmoSkillCap = "<red>You cannot redeem this many MCMMO Credits into <skill>, due to the Level Cap (<cap>).";
     private String noPermission = "<hover:show_text:'<red>Required permission: <permission>'><red>You do not have permission to do this!";
     private String notEnoughCredits = "<red>You do not have enough MCMMO Credits to do this!";
-    private String playerUnknown = "<red>This player does not exist in our database!";
     private String redeem = "<green>Redemption Successful! You have redeemed <amount> Credits into <skill>. You have <target_credits> Credits remaining.";
     private String redeemPrompt = "<gray>How many credits would you like to redeem into <green><skill>? <gray>You have <green><sender_credits> Credits available.";
     private String redeemSudo = "<green>Redemption Successful! You have redeemed <amount> Credits into <skill> for <target>. They have <target_credits> Credits remaining.";

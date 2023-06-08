@@ -90,4 +90,6 @@ public class MCMMOCreditsAPI {
         int result = this.getCredits(uuid) - amount;
         return result >= 0 && this.service.setCredits(uuid, result) != null;
     }
+
+    //TODO: expose custom user objects.
 }

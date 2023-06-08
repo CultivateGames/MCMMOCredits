@@ -27,7 +27,6 @@ import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
-import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.ui.item.Item;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.util.ChatQueue;
@@ -82,9 +81,7 @@ public final class ContextFactory {
      * @param skill The affected skill.
      */
     public void runRedeem(final User user, final PrimarySkillType skill) {
-        Resolver resolver = Resolver.ofUser(user);
-        resolver.addSkill(skill);
-        Text.fromString(user, this.config.getMessage("redeem-prompt"), resolver).send();
+        user.sendText(this.config.getMessage("redeem-prompt"), r -> r.addSkill(skill));
         this.queue.act(user.uuid(), i -> this.runCommand(user, String.format("credits redeem %s %s", i, skill)));
     }
 
@@ -95,13 +92,11 @@ public final class ContextFactory {
      * @param path The config node to be modified.
      */
     public void runEditConfig(final User user, final Object... path) {
-        Resolver resolver = Resolver.ofUser(user);
-        resolver.addTag("setting", Util.joinString(".", path));
-        Text.fromString(user, this.config.getMessage("edit-config-prompt"), resolver).send();
+        Resolver resolver = Resolver.ofUser(user).addTag("setting", Util.joinString(".", path));
+        user.sendText(this.config.getMessage("edit-config-prompt"), resolver);
         this.queue.act(user.uuid(), i -> {
-            resolver.addTag("change", i);
             boolean status = this.config.set(i, path);
-            Text.fromString(user, this.config.getMessage(status ? "edit-config" : "edit-config-fail"), resolver).send();
+            user.sendText(this.config.getMessage(status ? "edit-config" : "edit-config-fail"), resolver.addTag("change", i));
         });
     }
 
