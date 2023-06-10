@@ -38,7 +38,7 @@ import org.incendo.interfaces.paper.element.ItemStackElement;
 import org.incendo.interfaces.paper.pane.ChestPane;
 import org.incendo.interfaces.paper.transform.PaperTransform;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * Handles creation of click actions when Items are clicked inside of Menus.

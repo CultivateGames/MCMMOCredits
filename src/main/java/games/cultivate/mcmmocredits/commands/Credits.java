@@ -52,7 +52,7 @@ import games.cultivate.mcmmocredits.user.UserService;
 import org.bukkit.Bukkit;
 import org.incendo.interfaces.paper.PlayerViewer;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;

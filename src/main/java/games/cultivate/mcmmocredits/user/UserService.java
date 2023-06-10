@@ -25,11 +25,11 @@ package games.cultivate.mcmmocredits.user;
 
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
+import jakarta.inject.Inject;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
-import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -144,10 +144,11 @@ public final class UserService {
      * Updates an existing user in the DAO/Cache with the provided user.
      *
      * @param user The user to use in update.
-     * @return The updated user, or null if the update failed.
      */
-    public @Nullable User updateUser(final User user) {
-        return this.dao.updateUser(user) ? this.cache.update(user.uuid(), user) : null;
+    public void updateUser(final User user) {
+        if (this.dao.updateUser(user)) {
+            this.cache.update(user.uuid(), user);
+        }
     }
 
     /**

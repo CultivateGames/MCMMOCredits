@@ -25,7 +25,7 @@ package games.cultivate.mcmmocredits;
 
 import games.cultivate.mcmmocredits.user.UserService;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.UUID;
 
 /**
