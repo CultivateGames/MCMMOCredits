@@ -34,7 +34,7 @@ import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.locator.ClasspathSqlLocator;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.sql.Types;
 import java.util.UUID;
 

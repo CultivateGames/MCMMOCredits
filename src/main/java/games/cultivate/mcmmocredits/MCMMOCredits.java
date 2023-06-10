@@ -23,9 +23,10 @@
 //
 package games.cultivate.mcmmocredits;
 
+import cloud.commandframework.annotations.injection.GuiceInjectionService;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import games.cultivate.mcmmocredits.commands.CloudCommandHandler;
+import games.cultivate.mcmmocredits.commands.CommandHandler;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.converters.Converter;
@@ -111,7 +112,7 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     private void loadCommands() {
         this.logger.info("Checking Commands...");
-        this.injector.getInstance(CloudCommandHandler.class).load();
+        this.injector.getInstance(CommandHandler.class).load(GuiceInjectionService.create(this.injector));
         this.logger.info("Commands loaded!");
     }
 

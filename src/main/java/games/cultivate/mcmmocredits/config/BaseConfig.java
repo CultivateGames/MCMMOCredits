@@ -31,6 +31,7 @@ import games.cultivate.mcmmocredits.ui.item.Item;
 import games.cultivate.mcmmocredits.ui.menu.Menu;
 import games.cultivate.mcmmocredits.util.Util;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.loader.HeaderMode;
@@ -40,7 +41,6 @@ import org.spongepowered.configurate.util.NamingSchemes;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
-import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -54,7 +54,7 @@ import java.util.function.Predicate;
  */
 public class BaseConfig implements Config {
     private static final String HEADER = """
-            MCMMO Credits v0.3.9 Configuration
+            MCMMO Credits v0.4.0 Configuration
             Repository: https://github.com/CultivateGames/MCMMOCredits
             Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
             """;
@@ -253,7 +253,7 @@ public class BaseConfig implements Config {
      * @param filter Predicate to filter list against.
      * @return A filtered list of configuration node paths.
      */
-    public List<String> filterNodes(@NotNull final Predicate<? super String> filter) {
+    public List<String> filterNodes(final Predicate<? super String> filter) {
         List<String> sorted = new ArrayList<>(this.paths);
         sorted.removeIf(filter);
         return sorted;

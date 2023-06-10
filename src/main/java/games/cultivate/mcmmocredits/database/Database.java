@@ -26,7 +26,7 @@ package games.cultivate.mcmmocredits.database;
 import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.user.UserDAO;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 import java.nio.file.Path;
 
 /**

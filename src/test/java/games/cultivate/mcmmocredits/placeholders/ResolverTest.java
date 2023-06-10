@@ -81,9 +81,8 @@ class ResolverTest {
     }
 
     @Test
-    void addUser() {
-        Resolver resolver = new Resolver();
-        resolver.addUser(this.sender, "silly");
+    void addUser_AddsUserToResolver() {
+        Resolver resolver = new Resolver().addUser(this.sender, "silly");
         assertEquals(this.sender.username(), this.convert("<silly>", resolver));
         assertEquals(this.sender.uuid().toString(), this.convert("<silly_uuid>", resolver));
         assertEquals(this.sender.credits(), Integer.parseInt(this.convert("<silly_credits>", resolver)));
@@ -91,16 +90,8 @@ class ResolverTest {
     }
 
     @Test
-    void addUsername() {
-        Resolver resolver = new Resolver();
-        resolver.addUsername("testuser69");
-        assertEquals("testuser69", this.convert("<target>", resolver));
-    }
-
-    @Test
     void addAmount_AddsAmountToResolver() {
-        Resolver resolver = new Resolver();
-        resolver.addAmount(100);
+        Resolver resolver = new Resolver().addAmount(100);
         assertEquals(100, Integer.parseInt(this.convert("<amount>", resolver)));
     }
 
@@ -110,23 +101,20 @@ class ResolverTest {
         GeneralConfig config = mock(GeneralConfig.class);
         when(mcMMO.p.getGeneralConfig()).thenReturn(config);
         when(config.getLevelCap(PrimarySkillType.HERBALISM)).thenReturn(1000);
-        Resolver resolver = new Resolver();
-        resolver.addSkill(PrimarySkillType.HERBALISM);
+        Resolver resolver = new Resolver().addSkill(PrimarySkillType.HERBALISM);
         assertEquals("Herbalism", this.convert("<skill>", resolver));
         assertEquals("1000", this.convert("<cap>", resolver));
     }
 
     @Test
     void addTag_AddsStringTagToResolver() {
-        Resolver resolver = new Resolver();
-        resolver.addTag("helloworld", "Hello world!");
+        Resolver resolver = new Resolver().addTag("helloworld", "Hello world!");
         assertEquals("Hello world!", this.convert("<helloworld>", resolver));
     }
 
     @Test
     void addTag_AddsIntTagToResolver() {
-        Resolver resolver = new Resolver();
-        resolver.addTag("number", 10500);
+        Resolver resolver = new Resolver().addTag("number", 10500);
         assertEquals("10500", this.convert("<number>", resolver));
     }
 
@@ -136,9 +124,7 @@ class ResolverTest {
         String key2 = "testkey";
         String val1 = "hello world!";
         String val2 = "123";
-        Resolver resolver = new Resolver();
-        resolver.addTag(key1, val1);
-        resolver.addTag(key2, val2);
+        Resolver resolver = new Resolver().addTag(key1, val1).addTag(key2, val2);
         TagResolver tagResolver = TagResolver.builder().tag(key1, Tag.preProcessParsed(val1)).tag(key2, Tag.preProcessParsed(val2)).build();
         assertEquals(tagResolver, resolver.toTagResolver());
     }

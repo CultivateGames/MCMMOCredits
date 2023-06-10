@@ -26,16 +26,13 @@ package games.cultivate.mcmmocredits.util;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
-import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.transaction.FailureReason;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import games.cultivate.mcmmocredits.user.Console;
-import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -47,7 +44,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.incendo.interfaces.paper.view.ChestView;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -86,16 +83,13 @@ public class Listeners implements Listener {
         var profile = e.getPlayerProfile();
         UUID uuid = profile.getId();
         String username = profile.getName();
-        Optional<User> user = this.service.getUser(uuid);
-        if (user.isPresent()) {
+        if (this.service.getUser(uuid).isPresent()) {
             this.service.setUsername(uuid, username);
             return;
         }
         this.service.addUser(uuid, username);
         if (this.config.getBoolean("settings", "add-user-message")) {
-            Resolver resolver = Resolver.ofUser(Console.INSTANCE);
-            resolver.addUsername(username);
-            Text.fromString(Console.INSTANCE, this.config.getMessage("add-user"), resolver).send();
+            Console.INSTANCE.sendText(this.config.getMessage("add-user"), r -> r.addTag("username", username));
         }
     }
 
@@ -107,8 +101,7 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerJoin(final PlayerJoinEvent e) {
         if (this.config.getBoolean("settings", "send-login-message")) {
-            User user = this.service.getUser(e.getPlayer().getUniqueId()).orElseThrow();
-            Text.forOneUser(user, this.config.getMessage("login-message")).send();
+            this.service.getUser(e.getPlayer().getUniqueId()).orElseThrow().sendText(this.config.getMessage("login-message"));
         }
     }
 
@@ -124,8 +117,7 @@ public class Listeners implements Listener {
             String completion = PlainTextComponentSerializer.plainText().serialize(e.message());
             if (completion.equalsIgnoreCase("cancel")) {
                 this.queue.remove(uuid);
-                User user = this.service.getUser(uuid).orElseThrow();
-                Text.forOneUser(user, this.config.getMessage("cancel-prompt")).send();
+                this.service.getUser(uuid).orElseThrow().sendText(this.config.getMessage("cancel-prompt"));
             }
             this.queue.complete(uuid, completion);
             e.setCancelled(true);
@@ -139,8 +131,7 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerQuit(final PlayerQuitEvent e) {
-        Player player = e.getPlayer();
-        UUID uuid = player.getUniqueId();
+        UUID uuid = e.getPlayer().getUniqueId();
         this.service.removeFromCache(uuid);
         this.queue.remove(uuid);
     }
@@ -155,9 +146,7 @@ public class Listeners implements Listener {
         Transaction transaction = e.transaction();
         Optional<FailureReason> failure = transaction.executable();
         if (failure.isPresent()) {
-            String key = failure.get().getKey();
-            Resolver resolver = Resolver.ofTransaction(transaction);
-            Text.fromString(transaction.executor(), this.config.getMessage(key), resolver).send();
+            transaction.executor().sendText(this.config.getMessage(failure.get().getKey()), Resolver.ofTransaction(transaction));
             return;
         }
         TransactionResult result = transaction.execute();

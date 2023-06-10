@@ -25,7 +25,7 @@ package games.cultivate.mcmmocredits;
 
 import games.cultivate.mcmmocredits.user.UserService;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.UUID;
 
 /**
@@ -90,4 +90,6 @@ public class MCMMOCreditsAPI {
         int result = this.getCredits(uuid) - amount;
         return result >= 0 && this.service.setCredits(uuid, result) != null;
     }
+
+    //TODO: expose custom user objects.
 }

@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.3.9"
+version = "0.4.0"
 description = "MCMMOCredits"
 
 plugins {
@@ -8,6 +8,7 @@ plugins {
     id("signing")
     id("xyz.jpenilla.run-paper") version "2.1.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("net.minecrell.plugin-yml.bukkit") version "0.5.3"
 }
 
 repositories {
@@ -23,27 +24,27 @@ dependencies {
     implementation("cloud.commandframework:cloud-paper:1.8.3")
     implementation("org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT")
     implementation("com.h2database:h2:2.1.214")
-    implementation("com.google.inject:guice:5.1.0")
+    implementation("com.google.inject:guice:7.0.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.jdbi:jdbi3-core:3.38.2")
-    implementation("org.jdbi:jdbi3-sqlite:3.38.2")
-    implementation("org.jdbi:jdbi3-sqlobject:3.38.2")
-    implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
-        exclude(module = "paper-api")
-    }
-    compileOnly("io.papermc.paper:paper-api:1.19.4-R0.1-SNAPSHOT")
-    compileOnly("me.clip:placeholderapi:2.11.3") {
-        exclude(group = "net.kyori")
-    }
-    compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.218") {
-        exclude("com.sk89q.worldguard")
-        exclude("com.sk89q.worldedit")
-    }
-    testImplementation("org.jdbi:jdbi3-testing:3.38.2")
+    implementation("org.jdbi:jdbi3-core:3.38.3")
+    implementation("org.jdbi:jdbi3-sqlite:3.38.3")
+    implementation("org.jdbi:jdbi3-sqlobject:3.38.3")
+    testImplementation("org.jdbi:jdbi3-testing:3.38.3")
     testImplementation(platform("org.junit:junit-bom:5.9.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.mockito:mockito-core:5.3.1")
     testImplementation("org.mockito:mockito-junit-jupiter:5.3.1")
+    implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
+        exclude(module = "paper-api")
+    }
+    compileOnly("io.papermc.paper:paper-api:1.20-R0.1-SNAPSHOT")
+    compileOnly("me.clip:placeholderapi:2.11.3") {
+        exclude(group = "net.kyori")
+    }
+    compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.220") {
+        exclude("com.sk89q.worldguard")
+        exclude("com.sk89q.worldedit")
+    }
 }
 
 java {
@@ -105,6 +106,17 @@ signing {
     sign(publishing.publications)
 }
 
+bukkit {
+    name = project.name
+    version = project.version.toString()
+    main = "games.cultivate.mcmmocredits.MCMMOCredits"
+    apiVersion = "1.19"
+    description = "A modern MCMMO Credits plugin."
+    authors = listOf("CultivateGames")
+    website = "https://cultivate.games/"
+    softDepend = listOf("mcMMO", "PlaceholderAPI")
+}
+
 configurations {
     testImplementation {
         extendsFrom(compileOnly.get())
@@ -137,7 +149,7 @@ tasks {
     }
 
     runServer {
-        minecraftVersion("1.19.4")
+        minecraftVersion("1.20")
     }
 
     shadowJar {
@@ -145,7 +157,6 @@ tasks {
         minimize {
             exclude(dependency("com.h2database:h2:2.1.214"))
         }
-        // https://github.com/PaperMC/paperweight-test-plugin/blob/shadow/build.gradle.kts
         fun reloc(pkg: String) = relocate(pkg, "games.cultivate.mcmmocredits.relocate.$pkg")
         reloc("cloud.commandframework")
         reloc("com.github")

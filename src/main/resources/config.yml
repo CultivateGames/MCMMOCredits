@@ -1,4 +1,4 @@
-# MCMMO Credits v0.3.9 Configuration
+# MCMMO Credits v0.4.0 Configuration
 # Repository: https://github.com/CultivateGames/MCMMOCredits
 # Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
 
@@ -14,7 +14,7 @@ argument-parse-failure-flag-no-flag-started: No flag started. Don't know what to
 argument-parse-failure-flag-missing-argument: Missing argument for <flag>
 argument-parse-failure-number: <input> is not a valid number in the range <min> to
   <max>
-argument-parse-failure-player: No player found for input <input>
+argument-parse-failure-player: <red><input> does not exist in our database!
 argument-parse-failure-string: <input> is not a valid string of type <stringMode>
 argument-parsing: '<red>Argument Error: <argument_error>'
 balance: <green>You have <sender_credits> MCMMO Credits! You have redeemed <sender_redeemed>
@@ -25,10 +25,15 @@ cancel-prompt: <red>You have cancelled the current operation.
 command-execution: <red>There was an error executing this command!
 command-prefix: credits
 credits-add: <green>You have given <amount> Credits to <target>.
+credits-pay: <green>You have paid <amount> Credits to <target>. You now have <sender_credits>
+  Credits.
 credits-set: <yellow>You have set <target>'s Credits to <amount>.
 credits-take: <red>You have taken <amount> Credits from <target>.
 credits-add-user: <green><amount> Credits have been added to your balance by <sender>.
   You have <target_credits> Credits.
+credits-pay-user: <green><sender> has given you <amount> Credits. You have <target_credits>
+  Credits.
+credits-pay-same-user: <red>Users cannot pay themselves! Cancelling transaction...
 credits-set-user: <yellow>Your MCMMO Credit balance has been set to <amount> by <sender>.
 credits-take-user: <red>You had <amount> taken out of your Credit balance by <sender>.
   You now have <target_credits> Credits.
@@ -49,7 +54,6 @@ mcmmo-skill-cap: <red>You cannot redeem this many MCMMO Credits into <skill>, du
 no-permission: '<hover:show_text:''<red>Required permission: <permission>''><red>You
   do not have permission to do this!'
 not-enough-credits: <red>You do not have enough MCMMO Credits to do this!
-player-unknown: <red>This player does not exist in our database!
 redeem: <green>Redemption Successful! You have redeemed <amount> Credits into <skill>.
   You have <target_credits> Credits remaining.
 redeem-prompt: <gray>How many credits would you like to redeem into <green><skill>?
