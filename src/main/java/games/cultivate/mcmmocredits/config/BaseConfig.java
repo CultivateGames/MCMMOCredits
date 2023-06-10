@@ -54,7 +54,7 @@ import java.util.function.Predicate;
  */
 public class BaseConfig implements Config {
     private static final String HEADER = """
-            MCMMO Credits v0.4.0-SNAPSHOT Configuration
+            MCMMO Credits v0.4.0 Configuration
             Repository: https://github.com/CultivateGames/MCMMOCredits
             Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
             """;
@@ -253,7 +253,7 @@ public class BaseConfig implements Config {
      * @param filter Predicate to filter list against.
      * @return A filtered list of configuration node paths.
      */
-    public List<String> filterNodes(@NotNull final Predicate<? super String> filter) {
+    public List<String> filterNodes(final Predicate<? super String> filter) {
         List<String> sorted = new ArrayList<>(this.paths);
         sorted.removeIf(filter);
         return sorted;

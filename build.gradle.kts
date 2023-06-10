@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.4.0-SNAPSHOT"
+version = "0.4.0"
 description = "MCMMOCredits"
 
 plugins {
@@ -149,7 +149,7 @@ tasks {
     }
 
     runServer {
-        minecraftVersion("1.19.4")
+        minecraftVersion("1.20")
     }
 
     shadowJar {
