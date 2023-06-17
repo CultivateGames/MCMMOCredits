@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.4.0"
+version = "0.4.1"
 description = "MCMMOCredits"
 
 plugins {
@@ -37,7 +37,7 @@ dependencies {
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
         exclude(module = "paper-api")
     }
-    compileOnly("io.papermc.paper:paper-api:1.20-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.11.3") {
         exclude(group = "net.kyori")
     }
@@ -149,7 +149,7 @@ tasks {
     }
 
     runServer {
-        minecraftVersion("1.20")
+        minecraftVersion("1.20.1")
     }
 
     shadowJar {
