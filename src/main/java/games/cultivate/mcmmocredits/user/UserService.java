@@ -159,7 +159,7 @@ public final class UserService {
     public void processTransaction(final TransactionResult result) {
         Transaction transaction = result.transaction();
         User current = result.target();
-        if (transaction.target() != current) {
+        if (transaction.targets()[0] != current) {
             this.updateUser(current);
         }
         CommandExecutor exec = result.executor();

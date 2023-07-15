@@ -26,12 +26,12 @@ package games.cultivate.mcmmocredits.util;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
-import games.cultivate.mcmmocredits.transaction.FailureReason;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import games.cultivate.mcmmocredits.user.Console;
 import games.cultivate.mcmmocredits.user.UserService;
 import io.papermc.paper.event.player.AsyncChatEvent;
+import jakarta.inject.Inject;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -44,7 +44,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.incendo.interfaces.paper.view.ChestView;
 
-import jakarta.inject.Inject;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -144,14 +143,14 @@ public class Listeners implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onTransaction(final CreditTransactionEvent e) {
         Transaction transaction = e.transaction();
-        Optional<FailureReason> failure = transaction.executable();
+        Optional<String> failure = transaction.isExecutable();
         if (failure.isPresent()) {
-            transaction.executor().sendText(this.config.getMessage(failure.get().getKey()), Resolver.ofTransaction(transaction));
+            transaction.executor().sendText(this.config.getMessage(failure.get()), Resolver.ofTransaction(transaction));
             return;
         }
         TransactionResult result = transaction.execute();
         this.service.processTransaction(result);
-        result.sendFeedback(this.config, e.senderFeedback(), e.userFeedback());
+        this.sendTransactionFeedback(result, e.senderFeedback(), e.userFeedback());
     }
 
     /**
@@ -181,6 +180,24 @@ public class Listeners implements Listener {
     public void onInventoryDrag(final InventoryDragEvent e) {
         if (e.getInventory().getHolder() instanceof ChestView) {
             e.setCancelled(true);
+        }
+    }
+
+    /**
+     * Sends feedback for a transaction.
+     *
+     * @param result       Result of the Transaction.
+     * @param userSilent   If process sends feedback to the user. True will silence feedback.
+     * @param senderSilent If process sends feedback to the executor. True will silence feedback except for errors.
+     */
+    private void sendTransactionFeedback(final TransactionResult result, final boolean senderSilent, final boolean userSilent) {
+        Resolver resolver = Resolver.ofTransactionResult(result);
+        Transaction transaction = result.transaction();
+        if (!senderSilent) {
+            result.executor().sendText(this.config.getMessage(transaction.messageKey()), resolver);
+        }
+        if (!userSilent && result.target().player() != null) {
+            result.target().sendText(this.config.getMessage(transaction.userMessageKey(), resolver));
         }
     }
 }

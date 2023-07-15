@@ -49,12 +49,12 @@ import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import io.leangen.geantyref.TypeToken;
+import jakarta.inject.Inject;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -101,6 +101,8 @@ public final class CommandHandler {
 
     /**
      * Loads the CommandManager.
+     *
+     * @param injectionService An injection service. Used to inject into commands.
      */
     public void load(final GuiceInjectionService<CommandExecutor> injectionService) {
         Function<CommandSender, CommandExecutor> forwardsMapper = this.service::fromSender;

@@ -37,10 +37,8 @@ import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
-import games.cultivate.mcmmocredits.transaction.BasicTransaction;
-import games.cultivate.mcmmocredits.transaction.BasicTransactionType;
-import games.cultivate.mcmmocredits.transaction.PayTransaction;
-import games.cultivate.mcmmocredits.transaction.RedeemTransaction;
+import games.cultivate.mcmmocredits.transaction.Transaction;
+import games.cultivate.mcmmocredits.transaction.TransactionType;
 import games.cultivate.mcmmocredits.ui.ContextFactory;
 import games.cultivate.mcmmocredits.ui.menu.BaseMenu;
 import games.cultivate.mcmmocredits.ui.menu.ConfigMenu;
@@ -49,10 +47,10 @@ import games.cultivate.mcmmocredits.ui.menu.Menu;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
+import jakarta.inject.Inject;
 import org.bukkit.Bukkit;
 import org.incendo.interfaces.paper.PlayerViewer;
 
-import jakarta.inject.Inject;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -117,8 +115,9 @@ public final class Credits {
     @CommandMethod("<type> <amount>")
     @CommandPermission("mcmmocredits.modify.self")
     @CommandDescription("Allows user to modify their own credit balance.")
-    public void modify(final User executor, final @Argument BasicTransactionType type, final @Argument @Range(min = "0") int amount) {
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(BasicTransaction.of(executor, type, amount), true, false));
+    public void modify(final User executor, final @Argument TransactionType type, final @Argument @Range(min = "0") int amount) {
+        Transaction transaction = Transaction.builder().self(executor).amount(amount).type(type);
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false));
     }
 
     /**
@@ -133,8 +132,9 @@ public final class Credits {
     @CommandMethod("<type> <amount> <user>")
     @CommandPermission("mcmmocredits.modify.other")
     @CommandDescription("Allows user to modify someone else's credit balance.")
-    public void modifyOther(final CommandExecutor executor, final @Argument BasicTransactionType type, final @Argument @Range(min = "0") int amount, final @Argument User user, final @Flag("s") boolean silent) {
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(BasicTransaction.of(executor, user, type, amount), silent, false));
+    public void modifyOther(final CommandExecutor executor, final @Argument TransactionType type, final @Argument @Range(min = "0") int amount, final @Argument User user, final @Flag("s") boolean silent) {
+        Transaction transaction = Transaction.builder().users(executor, user).amount(amount).type(type);
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, silent, false));
     }
 
     /**
@@ -148,7 +148,8 @@ public final class Credits {
     @CommandPermission("mcmmocredits.redeem.self")
     @CommandDescription("Allows user to redeem credits for MCMMO Skill levels.")
     public void redeem(final User executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(RedeemTransaction.of(executor, skill, amount), true, false));
+        Transaction transaction = Transaction.builder().self(executor).skill(skill).amount(amount);
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false));
     }
 
     /**
@@ -164,7 +165,8 @@ public final class Credits {
     @CommandPermission("mcmmocredits.redeem.other")
     @CommandDescription("Allows a user to redeem credits for someone else.")
     public void redeemOther(final CommandExecutor executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument User user, final @Flag("s") boolean silent) {
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(RedeemTransaction.of(executor, user, skill, amount), silent, false));
+        Transaction transaction = Transaction.builder().users(executor, user).skill(skill).amount(amount);
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, silent, false));
     }
 
     /**
@@ -178,12 +180,14 @@ public final class Credits {
     @CommandPermission("mcmmocredits.pay")
     @CommandDescription("Allows user to give their credits to another user.")
     public void pay(final User executor, final @Argument @Range(min = "1") int amount, final @Argument User user) {
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(PayTransaction.of(executor, user, amount), true, false));
+        Transaction transaction = Transaction.builder().type(TransactionType.PAY).users(executor, user).amount(amount);
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false));
     }
 
     /**
      * Processes the {@literal /credits top <page>} command.
      *
+     * @param service  The UserService to fetch users.
      * @param executor CommandExecutor. Can be Console.
      * @param page     Page number of the leaderboard.
      */
@@ -214,13 +218,14 @@ public final class Credits {
      * Processes the {@literal /credits menu [type]} command.
      * Users need "mcmmocredits.menu" and "mcmmocredits.menu.type" permissions to open.
      *
+     * @param factory  The ContextFactory. Used to fetch item context.
      * @param executor CommandExecutor. Must be an online player.
      * @param type     Menu type to be opened (main, config, redeem).
      */
     @CommandMethod("menu [type]")
     @CommandPermission("mcmmocredits.menu")
     @CommandDescription("Allows user to open a menu of a specific type.")
-    public void openMenu(final User executor, final ContextFactory factory, @Argument(suggestions = "menus", defaultValue = "main") String type) {
+    public void openMenu(final User executor, final ContextFactory factory, final @Argument(suggestions = "menus", defaultValue = "main") String type) {
         String menuType = type.toLowerCase();
         if (!executor.player().hasPermission("mcmmocredits.menu." + menuType)) {
             this.plugin.execute(() -> {

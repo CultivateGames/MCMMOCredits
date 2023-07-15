@@ -23,9 +23,11 @@
 //
 package games.cultivate.mcmmocredits;
 
+import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
-
 import jakarta.inject.Inject;
+
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -91,5 +93,25 @@ public class MCMMOCreditsAPI {
         return result >= 0 && this.service.setCredits(uuid, result) != null;
     }
 
-    //TODO: expose custom user objects.
+    /**
+     * Gets a user from the UserService.
+     * Can be used in conjunction with the Transaction system to call an event.
+     *
+     * @param uuid UUID of the user.
+     * @return The user.
+     */
+    public Optional<User> getUser(final UUID uuid) {
+        return this.service.getUser(uuid);
+    }
+
+    /**
+     * Gets a user from the UserService.
+     * Can be used in conjunction with the Transaction system to call an event.
+     *
+     * @param username Username of the user.
+     * @return The user.
+     */
+    public Optional<User> getUser(final String username) {
+        return this.service.getUser(username);
+    }
 }

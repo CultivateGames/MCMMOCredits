@@ -23,8 +23,6 @@
 //
 package games.cultivate.mcmmocredits.transaction;
 
-import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 
@@ -44,22 +42,5 @@ public record TransactionResult(Transaction transaction, CommandExecutor executo
      */
     public static TransactionResult of(final Transaction transaction, final CommandExecutor executor, final User target) {
         return new TransactionResult(transaction, executor, target);
-    }
-
-    /**
-     * Sends feedback for the transaction.
-     *
-     * @param config       MainConfig used to extract messages.
-     * @param userSilent   If process sends feedback to the user. True will silence feedback.
-     * @param senderSilent If process sends feedback to the executor. True will silence feedback except for errors.
-     */
-    public void sendFeedback(final MainConfig config, final boolean senderSilent, final boolean userSilent) {
-        Resolver resolver = Resolver.ofTransactionResult(this);
-        if (!senderSilent) {
-            this.executor.sendText(config.getMessage(this.transaction.getMessageKey()), resolver);
-        }
-        if (!userSilent && this.target.player() != null) {
-            this.target.sendText(config.getMessage(this.transaction.getUserMessageKey(), resolver));
-        }
     }
 }

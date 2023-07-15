@@ -23,10 +23,9 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import games.cultivate.mcmmocredits.transaction.BasicTransaction;
-import games.cultivate.mcmmocredits.transaction.BasicTransactionType;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
+import games.cultivate.mcmmocredits.transaction.TransactionType;
 import org.bukkit.Bukkit;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
@@ -168,7 +167,7 @@ class UserServiceTest {
     @Test
     void processTransaction_UserExists_TransactionAppliedToService() {
         this.cache.add(this.user);
-        Transaction transaction = BasicTransaction.of(this.user, BasicTransactionType.ADD, 1000);
+        Transaction transaction = Transaction.builder().self(this.user).amount(1000).type(TransactionType.ADD);
         TransactionResult result = transaction.execute();
         when(this.dao.updateUser(result.target())).thenReturn(true);
         this.service.processTransaction(result);
