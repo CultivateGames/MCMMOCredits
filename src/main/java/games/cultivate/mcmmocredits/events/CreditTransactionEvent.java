@@ -110,7 +110,7 @@ public class CreditTransactionEvent extends Event implements Cancellable {
      * {@inheritDoc}
      */
     @Override
-    public void setCancelled(boolean cancel) {
+    public void setCancelled(final boolean cancel) {
         this.cancelled = cancel;
     }
 }

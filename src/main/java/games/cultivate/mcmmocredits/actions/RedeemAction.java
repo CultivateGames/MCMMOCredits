@@ -40,6 +40,8 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
  * Action which redeems credits into a skill via chat input.
+ *
+ * @param skill The skill.
  */
 @ConfigSerializable
 public record RedeemAction(PrimarySkillType skill) implements Action {

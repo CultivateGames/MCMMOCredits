@@ -36,6 +36,8 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
  * Action which executes a command.
+ *
+ * @param command The command.
  */
 @ConfigSerializable
 public record CommandAction(String command) implements Action {

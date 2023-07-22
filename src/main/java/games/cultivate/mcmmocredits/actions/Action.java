@@ -47,5 +47,5 @@ public interface Action {
      *
      * @param ctx The context.
      */
-    void execute(final ClickContext<ChestPane, InventoryClickEvent, PlayerViewer> ctx);
+    void execute(ClickContext<ChestPane, InventoryClickEvent, PlayerViewer> ctx);
 }

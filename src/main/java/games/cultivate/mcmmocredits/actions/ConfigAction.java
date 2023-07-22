@@ -39,6 +39,8 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
  * Action which sets a config field via chat input.
+ *
+ * @param path The NodePath of the config option to edit.
  */
 @ConfigSerializable
 public record ConfigAction(NodePath path) implements Action {

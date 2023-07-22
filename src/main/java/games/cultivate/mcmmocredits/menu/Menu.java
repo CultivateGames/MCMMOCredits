@@ -47,7 +47,7 @@ public interface Menu {
      *
      * @param user The user viewing the Menu.
      */
-    void addExtraItems(final User user);
+    void addExtraItems(User user);
 
     /**
      * Gets a Map of items in the Menu.
@@ -90,7 +90,7 @@ public interface Menu {
      * @param user The user to build the interface for.
      * @return The ChestInterface.
      */
-    default ChestInterface build(final User user) {
+    default ChestInterface build(User user) {
         this.addExtraItems(user);
         if (!this.navigation()) {
             this.items().remove("navigation");

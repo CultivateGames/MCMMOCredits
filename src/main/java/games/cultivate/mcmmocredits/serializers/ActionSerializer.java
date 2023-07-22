@@ -44,7 +44,7 @@ public final class ActionSerializer implements TypeSerializer<Action> {
      * {@inheritDoc}
      */
     @Override
-    public Action deserialize(Type type, ConfigurationNode node) {
+    public Action deserialize(final Type type, final ConfigurationNode node) {
         String key = node.key().toString();
         if (key.equals("messages") || key.equals("settings")) {
             return new ConfigAction(node.path());
@@ -62,7 +62,7 @@ public final class ActionSerializer implements TypeSerializer<Action> {
      * {@inheritDoc}
      */
     @Override
-    public void serialize(Type type, @Nullable Action obj, ConfigurationNode node) {
+    public void serialize(final Type type, @Nullable final Action obj, final ConfigurationNode node) {
         throw new UnsupportedOperationException("Actions cannot be independently serialized! (currently)");
     }
 }
