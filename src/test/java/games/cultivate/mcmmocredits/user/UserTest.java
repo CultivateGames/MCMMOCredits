@@ -103,7 +103,7 @@ class UserTest {
     @Test
     void withCredits_ReturnsSameUserWithUpdatedCredits() {
         int newCredits = 200;
-        User updatedUser = this.user.withCredits(newCredits);
+        User updatedUser = this.user.setCredits(newCredits);
         assertNotEquals(this.user, updatedUser);
         assertEquals(newCredits, updatedUser.credits());
         assertEquals(this.uuid, updatedUser.uuid());
@@ -123,9 +123,9 @@ class UserTest {
     }
 
     @Test
-    void withRedeemed_ReturnsUserWithUpdatedRedeemed() {
+    void setRedeemed_ReturnsUserWithUpdatedRedeemed() {
         int newRedeemed = 75;
-        User updatedUser = this.user.withRedeemed(newRedeemed);
+        User updatedUser = this.user.setRedeemed(newRedeemed);
         assertNotEquals(this.user, updatedUser);
         assertEquals(newRedeemed, updatedUser.redeemed());
         assertEquals(this.uuid, updatedUser.uuid());

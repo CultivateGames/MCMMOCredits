@@ -137,7 +137,7 @@ public final class UserService {
      * @return The updated user, or null if the update failed.
      */
     public @Nullable User setCredits(final UUID uuid, final int amount) {
-        return this.dao.setCredits(uuid, amount) ? this.cache.update(uuid, u -> u.withCredits(amount)) : null;
+        return this.dao.setCredits(uuid, amount) ? this.cache.update(uuid, u -> u.setCredits(amount)) : null;
     }
 
     /**

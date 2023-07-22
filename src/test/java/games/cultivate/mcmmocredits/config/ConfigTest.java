@@ -26,7 +26,7 @@ package games.cultivate.mcmmocredits.config;
 import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
 import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.converters.ConverterType;
-import games.cultivate.mcmmocredits.ui.menu.Menu;
+import games.cultivate.mcmmocredits.menu.Menu;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFactory;

@@ -167,7 +167,7 @@ class UserServiceTest {
     @Test
     void processTransaction_UserExists_TransactionAppliedToService() {
         this.cache.add(this.user);
-        Transaction transaction = Transaction.builder().self(this.user).amount(1000).type(TransactionType.ADD);
+        Transaction transaction = Transaction.builder().self(this.user).amount(1000).type(TransactionType.ADD).build();
         TransactionResult result = transaction.execute();
         when(this.dao.updateUser(result.target())).thenReturn(true);
         this.service.processTransaction(result);

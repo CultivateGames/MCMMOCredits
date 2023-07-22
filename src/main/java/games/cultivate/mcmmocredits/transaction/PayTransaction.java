@@ -21,70 +21,60 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.user;
+package games.cultivate.mcmmocredits.transaction;
 
-import org.bukkit.entity.Player;
+import games.cultivate.mcmmocredits.user.CommandExecutor;
+import games.cultivate.mcmmocredits.user.User;
 
-import java.util.UUID;
+import java.util.Optional;
 
 /**
- * CommandExecutor which represents the Bukkit ConsoleCommandSender.
+ * Represents a transaction in which an amount is added to a user's balance and taken from another user's balance.
+ *
+ * @param executor The executor of the transaction.
+ * @param targets  The targets of the transaction.
+ * @param amount   The amount of credits to add to targets.
  */
-public final class Console implements CommandExecutor {
-    public static final Console INSTANCE = new Console();
-    private static final UUID UUID = new UUID(0, 0);
-    private static final String USERNAME = "CONSOLE";
-    private static final int CREDITS = 0;
-    private static final int REDEEMED = 0;
+public record PayTransaction(CommandExecutor executor, User[] targets, int amount) implements Transaction {
+    private static final String MESSAGE_KEY = "credits-pay";
+    private static final String USER_MESSAGE_KEY = "credits-pay-user";
 
-    private Console() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String userMessageKey() {
+        return USER_MESSAGE_KEY;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean isPlayer() {
-        return false;
+    public String messageKey() {
+        return MESSAGE_KEY;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Player player() {
-        throw new UnsupportedOperationException("Console is not a player!");
+    public TransactionResult execute() {
+        User exec = (User) this.executor;
+        return TransactionResult.of(this, exec.takeCredits(this.amount), this.targets[0].addCredits(this.amount));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public UUID uuid() {
-        return UUID;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String username() {
-        return USERNAME;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int credits() {
-        return CREDITS;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int redeemed() {
-        return REDEEMED;
+    public Optional<String> valid() {
+        if (this.executor.credits() - this.amount < 0 || this.targets[0].credits() + this.amount < 0) {
+            return Optional.of("not-enough-credits");
+        }
+        if (this.isSelfTransaction()) {
+            return Optional.of("credits-pay-same-user");
+        }
+        return Optional.empty();
     }
 }

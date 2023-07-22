@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.ui.item;
+package games.cultivate.mcmmocredits.menu;
 
 import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.Component;
@@ -50,7 +50,7 @@ import static org.mockito.Mockito.when;
 
 //TODO: expand item tests
 @ExtendWith(MockitoExtension.class)
-class BaseItemTest {
+class ItemTest {
     @Mock
     private MockedStatic<Bukkit> mockBukkit;
     @Mock
@@ -64,7 +64,7 @@ class BaseItemTest {
     @Test
     void of_ValidProperties_ReturnsValidItem() {
         ItemStack stack = new ItemStack(Material.ACACIA_BOAT, 20);
-        BaseItem item = BaseItem.of(stack, "The item!", List.of("the lore!"), 10);
+        Item item = Item.of(stack, "The item!", List.of("the lore!"), 10);
         assertEquals(Material.ACACIA_BOAT, item.stack().getType());
         assertEquals(20, item.stack().getAmount());
         assertEquals("The item!", item.name());
@@ -74,7 +74,7 @@ class BaseItemTest {
 
     @Test
     void materialOf_ValidProperties_ReturnsValidItem() {
-        BaseItem item = BaseItem.of(Material.ACACIA_BOAT);
+        Item item = Item.of(Material.ACACIA_BOAT);
         assertEquals(Material.ACACIA_BOAT, item.stack().getType());
         assertEquals(1, item.stack().getAmount());
         assertEquals("", item.name());
@@ -85,7 +85,7 @@ class BaseItemTest {
     @Test
     void parseUser_ValidItemUser_ReturnsParsedItem() {
         ItemStack stack = new ItemStack(Material.ACACIA_BOAT, 20);
-        BaseItem item = BaseItem.of(stack, "<sender_credits> credits!", List.of("<sender_redeemed> credits redeemed"), 10);
+        Item item = Item.of(stack, "<sender_credits> credits!", List.of("<sender_redeemed> credits redeemed"), 10);
         User user = new User(UUID.randomUUID(), "testUser", 1500, 10);
         ItemMeta meta = mock(ItemMeta.class);
         when(this.mockFactory.getItemMeta(Material.ACACIA_BOAT)).thenReturn(meta);

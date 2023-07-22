@@ -25,28 +25,50 @@ package games.cultivate.mcmmocredits.transaction;
 
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.UUID;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+/**
+ * Represents a transaction in which a user's balance is set to an amount.
+ *
+ * @param executor The executor of the transaction.
+ * @param targets  The targets of the transaction.
+ * @param amount   The amount of credits to set on targets.
+ */
+public record SetTransaction(CommandExecutor executor, User[] targets, int amount) implements Transaction {
+    private static final String MESSAGE_KEY = "credits-set";
+    private static final String USER_MESSAGE_KEY = "credits-set-user";
 
-@ExtendWith(MockitoExtension.class)
-class TransactionResultTest {
-    @Mock
-    private CommandExecutor mockExecutor;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String userMessageKey() {
+        return USER_MESSAGE_KEY;
+    }
 
-    @Test
-    void of_ValidProperties_ValidTransactionResult() {
-        User target = new User(UUID.randomUUID(), "testUser", 100, 10);
-        Transaction transaction = Transaction.builder().amount(100).users(this.mockExecutor, target).type(TransactionType.ADD).build();
-        TransactionResult result = transaction.execute();
-        assertNotEquals(target, result.target());
-        assertEquals(this.mockExecutor, result.executor());
-        assertEquals(transaction, result.transaction());
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String messageKey() {
+        return MESSAGE_KEY;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TransactionResult execute() {
+        User updated = this.targets[0].setCredits(this.amount);
+        return this.isSelfTransaction() ? TransactionResult.of(this, updated) : TransactionResult.of(this, this.executor, updated);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<String> valid() {
+        return this.amount >= 0 ? Optional.empty() : Optional.of("not-enough-credits");
     }
 }

@@ -25,13 +25,9 @@ package games.cultivate.mcmmocredits.serializers;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
-import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import games.cultivate.mcmmocredits.ui.item.BaseItem;
-import games.cultivate.mcmmocredits.ui.item.CommandItem;
-import games.cultivate.mcmmocredits.ui.item.ConfigItem;
-import games.cultivate.mcmmocredits.ui.item.Item;
-import games.cultivate.mcmmocredits.ui.item.RedeemItem;
-import games.cultivate.mcmmocredits.util.Util;
+import games.cultivate.mcmmocredits.actions.Action;
+import games.cultivate.mcmmocredits.actions.CommandAction;
+import games.cultivate.mcmmocredits.menu.Item;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -74,18 +70,8 @@ public final class ItemSerializer implements TypeSerializer<Item> {
         }
         meta.setCustomModelData(customModelData);
         stack.setItemMeta(texture.isEmpty() ? meta : this.createSkullMeta(meta, texture));
-        Item item = BaseItem.of(stack, name, lore, slot);
-        String key = node.key().toString();
-        if (key.equals("messages") || key.equals("settings")) {
-            return ConfigItem.of(node.path(), item);
-        }
-        if (!node.node("command").virtual()) {
-            return CommandItem.of(node.node("command").getString(), item);
-        }
-        if (Util.getSkillNames().contains(key)) {
-            return RedeemItem.of(PrimarySkillType.valueOf(key.toUpperCase()), item);
-        }
-        return item;
+        Action action = node.get(Action.class, Action.dummy());
+        return new Item(stack, name, lore, slot, action);
     }
 
     /**
@@ -103,8 +89,8 @@ public final class ItemSerializer implements TypeSerializer<Item> {
         node.node("texture").set(meta instanceof SkullMeta skullMeta ? this.getTexture(skullMeta) : "");
         node.node("custom-model-data").set(meta.hasCustomModelData() ? meta.getCustomModelData() : 0);
         node.node("glow").set(!stack.getEnchantments().isEmpty());
-        if (item instanceof CommandItem citem) {
-            node.node("command").set(citem.command());
+        if (item.action() instanceof CommandAction commandAction) {
+            node.node("command").set(commandAction.command());
         }
     }
 

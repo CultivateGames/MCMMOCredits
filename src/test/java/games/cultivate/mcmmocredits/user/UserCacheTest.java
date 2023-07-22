@@ -151,7 +151,7 @@ class UserCacheTest {
     @Test
     void update_UpdateUserInCache_ReturnsUpdatedUser() {
         this.cache.add(this.user);
-        UnaryOperator<User> updateUserCredits = user -> user.withCredits(200);
+        UnaryOperator<User> updateUserCredits = user -> user.setCredits(200);
         User updatedUser = this.cache.update(this.uuid, updateUserCredits);
         assertEquals(200, updatedUser.credits());
         assertNotEquals(this.user.credits(), updatedUser.credits());
@@ -169,7 +169,7 @@ class UserCacheTest {
 
     @Test
     void update_ThrowsExceptionWhenUserNotFound() {
-        UnaryOperator<User> updateUserCredits = user -> user.withCredits(200);
+        UnaryOperator<User> updateUserCredits = user -> user.setCredits(200);
         assertThrows(IllegalArgumentException.class, () -> this.cache.update(this.uuid, updateUserCredits));
     }
 }

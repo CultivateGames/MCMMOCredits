@@ -140,17 +140,23 @@ public class Listeners implements Listener {
      *
      * @param e The event.
      */
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onTransaction(final CreditTransactionEvent e) {
         Transaction transaction = e.transaction();
-        Optional<String> failure = transaction.isExecutable();
+        Optional<String> failure = transaction.valid();
         if (failure.isPresent()) {
             transaction.executor().sendText(this.config.getMessage(failure.get()), Resolver.ofTransaction(transaction));
             return;
         }
         TransactionResult result = transaction.execute();
         this.service.processTransaction(result);
-        this.sendTransactionFeedback(result, e.senderFeedback(), e.userFeedback());
+        Resolver resolver = Resolver.ofTransactionResult(result);
+        if (!e.senderFeedback()) {
+            result.executor().sendText(this.config.getMessage(transaction.messageKey()), resolver);
+        }
+        if (!e.userFeedback() && result.target().player() != null) {
+            result.target().sendText(this.config.getMessage(transaction.userMessageKey(), resolver));
+        }
     }
 
     /**
@@ -180,24 +186,6 @@ public class Listeners implements Listener {
     public void onInventoryDrag(final InventoryDragEvent e) {
         if (e.getInventory().getHolder() instanceof ChestView) {
             e.setCancelled(true);
-        }
-    }
-
-    /**
-     * Sends feedback for a transaction.
-     *
-     * @param result       Result of the Transaction.
-     * @param userSilent   If process sends feedback to the user. True will silence feedback.
-     * @param senderSilent If process sends feedback to the executor. True will silence feedback except for errors.
-     */
-    private void sendTransactionFeedback(final TransactionResult result, final boolean senderSilent, final boolean userSilent) {
-        Resolver resolver = Resolver.ofTransactionResult(result);
-        Transaction transaction = result.transaction();
-        if (!senderSilent) {
-            result.executor().sendText(this.config.getMessage(transaction.messageKey()), resolver);
-        }
-        if (!userSilent && result.target().player() != null) {
-            result.target().sendText(this.config.getMessage(transaction.userMessageKey(), resolver));
         }
     }
 }

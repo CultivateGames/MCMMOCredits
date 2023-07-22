@@ -35,6 +35,8 @@ import games.cultivate.mcmmocredits.user.User;
  */
 public record TransactionResult(Transaction transaction, CommandExecutor executor, User target) {
     /**
+     * Constructs a TransactionResult.
+     *
      * @param transaction The transaction.
      * @param executor    The updated executor of the transaction.
      * @param target      The updated user for the transaction.
@@ -42,5 +44,16 @@ public record TransactionResult(Transaction transaction, CommandExecutor executo
      */
     public static TransactionResult of(final Transaction transaction, final CommandExecutor executor, final User target) {
         return new TransactionResult(transaction, executor, target);
+    }
+
+    /**
+     * Constructs a TransactionResult for a transaction which only impacts the target.
+     *
+     * @param transaction The transaction.
+     * @param target      The updated user for the transaction.
+     * @return The result of the provided transaction.
+     */
+    public static TransactionResult of(final Transaction transaction, final User target) {
+        return new TransactionResult(transaction, target, target);
     }
 }

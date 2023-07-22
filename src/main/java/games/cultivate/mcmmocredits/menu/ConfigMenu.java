@@ -21,70 +21,73 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.user;
+package games.cultivate.mcmmocredits.menu;
 
-import org.bukkit.entity.Player;
+import games.cultivate.mcmmocredits.actions.ConfigAction;
+import games.cultivate.mcmmocredits.user.User;
+import org.spongepowered.configurate.NodePath;
 
-import java.util.UUID;
+import java.util.List;
+import java.util.Map;
 
 /**
- * CommandExecutor which represents the Bukkit ConsoleCommandSender.
+ * Represents a Menu in which users can edit the config.
+ *
+ * @param menu The existing menu.
+ * @param keys List of node keys to show as editable.
  */
-public final class Console implements CommandExecutor {
-    public static final Console INSTANCE = new Console();
-    private static final UUID UUID = new UUID(0, 0);
-    private static final String USERNAME = "CONSOLE";
-    private static final int CREDITS = 0;
-    private static final int REDEEMED = 0;
-
-    private Console() {
+public record ConfigMenu(Menu menu, List<String> keys) implements Menu {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addExtraItems(final User user) {
+        Item messages = this.items().remove("messages");
+        Item settings = this.items().remove("settings");
+        for (int i = 0; i < this.keys.size(); i++) {
+            String key = this.keys.get(i);
+            Item item = key.contains("settings") ? settings : messages;
+            this.items().put(key, new Item(item.stack(), key, item.lore(), i, new ConfigAction(NodePath.of(key.split("\\.")))));
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean isPlayer() {
-        return false;
+    public Map<String, Item> items() {
+        return this.menu.items();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Player player() {
-        throw new UnsupportedOperationException("Console is not a player!");
+    public String title() {
+        return this.menu.title();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public UUID uuid() {
-        return UUID;
+    public int slots() {
+        return this.menu.slots();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String username() {
-        return USERNAME;
+    public boolean fill() {
+        return this.menu.fill();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int credits() {
-        return CREDITS;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int redeemed() {
-        return REDEEMED;
+    public boolean navigation() {
+        return this.menu.navigation();
     }
 }

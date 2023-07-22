@@ -21,56 +21,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.ui.item;
+package games.cultivate.mcmmocredits.actions;
 
-import games.cultivate.mcmmocredits.ui.ContextFactory;
+import games.cultivate.mcmmocredits.config.MainConfig;
+import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.util.ChatQueue;
+import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.ItemStack;
+import org.incendo.interfaces.core.arguments.ArgumentKey;
+import org.incendo.interfaces.core.arguments.InterfaceArguments;
 import org.incendo.interfaces.core.click.ClickContext;
 import org.incendo.interfaces.paper.PlayerViewer;
 import org.incendo.interfaces.paper.pane.ChestPane;
 import org.spongepowered.configurate.NodePath;
-
-import java.util.List;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
- * Represents an Item that edits a configuration value when clicked.
+ * Action which sets a config field via chat input.
  */
-public final class ConfigItem extends BaseItem {
-    private final NodePath path;
-
-    /**
-     * Constructs the object.
-     *
-     * @param path  The NodePath to be edited.
-     * @param stack The representative ItemStack. Updated with refreshing name/lore.
-     * @param name  Raw name of the item. Always parsed.
-     * @param lore  Raw lore of the item. Always parsed.
-     * @param slot  Location of item in a Menu.
-     */
-    private ConfigItem(final NodePath path, final ItemStack stack, final String name, final List<String> lore, final int slot) {
-        super(stack, name, lore, slot);
-        this.path = path;
-    }
-
-    /**
-     * Constructs the object from an existing item.
-     *
-     * @param path The NodePath to be edited.
-     * @param item The item to be used for pass-through.
-     * @return The item.
-     */
-    public static ConfigItem of(final NodePath path, final Item item) {
-        return new ConfigItem(path, item.stack(), item.name(), item.lore(), item.slot());
-    }
-
+@ConfigSerializable
+public record ConfigAction(NodePath path) implements Action {
     /**
      * {@inheritDoc}
      */
     @Override
-    public void executeClick(final User user, final ContextFactory factory, final ClickContext<ChestPane, InventoryClickEvent, PlayerViewer> ctx) {
+    public void execute(final ClickContext<ChestPane, InventoryClickEvent, PlayerViewer> ctx) {
+        InterfaceArguments args = ctx.view().arguments();
+        User user = args.get(ArgumentKey.of("user", User.class));
+        MainConfig config = args.get(ArgumentKey.of("config", MainConfig.class));
+        ChatQueue queue = args.get(ArgumentKey.of("queue", ChatQueue.class));
+        Resolver resolver = Resolver.ofUser(user).addTag("setting", Util.joinString(".", this.path.array()));
         ctx.viewer().close();
-        factory.runEditConfig(user, this.path.array());
+        user.sendText(config.getMessage("edit-config-prompt"), resolver);
+        queue.act(user.uuid(), i -> {
+            boolean status = config.set(i, this.path);
+            user.sendText(config.getMessage(status ? "edit-config" : "edit-config-fail"), resolver.addTag("change", i));
+        });
     }
 }

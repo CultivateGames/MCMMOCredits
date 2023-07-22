@@ -24,6 +24,7 @@
 package games.cultivate.mcmmocredits.events;
 
 import games.cultivate.mcmmocredits.transaction.Transaction;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
@@ -31,11 +32,12 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Event that is fired when a credit transaction is created.
  */
-public class CreditTransactionEvent extends Event {
+public class CreditTransactionEvent extends Event implements Cancellable {
     private static final HandlerList HANDLERS = new HandlerList();
     private final Transaction transaction;
     private final boolean userFeedback;
     private final boolean senderFeedback;
+    private boolean cancelled = false;
 
     /**
      * Constructs the object.
@@ -94,5 +96,21 @@ public class CreditTransactionEvent extends Event {
      */
     public boolean senderFeedback() {
         return this.senderFeedback;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isCancelled() {
+        return this.cancelled;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setCancelled(boolean cancel) {
+        this.cancelled = cancel;
     }
 }

@@ -23,163 +23,179 @@
 //
 package games.cultivate.mcmmocredits.transaction;
 
-import com.gmail.nossr50.datatypes.player.PlayerProfile;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import com.gmail.nossr50.mcMMO;
-import com.gmail.nossr50.util.player.UserManager;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
 
-public final class Transaction {
-    private int amount;
-    private CommandExecutor executor;
-    private User[] targets;
-    private String userMessageKey;
-    private String messageKey;
-    private TransactionType type;
-    private PrimarySkillType skill;
-
-    public static Transaction builder() {
-        return new Transaction();
-    }
-
-    public PrimarySkillType skill() {
-        return this.skill;
-    }
-
-    public Transaction skill(final PrimarySkillType skill) {
-        this.type = TransactionType.REDEEM;
-        this.skill = skill;
-        return this;
-    }
-
-    public TransactionType type() {
-        return this.type;
-    }
-
-    public Transaction type(final TransactionType type) {
-        this.type = type;
-        this.messageKey = this.type.messageKey();
-        this.userMessageKey = this.type.userMessageKey();
-        return this;
-    }
-
-    public int amount() {
-        return this.amount;
-    }
-
-    public Transaction amount(final int amount) {
-        this.amount = amount;
-        return this;
-    }
-
-    public CommandExecutor executor() {
-        return this.executor;
-    }
-
-    public User[] targets() {
-        return this.targets;
-    }
-
-    public Transaction self(final User executor) {
-        this.executor = executor;
-        this.targets = new User[]{executor};
-        return this;
-    }
-
-    public Transaction users(final CommandExecutor executor, final User... targets) {
-        this.executor = executor;
-        this.targets = targets;
-        return this;
-    }
-
-    public Transaction users(final User executor, final List<User> targets) {
-        this.executor = executor;
-        this.targets = targets.toArray(new User[0]);
-        return this;
-    }
-
-    public String userMessageKey() {
-        return this.userMessageKey;
-    }
-
-    public String messageKey() {
-        return this.messageKey;
-    }
-
-    public TransactionResult execute() {
-        User primary = this.targets[0];
-        int balance = primary.credits();
-        return switch (this.type) {
-            case ADD -> TransactionResult.of(this, this.executor, this.targets[0].withCredits(balance + this.amount));
-            case TAKE -> TransactionResult.of(this, this.executor, this.targets[0].withCredits(balance - this.amount));
-            case SET -> TransactionResult.of(this, this.executor, this.targets[0].withCredits(this.amount));
-            case PAY -> {
-                User exec = (User) this.executor;
-                yield TransactionResult.of(this, exec.withCredits(this.executor.credits() - this.amount), this.targets[0].withCredits(balance + this.amount));
-            }
-            case REDEEM -> {
-                PlayerProfile profile = this.getPlayerProfile(primary);
-                profile.addLevels(this.skill, this.amount);
-                profile.save(true);
-                yield TransactionResult.of(this, this.executor, primary.withCredits(balance - this.amount).withRedeemed(primary.redeemed() + this.amount));
-            }
-        };
+/**
+ * Represents an interaction in which a user's credit balance is modified.
+ */
+public interface Transaction {
+    /**
+     * Returns a new instance of the Transaction builder.
+     *
+     * @return new instance of the Transaction builder.
+     */
+    static Transaction.Builder builder() {
+        return new Transaction.Builder();
     }
 
     /**
-     * Gets if the executor and target are the same entity.
+     * Gets the config key for feedback sent to the user during this transaction.
+     *
+     * @return The config key.
+     */
+    String userMessageKey();
+
+    /**
+     * Gets the config key for feedback sent to the executor during this transaction.
+     *
+     * @return The config key.
+     */
+    String messageKey();
+
+    /**
+     * Executes the transaction.
+     *
+     * @return An updated User from execution of the transaction.
+     */
+    TransactionResult execute();
+
+    /**
+     * Gets if the transaction is valid. The optional is empty if the transaction can be executed.
+     *
+     * @return An optional indicating execution status of the transaction.
+     */
+    Optional<String> valid();
+
+    /**
+     * Gets the executor of the transaction.
+     *
+     * @return The CommandExecutor.
+     */
+    CommandExecutor executor();
+
+    /**
+     * Gets the targets of the transaction.
+     *
+     * @return The targets.
+     */
+    User[] targets();
+
+    /**
+     * Gets the amount of credits applied in transaction.
+     *
+     * @return The amount
+     */
+    int amount();
+
+    /**
+     * Returns if the executor and target are the same entity.
      *
      * @return True if the executor and target are the same entity, otherwise false.
      */
-    public boolean isSelfTransaction() {
-        return this.executor.equals(this.targets[0]);
-    }
-
-    public Optional<String> isExecutable() {
-        int balance = this.targets[0].credits();
-        return switch (this.type) {
-            case ADD -> this.amount + balance >= 0 ? Optional.empty() : Optional.of("not-enough-credits");
-            case SET -> this.amount >= 0 ? Optional.empty() : Optional.of("not-enough-credits");
-            case TAKE -> balance - this.amount >= 0 ? Optional.empty() : Optional.of("not-enough-credits");
-            case PAY -> {
-                if (this.executor.credits() - this.amount < 0 || this.targets[0].credits() + this.amount < 0) {
-                    yield Optional.of("not-enough-credits");
-                }
-                if (this.isSelfTransaction()) {
-                    yield Optional.of("credits-pay-same-user");
-                }
-                yield Optional.empty();
-            }
-            case REDEEM -> {
-                if (balance < this.amount) {
-                    yield Optional.of("not-enough-credits");
-                }
-                PlayerProfile profile = this.getPlayerProfile(this.targets[0]);
-                if (profile == null || !profile.isLoaded()) {
-                    yield Optional.of("mcmmo-profile-fail");
-                }
-                if (profile.getSkillLevel(this.skill) + this.amount > mcMMO.p.getGeneralConfig().getLevelCap(this.skill)) {
-                    yield Optional.of("mcmmo-skill-cap");
-                }
-                yield Optional.empty();
-            }
-        };
+    default boolean isSelfTransaction() {
+        return this.executor().equals(this.targets()[0]);
     }
 
     /**
-     * Gets the target's MCMMO profile.
-     *
-     * @param user The user to fetch a profile for.
-     * @return The profile.
+     * Builder class for Transactions.
      */
-    private @Nullable PlayerProfile getPlayerProfile(final User user) {
-        Player player = user.player();
-        return player == null ? mcMMO.getDatabaseManager().loadPlayerProfile(user.uuid()) : UserManager.getPlayer(player).getProfile();
+    class Builder {
+        private int amount;
+        private CommandExecutor executor;
+        private User[] targets;
+        private PrimarySkillType skill;
+        private TransactionType type;
+
+        /**
+         * Sets PrimarySkillType of the transaction, and also sets the transaction type to REDEEM.
+         *
+         * @param skill The skill.
+         * @return The builder.
+         */
+        public Builder skill(final PrimarySkillType skill) {
+            this.skill = skill;
+            this.type = TransactionType.REDEEM;
+            return this;
+        }
+
+        /**
+         * Sets the type of the transaction.
+         *
+         * @param type The type.
+         * @return The builder.
+         */
+        public Builder type(final TransactionType type) {
+            this.type = type;
+            return this;
+        }
+
+        /**
+         * Sets the amount of the transaction.
+         *
+         * @param amount The amount.
+         * @return The builder.
+         */
+        public Builder amount(final int amount) {
+            this.amount = amount;
+            return this;
+        }
+
+        /**
+         * Sets the executor and target to the provided user.
+         *
+         * @param executor The user.
+         * @return The builder.
+         */
+        public Builder self(final User executor) {
+            this.executor = executor;
+            this.targets = new User[]{executor};
+            return this;
+        }
+
+        /**
+         * Sets the users of the transaction.
+         *
+         * @param executor The executor.
+         * @param targets  The targets.
+         * @return The builder.
+         */
+        public Builder users(final CommandExecutor executor, final User... targets) {
+            this.executor = executor;
+            this.targets = targets;
+            return this;
+        }
+
+        /**
+         * Sets the users of the transaction.
+         *
+         * @param executor The executor.
+         * @param targets  The targets.
+         * @return The builder.
+         */
+        public Builder users(final CommandExecutor executor, final List<User> targets) {
+            this.executor = executor;
+            this.targets = targets.toArray(new User[0]);
+            return this;
+        }
+
+        /**
+         * Builds the transaction.
+         *
+         * @return The transaction.
+         */
+        public Transaction build() {
+            return switch (this.type) {
+                case ADD -> new AddTransaction(this.executor, this.targets, this.amount);
+                case SET -> new SetTransaction(this.executor, this.targets, this.amount);
+                case TAKE -> new TakeTransaction(this.executor, this.targets, this.amount);
+                case PAY -> new PayTransaction(this.executor, this.targets, this.amount);
+                case REDEEM -> new RedeemTransaction(this.executor, this.targets, this.skill, this.amount);
+            };
+        }
     }
 }

@@ -29,31 +29,28 @@ import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.specifier.Range;
-import cloud.commandframework.exceptions.NoPermissionException;
-import cloud.commandframework.permission.Permission;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.config.MenuConfig;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
+import games.cultivate.mcmmocredits.menu.ConfigMenu;
+import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionType;
-import games.cultivate.mcmmocredits.ui.ContextFactory;
-import games.cultivate.mcmmocredits.ui.menu.BaseMenu;
-import games.cultivate.mcmmocredits.ui.menu.ConfigMenu;
-import games.cultivate.mcmmocredits.ui.menu.MainMenu;
-import games.cultivate.mcmmocredits.ui.menu.Menu;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
+import games.cultivate.mcmmocredits.util.ChatQueue;
 import jakarta.inject.Inject;
 import org.bukkit.Bukkit;
+import org.incendo.interfaces.core.arguments.ArgumentKey;
+import org.incendo.interfaces.core.arguments.HashMapInterfaceArguments;
 import org.incendo.interfaces.paper.PlayerViewer;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Handles all commands. Prefix is customizable via config.
@@ -116,8 +113,8 @@ public final class Credits {
     @CommandPermission("mcmmocredits.modify.self")
     @CommandDescription("Allows user to modify their own credit balance.")
     public void modify(final User executor, final @Argument TransactionType type, final @Argument @Range(min = "0") int amount) {
-        Transaction transaction = Transaction.builder().self(executor).amount(amount).type(type);
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false));
+        Transaction transaction = Transaction.builder().self(executor).amount(amount).type(type).build();
+        this.emitEvent(new CreditTransactionEvent(transaction, true, false));
     }
 
     /**
@@ -133,8 +130,8 @@ public final class Credits {
     @CommandPermission("mcmmocredits.modify.other")
     @CommandDescription("Allows user to modify someone else's credit balance.")
     public void modifyOther(final CommandExecutor executor, final @Argument TransactionType type, final @Argument @Range(min = "0") int amount, final @Argument User user, final @Flag("s") boolean silent) {
-        Transaction transaction = Transaction.builder().users(executor, user).amount(amount).type(type);
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, silent, false));
+        Transaction transaction = Transaction.builder().users(executor, user).amount(amount).type(type).build();
+        this.emitEvent(new CreditTransactionEvent(transaction, silent, false));
     }
 
     /**
@@ -148,8 +145,8 @@ public final class Credits {
     @CommandPermission("mcmmocredits.redeem.self")
     @CommandDescription("Allows user to redeem credits for MCMMO Skill levels.")
     public void redeem(final User executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
-        Transaction transaction = Transaction.builder().self(executor).skill(skill).amount(amount);
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false));
+        Transaction transaction = Transaction.builder().self(executor).skill(skill).amount(amount).build();
+        this.emitEvent(new CreditTransactionEvent(transaction, true, false));
     }
 
     /**
@@ -165,8 +162,8 @@ public final class Credits {
     @CommandPermission("mcmmocredits.redeem.other")
     @CommandDescription("Allows a user to redeem credits for someone else.")
     public void redeemOther(final CommandExecutor executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument User user, final @Flag("s") boolean silent) {
-        Transaction transaction = Transaction.builder().users(executor, user).skill(skill).amount(amount);
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, silent, false));
+        Transaction transaction = Transaction.builder().users(executor, user).skill(skill).amount(amount).build();
+        this.emitEvent(new CreditTransactionEvent(transaction, silent, false));
     }
 
     /**
@@ -180,8 +177,8 @@ public final class Credits {
     @CommandPermission("mcmmocredits.pay")
     @CommandDescription("Allows user to give their credits to another user.")
     public void pay(final User executor, final @Argument @Range(min = "1") int amount, final @Argument User user) {
-        Transaction transaction = Transaction.builder().type(TransactionType.PAY).users(executor, user).amount(amount);
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false));
+        Transaction transaction = Transaction.builder().type(TransactionType.PAY).users(executor, user).amount(amount).build();
+        this.emitEvent(new CreditTransactionEvent(transaction, true, false));
     }
 
     /**
@@ -215,31 +212,61 @@ public final class Credits {
     }
 
     /**
-     * Processes the {@literal /credits menu [type]} command.
-     * Users need "mcmmocredits.menu" and "mcmmocredits.menu.type" permissions to open.
+     * Processes the {@literal /credits menu main} command.
      *
-     * @param factory  The ContextFactory. Used to fetch item context.
      * @param executor CommandExecutor. Must be an online player.
-     * @param type     Menu type to be opened (main, config, redeem).
+     * @param queue    Injected instance of the ChatQueue used for item actions.
      */
-    @CommandMethod("menu [type]")
-    @CommandPermission("mcmmocredits.menu")
-    @CommandDescription("Allows user to open a menu of a specific type.")
-    public void openMenu(final User executor, final ContextFactory factory, final @Argument(suggestions = "menus", defaultValue = "main") String type) {
-        String menuType = type.toLowerCase();
-        if (!executor.player().hasPermission("mcmmocredits.menu." + menuType)) {
-            this.plugin.execute(() -> {
-                throw new NoPermissionException(Permission.of("mcmmocredits.menu." + menuType), executor, List.of());
-            });
-        }
-        Menu menu = Objects.requireNonNull(this.menuConfig.getMenu(menuType));
+    @CommandMethod("menu main")
+    @CommandPermission("mcmmocredits.menu.main")
+    @CommandDescription("Allows user to open the Main Menu.")
+    public void openMainMenu(final User executor, final ChatQueue queue) {
+        HashMapInterfaceArguments args = HashMapInterfaceArguments.with(ArgumentKey.of("config"), this.config)
+                .with(ArgumentKey.of("queue"), queue)
+                .with(ArgumentKey.of("plugin"), this.plugin)
+                .with(ArgumentKey.of("user"), executor)
+                .build();
         PlayerViewer viewer = PlayerViewer.of(executor.player());
-        switch (menuType) {
-            case "main" -> MainMenu.of(menu).build(executor, factory).open(viewer);
-            case "redeem" -> BaseMenu.of(menu).build(executor, factory).open(viewer);
-            case "config" -> ConfigMenu.of(this.config, menu).build(executor, factory).open(viewer);
-            default -> throw new IllegalArgumentException("Invalid menu type passed! Value: " + menuType);
-        }
+        this.plugin.execute(() -> this.menuConfig.getMenu("main").build(executor).open(viewer, args));
+    }
+
+    /**
+     * Processes the {@literal /credits menu redeem} command.
+     *
+     * @param executor CommandExecutor. Must be an online player.
+     * @param queue    Injected instance of the ChatQueue used for item actions.
+     */
+    @CommandMethod("menu redeem")
+    @CommandPermission("mcmmocredits.menu.redeem")
+    @CommandDescription("Allows user to open the Redeem Menu.")
+    public void openRedeemMenu(final User executor, final ChatQueue queue) {
+        HashMapInterfaceArguments args = HashMapInterfaceArguments.with(ArgumentKey.of("config"), this.config)
+                .with(ArgumentKey.of("queue"), queue)
+                .with(ArgumentKey.of("plugin"), this.plugin)
+                .with(ArgumentKey.of("user"), executor)
+                .build();
+        PlayerViewer viewer = PlayerViewer.of(executor.player());
+        this.plugin.execute(() -> this.menuConfig.getMenu("redeem").build(executor).open(viewer, args));
+    }
+
+    /**
+     * Processes the {@literal /credits menu config} command.
+     *
+     * @param executor CommandExecutor. Must be an online player.
+     * @param queue    Injected instance of the ChatQueue used for item actions.
+     */
+    @CommandMethod("menu config")
+    @CommandPermission("mcmmocredits.menu.config")
+    @CommandDescription("Allows user to open the Config Menu.")
+    public void openConfigMenu(final User executor, final ChatQueue queue) {
+        HashMapInterfaceArguments args = HashMapInterfaceArguments.with(ArgumentKey.of("config"), this.config)
+                .with(ArgumentKey.of("queue"), queue)
+                .with(ArgumentKey.of("plugin"), this.plugin)
+                .with(ArgumentKey.of("user"), executor)
+                .build();
+        PlayerViewer viewer = PlayerViewer.of(executor.player());
+        Menu menu = new ConfigMenu(this.menuConfig.getMenu("config"), this.config.filterNodes(x -> x.contains("database") || x.contains("converter")));
+        this.plugin.execute(() -> menu.build(executor).open(viewer, args));
     }
 
     /**
@@ -255,5 +282,14 @@ public final class Credits {
         this.config.load(path, "config.yml");
         this.menuConfig.load(path, "menus.yml");
         executor.sendText(this.config.getMessage("reload"));
+    }
+
+    /**
+     * Fires a Transaction event on the main thread.
+     *
+     * @param event The event.
+     */
+    private void emitEvent(final CreditTransactionEvent event) {
+        this.plugin.execute(() -> Bukkit.getPluginManager().callEvent(event));
     }
 }

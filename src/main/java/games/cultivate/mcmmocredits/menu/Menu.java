@@ -21,32 +21,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.ui.menu;
+package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.ui.ContextFactory;
-import games.cultivate.mcmmocredits.ui.item.Item;
+import games.cultivate.mcmmocredits.actions.Action;
+import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.user.User;
+import net.kyori.adventure.text.Component;
+import org.incendo.interfaces.core.click.ClickHandler;
+import org.incendo.interfaces.core.transform.TransformContext;
+import org.incendo.interfaces.paper.PlayerViewer;
+import org.incendo.interfaces.paper.pane.ChestPane;
 import org.incendo.interfaces.paper.type.ChestInterface;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Represents an Inventory and it's properties.
  */
 public interface Menu {
     /**
-     * Adds extra items if needed.
-     */
-    void addExtraItems();
-
-    /**
-     * Creates a new ChestInterface for the specified user.
+     * Adds extra items to the menu if needed.
      *
-     * @param user    The user to build the interface for.
-     * @param factory The ContextFactory required to help build item clicks.
-     * @return The ChestInterface.
+     * @param user The user viewing the Menu.
      */
-    ChestInterface build(User user, ContextFactory factory);
+    void addExtraItems(final User user);
 
     /**
      * Gets a Map of items in the Menu.
@@ -82,4 +83,30 @@ public interface Menu {
      * @return If the Menu has a navigation item.
      */
     boolean navigation();
+
+    /**
+     * Creates a new ChestInterface for the specified user.
+     *
+     * @param user The user to build the interface for.
+     * @return The ChestInterface.
+     */
+    default ChestInterface build(final User user) {
+        this.addExtraItems(user);
+        if (!this.navigation()) {
+            this.items().remove("navigation");
+        }
+        Item filler = this.items().remove("fill");
+        if (this.fill()) {
+            Set<Integer> itemSlots = new HashSet<>(this.items().values().stream().map(Item::slot).toList());
+            for (int i = 0; i < this.slots(); i++) {
+                if (!itemSlots.contains(i)) {
+                    Item item = new Item(filler.stack(), filler.name(), filler.lore(), filler.slot(), Action.dummy());
+                    this.items().put("fill" + i, item);
+                }
+            }
+        }
+        Component parsedTitle = Text.forOneUser(user, this.title()).toComponent();
+        List<TransformContext<ChestPane, PlayerViewer>> context = this.items().values().stream().map(item -> TransformContext.of(0, item.transform(user))).toList();
+        return new ChestInterface(this.slots() / 9, parsedTitle, context, List.of(), true, 20, ClickHandler.dummy());
+    }
 }

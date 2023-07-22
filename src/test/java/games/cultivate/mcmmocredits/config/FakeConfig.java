@@ -23,15 +23,16 @@
 //
 package games.cultivate.mcmmocredits.config;
 
+import games.cultivate.mcmmocredits.actions.Action;
+import games.cultivate.mcmmocredits.actions.CommandAction;
 import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
 import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
+import games.cultivate.mcmmocredits.menu.Item;
+import games.cultivate.mcmmocredits.menu.Menu;
+import games.cultivate.mcmmocredits.menu.RegularMenu;
+import games.cultivate.mcmmocredits.serializers.ActionSerializer;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
-import games.cultivate.mcmmocredits.ui.item.BaseItem;
-import games.cultivate.mcmmocredits.ui.item.CommandItem;
-import games.cultivate.mcmmocredits.ui.item.Item;
-import games.cultivate.mcmmocredits.ui.menu.BaseMenu;
-import games.cultivate.mcmmocredits.ui.menu.Menu;
 import org.bukkit.Material;
 import org.spongepowered.configurate.loader.HeaderMode;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
@@ -66,9 +67,9 @@ final class FakeConfig extends BaseConfig {
     public FakeConfig() {
         super();
         Map<String, Item> map = new HashMap<>();
-        map.put("fill", BaseItem.of(Material.BLACK_STAINED_GLASS_PANE));
-        map.put("navigation", CommandItem.of("credits menu main", BaseItem.of(Material.COMPASS)));
-        this.menu = BaseMenu.of(map, "The menu title!", 54, false, true);
+        map.put("fill", Item.of(Material.BLACK_STAINED_GLASS_PANE));
+        map.put("navigation", Item.of(Material.COMPASS).action(new CommandAction("credits menu main")));
+        this.menu = new RegularMenu(map, "The menu title!", 54, false, true);
         this.setLoader(YamlConfigurationLoader.builder()
                 .headerMode(HeaderMode.PRESET)
                 .indent(2)
@@ -77,7 +78,7 @@ final class FakeConfig extends BaseConfig {
                 .sink(() -> new BufferedWriter(new StringWriter()))
                 .defaultOptions(opts -> opts.serializers(build -> build
                         .register(Item.class, ItemSerializer.INSTANCE)
-                        .register(Menu.class, MenuSerializer.INSTANCE)))
-                .build());
+                        .register(Menu.class, MenuSerializer.INSTANCE)
+                        .register(Action.class, ActionSerializer.INSTANCE))).build());
     }
 }

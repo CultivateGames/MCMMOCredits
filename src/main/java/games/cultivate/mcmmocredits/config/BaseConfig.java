@@ -23,17 +23,20 @@
 //
 package games.cultivate.mcmmocredits.config;
 
+import games.cultivate.mcmmocredits.actions.Action;
 import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
 import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
+import games.cultivate.mcmmocredits.menu.Item;
+import games.cultivate.mcmmocredits.menu.Menu;
+import games.cultivate.mcmmocredits.serializers.ActionSerializer;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
-import games.cultivate.mcmmocredits.ui.item.Item;
-import games.cultivate.mcmmocredits.ui.menu.Menu;
 import games.cultivate.mcmmocredits.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
+import org.spongepowered.configurate.NodePath;
 import org.spongepowered.configurate.loader.HeaderMode;
 import org.spongepowered.configurate.objectmapping.ObjectMapper;
 import org.spongepowered.configurate.serialize.SerializationException;
@@ -118,6 +121,18 @@ public class BaseConfig implements Config {
     }
 
     /**
+     * Sets a value to the configuration at the provided NodePath.
+     *
+     * @param value The value to set.
+     * @param path  The path to set the value.
+     * @param <T>   The type of the value.
+     * @return If it was successful.
+     */
+    public <T> boolean set(@NotNull final T value, final NodePath path) {
+        return this.set(value, path.array());
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -142,7 +157,8 @@ public class BaseConfig implements Config {
         return YamlConfigurationLoader.builder()
                 .defaultOptions(opts -> opts.header(HEADER).serializers(build -> build
                         .register(Item.class, ItemSerializer.INSTANCE)
-                        .register(Menu.class, MenuSerializer.INSTANCE)))
+                        .register(Menu.class, MenuSerializer.INSTANCE)
+                        .register(Action.class, ActionSerializer.INSTANCE)))
                 .path(Util.createFile(path, fileName))
                 .headerMode(HeaderMode.PRESET)
                 .indent(2)

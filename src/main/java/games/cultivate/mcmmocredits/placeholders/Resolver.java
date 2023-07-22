@@ -25,13 +25,13 @@ package games.cultivate.mcmmocredits.placeholders;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.mcMMO;
+import games.cultivate.mcmmocredits.transaction.RedeemTransaction;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.util.Util;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -78,7 +78,7 @@ public final class Resolver {
      */
     public static Resolver ofTransaction(final Transaction transaction) {
         Resolver resolver = Resolver.ofUsers(transaction.executor(), transaction.targets()[0]).addAmount(transaction.amount());
-        return transaction.skill() != null ? resolver.addSkill(transaction.skill()) : resolver;
+        return transaction instanceof RedeemTransaction rt ? resolver.addSkill(rt.skill()) : resolver;
     }
 
     /**
@@ -89,7 +89,7 @@ public final class Resolver {
      */
     public static Resolver ofTransactionResult(final TransactionResult result) {
         Resolver resolver = Resolver.ofUsers(result.executor(), result.target()).addAmount(result.transaction().amount());
-        return result.transaction().skill() != null ? resolver.addSkill(result.transaction().skill()) : resolver;
+        return result.transaction() instanceof RedeemTransaction rt ? resolver.addSkill(rt.skill()) : resolver;
     }
 
     /**
@@ -123,8 +123,8 @@ public final class Resolver {
      * @param skill The skill.
      * @return The resolver.
      */
-    public Resolver addSkill(@Nullable final PrimarySkillType skill) {
-        return skill == null ? this : this.addTag("skill", Util.capitalizeWord(skill.name())).addTag("cap", mcMMO.p.getGeneralConfig().getLevelCap(skill));
+    public Resolver addSkill(final PrimarySkillType skill) {
+        return this.addTag("skill", Util.capitalizeWord(skill.name())).addTag("cap", mcMMO.p.getGeneralConfig().getLevelCap(skill));
     }
 
     /**

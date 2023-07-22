@@ -24,11 +24,10 @@
 package games.cultivate.mcmmocredits.config;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import games.cultivate.mcmmocredits.ui.item.BaseItem;
-import games.cultivate.mcmmocredits.ui.item.CommandItem;
-import games.cultivate.mcmmocredits.ui.item.Item;
-import games.cultivate.mcmmocredits.ui.item.RedeemItem;
-import games.cultivate.mcmmocredits.ui.menu.BaseMenu;
+import games.cultivate.mcmmocredits.actions.CommandAction;
+import games.cultivate.mcmmocredits.actions.RedeemAction;
+import games.cultivate.mcmmocredits.menu.Item;
+import games.cultivate.mcmmocredits.menu.RegularMenu;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -44,9 +43,9 @@ import java.util.Map;
 @SuppressWarnings({"FieldMayBeFinal, unused"})
 @ConfigSerializable
 public class MenuConfig extends BaseConfig {
-    private BaseMenu main = BaseMenu.of(this.createMainItems(), "<#ff253c><bold>MCMMO Credits", 54, false, false);
-    private BaseMenu config = BaseMenu.of(this.createConfigItems(), "<dark_gray>Edit Your Configuration...", 54, false, false);
-    private BaseMenu redeem = BaseMenu.of(this.createRedeemItems(), "<dark_gray>Redeem Your Credits...", 45, false, false);
+    private RegularMenu main = RegularMenu.of(this.createMainItems(), "<#ff253c><bold>MCMMO Credits", 54, false, false);
+    private RegularMenu config = RegularMenu.of(this.createConfigItems(), "<dark_gray>Edit Your Configuration...", 54, false, false);
+    private RegularMenu redeem = RegularMenu.of(this.createRedeemItems(), "<dark_gray>Redeem Your Credits...", 45, false, false);
 
     private Map<String, Item> createMainItems() {
         Map<String, Item> items = new HashMap<>();
@@ -60,8 +59,8 @@ public class MenuConfig extends BaseConfig {
     private Map<String, Item> createConfigItems() {
         List<String> lore = List.of("<gray>Click here to edit this config option!");
         Map<String, Item> items = new HashMap<>();
-        items.put("messages", BaseItem.of(new ItemStack(Material.WRITABLE_BOOK, 1), "", lore, -1));
-        items.put("settings", BaseItem.of(new ItemStack(Material.REDSTONE, 1), "", lore, -1));
+        items.put("messages", Item.of(Material.WRITABLE_BOOK, "", lore, -1));
+        items.put("settings", Item.of(Material.REDSTONE, "", lore, -1));
         items.put("fill", this.createFill());
         items.put("navigation", this.createCompass(49));
         return items;
@@ -92,8 +91,8 @@ public class MenuConfig extends BaseConfig {
      *
      * @return The created item.
      */
-    private BaseItem createFill() {
-        return BaseItem.of(Material.BLACK_STAINED_GLASS_PANE);
+    private Item createFill() {
+        return Item.of(Material.BLACK_STAINED_GLASS_PANE);
     }
 
     /**
@@ -102,30 +101,30 @@ public class MenuConfig extends BaseConfig {
      * @param slot The slot location of the created item.
      * @return The created item.
      */
-    private CommandItem createCompass(final int slot) {
+    private Item createCompass(final int slot) {
         String command = "credits menu main";
         String name = "<red>Previous Menu";
         List<String> lore = List.of("<gray>Left Click to go back!");
-        return CommandItem.of(command, BaseItem.of(new ItemStack(Material.COMPASS, 1), name, lore, slot));
+        return new Item(new ItemStack(Material.DIAMOND), name, lore, slot, new CommandAction(command));
     }
 
-    private CommandItem createConfigShortcut() {
+    private Item createConfigShortcut() {
         String command = "credits menu config";
         String name = "<#FF253C>Edit Config";
         List<String> lore = List.of("<gray>Left Click to edit config!");
-        return CommandItem.of(command, BaseItem.of(new ItemStack(Material.DIAMOND, 1), name, lore, 11));
+        return new Item(new ItemStack(Material.DIAMOND), name, lore, 11, new CommandAction(command));
     }
 
-    private CommandItem createRedeemShortcut() {
+    private Item createRedeemShortcut() {
         String command = "credits menu redeem";
         String name = "<green>Redeem MCMMO Credits!";
         List<String> lore = List.of("<gray>Left Click to redeem Credits!");
-        return CommandItem.of(command, BaseItem.of(new ItemStack(Material.EMERALD, 1), name, lore, 15));
+        return new Item(new ItemStack(Material.EMERALD), name, lore, 15, new CommandAction(command));
     }
 
-    private RedeemItem createRedeemItem(final Material material, final PrimarySkillType skill, final int slot) {
+    private Item createRedeemItem(final Material material, final PrimarySkillType skill, final int slot) {
         List<String> lore = List.of("<yellow><sender>, click here to redeem!");
-        Item item = BaseItem.of(new ItemStack(material, 1), "<yellow>" + Util.capitalizeWord(skill.name()), lore, slot);
-        return RedeemItem.of(skill, item);
+        Item item = Item.of(new ItemStack(material, 1), "<yellow>" + Util.capitalizeWord(skill.name()), lore, slot);
+        return item.action(new RedeemAction(skill));
     }
 }

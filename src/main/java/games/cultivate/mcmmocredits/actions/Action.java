@@ -21,32 +21,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.transaction;
+package games.cultivate.mcmmocredits.actions;
 
-import games.cultivate.mcmmocredits.user.CommandExecutor;
-import games.cultivate.mcmmocredits.user.User;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.incendo.interfaces.core.click.ClickContext;
+import org.incendo.interfaces.paper.PlayerViewer;
+import org.incendo.interfaces.paper.pane.ChestPane;
 
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-
-@ExtendWith(MockitoExtension.class)
-class TransactionResultTest {
-    @Mock
-    private CommandExecutor mockExecutor;
-
-    @Test
-    void of_ValidProperties_ValidTransactionResult() {
-        User target = new User(UUID.randomUUID(), "testUser", 100, 10);
-        Transaction transaction = Transaction.builder().amount(100).users(this.mockExecutor, target).type(TransactionType.ADD).build();
-        TransactionResult result = transaction.execute();
-        assertNotEquals(target, result.target());
-        assertEquals(this.mockExecutor, result.executor());
-        assertEquals(transaction, result.transaction());
+/**
+ * Represents an action that is executed after an item is clicked.
+ */
+public interface Action {
+    /**
+     * Returns an Action that does nothing.
+     *
+     * @return Action that does nothing.
+     */
+    static Action dummy() {
+        return x -> {
+        };
     }
+
+    /**
+     * Executes the action using the provided context.
+     *
+     * @param ctx The context.
+     */
+    void execute(final ClickContext<ChestPane, InventoryClickEvent, PlayerViewer> ctx);
 }

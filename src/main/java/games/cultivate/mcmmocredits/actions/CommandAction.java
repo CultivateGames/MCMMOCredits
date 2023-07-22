@@ -21,64 +21,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.ui.item;
+package games.cultivate.mcmmocredits.actions;
 
-import games.cultivate.mcmmocredits.ui.ContextFactory;
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.user.User;
+import org.bukkit.Bukkit;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.ItemStack;
+import org.incendo.interfaces.core.arguments.ArgumentKey;
+import org.incendo.interfaces.core.arguments.InterfaceArguments;
 import org.incendo.interfaces.core.click.ClickContext;
 import org.incendo.interfaces.paper.PlayerViewer;
 import org.incendo.interfaces.paper.pane.ChestPane;
-
-import java.util.List;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
- * Represents an ItemStack and an action to be performed when clicked inside a menu.
+ * Action which executes a command.
  */
-public interface Item {
+@ConfigSerializable
+public record CommandAction(String command) implements Action {
     /**
-     * Updates the name and lore based on the provided User.
-     *
-     * @param user The viewer of the item as a User.
-     * @return A Bukkit ItemStack with updated properties.
+     * {@inheritDoc}
      */
-    ItemStack parseUser(User user);
-
-    /**
-     * Executes an action if a click is performed on this Item within a Menu.
-     *
-     * @param user    The viewer of the item as a User.
-     * @param factory The ContextFactory used to run click actions.
-     * @param ctx     The context of the click.
-     */
-    void executeClick(User user, ContextFactory factory, ClickContext<ChestPane, InventoryClickEvent, PlayerViewer> ctx);
-
-    /**
-     * Gets the raw item name.
-     *
-     * @return The item's name.
-     */
-    String name();
-
-    /**
-     * Gets the raw item lore.
-     *
-     * @return The item's lore.
-     */
-    List<String> lore();
-
-    /**
-     * Gets the Item's assigned slot in a Menu.
-     *
-     * @return The item's slot
-     */
-    int slot();
-
-    /**
-     * Gets the Bukkit ItemStack.
-     *
-     * @return The Bukkit ItemStack.
-     */
-    ItemStack stack();
+    @Override
+    public void execute(final ClickContext<ChestPane, InventoryClickEvent, PlayerViewer> ctx) {
+        InterfaceArguments args = ctx.view().arguments();
+        MCMMOCredits plugin = args.get(ArgumentKey.of("plugin", MCMMOCredits.class));
+        User user = args.get(ArgumentKey.of("user", User.class));
+        ctx.viewer().close();
+        plugin.execute(() -> Bukkit.dispatchCommand(user.player(), this.command));
+    }
 }

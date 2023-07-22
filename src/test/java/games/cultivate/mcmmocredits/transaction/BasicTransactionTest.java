@@ -49,9 +49,9 @@ class BasicTransactionTest {
 
     @Test
     void execute_ValidUser_TransactionApplied() {
-        Transaction addition = Transaction.builder().self(this.target).type(TransactionType.ADD).amount(100);
-        Transaction subtraction = Transaction.builder().self(this.target).type(TransactionType.TAKE).amount(100);
-        Transaction setting = Transaction.builder().self(this.target).type(TransactionType.SET).amount(100);
+        Transaction addition = Transaction.builder().self(this.target).type(TransactionType.ADD).amount(100).build();
+        Transaction subtraction = Transaction.builder().self(this.target).type(TransactionType.TAKE).amount(100).build();
+        Transaction setting = Transaction.builder().self(this.target).type(TransactionType.SET).amount(100).build();
         assertEquals(1100, addition.execute().target().credits());
         assertEquals(900, subtraction.execute().target().credits());
         assertEquals(100, setting.execute().target().credits());
@@ -59,9 +59,9 @@ class BasicTransactionTest {
 
     @Test
     void execute_ValidUsers_TransactionApplied() {
-        Transaction addition = Transaction.builder().users(this.executor, this.target).type(TransactionType.ADD).amount(100);
-        Transaction subtraction = Transaction.builder().users(this.executor, this.target).type(TransactionType.TAKE).amount(100);
-        Transaction setting = Transaction.builder().users(this.executor, this.target).type(TransactionType.SET).amount(100);
+        Transaction addition = Transaction.builder().users(this.executor, this.target).type(TransactionType.ADD).amount(100).build();
+        Transaction subtraction = Transaction.builder().users(this.executor, this.target).type(TransactionType.TAKE).amount(100).build();
+        Transaction setting = Transaction.builder().users(this.executor, this.target).type(TransactionType.SET).amount(100).build();
         assertEquals(1100, addition.execute().target().credits());
         assertEquals(900, subtraction.execute().target().credits());
         assertEquals(100, setting.execute().target().credits());
@@ -69,51 +69,51 @@ class BasicTransactionTest {
 
     @Test
     void selfOf_ValidProperties_ValidTransaction() {
-        Transaction addition = Transaction.builder().self(this.target).type(TransactionType.ADD).amount(100);
+        Transaction addition = Transaction.builder().self(this.target).type(TransactionType.ADD).amount(100).build();
         assertEquals(this.target, addition.executor());
         assertEquals(this.target, addition.targets()[0]);
-        assertEquals(TransactionType.ADD, addition.type());
+        assertTrue(addition instanceof AddTransaction);
         assertEquals(100, addition.amount());
-        assertEquals(Optional.empty(), addition.isExecutable());
+        assertEquals(Optional.empty(), addition.valid());
     }
 
     @Test
     void of_ValidProperties_ValidTransaction() {
-        Transaction addition = Transaction.builder().users(this.executor, this.target).type(TransactionType.ADD).amount(100);
+        Transaction addition = Transaction.builder().users(this.executor, this.target).type(TransactionType.ADD).amount(100).build();
         assertEquals(this.executor, addition.executor());
         assertEquals(this.target, addition.targets()[0]);
-        assertEquals(TransactionType.ADD, addition.type());
+        assertTrue(addition instanceof AddTransaction);
         assertEquals(100, addition.amount());
-        assertEquals(Optional.empty(), addition.isExecutable());
+        assertEquals(Optional.empty(), addition.valid());
     }
 
     @Test
     void executable_ValidTransaction_ReturnsNoFailure() {
-        Transaction addition = Transaction.builder().users(this.executor, this.target).type(TransactionType.ADD).amount(100);
-        assertEquals(Optional.empty(), addition.isExecutable());
+        Transaction addition = Transaction.builder().users(this.executor, this.target).type(TransactionType.ADD).amount(100).build();
+        assertEquals(Optional.empty(), addition.valid());
     }
 
     @Test
     void executable_InvalidTransaction_ReturnsFailure() {
-        Transaction subtraction = Transaction.builder().users(this.executor, this.target).type(TransactionType.TAKE).amount(1001);
-        assertEquals(Optional.of("not-enough-credits"), subtraction.isExecutable());
+        Transaction subtraction = Transaction.builder().users(this.executor, this.target).type(TransactionType.TAKE).amount(1001).build();
+        assertEquals(Optional.of("not-enough-credits"), subtraction.valid());
     }
 
     @Test
     void executable_InvalidTransactionWithOverflowedInt_DoesNotThrow() {
-        Transaction addition = Transaction.builder().users(this.executor, this.target).type(TransactionType.ADD).amount(Integer.MAX_VALUE);
-        assertDoesNotThrow(addition::isExecutable);
+        Transaction addition = Transaction.builder().users(this.executor, this.target).type(TransactionType.ADD).amount(Integer.MAX_VALUE).build();
+        assertDoesNotThrow(addition::valid);
     }
 
     @Test
     void isSelfTransaction_selfTransactionReturnsTrue() {
-        Transaction addition = Transaction.builder().self(this.target).type(TransactionType.ADD).amount(100);
+        Transaction addition = Transaction.builder().self(this.target).type(TransactionType.ADD).amount(100).build();
         assertTrue(addition.isSelfTransaction());
     }
 
     @Test
     void isSelfTransaction_regularTransactionReturnsFalse() {
-        Transaction addition = Transaction.builder().users(this.executor, this.target).type(TransactionType.ADD).amount(100);
+        Transaction addition = Transaction.builder().users(this.executor, this.target).type(TransactionType.ADD).amount(100).build();
         assertFalse(addition.isSelfTransaction());
     }
 }

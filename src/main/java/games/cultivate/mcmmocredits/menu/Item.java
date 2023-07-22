@@ -21,44 +21,46 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.ui.item;
+package games.cultivate.mcmmocredits.menu;
 
+import games.cultivate.mcmmocredits.actions.Action;
 import games.cultivate.mcmmocredits.text.Text;
-import games.cultivate.mcmmocredits.ui.ContextFactory;
 import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.incendo.interfaces.core.click.ClickContext;
+import org.incendo.interfaces.core.transform.Transform;
 import org.incendo.interfaces.paper.PlayerViewer;
+import org.incendo.interfaces.paper.element.ItemStackElement;
 import org.incendo.interfaces.paper.pane.ChestPane;
+import org.incendo.interfaces.paper.transform.PaperTransform;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.util.List;
 
 /**
- * Represents a basic Item.
+ * Representation of a Bukkit ItemStack.
+ *
+ * @param stack  The Bukkit ItemStack.
+ * @param name   Unparsed item name.
+ * @param lore   Unparsed item lore.
+ * @param slot   Slot of the item in the Menu.
+ * @param action Action to execute when the item is clicked in a menu.
  */
-public class BaseItem implements Item {
-    private final ItemStack stack;
-    private final String name;
-    private final List<String> lore;
-    private final int slot;
-
+@ConfigSerializable
+public record Item(ItemStack stack, String name, List<String> lore, int slot, Action action) {
     /**
      * Constructs the object.
      *
-     * @param stack The representative ItemStack. Updated with refreshing name/lore.
-     * @param name  Raw name of the item. Always parsed.
-     * @param lore  Raw lore of the item. Always parsed.
-     * @param slot  Location of item in a Menu.
+     * @param material The material of the ItemStack. Updated with refreshing name/lore.
+     * @param name     Raw name of the item. Always parsed.
+     * @param lore     Raw lore of the item. Always parsed.
+     * @param slot     Location of item in a Menu.
+     * @return The item.
      */
-    BaseItem(final ItemStack stack, final String name, final List<String> lore, final int slot) {
-        this.stack = stack;
-        this.name = name;
-        this.lore = lore;
-        this.slot = slot;
+    public static Item of(final Material material, final String name, final List<String> lore, final int slot) {
+        return new Item(new ItemStack(material, 1), name, lore, slot, Action.dummy());
     }
 
     /**
@@ -70,8 +72,8 @@ public class BaseItem implements Item {
      * @param slot  Location of item in a Menu.
      * @return The item.
      */
-    public static BaseItem of(final ItemStack stack, final String name, final List<String> lore, final int slot) {
-        return new BaseItem(stack, name, lore, slot);
+    public static Item of(final ItemStack stack, final String name, final List<String> lore, final int slot) {
+        return new Item(stack, name, lore, slot, Action.dummy());
     }
 
     /**
@@ -80,14 +82,33 @@ public class BaseItem implements Item {
      * @param material The type of the Item.
      * @return The item.
      */
-    public static BaseItem of(final Material material) {
-        return new BaseItem(new ItemStack(material, 1), "", List.of(), -1);
+    public static Item of(final Material material) {
+        return new Item(new ItemStack(material, 1), "", List.of(), -1, Action.dummy());
+    }
+
+    /**
+     * Returns a menu transformation for the item.
+     *
+     * @param user The user to parse against.
+     * @return The transformation.
+     */
+    public Transform<ChestPane, PlayerViewer> transform(final User user) {
+        return PaperTransform.chestItem(() -> ItemStackElement.of(this.parseUser(user), this.action::execute), this.slot % 9, this.slot / 9);
+    }
+
+    /**
+     * Returns a copy of the item with a new action.
+     *
+     * @param action The action.
+     * @return The new item.
+     */
+    public Item action(final Action action) {
+        return new Item(this.stack, this.name, this.lore, this.slot, action);
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override
     public ItemStack parseUser(final User user) {
         ItemMeta meta = this.stack.getItemMeta();
         if (!this.name.isEmpty()) {
@@ -101,45 +122,5 @@ public class BaseItem implements Item {
         ItemStack copy = this.stack.clone();
         copy.setItemMeta(meta);
         return copy;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void executeClick(final User user, final ContextFactory factory, final ClickContext<ChestPane, InventoryClickEvent, PlayerViewer> ctx) {
-        ctx.status(ClickContext.ClickStatus.DENY);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ItemStack stack() {
-        return this.stack;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String name() {
-        return this.name;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<String> lore() {
-        return this.lore;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int slot() {
-        return this.slot;
     }
 }

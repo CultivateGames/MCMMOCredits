@@ -133,7 +133,7 @@ class ResolverTest {
         GeneralConfig config = mock(GeneralConfig.class);
         when(mcMMO.p.getGeneralConfig()).thenReturn(config);
         when(config.getLevelCap(PrimarySkillType.HERBALISM)).thenReturn(1000);
-        Transaction transaction = Transaction.builder().users(this.sender, this.target).skill(PrimarySkillType.HERBALISM).amount(25);
+        Transaction transaction = Transaction.builder().users(this.sender, this.target).skill(PrimarySkillType.HERBALISM).amount(25).build();
         Resolver resolver = Resolver.ofTransaction(transaction);
         assertEquals(this.sender.username(), this.convert("<sender>", resolver));
         assertEquals(this.sender.uuid().toString(), this.convert("<sender_uuid>", resolver));
@@ -150,7 +150,7 @@ class ResolverTest {
 
     @Test
     void ofTransactionResult_ValidTransactionResult_BuildsCorrectResolver() {
-        Transaction transaction = Transaction.builder().users(this.sender, this.target).amount(25).type(TransactionType.SET);
+        Transaction transaction = Transaction.builder().users(this.sender, this.target).amount(25).type(TransactionType.SET).build();
         TransactionResult result = TransactionResult.of(transaction, this.sender, this.target);
         Resolver resolver = Resolver.ofTransactionResult(result);
         assertEquals(this.sender.username(), this.convert("<sender>", resolver));

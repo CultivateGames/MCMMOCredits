@@ -21,20 +21,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.ui.menu;
+package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.ui.ContextFactory;
-import games.cultivate.mcmmocredits.ui.item.Item;
 import games.cultivate.mcmmocredits.user.User;
 import org.bukkit.entity.Player;
-import org.incendo.interfaces.paper.type.ChestInterface;
 
 import java.util.Map;
 
 /**
- * Represents the menu provided by executing /credits menu main.
+ * Represents a Bukkit Inventory with populated item slots.
+ *
+ * @param items      Map of items and their internal names.
+ * @param title      Unparsed title of the inventory.
+ * @param slots      Size of the inventory.
+ * @param fill       If the inventory should be filled with bordering items.
+ * @param navigation If a navigation item should be included in the menu.
  */
-public final class MainMenu extends BaseMenu {
+public record RegularMenu(Map<String, Item> items, String title, int slots, boolean fill,
+                          boolean navigation) implements Menu {
     /**
      * Constructs the object.
      *
@@ -43,9 +47,10 @@ public final class MainMenu extends BaseMenu {
      * @param slots      Size of the Inventory.
      * @param fill       Whether the inventory will have fill border items.
      * @param navigation Whether the inventory will have a navigation item.
+     * @return The menu.
      */
-    private MainMenu(final Map<String, Item> items, final String title, final int slots, final boolean fill, final boolean navigation) {
-        super(items, title, slots, fill, navigation);
+    public static RegularMenu of(final Map<String, Item> items, final String title, final int slots, final boolean fill, final boolean navigation) {
+        return new RegularMenu(items, title, slots, fill, navigation);
     }
 
     /**
@@ -54,20 +59,15 @@ public final class MainMenu extends BaseMenu {
      * @param menu The existing Menu.
      * @return The menu.
      */
-    public static MainMenu of(final Menu menu) {
-        return new MainMenu(menu.items(), menu.title(), menu.slots(), menu.fill(), menu.navigation());
+    public static RegularMenu of(final Menu menu) {
+        return new RegularMenu(menu.items(), menu.title(), menu.slots(), menu.fill(), menu.navigation());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ChestInterface build(final User user, final ContextFactory factory) {
-        this.hideItems(user);
-        return super.build(user, factory);
-    }
-
-    private void hideItems(final User user) {
+    public void addExtraItems(final User user) {
         Player player = user.player();
         if (!player.hasPermission("mcmmocredits.menu.config")) {
             this.items().remove("config");

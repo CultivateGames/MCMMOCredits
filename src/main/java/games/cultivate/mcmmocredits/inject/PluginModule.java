@@ -37,14 +37,13 @@ import games.cultivate.mcmmocredits.converters.Converter;
 import games.cultivate.mcmmocredits.converters.InternalConverter;
 import games.cultivate.mcmmocredits.converters.PluginConverter;
 import games.cultivate.mcmmocredits.database.Database;
-import games.cultivate.mcmmocredits.ui.ContextFactory;
 import games.cultivate.mcmmocredits.user.UserCache;
 import games.cultivate.mcmmocredits.user.UserDAO;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
 import games.cultivate.mcmmocredits.util.Dir;
-
 import jakarta.inject.Singleton;
+
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -73,7 +72,6 @@ public final class PluginModule extends AbstractModule {
         this.bind(UserService.class).asEagerSingleton();
         this.bind(UserCache.class).asEagerSingleton();
         this.bind(ChatQueue.class).asEagerSingleton();
-        this.bind(ContextFactory.class).asEagerSingleton();
         this.bind(UserDAO.class).toProvider(Database.class).in(Singleton.class);
         this.bind(Credits.class).asEagerSingleton();
     }

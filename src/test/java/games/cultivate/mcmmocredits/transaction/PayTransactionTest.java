@@ -45,7 +45,7 @@ class PayTransactionTest {
 
     @Test
     void execute_ValidUsers_TransactionApplied() {
-        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(600).type(TransactionType.PAY);
+        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(600).type(TransactionType.PAY).build();
         TransactionResult result = pay.execute();
         assertEquals(900, result.executor().credits());
         assertEquals(1600, result.target().credits());
@@ -53,22 +53,22 @@ class PayTransactionTest {
 
     @Test
     void of_ValidProperties_ValidTransaction() {
-        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(600).type(TransactionType.PAY);
+        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(600).type(TransactionType.PAY).build();
         assertEquals(this.executor, pay.executor());
         assertEquals(this.target, pay.targets()[0]);
         assertEquals(600, pay.amount());
-        assertEquals(Optional.empty(), pay.isExecutable());
+        assertEquals(Optional.empty(), pay.valid());
     }
 
     @Test
     void executable_InvalidTransaction_ReturnsFailure() {
-        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(10000).type(TransactionType.PAY);
-        assertEquals(Optional.of("not-enough-credits"), pay.isExecutable());
+        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(10000).type(TransactionType.PAY).build();
+        assertEquals(Optional.of("not-enough-credits"), pay.valid());
     }
 
     @Test
     void isSelfTransaction_regularTransactionReturnsFalse() {
-        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(10000).type(TransactionType.PAY);
+        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(10000).type(TransactionType.PAY).build();
         assertFalse(pay.isSelfTransaction());
     }
 }
