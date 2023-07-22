@@ -8,7 +8,8 @@ plugins {
     id("signing")
     id("xyz.jpenilla.run-paper") version "2.1.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("net.minecrell.plugin-yml.bukkit") version "0.5.3"
+    id("net.minecrell.plugin-yml.bukkit") version "0.6.0"
+    id("org.cadixdev.licenser") version "0.6.1"
 }
 
 repositories {
@@ -23,17 +24,17 @@ dependencies {
     implementation("cloud.commandframework:cloud-annotations:1.8.3")
     implementation("cloud.commandframework:cloud-paper:1.8.3")
     implementation("org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT")
-    implementation("com.h2database:h2:2.1.214")
+    implementation("com.h2database:h2:2.2.220")
     implementation("com.google.inject:guice:7.0.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.jdbi:jdbi3-core:3.38.3")
-    implementation("org.jdbi:jdbi3-sqlite:3.38.3")
-    implementation("org.jdbi:jdbi3-sqlobject:3.38.3")
-    testImplementation("org.jdbi:jdbi3-testing:3.38.3")
+    implementation("org.jdbi:jdbi3-core:3.39.1")
+    implementation("org.jdbi:jdbi3-sqlite:3.39.1")
+    implementation("org.jdbi:jdbi3-sqlobject:3.39.1")
+    testImplementation("org.jdbi:jdbi3-testing:3.39.1")
     testImplementation(platform("org.junit:junit-bom:5.9.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.mockito:mockito-core:5.3.1")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.3.1")
+    testImplementation("org.mockito:mockito-core:5.4.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.4.0")
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
         exclude(module = "paper-api")
     }
@@ -41,7 +42,7 @@ dependencies {
     compileOnly("me.clip:placeholderapi:2.11.3") {
         exclude(group = "net.kyori")
     }
-    compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.220") {
+    compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.222") {
         exclude("com.sk89q.worldguard")
         exclude("com.sk89q.worldedit")
     }
@@ -115,6 +116,12 @@ bukkit {
     authors = listOf("CultivateGames")
     website = "https://cultivate.games/"
     softDepend = listOf("mcMMO", "PlaceholderAPI")
+}
+
+license {
+    style.put("java", "DOUBLE_SLASH")
+    newLine(false)
+    exclude("**/*.yml")
 }
 
 configurations {
