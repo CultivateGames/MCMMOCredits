@@ -162,7 +162,7 @@ tasks {
     shadowJar {
         archiveClassifier.set("")
         minimize {
-            exclude(dependency("com.h2database:h2:2.1.214"))
+            exclude(dependency("com.h2database:h2"))
         }
         fun reloc(pkg: String) = relocate(pkg, "games.cultivate.mcmmocredits.relocate.$pkg")
         reloc("cloud.commandframework")

@@ -25,11 +25,11 @@ package games.cultivate.mcmmocredits.placeholders;
 
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
+import jakarta.inject.Inject;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
-import jakarta.inject.Inject;
 import java.util.Optional;
 
 /**

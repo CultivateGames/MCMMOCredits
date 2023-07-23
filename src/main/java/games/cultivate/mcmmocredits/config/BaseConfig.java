@@ -36,7 +36,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
-import org.spongepowered.configurate.NodePath;
 import org.spongepowered.configurate.loader.HeaderMode;
 import org.spongepowered.configurate.objectmapping.ObjectMapper;
 import org.spongepowered.configurate.serialize.SerializationException;
@@ -118,18 +117,6 @@ public class BaseConfig implements Config {
             e.printStackTrace();
             return false;
         }
-    }
-
-    /**
-     * Sets a value to the configuration at the provided NodePath.
-     *
-     * @param value The value to set.
-     * @param path  The path to set the value.
-     * @param <T>   The type of the value.
-     * @return If it was successful.
-     */
-    public <T> boolean set(@NotNull final T value, final NodePath path) {
-        return this.set(value, path.array());
     }
 
     /**

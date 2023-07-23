@@ -37,8 +37,7 @@ import java.util.Map;
  * @param fill       If the inventory should be filled with bordering items.
  * @param navigation If a navigation item should be included in the menu.
  */
-public record RegularMenu(Map<String, Item> items, String title, int slots, boolean fill,
-                          boolean navigation) implements Menu {
+public record RegularMenu(Map<String, Item> items, String title, int slots, boolean fill, boolean navigation) implements Menu {
     /**
      * Constructs the object.
      *
@@ -70,10 +69,10 @@ public record RegularMenu(Map<String, Item> items, String title, int slots, bool
     public void addExtraItems(final User user) {
         Player player = user.player();
         if (!player.hasPermission("mcmmocredits.menu.config")) {
-            this.items().remove("config");
+            this.items.remove("config");
         }
         if (!player.hasPermission("mcmmocredits.menu.redeem")) {
-            this.items().remove("redeem");
+            this.items.remove("redeem");
         }
     }
 }

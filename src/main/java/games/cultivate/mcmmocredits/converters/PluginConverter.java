@@ -28,10 +28,10 @@ import com.google.gson.JsonParser;
 import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.user.User;
+import jakarta.inject.Inject;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import jakarta.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;

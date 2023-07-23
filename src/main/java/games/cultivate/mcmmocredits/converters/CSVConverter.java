@@ -27,8 +27,8 @@ import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.util.Dir;
-
 import jakarta.inject.Inject;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
