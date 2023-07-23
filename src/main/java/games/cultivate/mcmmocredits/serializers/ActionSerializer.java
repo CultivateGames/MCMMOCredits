@@ -23,6 +23,7 @@
 //
 package games.cultivate.mcmmocredits.serializers;
 
+import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.actions.Action;
 import games.cultivate.mcmmocredits.actions.CommandAction;
 import games.cultivate.mcmmocredits.actions.ConfigAction;
@@ -53,7 +54,7 @@ public final class ActionSerializer implements TypeSerializer<Action> {
             return new CommandAction(node.node("command").getString());
         }
         if (Util.getSkillNames().contains(key)) {
-            return RedeemAction.of(key);
+            return new RedeemAction(PrimarySkillType.valueOf(key.toUpperCase()));
         }
         return Action.dummy();
     }

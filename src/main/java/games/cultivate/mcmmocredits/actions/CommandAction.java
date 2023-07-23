@@ -50,6 +50,6 @@ public record CommandAction(String command) implements Action {
         MCMMOCredits plugin = args.get(ArgumentKey.of("plugin", MCMMOCredits.class));
         User user = args.get(ArgumentKey.of("user", User.class));
         ctx.viewer().close();
-        plugin.execute(() -> Bukkit.dispatchCommand(user.player(), this.command));
+        Bukkit.getScheduler().runTaskLater(plugin, () -> Bukkit.dispatchCommand(user.player(), this.command), 1L);
     }
 }

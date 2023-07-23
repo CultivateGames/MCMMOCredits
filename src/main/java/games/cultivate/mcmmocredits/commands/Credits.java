@@ -227,7 +227,7 @@ public final class Credits {
                 .with(ArgumentKey.of("user"), executor)
                 .build();
         PlayerViewer viewer = PlayerViewer.of(executor.player());
-        this.plugin.execute(() -> this.menuConfig.getMenu("main").build(executor).open(viewer, args));
+        this.menuConfig.getMenu("main").build(executor).open(viewer, args);
     }
 
     /**
@@ -246,7 +246,7 @@ public final class Credits {
                 .with(ArgumentKey.of("user"), executor)
                 .build();
         PlayerViewer viewer = PlayerViewer.of(executor.player());
-        this.plugin.execute(() -> this.menuConfig.getMenu("redeem").build(executor).open(viewer, args));
+        this.menuConfig.getMenu("redeem").build(executor).open(viewer, args);
     }
 
     /**
@@ -266,7 +266,7 @@ public final class Credits {
                 .build();
         PlayerViewer viewer = PlayerViewer.of(executor.player());
         Menu menu = new ConfigMenu(this.menuConfig.getMenu("config"), this.config.filterNodes(x -> x.contains("database") || x.contains("converter")));
-        this.plugin.execute(() -> menu.build(executor).open(viewer, args));
+        menu.build(executor).open(viewer, args);
     }
 
     /**

@@ -24,6 +24,7 @@
 package games.cultivate.mcmmocredits.actions;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.MainConfig;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.transaction.Transaction;
@@ -46,16 +47,6 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 @ConfigSerializable
 public record RedeemAction(PrimarySkillType skill) implements Action {
     /**
-     * Builds a RedeemAction using a string to parse the skill type.
-     *
-     * @param skill The skill type.
-     * @return The action.
-     */
-    public static RedeemAction of(final String skill) {
-        return new RedeemAction(PrimarySkillType.valueOf(skill.toUpperCase()));
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -64,11 +55,12 @@ public record RedeemAction(PrimarySkillType skill) implements Action {
         MainConfig config = args.get(ArgumentKey.of("config", MainConfig.class));
         ChatQueue queue = args.get(ArgumentKey.of("queue", ChatQueue.class));
         User user = args.get(ArgumentKey.of("user", User.class));
+        MCMMOCredits plugin = args.get(ArgumentKey.of("plugin", MCMMOCredits.class));
         ctx.viewer().close();
         user.sendText(config.getMessage("redeem-prompt"), r -> r.addSkill(this.skill));
-        queue.act(user.uuid(), i -> {
+        queue.act(user.uuid(), i -> Bukkit.getScheduler().runTaskLater(plugin, () -> {
             Transaction transaction = Transaction.builder().self(user).skill(this.skill).amount(Integer.parseInt(i)).build();
             Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false));
-        });
+        }, 1L));
     }
 }
