@@ -23,10 +23,6 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
@@ -48,26 +44,6 @@ public final class Util {
      */
     public static List<String> getSkillNames() {
         return MCMMO_SKILLS;
-    }
-
-    /**
-     * Creates a file and path's directories if they do not exist.
-     *
-     * @param dir      Path of the file to be created.
-     * @param fileName Name of the file to be created.
-     * @return the path of the created file.
-     */
-    public static Path createFile(final Path dir, final String fileName) {
-        try {
-            if (Files.notExists(dir)) {
-                Files.createDirectories(dir);
-            }
-            return Files.createFile(dir.resolve(fileName));
-        } catch (FileAlreadyExistsException ignored) { //Ignore if file already exists.
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return dir.resolve(fileName);
     }
 
     /**

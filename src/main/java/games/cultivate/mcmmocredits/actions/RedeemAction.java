@@ -25,7 +25,8 @@ package games.cultivate.mcmmocredits.actions;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.MainConfig;
+import games.cultivate.mcmmocredits.config.Config;
+import games.cultivate.mcmmocredits.config.MainData;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.user.User;
@@ -52,7 +53,7 @@ public record RedeemAction(PrimarySkillType skill) implements Action {
     @Override
     public void execute(final ClickContext<ChestPane, InventoryClickEvent, PlayerViewer> ctx) {
         InterfaceArguments args = ctx.view().arguments();
-        MainConfig config = args.get(ArgumentKey.of("config", MainConfig.class));
+        Config<MainData> config = args.get(ArgumentKey.of("config", Config.class));
         ChatQueue queue = args.get(ArgumentKey.of("queue", ChatQueue.class));
         User user = args.get(ArgumentKey.of("user", User.class));
         MCMMOCredits plugin = args.get(ArgumentKey.of("plugin", MCMMOCredits.class));

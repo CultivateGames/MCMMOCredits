@@ -27,9 +27,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
+import games.cultivate.mcmmocredits.actions.Action;
 import games.cultivate.mcmmocredits.commands.Credits;
-import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.config.MenuConfig;
+import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
 import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.converters.CSVConverter;
@@ -37,12 +37,20 @@ import games.cultivate.mcmmocredits.converters.Converter;
 import games.cultivate.mcmmocredits.converters.InternalConverter;
 import games.cultivate.mcmmocredits.converters.PluginConverter;
 import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.menu.Item;
+import games.cultivate.mcmmocredits.menu.Menu;
+import games.cultivate.mcmmocredits.serializers.ActionSerializer;
+import games.cultivate.mcmmocredits.serializers.ItemSerializer;
+import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import games.cultivate.mcmmocredits.user.UserCache;
 import games.cultivate.mcmmocredits.user.UserDAO;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
 import games.cultivate.mcmmocredits.util.Dir;
 import jakarta.inject.Singleton;
+import org.spongepowered.configurate.loader.HeaderMode;
+import org.spongepowered.configurate.yaml.NodeStyle;
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -52,6 +60,7 @@ import java.util.Objects;
  */
 public final class PluginModule extends AbstractModule {
     private final MCMMOCredits plugin;
+    private ConfigService configService;
 
     /**
      * Constructs the Guice Module.
@@ -76,6 +85,21 @@ public final class PluginModule extends AbstractModule {
         this.bind(Credits.class).asEagerSingleton();
     }
 
+    @Provides
+    public ConfigService provideConfigService(final @Dir Path path) {
+        if (this.configService == null) {
+            this.configService = new ConfigService(YamlConfigurationLoader.builder()
+                    .defaultOptions(opts -> opts.serializers(build -> build
+                            .register(Item.class, ItemSerializer.INSTANCE)
+                            .register(Menu.class, MenuSerializer.INSTANCE)
+                            .register(Action.class, ActionSerializer.INSTANCE)))
+                    .headerMode(HeaderMode.PRESET)
+                    .indent(2)
+                    .nodeStyle(NodeStyle.BLOCK), path);
+        }
+        return this.configService;
+    }
+
     /**
      * Provides the Database from DatabaseProperties.
      *
@@ -92,51 +116,23 @@ public final class PluginModule extends AbstractModule {
     /**
      * Provides the ConverterProperties from the config.
      *
-     * @param config The injected MainConfig.
+     * @param configService The injected ConfigService.
      * @return The ConverterProperties.
      */
     @Provides
-    public ConverterProperties provideConverterProperties(final MainConfig config) {
-        return config.getConverterProperties("converter");
+    public ConverterProperties provideConverterProperties(final ConfigService configService) {
+        return configService.mainConfig().getConverterProperties("converter");
     }
 
     /**
      * Provides the DatabaseProperties from the config.
      *
-     * @param config The injected MainConfig.
+     * @param configService The injected ConfigService.
      * @return The DatabaseProperties.
      */
     @Provides
-    public DatabaseProperties provideProperties(final MainConfig config) {
-        return config.getDatabaseProperties("settings", "database");
-    }
-
-    /**
-     * Provides the MainConfig for injection. Loads the config first.
-     *
-     * @param path The plugin's data folder path.
-     * @return The loaded MainConfig.
-     */
-    @Provides
-    @Singleton
-    public MainConfig provideMainConfig(@Dir final Path path) {
-        MainConfig config = new MainConfig();
-        config.load(path, "config.yml");
-        return config;
-    }
-
-    /**
-     * Provides the MenuConfig for injection. Loads the config first.
-     *
-     * @param path The plugin's data folder path.
-     * @return The loaded MenuConfig.
-     */
-    @Provides
-    @Singleton
-    public MenuConfig provideMenuConfig(@Dir final Path path) {
-        MenuConfig config = new MenuConfig();
-        config.load(path, "menus.yml");
-        return config;
+    public DatabaseProperties provideProperties(final ConfigService configService) {
+        return configService.mainConfig().getDatabaseProperties("settings", "database");
     }
 
     /**

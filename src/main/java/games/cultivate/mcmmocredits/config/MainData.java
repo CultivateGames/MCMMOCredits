@@ -32,11 +32,7 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
  */
 @SuppressWarnings({"FieldMayBeFinal, unused"})
 @ConfigSerializable
-public class MainConfig extends BaseConfig {
-    /**
-     * Settings used to modify plugin messages.
-     * Most messages sent with the "prefix" prepended.
-     */
+public class MainData implements Data {
     private String prefix = "<hover:show_text:'<green><sender>: <sender_credits> Credits'><gold><bold>CREDITS</bold> ";
     private String addUser = "<target> has been added to the database!";
     private String argumentParseFailureNoInputWasProvided = "No input was provided";

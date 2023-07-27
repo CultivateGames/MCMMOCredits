@@ -23,24 +23,28 @@
 //
 package games.cultivate.mcmmocredits.config;
 
+import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
+import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
+import games.cultivate.mcmmocredits.menu.Menu;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.NodePath;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
-import java.nio.file.Path;
+import java.util.List;
+import java.util.function.Predicate;
 
 /**
- * Represents basic functionality of a configuration.
+ * Represents basic functionality of a file that holds configuration data.
  */
 @ConfigSerializable
-public interface Config {
+public interface Config<D extends Data> {
     /**
-     * Loads the configuration. Supports reloading.
+     * Loads the configuration.
      *
-     * @param path     The path of the configuration.
-     * @param fileName The name of the configuration file.
+     * @param type Type of the data to load.
      */
-    void load(Path path, String fileName);
+    void load(Class<D> type);
 
     /**
      * Saves the configuration using the current root node.
@@ -69,6 +73,13 @@ public interface Config {
     <T> T get(Class<T> type, T def, Object... path);
 
     /**
+     * Filters configuration node paths based on the provided Predicate.
+     * @param filter Predicate to filter list against.
+     * @return A filtered list of configuration node paths.
+     */
+    List<String> filterNodes(Predicate<? super String> filter);
+
+    /**
      * Sets a value to the configuration at the provided NodePath.
      *
      * @param value The value to set.
@@ -78,5 +89,76 @@ public interface Config {
      */
     default <T> boolean set(@NotNull final T value, final NodePath path) {
         return this.set(value, path.array());
+    }
+
+    /**
+     * Gets a boolean from the configuration.
+     *
+     * @param path location where the value is found.
+     * @return The value, or the default if the value is null.
+     */
+    default boolean getBoolean(final Object... path) {
+        return this.get(boolean.class, false, path);
+    }
+
+    /**
+     * Gets a String from the configuration, with the prefix prepended.
+     *
+     * @param path Node path where the value is found.
+     * @return The value, or the default if the value is null.
+     */
+    default String getMessage(final Object... path) {
+        return this.getString("prefix") + this.getString(path);
+    }
+
+    /**
+     * Gets a String from the configuration.
+     *
+     * @param path Node path where the value is found.
+     * @return The value, or the default if the value is null.
+     */
+    default String getString(final Object... path) {
+        return this.get(String.class, "", path);
+    }
+
+    /**
+     * Gets an int from the configuration.
+     *
+     * @param path Node path where the value is found.
+     * @return The value, or the default if the value is null.
+     */
+    default int getInteger(final Object... path) {
+        return this.get(int.class, 0, path);
+    }
+
+    /**
+     * Gets a Menu from the configuration.
+     *
+     * @param path Node path where the value is found.
+     * @return The value, or the default if the value is null.
+     */
+    default @Nullable Menu getMenu(final Object... path) {
+        return this.get(Menu.class, null, path);
+    }
+
+    /**
+     * Gets the DatabaseProperties object from the configuration.
+     *
+     * @param path Node path where the value is found.
+     * @return The value, or the default if the value is null.
+     */
+    default DatabaseProperties getDatabaseProperties(final Object... path) {
+        return this.get(DatabaseProperties.class, DatabaseProperties.defaults(), path);
+    }
+
+    /**
+     * Gets the ConverterProperties object from the configuration.
+     * A default is not returned to prevent execution of a conversion.
+     *
+     * @param path Node path where the value is found.
+     * @return The value, or null.
+     */
+    default @Nullable ConverterProperties getConverterProperties(final Object... path) {
+        return this.get(ConverterProperties.class, null, path);
     }
 }

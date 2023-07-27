@@ -23,10 +23,15 @@
 //
 package games.cultivate.mcmmocredits.config;
 
+import games.cultivate.mcmmocredits.actions.Action;
 import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
 import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.converters.ConverterType;
+import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
+import games.cultivate.mcmmocredits.serializers.ActionSerializer;
+import games.cultivate.mcmmocredits.serializers.ItemSerializer;
+import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFactory;
@@ -37,7 +42,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.spongepowered.configurate.loader.HeaderMode;
+import org.spongepowered.configurate.yaml.NodeStyle;
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -49,20 +61,32 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ConfigTest {
+    private String configString;
     @Mock
     private MockedStatic<Bukkit> mockBukkit;
     @Mock
     private ItemFactory mockFactory;
     @Mock
     private ItemMeta mockMeta;
-    private FakeConfig config;
+    private Config<FakeData> config;
 
     @BeforeEach
     void setUp() {
+        this.configString = """
+                """;
         this.mockBukkit.when(Bukkit::getItemFactory).thenReturn(this.mockFactory);
         when(this.mockFactory.getItemMeta(any(Material.class))).thenReturn(this.mockMeta);
-        this.config = new FakeConfig();
-        this.config.load(Path.of(""), "");
+        ConfigService configService = new ConfigService(YamlConfigurationLoader.builder()
+                .headerMode(HeaderMode.PRESET)
+                .indent(2)
+                .nodeStyle(NodeStyle.BLOCK)
+                .source(() -> new BufferedReader(new StringReader(this.configString)))
+                .sink(() -> new BufferedWriter(new StringWriter()))
+                .defaultOptions(opts -> opts.serializers(build -> build
+                        .register(Item.class, ItemSerializer.INSTANCE)
+                        .register(Menu.class, MenuSerializer.INSTANCE)
+                        .register(Action.class, ActionSerializer.INSTANCE))), Path.of(""));
+        this.config = configService.loadConfig(FakeData.class);
     }
 
     @Test
@@ -120,9 +144,9 @@ class ConfigTest {
     @Test
     void set_SetsCorrectValue() {
         String test = "The test string--";
-        assertNotEquals(test, this.config.getString("fake-message"));
+        assertNotEquals(test, this.config.get(String.class, "", "fake-message"));
         this.config.set(test, "fake-message");
-        assertEquals(test, this.config.getString("fake-message"));
+        assertEquals(test, this.config.get(String.class, "", "fake-message"));
     }
 
     @Test

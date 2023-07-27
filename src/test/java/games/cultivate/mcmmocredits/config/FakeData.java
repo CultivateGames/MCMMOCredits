@@ -23,37 +23,20 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.actions.Action;
 import games.cultivate.mcmmocredits.actions.CommandAction;
 import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
 import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.menu.RegularMenu;
-import games.cultivate.mcmmocredits.serializers.ActionSerializer;
-import games.cultivate.mcmmocredits.serializers.ItemSerializer;
-import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import org.bukkit.Material;
-import org.spongepowered.configurate.loader.HeaderMode;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.yaml.NodeStyle;
-import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * In-memory configuration used for testing.
- */
-@SuppressWarnings({"FieldMayBeFinal, unused"})
 @ConfigSerializable
-final class FakeConfig extends BaseConfig {
-    private final transient String configString = """
-            """;
+public class FakeData implements Data {
     private String prefix = "The message prefix!!";
     private String fakeMessage = "The actual message!";
     private boolean leaderboardEnabled = true;
@@ -62,23 +45,12 @@ final class FakeConfig extends BaseConfig {
     private DatabaseProperties database = DatabaseProperties.defaults();
     private ConverterProperties converter = ConverterProperties.defaults();
     private long retryDelay = 60000L;
-    private Menu menu;
+    private Menu menu = new RegularMenu(this.items(), "The menu title!", 54, false, true);
 
-    public FakeConfig() {
-        super();
+    private Map<String, Item> items() {
         Map<String, Item> map = new HashMap<>();
         map.put("fill", Item.of(Material.BLACK_STAINED_GLASS_PANE));
         map.put("navigation", Item.of(Material.COMPASS).action(new CommandAction("credits menu main")));
-        this.menu = new RegularMenu(map, "The menu title!", 54, false, true);
-        this.setLoader(YamlConfigurationLoader.builder()
-                .headerMode(HeaderMode.PRESET)
-                .indent(2)
-                .nodeStyle(NodeStyle.BLOCK)
-                .source(() -> new BufferedReader(new StringReader(this.configString)))
-                .sink(() -> new BufferedWriter(new StringWriter()))
-                .defaultOptions(opts -> opts.serializers(build -> build
-                        .register(Item.class, ItemSerializer.INSTANCE)
-                        .register(Menu.class, MenuSerializer.INSTANCE)
-                        .register(Action.class, ActionSerializer.INSTANCE))).build());
+        return map;
     }
 }

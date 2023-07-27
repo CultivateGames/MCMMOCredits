@@ -42,7 +42,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldMayBeFinal, unused"})
 @ConfigSerializable
-public class MenuConfig extends BaseConfig {
+public class MenuData implements Data {
     private RegularMenu main = RegularMenu.of(this.createMainItems(), "<#ff253c><bold>MCMMO Credits", 54, false, false);
     private RegularMenu config = RegularMenu.of(this.createConfigItems(), "<dark_gray>Edit Your Configuration...", 54, false, false);
     private RegularMenu redeem = RegularMenu.of(this.createRedeemItems(), "<dark_gray>Redeem Your Credits...", 45, false, false);

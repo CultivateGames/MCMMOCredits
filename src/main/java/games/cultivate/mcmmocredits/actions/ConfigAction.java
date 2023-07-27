@@ -23,7 +23,8 @@
 //
 package games.cultivate.mcmmocredits.actions;
 
-import games.cultivate.mcmmocredits.config.MainConfig;
+import games.cultivate.mcmmocredits.config.Config;
+import games.cultivate.mcmmocredits.config.MainData;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.util.ChatQueue;
@@ -51,7 +52,7 @@ public record ConfigAction(NodePath path) implements Action {
     public void execute(final ClickContext<ChestPane, InventoryClickEvent, PlayerViewer> ctx) {
         InterfaceArguments args = ctx.view().arguments();
         User user = args.get(ArgumentKey.of("user", User.class));
-        MainConfig config = args.get(ArgumentKey.of("config", MainConfig.class));
+        Config<MainData> config = args.get(ArgumentKey.of("config", Config.class));
         ChatQueue queue = args.get(ArgumentKey.of("queue", ChatQueue.class));
         Resolver resolver = Resolver.ofUser(user).addTag("setting", Util.joinString(".", this.path.array()));
         ctx.viewer().close();

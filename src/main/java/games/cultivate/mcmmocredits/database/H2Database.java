@@ -25,10 +25,10 @@ package games.cultivate.mcmmocredits.database;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.user.UserDAO;
 import games.cultivate.mcmmocredits.util.Dir;
-import games.cultivate.mcmmocredits.util.Util;
 import jakarta.inject.Inject;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.h2.H2DatabasePlugin;
@@ -65,7 +65,7 @@ public class H2Database implements Database {
     @Override
     public void load() {
         HikariConfig config = new HikariConfig();
-        String h2Path = Util.createFile(this.path, "database.mv.db").toString().replace(".mv.db", "");
+        String h2Path = ConfigService.createFile(this.path, "database.mv.db").toString().replace(".mv.db", "");
         String url = String.format("jdbc:h2:file:./%s;DB_CLOSE_DELAY=-1;MODE=MYSQL", h2Path);
         config.setPoolName("MCMMOCredits H2");
         config.setDataSourceClassName("org.h2.jdbcx.JdbcDataSource");

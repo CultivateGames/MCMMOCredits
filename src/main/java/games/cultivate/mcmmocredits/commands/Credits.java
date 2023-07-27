@@ -31,8 +31,7 @@ import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.specifier.Range;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.config.MenuConfig;
+import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.menu.ConfigMenu;
 import games.cultivate.mcmmocredits.menu.Menu;
@@ -49,7 +48,6 @@ import org.incendo.interfaces.core.arguments.ArgumentKey;
 import org.incendo.interfaces.core.arguments.HashMapInterfaceArguments;
 import org.incendo.interfaces.paper.PlayerViewer;
 
-import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -59,21 +57,18 @@ import java.util.List;
 @CommandMethod("${command.prefix}")
 @SuppressWarnings("checkstyle:linelength")
 public final class Credits {
-    private final MainConfig config;
-    private final MenuConfig menuConfig;
+    private final ConfigService configs;
     private final MCMMOCredits plugin;
 
     /**
      * Constructs the object.
      *
-     * @param config     MainConfig to obtain messages and for usage in reload command.
-     * @param menuConfig MenuConfig to obtain menus and for usage in reload command.
-     * @param plugin     Plugin instance to obtain main thread executor.
+     * @param configs ConfigService to obtain configs.
+     * @param plugin  Plugin instance to obtain main thread executor.
      */
     @Inject
-    public Credits(final MainConfig config, final MenuConfig menuConfig, final MCMMOCredits plugin) {
-        this.config = config;
-        this.menuConfig = menuConfig;
+    public Credits(final ConfigService configs, final MCMMOCredits plugin) {
+        this.configs = configs;
         this.plugin = plugin;
     }
 
@@ -86,7 +81,7 @@ public final class Credits {
     @CommandPermission("mcmmocredits.balance.self")
     @CommandDescription("Allows user to check credit statistics.")
     public void balance(final User user) {
-        user.sendText(this.config.getMessage("balance"));
+        user.sendText(this.configs.mainConfig().getMessage("balance"));
     }
 
     /**
@@ -99,7 +94,7 @@ public final class Credits {
     @CommandPermission("mcmmocredits.balance.other")
     @CommandDescription("Allows user to check someone else's credit statistics.")
     public void balanceOther(final CommandExecutor executor, final @Argument User user) {
-        executor.sendText(this.config.getMessage("balance-other"), Resolver.ofUsers(executor, user));
+        executor.sendText(this.configs.mainConfig().getMessage("balance-other"), Resolver.ofUsers(executor, user));
     }
 
     /**
@@ -192,20 +187,20 @@ public final class Credits {
     @CommandPermission("mcmmocredits.leaderboard")
     @CommandDescription("Shows the specified page of the leaderboard.")
     public void top(final CommandExecutor executor, final UserService service, final @Argument @Range(min = "1") int page) {
-        if (!this.config.getBoolean("settings", "leaderboard-enabled")) {
-            executor.sendText(this.config.getMessage("invalid-leaderboard"));
+        if (!this.configs.mainConfig().getBoolean("settings", "leaderboard-enabled")) {
+            executor.sendText(this.configs.mainConfig().getMessage("invalid-leaderboard"));
             return;
         }
-        int limit = this.config.getInteger("settings", "leaderboard-page-size");
+        int limit = this.configs.mainConfig().getInteger("settings", "leaderboard-page-size");
         int offset = Math.max(0, (page - 1) * limit);
         List<User> users = service.getPageOfUsers(limit, offset);
         if (users.isEmpty()) {
-            executor.sendText(this.config.getMessage("invalid-leaderboard"));
+            executor.sendText(this.configs.mainConfig().getMessage("invalid-leaderboard"));
             return;
         }
-        executor.sendText(this.config.getString("leaderboard-title"));
+        executor.sendText(this.configs.mainConfig().getString("leaderboard-title"));
         Resolver resolver = Resolver.ofUser(executor);
-        String entry = this.config.getString("leaderboard-entry");
+        String entry = this.configs.mainConfig().getString("leaderboard-entry");
         for (int i = 1; i <= users.size(); i++) {
             executor.sendText(entry, resolver.addUser(users.get(i - 1), "target").addTag("rank", i + offset));
         }
@@ -221,13 +216,13 @@ public final class Credits {
     @CommandPermission("mcmmocredits.menu.main")
     @CommandDescription("Allows user to open the Main Menu.")
     public void openMainMenu(final User executor, final ChatQueue queue) {
-        HashMapInterfaceArguments args = HashMapInterfaceArguments.with(ArgumentKey.of("config"), this.config)
+        HashMapInterfaceArguments args = HashMapInterfaceArguments.with(ArgumentKey.of("config"), this.configs.mainConfig())
                 .with(ArgumentKey.of("queue"), queue)
                 .with(ArgumentKey.of("plugin"), this.plugin)
                 .with(ArgumentKey.of("user"), executor)
                 .build();
         PlayerViewer viewer = PlayerViewer.of(executor.player());
-        this.menuConfig.getMenu("main").build(executor).open(viewer, args);
+        this.configs.menuConfig().getMenu("main").build(executor).open(viewer, args);
     }
 
     /**
@@ -240,13 +235,13 @@ public final class Credits {
     @CommandPermission("mcmmocredits.menu.redeem")
     @CommandDescription("Allows user to open the Redeem Menu.")
     public void openRedeemMenu(final User executor, final ChatQueue queue) {
-        HashMapInterfaceArguments args = HashMapInterfaceArguments.with(ArgumentKey.of("config"), this.config)
+        HashMapInterfaceArguments args = HashMapInterfaceArguments.with(ArgumentKey.of("config"), this.configs.mainConfig())
                 .with(ArgumentKey.of("queue"), queue)
                 .with(ArgumentKey.of("plugin"), this.plugin)
                 .with(ArgumentKey.of("user"), executor)
                 .build();
         PlayerViewer viewer = PlayerViewer.of(executor.player());
-        this.menuConfig.getMenu("redeem").build(executor).open(viewer, args);
+        this.configs.menuConfig().getMenu("redeem").build(executor).open(viewer, args);
     }
 
     /**
@@ -259,13 +254,13 @@ public final class Credits {
     @CommandPermission("mcmmocredits.menu.config")
     @CommandDescription("Allows user to open the Config Menu.")
     public void openConfigMenu(final User executor, final ChatQueue queue) {
-        HashMapInterfaceArguments args = HashMapInterfaceArguments.with(ArgumentKey.of("config"), this.config)
+        HashMapInterfaceArguments args = HashMapInterfaceArguments.with(ArgumentKey.of("config"), this.configs.mainConfig())
                 .with(ArgumentKey.of("queue"), queue)
                 .with(ArgumentKey.of("plugin"), this.plugin)
                 .with(ArgumentKey.of("user"), executor)
                 .build();
         PlayerViewer viewer = PlayerViewer.of(executor.player());
-        Menu menu = new ConfigMenu(this.menuConfig.getMenu("config"), this.config.filterNodes(x -> x.contains("database") || x.contains("converter")));
+        Menu menu = new ConfigMenu(this.configs.menuConfig().getMenu("config"), this.configs.mainConfig().filterNodes(x -> x.contains("database") || x.contains("converter")));
         menu.build(executor).open(viewer, args);
     }
 
@@ -278,10 +273,8 @@ public final class Credits {
     @CommandPermission("mcmmocredits.admin")
     @CommandDescription("Reloads the configuration files with most changes applied.")
     public void reload(final CommandExecutor executor) {
-        Path path = this.plugin.getDataFolder().toPath();
-        this.config.load(path, "config.yml");
-        this.menuConfig.load(path, "menus.yml");
-        executor.sendText(this.config.getMessage("reload"));
+        this.configs.reloadConfigs();
+        executor.sendText(this.configs.mainConfig().getMessage("reload"));
     }
 
     /**

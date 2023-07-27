@@ -25,10 +25,10 @@ package games.cultivate.mcmmocredits.database;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.user.UserDAO;
 import games.cultivate.mcmmocredits.util.Dir;
-import games.cultivate.mcmmocredits.util.Util;
 import jakarta.inject.Inject;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.locator.ClasspathSqlLocator;
@@ -65,7 +65,7 @@ public class SQLiteDatabase implements Database {
     @Override
     public void load() {
         HikariConfig config = new HikariConfig();
-        String url = "jdbc:sqlite:" + Util.createFile(this.path, "database.db");
+        String url = "jdbc:sqlite:" + ConfigService.createFile(this.path, "database.db");
         config.setPoolName("MCMMOCredits SQLITE");
         config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
         config.addDataSourceProperty("url", url);
