@@ -24,11 +24,7 @@
 package games.cultivate.mcmmocredits.config.properties;
 
 import games.cultivate.mcmmocredits.converters.ConverterType;
-import games.cultivate.mcmmocredits.database.Database;
-import org.bukkit.Bukkit;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-
-import java.nio.file.Path;
 
 /**
  * Represents properties of a Data Converter.
@@ -48,24 +44,5 @@ public record ConverterProperties(ConverterType type, DatabaseProperties oldData
      */
     public static ConverterProperties defaults() {
         return new ConverterProperties(ConverterType.INTERNAL, DatabaseProperties.defaults(), 60000L, 300L, false);
-    }
-
-    /**
-     * Gets the correct path for external data conversions.
-     *
-     * @return The Path.
-     */
-    public Path getExternalPath() {
-        return Bukkit.getPluginsFolder().toPath().resolve(this.type == ConverterType.GUI_REDEEM_MCMMO ? Path.of("GuiRedeemMCMMO", "playerdata") : Path.of("MorphRedeem", "PlayerData"));
-    }
-
-    /**
-     * Gets the Database from stored database information and the provided path.
-     *
-     * @param path The data path of the database.
-     * @return The database.
-     */
-    public Database getOldDatabase(final Path path) {
-        return Database.getDatabase(this.oldDatabase, path);
     }
 }

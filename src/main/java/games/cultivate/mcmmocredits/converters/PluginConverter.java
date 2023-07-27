@@ -40,8 +40,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.List;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -74,8 +73,8 @@ public final class PluginConverter extends AbstractConverter {
     public void load() throws IOException, InterruptedException {
         Map<UUID, String> cached = this.loadCache();
         Set<User> users = this.getUsers();
-        List<File> files = Arrays.asList(this.getConverterProperties().getExternalPath().toFile().listFiles());
-        int size = files.size();
+        File[] files = this.getExternalPath().toFile().listFiles();
+        int size = files.length;
         for (File file : files) {
             UUID uuid = UUID.fromString(file.getName().substring(0, file.getName().length() - 4));
             YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
@@ -120,5 +119,14 @@ public final class PluginConverter extends AbstractConverter {
             this.getName(uuid);
         }
         return element.getAsJsonObject().get("name").getAsString();
+    }
+
+    /**
+     * Gets the correct path for external data conversions.
+     *
+     * @return The Path.
+     */
+    private Path getExternalPath() {
+        return Bukkit.getPluginsFolder().toPath().resolve(this.getConverterProperties().type() == ConverterType.GUI_REDEEM_MCMMO ? Path.of("GuiRedeemMCMMO", "playerdata") : Path.of("MorphRedeem", "PlayerData"));
     }
 }

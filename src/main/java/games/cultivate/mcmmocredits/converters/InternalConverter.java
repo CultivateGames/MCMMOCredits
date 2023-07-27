@@ -49,7 +49,7 @@ public final class InternalConverter extends AbstractConverter {
     @Inject
     public InternalConverter(final Database database, final ConverterProperties properties, final @Dir Path path) {
         super(database, properties);
-        this.oldDatabase = properties.getOldDatabase(path);
+        this.oldDatabase = Database.getDatabase(properties.oldDatabase(), path);
     }
 
     /**

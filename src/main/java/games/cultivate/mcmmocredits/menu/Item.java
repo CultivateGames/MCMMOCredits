@@ -60,7 +60,7 @@ public record Item(ItemStack stack, String name, List<String> lore, int slot, Ac
      * @return The item.
      */
     public static Item of(final Material material, final String name, final List<String> lore, final int slot) {
-        return new Item(new ItemStack(material, 1), name, lore, slot, Action.dummy());
+        return new Item(new ItemStack(material), name, lore, slot, Action.dummy());
     }
 
     /**
@@ -83,7 +83,7 @@ public record Item(ItemStack stack, String name, List<String> lore, int slot, Ac
      * @return The item.
      */
     public static Item of(final Material material) {
-        return new Item(new ItemStack(material, 1), "", List.of(), -1, Action.dummy());
+        return new Item(new ItemStack(material), "", List.of(), -1, Action.dummy());
     }
 
     /**

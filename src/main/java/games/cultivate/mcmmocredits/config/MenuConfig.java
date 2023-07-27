@@ -124,7 +124,6 @@ public class MenuConfig extends BaseConfig {
 
     private Item createRedeemItem(final Material material, final PrimarySkillType skill, final int slot) {
         List<String> lore = List.of("<yellow><sender>, click here to redeem!");
-        Item item = Item.of(new ItemStack(material, 1), "<yellow>" + Util.capitalizeWord(skill.name()), lore, slot);
-        return item.action(new RedeemAction(skill));
+        return new Item(new ItemStack(material), "<yellow>" + Util.capitalizeWord(skill.name()), lore, slot, new RedeemAction(skill));
     }
 }
