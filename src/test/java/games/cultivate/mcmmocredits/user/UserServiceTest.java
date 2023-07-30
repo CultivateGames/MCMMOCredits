@@ -24,7 +24,7 @@
 package games.cultivate.mcmmocredits.user;
 
 import games.cultivate.mcmmocredits.database.Database;
-import games.cultivate.mcmmocredits.database.FakeDatabase;
+import games.cultivate.mcmmocredits.database.DatabaseUtil;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import games.cultivate.mcmmocredits.transaction.TransactionType;
@@ -58,7 +58,7 @@ class UserServiceTest {
     private final int credits = 100;
     private User user;
     private UserService service;
-    private Database database;
+    private final Database database = DatabaseUtil.create();
     @Mock
     private MockedStatic<Bukkit> mockBukkit;
     @Mock
@@ -66,14 +66,13 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        this.database = new FakeDatabase();
         this.user = new User(this.uuid, this.username, this.credits, 50);
         this.service = new UserService(this.database);
     }
 
     @AfterEach
     void tearDown() {
-        this.database.jdbi().useHandle(x -> x.execute("DROP TABLE MCMMOCredits"));
+        this.database.jdbi().useHandle(x -> x.execute("DELETE FROM MCMMOCredits"));
     }
 
     @Test
@@ -117,9 +116,9 @@ class UserServiceTest {
 
     @Test
     void setUsername_UsernameUpdated_ReturnsUpdatedUser() {
-        this.service.addUser(this.user);
-        User result = this.service.setUsername(this.uuid, "newUsername");
-        assertNotNull(result);
+        UUID uuidtest = UUID.randomUUID();
+        this.service.addUser(new User(uuidtest, "new1", 100, 100));
+        User result = this.service.setUsername(uuidtest, "newUsername");
         assertEquals("newUsername", result.username());
     }
 

@@ -24,7 +24,8 @@
 package games.cultivate.mcmmocredits.converter;
 
 import games.cultivate.mcmmocredits.converters.InternalConverter;
-import games.cultivate.mcmmocredits.database.FakeDatabase;
+import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.DatabaseUtil;
 import games.cultivate.mcmmocredits.user.User;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
@@ -36,18 +37,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InternalConverterTest {
+    private final Database oldDatabase = DatabaseUtil.create();
+    private final Database currentDatabase = DatabaseUtil.create("jdbc:h2:mem:testdb2;DB_CLOSE_DELAY=-1;MODE=MYSQL");
 
     @Test
     void run_ValidUsers_ConvertsUsersCorrectly() {
-        FakeDatabase oldDatabase = new FakeDatabase();
-        oldDatabase.addUser(new User(new UUID(0, 0), "tester0", 0, 0));
-        oldDatabase.addUser(new User(new UUID(1, 1), "tester1", 10, 10));
-        oldDatabase.addUser(new User(new UUID(2, 2), "tester2", 20, 20));
-        List<User> users = oldDatabase.getAllUsers();
-        FakeDatabase currentDatabase = new FakeDatabase("jdbc:h2:mem:testdb2;DB_CLOSE_DELAY=-1;MODE=MYSQL");
-        InternalConverter converter = new InternalConverter(currentDatabase, oldDatabase);
+        this.oldDatabase.addUser(new User(new UUID(0, 0), "tester0", 0, 0));
+        this.oldDatabase.addUser(new User(new UUID(1, 1), "tester1", 10, 10));
+        this.oldDatabase.addUser(new User(new UUID(2, 2), "tester2", 20, 20));
+        List<User> users = this.oldDatabase.getAllUsers();
+        InternalConverter converter = new InternalConverter(this.currentDatabase, this.oldDatabase);
         converter.run(LoggerFactory.getLogger(this.getClass()));
-        assertEquals(users.size(), currentDatabase.getAllUsers().size());
-        assertTrue(currentDatabase.getAllUsers().containsAll(users));
+        assertEquals(users.size(), this.currentDatabase.getAllUsers().size());
+        assertTrue(this.currentDatabase.getAllUsers().containsAll(users));
     }
 }

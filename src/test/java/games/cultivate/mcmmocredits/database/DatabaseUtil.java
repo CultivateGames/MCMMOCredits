@@ -24,64 +24,22 @@
 package games.cultivate.mcmmocredits.database;
 
 import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import games.cultivate.mcmmocredits.config.ConfigService;
-import games.cultivate.mcmmocredits.user.User;
-import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.h2.H2DatabasePlugin;
 
-import java.nio.file.Path;
-import java.util.UUID;
+public class DatabaseUtil {
 
-/**
- * Provides a UserDAO using an H2 Database.
- */
-public class H2Database implements Database {
-    private final HikariDataSource source;
-    private final Jdbi jdbi;
+    private DatabaseUtil() {
+    }
 
-    /**
-     * Constructs the object.
-     *
-     * @param path The plugin's file path.
-     */
-    public H2Database(final Path path) {
+    public static Database create(final String url) {
         HikariConfig config = new HikariConfig();
-        String h2Path = ConfigService.createFile(path, "database.mv.db").toString().replace(".mv.db", "");
-        String url = String.format("jdbc:h2:file:./%s;DB_CLOSE_DELAY=-1;MODE=MYSQL", h2Path);
         config.setPoolName("MCMMOCredits H2");
         config.setDataSourceClassName("org.h2.jdbcx.JdbcDataSource");
         config.addDataSourceProperty("url", url);
-        this.source = new HikariDataSource(config);
-        this.jdbi = Jdbi.create(this.source)
-                .installPlugin(new H2DatabasePlugin())
-                .registerRowMapper(User.class, (rs, ctx) -> new User(UUID.fromString(rs.getString("UUID")), rs.getString("username"), rs.getInt("credits"), rs.getInt("redeemed")));
-        this.createTable();
+        return new Database(config, jdbi -> jdbi.installPlugin(new H2DatabasePlugin()));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void disable() {
-        if (this.source != null) {
-            this.source.close();
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Jdbi jdbi() {
-        return this.jdbi;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isH2() {
-        return true;
+    public static Database create() {
+        return create("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MYSQL");
     }
 }

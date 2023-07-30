@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.placeholders;
 
-import games.cultivate.mcmmocredits.database.FakeDatabase;
+import games.cultivate.mcmmocredits.database.DatabaseUtil;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -51,7 +51,7 @@ class CreditExpansionTest {
     @BeforeEach
     void setUp() {
         this.user = new User(new UUID(2, 2), "testUser", 1000, 500);
-        this.service = new UserService(mock(FakeDatabase.class));
+        this.service = new UserService(DatabaseUtil.create());
         this.map = new HashMap<>();
         this.map.put("mcmmocredits", new CreditsExpansion(this.service));
     }

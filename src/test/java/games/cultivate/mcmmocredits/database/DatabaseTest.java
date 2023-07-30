@@ -44,19 +44,18 @@ class DatabaseTest {
     private final UUID uuid = UUID.randomUUID();
     private final int credits = 60;
     private final int redeemed = 500;
-    private Database database;
+    private final Database database = DatabaseUtil.create();
     private User user;
 
     @BeforeEach
     void setUp() {
-        this.database = new FakeDatabase();
         this.user = new User(this.uuid, this.username, this.credits, this.redeemed);
         this.database.addUser(this.user);
     }
 
     @AfterEach
     void tearDown() {
-        this.database.jdbi().useHandle(x -> x.execute("DROP TABLE MCMMOCredits"));
+        this.database.jdbi().useHandle(x -> x.execute("DELETE FROM MCMMOCredits"));
     }
 
     @Test

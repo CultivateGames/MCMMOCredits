@@ -25,9 +25,6 @@ package games.cultivate.mcmmocredits.serializers;
 
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import games.cultivate.mcmmocredits.database.H2Database;
-import games.cultivate.mcmmocredits.database.MySQLDatabase;
-import games.cultivate.mcmmocredits.database.SQLiteDatabase;
 import games.cultivate.mcmmocredits.util.Dir;
 import jakarta.inject.Inject;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -52,11 +49,7 @@ public class DatabaseSerializer implements TypeSerializer<Database> {
     @Override
     public Database deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
         DatabaseProperties properties = node.get(DatabaseProperties.class, DatabaseProperties.defaults());
-        return switch (properties.type()) {
-            case H2 -> new H2Database(this.path);
-            case SQLITE -> new SQLiteDatabase(this.path);
-            case MYSQL -> new MySQLDatabase(properties.user(), properties.password(), properties.url());
-        };
+        return properties.type().apply(properties, this.path);
     }
 
     /**
