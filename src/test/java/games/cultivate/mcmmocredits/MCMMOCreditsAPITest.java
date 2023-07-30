@@ -23,9 +23,8 @@
 //
 package games.cultivate.mcmmocredits;
 
+import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.user.User;
-import games.cultivate.mcmmocredits.user.UserCache;
-import games.cultivate.mcmmocredits.user.UserDAO;
 import games.cultivate.mcmmocredits.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,20 +45,20 @@ class MCMMOCreditsAPITest {
     private final int credits = 100;
     private MCMMOCreditsAPI api;
     private User user;
-    private UserCache cache;
     @Mock
-    private UserDAO dao;
+    private Database database;
+    private UserService service;
 
     @BeforeEach
     void setUp() {
-        this.cache = new UserCache();
-        this.api = new MCMMOCreditsAPI(new UserService(this.dao, this.cache));
+        this.service = new UserService(this.database);
+        this.api = new MCMMOCreditsAPI(this.service);
         this.user = new User(this.uuid, "TestUser", this.credits, 0);
     }
 
     @Test
     void getCredits_ValidUser_ReturnsCredits() {
-        this.cache.add(this.user);
+        this.service.addUser(this.user);
         assertEquals(this.credits, this.api.getCredits(this.uuid));
     }
 
@@ -70,8 +69,8 @@ class MCMMOCreditsAPITest {
 
     @Test
     void addCredits_ValidUser_ReturnsUpdatedCredits() {
-        this.cache.add(this.user);
-        when(this.dao.setCredits(this.uuid, this.credits + 200)).thenReturn(true);
+        this.service.addUser(this.user);
+        when(this.database.setCredits(this.uuid, this.credits + 200)).thenReturn(true);
         assertTrue(this.api.addCredits(this.uuid, 200));
         assertEquals(this.credits + 200, this.api.getCredits(this.uuid));
     }
@@ -79,15 +78,15 @@ class MCMMOCreditsAPITest {
     @Test
     void addCredits_InvalidUser_ReturnsFalse() {
         UUID ruuid = UUID.randomUUID();
-        when(this.dao.setCredits(ruuid, 2030)).thenReturn(false);
+        when(this.database.setCredits(ruuid, 2030)).thenReturn(false);
         assertFalse(this.api.addCredits(ruuid, 2030));
         assertEquals(0, this.api.getCredits(ruuid));
     }
 
     @Test
     void setCredits_ValidUser_ReturnsUpdatedCredits() {
-        this.cache.add(this.user);
-        when(this.dao.setCredits(this.uuid, 250)).thenReturn(true);
+        this.service.addUser(this.user);
+        when(this.database.setCredits(this.uuid, 250)).thenReturn(true);
         assertTrue(this.api.setCredits(this.uuid, 250));
         assertEquals(250, this.api.getCredits(this.uuid));
     }
@@ -95,15 +94,15 @@ class MCMMOCreditsAPITest {
     @Test
     void setCredits_InvalidUser_ReturnsFalse() {
         UUID ruuid = UUID.randomUUID();
-        when(this.dao.setCredits(ruuid, 2030)).thenReturn(false);
+        when(this.database.setCredits(ruuid, 2030)).thenReturn(false);
         assertFalse(this.api.setCredits(ruuid, 2030));
         assertEquals(0, this.api.getCredits(ruuid));
     }
 
     @Test
     void takeCredits_ValidUser_ReturnsUpdatedCredits() {
-        this.cache.add(this.user);
-        when(this.dao.setCredits(this.uuid, this.credits - 20)).thenReturn(true);
+        this.service.addUser(this.user);
+        when(this.database.setCredits(this.uuid, this.credits - 20)).thenReturn(true);
         assertTrue(this.api.takeCredits(this.uuid, 20));
         assertEquals(this.credits - 20, this.api.getCredits(this.uuid));
     }

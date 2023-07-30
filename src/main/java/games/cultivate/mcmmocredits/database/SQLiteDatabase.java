@@ -26,53 +26,36 @@ package games.cultivate.mcmmocredits.database;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.config.ConfigService;
-import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
-import games.cultivate.mcmmocredits.user.UserDAO;
-import games.cultivate.mcmmocredits.util.Dir;
-import jakarta.inject.Inject;
+import games.cultivate.mcmmocredits.user.User;
 import org.jdbi.v3.core.Jdbi;
-import org.jdbi.v3.core.locator.ClasspathSqlLocator;
 import org.jdbi.v3.sqlite3.SQLitePlugin;
-import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import java.nio.file.Path;
+import java.util.UUID;
 
 /**
  * Provides a UserDAO using an SQLite Database.
  */
 public class SQLiteDatabase implements Database {
-    private static final ClasspathSqlLocator LOCATOR = ClasspathSqlLocator.create();
-    private final Path path;
-    private final DatabaseProperties properties;
-    private HikariDataSource source;
-    private UserDAO dao;
+    private final HikariDataSource source;
+    private final Jdbi jdbi;
 
     /**
      * Constructs the object.
      *
-     * @param properties The database's properties.
-     * @param path       The plugin's file path.
+     * @param path The plugin's file path.
      */
-    @Inject
-    public SQLiteDatabase(final DatabaseProperties properties, final @Dir Path path) {
-        this.properties = properties;
-        this.path = path;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void load() {
+    public SQLiteDatabase(final Path path) {
         HikariConfig config = new HikariConfig();
-        String url = "jdbc:sqlite:" + ConfigService.createFile(this.path, "database.db");
+        String url = "jdbc:sqlite:" + ConfigService.createFile(path, "database.db");
         config.setPoolName("MCMMOCredits SQLITE");
         config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
         config.addDataSourceProperty("url", url);
         this.source = new HikariDataSource(config);
-        Jdbi jdbi = Jdbi.create(this.source).installPlugin(new SqlObjectPlugin()).installPlugin(new SQLitePlugin());
-        this.dao = jdbi.onDemand(UserDAO.class);
-        this.dao.useHandle(x -> x.execute(LOCATOR.getResource(this.getClass().getClassLoader(), "CREATE-TABLE-SQLITE.sql")));
+        this.jdbi = Jdbi.create(this.source)
+                .installPlugin(new SQLitePlugin())
+                .registerRowMapper(User.class, (rs, ctx) -> new User(UUID.fromString(rs.getString("UUID")), rs.getString("username"), rs.getInt("credits"), rs.getInt("redeemed")));
+        this.createTable();
     }
 
     /**
@@ -89,18 +72,15 @@ public class SQLiteDatabase implements Database {
      * {@inheritDoc}
      */
     @Override
-    public DatabaseProperties getProperties() {
-        return this.properties;
+    public void createTable() {
+        this.jdbi.useHandle(handle -> handle.execute("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTOINCREMENT,UUID VARCHAR NOT NULL,username VARCHAR NOT NULL,credits INT CHECK(credits >= 0),redeemed INT);"));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public UserDAO get() {
-        if (this.dao == null) {
-            this.load();
-        }
-        return this.dao;
+    public Jdbi jdbi() {
+        return this.jdbi;
     }
 }

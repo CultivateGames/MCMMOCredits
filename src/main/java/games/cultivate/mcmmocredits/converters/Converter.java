@@ -59,5 +59,28 @@ public interface Converter {
      *
      * @param logger The logger used to log current status of the converter.
      */
-    void run(Logger logger);
+    default void run(final Logger logger) {
+        logger.warn("Data Converter enabled in configuration! Loading...");
+        try {
+            this.load();
+        } catch (IOException e) {
+            logger.warn("Data Converter failed at the loading stage! Look for possible errors thrown in console!");
+            e.printStackTrace();
+            return;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+        logger.info("Converter has loaded users from source successfully! Starting conversion, this may take some time.");
+        if (!this.convert()) {
+            logger.warn("Data Converter failed at the conversion stage! Look for possible errors thrown in console!");
+            return;
+        }
+        logger.info("Users have been written to destination database. Starting to verify results...");
+        if (!this.verify()) {
+            logger.warn("Data Converter failed at the verification stage! Look for possible errors thrown in console!");
+            return;
+        }
+        logger.info("Conversion has been verified! Disabling conversion...");
+    }
 }

@@ -24,8 +24,6 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.actions.CommandAction;
-import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
-import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.menu.RegularMenu;
@@ -42,8 +40,6 @@ public class FakeData implements Data {
     private boolean leaderboardEnabled = true;
     private boolean debug = false;
     private int leaderboardPageSize = 10;
-    private DatabaseProperties database = DatabaseProperties.defaults();
-    private ConverterProperties converter = ConverterProperties.defaults();
     private long retryDelay = 60000L;
     private Menu menu = new RegularMenu(this.items(), "The menu title!", 54, false, true);
 

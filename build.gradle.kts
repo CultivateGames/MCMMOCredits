@@ -27,6 +27,7 @@ dependencies {
     implementation("com.h2database:h2:2.2.220")
     implementation("com.google.inject:guice:7.0.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.7")
     implementation("org.jdbi:jdbi3-core:3.39.1")
     implementation("org.jdbi:jdbi3-sqlite:3.39.1")
     implementation("org.jdbi:jdbi3-sqlobject:3.39.1")

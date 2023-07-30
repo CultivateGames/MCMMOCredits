@@ -21,9 +21,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.config.properties;
+package games.cultivate.mcmmocredits.converters;
 
-import games.cultivate.mcmmocredits.converters.ConverterType;
+import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**

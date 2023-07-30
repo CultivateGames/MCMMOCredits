@@ -56,4 +56,22 @@ public record TransactionResult(Transaction transaction, CommandExecutor executo
     public static TransactionResult of(final Transaction transaction, final User target) {
         return new TransactionResult(transaction, target, target);
     }
+
+    /**
+     * Returns if the executor was updated by the transaction.
+     *
+     * @return if the executor was updated by the transaction.
+     */
+    public boolean isExecutorUpdated() {
+        return this.transaction.executor() != this.executor;
+    }
+
+    /**
+     * Returns if the target was updated by the transaction.
+     *
+     * @return if the target was updated by the transaction.
+     */
+    public boolean isTargetUpdated() {
+        return this.transaction().targets()[0] != this.target;
+    }
 }

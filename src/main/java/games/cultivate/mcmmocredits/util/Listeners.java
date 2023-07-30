@@ -29,6 +29,7 @@ import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import games.cultivate.mcmmocredits.user.Console;
+import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import jakarta.inject.Inject;
@@ -86,7 +87,7 @@ public class Listeners implements Listener {
             this.service.setUsername(uuid, username);
             return;
         }
-        this.service.addUser(uuid, username);
+        this.service.addUser(new User(uuid, username, 0, 0));
         if (this.configs.mainConfig().getBoolean("settings", "add-user-message")) {
             Console.INSTANCE.sendText(this.configs.mainConfig().getMessage("add-user"), r -> r.addTag("username", username));
         }
@@ -131,7 +132,7 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerQuit(final PlayerQuitEvent e) {
         UUID uuid = e.getPlayer().getUniqueId();
-        this.service.removeFromCache(uuid);
+        this.service.removeUser(uuid);
         this.queue.remove(uuid);
     }
 
@@ -155,7 +156,7 @@ public class Listeners implements Listener {
             result.executor().sendText(this.configs.mainConfig().getMessage(transaction.messageKey()), resolver);
         }
         if (!e.userFeedback() && result.target().player() != null) {
-            result.target().sendText(this.configs.mainConfig().getMessage(transaction.userMessageKey(), resolver));
+            result.target().sendText(this.configs.mainConfig().getMessage(transaction.userMessageKey()), resolver);
         }
     }
 

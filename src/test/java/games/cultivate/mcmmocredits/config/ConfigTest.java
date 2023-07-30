@@ -24,8 +24,6 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.actions.Action;
-import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
-import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.converters.ConverterType;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
@@ -76,7 +74,8 @@ class ConfigTest {
                 """;
         this.mockBukkit.when(Bukkit::getItemFactory).thenReturn(this.mockFactory);
         when(this.mockFactory.getItemMeta(any(Material.class))).thenReturn(this.mockMeta);
-        ConfigService configService = new ConfigService(YamlConfigurationLoader.builder()
+        ConfigService configService = new ConfigService(Path.of(""));
+        YamlConfigurationLoader.Builder builder = YamlConfigurationLoader.builder()
                 .headerMode(HeaderMode.PRESET)
                 .indent(2)
                 .nodeStyle(NodeStyle.BLOCK)
@@ -85,8 +84,8 @@ class ConfigTest {
                 .defaultOptions(opts -> opts.serializers(build -> build
                         .register(Item.class, ItemSerializer.INSTANCE)
                         .register(Menu.class, MenuSerializer.INSTANCE)
-                        .register(Action.class, ActionSerializer.INSTANCE))), Path.of(""));
-        this.config = configService.loadConfig(FakeData.class);
+                        .register(Action.class, ActionSerializer.INSTANCE)));
+        this.config = configService.loadConfig(FakeData.class, builder);
     }
 
     @Test
@@ -116,16 +115,6 @@ class ConfigTest {
     }
 
     @Test
-    void getDatabaseProperties_ReturnsCorrectValue() {
-        assertEquals(DatabaseProperties.defaults(), this.config.getDatabaseProperties("database"));
-    }
-
-    @Test
-    void getConverterProperties_ReturnsCorrectValue() {
-        assertEquals(ConverterProperties.defaults(), this.config.getConverterProperties("converter"));
-    }
-
-    @Test
     void getMenu_ReturnsCorrectValue() {
         Menu menu = this.config.getMenu("menu");
         assertEquals(Material.BLACK_STAINED_GLASS_PANE, menu.items().get("fill").stack().getType());
@@ -152,8 +141,6 @@ class ConfigTest {
     @Test
     void filterNodes_FiltersCorrectNodes() {
         assertTrue(this.config.filterNodes(x -> false).contains("retry-delay"));
-        assertTrue(this.config.filterNodes(x -> false).contains("converter.type"));
         assertFalse(this.config.filterNodes(x -> x.contains("retry")).contains("retry-delay"));
-        assertFalse(this.config.filterNodes(x -> x.contains("converter.type")).contains("converter.type"));
     }
 }

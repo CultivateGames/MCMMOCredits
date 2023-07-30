@@ -23,8 +23,18 @@
 //
 package games.cultivate.mcmmocredits.config;
 
+import games.cultivate.mcmmocredits.actions.Action;
+import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.menu.Item;
+import games.cultivate.mcmmocredits.menu.Menu;
+import games.cultivate.mcmmocredits.serializers.ActionSerializer;
+import games.cultivate.mcmmocredits.serializers.DatabaseSerializer;
+import games.cultivate.mcmmocredits.serializers.ItemSerializer;
+import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import games.cultivate.mcmmocredits.util.Dir;
 import jakarta.inject.Inject;
+import org.spongepowered.configurate.loader.HeaderMode;
+import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.io.IOException;
@@ -41,10 +51,23 @@ public final class ConfigService {
     private Config<MainData> config;
     private Config<MenuData> menuConfig;
 
+    /**
+     * Constructs the object.
+     *
+     * @param path The plugin's path.
+     */
     @Inject
-    public ConfigService(final YamlConfigurationLoader.Builder builder, final @Dir Path path) {
+    public ConfigService(final @Dir Path path) {
         this.path = path;
-        this.builder = builder;
+        this.builder = YamlConfigurationLoader.builder()
+                .defaultOptions(opts -> opts.serializers(build -> build
+                        .register(Item.class, ItemSerializer.INSTANCE)
+                        .register(Menu.class, MenuSerializer.INSTANCE)
+                        .register(Action.class, ActionSerializer.INSTANCE)
+                        .register(Database.class, new DatabaseSerializer(path))))
+                .headerMode(HeaderMode.PRESET)
+                .indent(2)
+                .nodeStyle(NodeStyle.BLOCK);
     }
 
     /**
@@ -67,24 +90,48 @@ public final class ConfigService {
         return dir.resolve(fileName);
     }
 
-    public <T extends Data> Config<T> loadConfig(final Class<T> type) {
-        Config<T> conf = new BaseConfig<>(this.builder.build());
+    /**
+     * Loads a configuration using the provided type and builder.
+     *
+     * @param type        The data type to load data.
+     * @param yamlBuilder The builder used to load the config.
+     * @param <T>         The data type.
+     * @return The configuration.
+     */
+    public <T extends Data> Config<T> loadConfig(final Class<T> type, final YamlConfigurationLoader.Builder yamlBuilder) {
+        Config<T> conf = new Config<>(yamlBuilder.build());
         conf.load(type);
         return conf;
     }
 
+    /**
+     * Loads a configuration using the provided type and file name. Creates the file for writing.
+     *
+     * @param type The data type to load data.
+     * @param name The name of the file to write the configuration to.
+     * @param <T>  The data type.
+     * @return The configuration.
+     */
     public <T extends Data> Config<T> loadConfig(final Class<T> type, final String name) {
         Path filePath = ConfigService.createFile(this.path, name);
-        Config<T> conf = new BaseConfig<>(this.builder.path(filePath).build());
+        Config<T> conf = new Config<>(this.builder.path(filePath).build());
         conf.load(type);
         return conf;
     }
 
+    /**
+     * Reloads the configurations.
+     */
     public void reloadConfigs() {
         this.config = this.loadConfig(MainData.class, "config.yml");
         this.menuConfig = this.loadConfig(MenuData.class, "menus.yml");
     }
 
+    /**
+     * Returns an instance of the Main Config.
+     *
+     * @return The Main Config.
+     */
     public Config<MainData> mainConfig() {
         if (this.config == null) {
             this.config = this.loadConfig(MainData.class, "config.yml");
@@ -92,6 +139,11 @@ public final class ConfigService {
         return this.config;
     }
 
+    /**
+     * Returns an instance of the Menu Config.
+     *
+     * @return The Menu Config.
+     */
     public Config<MenuData> menuConfig() {
         if (this.menuConfig == null) {
             this.menuConfig = this.loadConfig(MenuData.class, "menus.yml");

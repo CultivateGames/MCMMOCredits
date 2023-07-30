@@ -23,61 +23,127 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
-import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
+import games.cultivate.mcmmocredits.converters.ConverterProperties;
 import games.cultivate.mcmmocredits.menu.Menu;
+import games.cultivate.mcmmocredits.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.configurate.ConfigurateException;
+import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.NodePath;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.ObjectMapper;
+import org.spongepowered.configurate.serialize.SerializationException;
+import org.spongepowered.configurate.util.NamingSchemes;
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.function.Predicate;
 
 /**
- * Represents basic functionality of a file that holds configuration data.
+ * A Configuration File.
+ *
+ * @param <D> Type of the data to parse for config.
  */
-@ConfigSerializable
-public interface Config<D extends Data> {
-    /**
-     * Loads the configuration.
-     *
-     * @param type Type of the data to load.
-     */
-    void load(Class<D> type);
+public final class Config<D extends Data> {
+    private final YamlConfigurationLoader loader;
+    private final ObjectMapper.Factory factory;
+    private ConfigurationNode root;
+    private List<String> paths;
 
     /**
-     * Saves the configuration using the current root node.
+     * Constructs the object.
+     *
+     * @param loader The YAMLConfigurationLoader used to load the config. Stored to load/save the configuration.
      */
-    void save();
+    public Config(final YamlConfigurationLoader loader) {
+        this.loader = loader;
+        this.factory = ObjectMapper.factoryBuilder().defaultNamingScheme(NamingSchemes.LOWER_CASE_DASHED).build();
+        this.paths = new ArrayList<>();
+    }
 
     /**
-     * Modifies the configuration.
-     *
-     * @param value The value to apply.
-     * @param path  location where the value will be set.
-     * @param <T>   Type of the value.
-     * @return returns true if successful, false otherwise.
+     * {@inheritDoc}
      */
-    <T> boolean set(@NotNull T value, Object... path);
+    public void load(final Class<D> type) {
+        try {
+            this.root = this.loader.load();
+            this.factory.get(type).load(this.root);
+            this.save();
+        } catch (ConfigurateException e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
-     * Gets a value from the configuration.
-     *
-     * @param type Value type.
-     * @param def  Default value if missing.
-     * @param path location where the value will be obtained.
-     * @param <T>  Type of the value.
-     * @return The value, or the default if the value is null.
+     * {@inheritDoc}
      */
-    <T> T get(Class<T> type, T def, Object... path);
+    public void save() {
+        try {
+            this.loader.save(this.root);
+            this.updatePaths();
+        } catch (ConfigurateException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public <T> boolean set(@NotNull final T value, final Object... path) {
+        try {
+            this.root.node(path).set(value);
+            this.save();
+            return true;
+        } catch (SerializationException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public <T> T get(final Class<T> type, final T def, final Object... path) {
+        try {
+            return this.root.node(path).get(type, def);
+        } catch (SerializationException e) {
+            e.printStackTrace();
+        }
+        return def;
+    }
+
+    /**
+     * Generates a list of possible paths from the configuration file.
+     */
+    private void updatePaths() {
+        Queue<ConfigurationNode> queue = new ArrayDeque<>(this.root.childrenMap().values());
+        List<String> sorted = new LinkedList<>();
+        while (!queue.isEmpty()) {
+            ConfigurationNode node = queue.poll();
+            if (node.isMap()) {
+                queue.addAll(node.childrenMap().values());
+            } else {
+                sorted.add(Util.joinString(".", node.path()));
+            }
+        }
+        this.paths = sorted;
+    }
 
     /**
      * Filters configuration node paths based on the provided Predicate.
+     *
      * @param filter Predicate to filter list against.
      * @return A filtered list of configuration node paths.
      */
-    List<String> filterNodes(Predicate<? super String> filter);
+    public List<String> filterNodes(final Predicate<? super String> filter) {
+        List<String> sorted = new ArrayList<>(this.paths);
+        sorted.removeIf(filter);
+        return sorted;
+    }
 
     /**
      * Sets a value to the configuration at the provided NodePath.
@@ -87,7 +153,7 @@ public interface Config<D extends Data> {
      * @param <T>   The type of the value.
      * @return If it was successful.
      */
-    default <T> boolean set(@NotNull final T value, final NodePath path) {
+    public <T> boolean set(@NotNull final T value, final NodePath path) {
         return this.set(value, path.array());
     }
 
@@ -95,9 +161,9 @@ public interface Config<D extends Data> {
      * Gets a boolean from the configuration.
      *
      * @param path location where the value is found.
-     * @return The value, or the default if the value is null.
+     * @return The value, or the public if the value is null.
      */
-    default boolean getBoolean(final Object... path) {
+    public boolean getBoolean(final Object... path) {
         return this.get(boolean.class, false, path);
     }
 
@@ -105,9 +171,9 @@ public interface Config<D extends Data> {
      * Gets a String from the configuration, with the prefix prepended.
      *
      * @param path Node path where the value is found.
-     * @return The value, or the default if the value is null.
+     * @return The value, or the public if the value is null.
      */
-    default String getMessage(final Object... path) {
+    public String getMessage(final Object... path) {
         return this.getString("prefix") + this.getString(path);
     }
 
@@ -115,9 +181,9 @@ public interface Config<D extends Data> {
      * Gets a String from the configuration.
      *
      * @param path Node path where the value is found.
-     * @return The value, or the default if the value is null.
+     * @return The value, or the public if the value is null.
      */
-    default String getString(final Object... path) {
+    public String getString(final Object... path) {
         return this.get(String.class, "", path);
     }
 
@@ -125,9 +191,9 @@ public interface Config<D extends Data> {
      * Gets an int from the configuration.
      *
      * @param path Node path where the value is found.
-     * @return The value, or the default if the value is null.
+     * @return The value, or the public if the value is null.
      */
-    default int getInteger(final Object... path) {
+    public int getInteger(final Object... path) {
         return this.get(int.class, 0, path);
     }
 
@@ -135,20 +201,10 @@ public interface Config<D extends Data> {
      * Gets a Menu from the configuration.
      *
      * @param path Node path where the value is found.
-     * @return The value, or the default if the value is null.
+     * @return The value, or the public if the value is null.
      */
-    default @Nullable Menu getMenu(final Object... path) {
+    public @Nullable Menu getMenu(final Object... path) {
         return this.get(Menu.class, null, path);
-    }
-
-    /**
-     * Gets the DatabaseProperties object from the configuration.
-     *
-     * @param path Node path where the value is found.
-     * @return The value, or the default if the value is null.
-     */
-    default DatabaseProperties getDatabaseProperties(final Object... path) {
-        return this.get(DatabaseProperties.class, DatabaseProperties.defaults(), path);
     }
 
     /**
@@ -158,7 +214,7 @@ public interface Config<D extends Data> {
      * @param path Node path where the value is found.
      * @return The value, or null.
      */
-    default @Nullable ConverterProperties getConverterProperties(final Object... path) {
+    public @Nullable ConverterProperties getConverterProperties(final Object... path) {
         return this.get(ConverterProperties.class, null, path);
     }
 }

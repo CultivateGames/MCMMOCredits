@@ -21,68 +21,49 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.converters;
+package games.cultivate.mcmmocredits.serializers;
 
 import games.cultivate.mcmmocredits.database.Database;
-import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.database.DatabaseProperties;
+import games.cultivate.mcmmocredits.database.H2Database;
+import games.cultivate.mcmmocredits.database.MySQLDatabase;
+import games.cultivate.mcmmocredits.database.SQLiteDatabase;
 import games.cultivate.mcmmocredits.util.Dir;
 import jakarta.inject.Inject;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
+import org.spongepowered.configurate.serialize.TypeSerializer;
 
-import java.io.IOException;
-import java.nio.file.Files;
+import java.lang.reflect.Type;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
-/**
- * Data Converter that reads data from a CSV file.
- */
-public final class CSVConverter implements Converter {
+public class DatabaseSerializer implements TypeSerializer<Database> {
     private final Path path;
-    private final Database database;
-    private final Set<User> users;
 
-    /**
-     * Constructs the object.
-     *
-     * @param database The current Database.
-     * @param path     The plugin's data path.
-     */
     @Inject
-    public CSVConverter(final Database database, final @Dir Path path) {
-        this.database = database;
+    public DatabaseSerializer(final @Dir Path path) {
         this.path = path;
-        this.users = new HashSet<>();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void load() throws IOException {
-        List<String> lines = Files.readAllLines(this.path.resolve("database.csv"));
-        this.users.addAll(lines.stream().map(User::fromCSV).toList());
+    public Database deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
+        DatabaseProperties properties = node.get(DatabaseProperties.class, DatabaseProperties.defaults());
+        return switch (properties.type()) {
+            case H2 -> new H2Database(this.path);
+            case SQLITE -> new SQLiteDatabase(this.path);
+            case MYSQL -> new MySQLDatabase(properties.user(), properties.password(), properties.url());
+        };
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean convert() {
-        this.database.addUsers(this.users);
-        if (this.database.isH2()) {
-            this.database.jdbi().useHandle(x -> x.execute("CHECKPOINT SYNC"));
-        }
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean verify() {
-        List<User> updatedCurrentUsers = this.database.getAllUsers();
-        return this.users.parallelStream().allMatch(updatedCurrentUsers::contains);
+    public void serialize(final Type type, final @Nullable Database obj, final ConfigurationNode node) {
+        throw new UnsupportedOperationException("Database serialization is not supported.");
     }
 }

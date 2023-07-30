@@ -23,8 +23,8 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
-import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
+import games.cultivate.mcmmocredits.converters.ConverterProperties;
+import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
@@ -81,9 +81,6 @@ public class MainData implements Data {
     private Settings settings = new Settings();
     private ConverterProperties converter = ConverterProperties.defaults();
 
-    /**
-     * Settings used to modify the plugin's behavior.
-     */
     @ConfigSerializable
     static class Settings {
         private boolean addUserMessage = true;

@@ -25,15 +25,11 @@ package games.cultivate.mcmmocredits.database;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
-import games.cultivate.mcmmocredits.user.UserDAO;
-import jakarta.inject.Inject;
+import games.cultivate.mcmmocredits.user.User;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.argument.AbstractArgumentFactory;
 import org.jdbi.v3.core.argument.Argument;
 import org.jdbi.v3.core.config.ConfigRegistry;
-import org.jdbi.v3.core.locator.ClasspathSqlLocator;
-import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import java.sql.Types;
 import java.util.UUID;
@@ -42,29 +38,20 @@ import java.util.UUID;
  * Provides a UserDAO using a MySQL Database.
  */
 public class MySQLDatabase implements Database {
-    private static final ClasspathSqlLocator LOCATOR = ClasspathSqlLocator.create();
-    private final DatabaseProperties properties;
-    private HikariDataSource source;
-    private UserDAO dao;
+    private final HikariDataSource source;
+    private final Jdbi jdbi;
 
     /**
      * Constructs the object.
      *
-     * @param properties The database's properties.
+     * @param user     Username for the database.
+     * @param password Password for the database.
+     * @param url      URL of the database.
      */
-    @Inject
-    public MySQLDatabase(final DatabaseProperties properties) {
-        this.properties = properties;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void load() {
+    public MySQLDatabase(final String user, final String password, final String url) {
         HikariConfig config = new HikariConfig();
         config.setPoolName("MCMMOCredits MYSQL");
-        config.setJdbcUrl(this.properties.url());
+        config.setJdbcUrl(url);
         //https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration
         config.addDataSourceProperty("cachePrepStmts", true);
         config.addDataSourceProperty("prepStmtCacheSize", 250);
@@ -75,12 +62,13 @@ public class MySQLDatabase implements Database {
         config.addDataSourceProperty("cacheServerConfiguration", true);
         config.addDataSourceProperty("elideSetAutoCommits", true);
         config.addDataSourceProperty("maintainTimeStats", false);
-        config.addDataSourceProperty("user", this.properties.user());
-        config.addDataSourceProperty("password", this.properties.password());
+        config.addDataSourceProperty("user", user);
+        config.addDataSourceProperty("password", password);
         this.source = new HikariDataSource(config);
-        Jdbi jdbi = Jdbi.create(this.source).installPlugin(new SqlObjectPlugin()).registerArgument(new UUIDArgumentFactory());
-        this.dao = jdbi.onDemand(UserDAO.class);
-        this.dao.useHandle(x -> x.execute(LOCATOR.getResource(this.getClass().getClassLoader(), "CREATE-TABLE-MYSQL.sql")));
+        this.jdbi = Jdbi.create(this.source)
+                .registerArgument(new UUIDArgumentFactory())
+                .registerRowMapper(User.class, (rs, ctx) -> new User(UUID.fromString(rs.getString("UUID")), rs.getString("username"), rs.getInt("credits"), rs.getInt("redeemed")));
+        this.createTable();
     }
 
     /**
@@ -97,19 +85,8 @@ public class MySQLDatabase implements Database {
      * {@inheritDoc}
      */
     @Override
-    public DatabaseProperties getProperties() {
-        return this.properties;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public UserDAO get() {
-        if (this.dao == null) {
-            this.load();
-        }
-        return this.dao;
+    public Jdbi jdbi() {
+        return this.jdbi;
     }
 
     /**

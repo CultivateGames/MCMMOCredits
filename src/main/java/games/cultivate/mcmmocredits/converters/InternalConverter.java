@@ -23,42 +23,62 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.user.User;
-import games.cultivate.mcmmocredits.util.Dir;
 import jakarta.inject.Inject;
 
-import java.io.IOException;
-import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
  * Data Converter used to switch between internal database types.
  */
-public final class InternalConverter extends AbstractConverter {
+public final class InternalConverter implements Converter {
     private final Database oldDatabase;
+    private final Database currentDatabase;
+    private final Set<User> users;
 
     /**
      * Constructs the object.
      *
-     * @param database   The current Database.
-     * @param properties The properties of the converter.
-     * @param path       The plugin's data path.
+     * @param currentDatabase The current Database.
+     * @param oldDatabase     The old Database.
      */
     @Inject
-    public InternalConverter(final Database database, final ConverterProperties properties, final @Dir Path path) {
-        super(database, properties);
-        this.oldDatabase = Database.getDatabase(properties.oldDatabase(), path);
+    public InternalConverter(final Database currentDatabase, final Database oldDatabase) {
+        this.currentDatabase = currentDatabase;
+        this.oldDatabase = oldDatabase;
+        this.users = new HashSet<>();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void load() throws IOException, InterruptedException {
-        Set<User> set = this.getUsers();
-        set.addAll(this.oldDatabase.get().getAllUsers());
+    public void load() {
+        this.users.addAll(this.oldDatabase.getAllUsers());
         this.oldDatabase.disable();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean convert() {
+        this.currentDatabase.addUsers(this.users);
+        if (this.currentDatabase.isH2()) {
+            this.currentDatabase.jdbi().useHandle(x -> x.execute("CHECKPOINT SYNC"));
+        }
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean verify() {
+        List<User> updatedCurrentUsers = this.currentDatabase.getAllUsers();
+        return this.users.parallelStream().allMatch(updatedCurrentUsers::contains);
     }
 }

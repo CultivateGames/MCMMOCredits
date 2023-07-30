@@ -25,7 +25,6 @@ package games.cultivate.mcmmocredits.converters;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.user.User;
 import jakarta.inject.Inject;
@@ -41,6 +40,8 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -51,19 +52,30 @@ import java.util.stream.Collectors;
  * Data Converter used to add Users from external plugin data.
  * This converter connects to Mojang to validate username data, as it is not always stored by other plugins.
  */
-public final class PluginConverter extends AbstractConverter {
+public final class PluginConverter implements Converter {
     private final HttpClient client;
+    private final Database database;
+    private final Set<User> users;
+    private final long requestDelay;
+    private final long failureDelay;
+    private final Path pluginPath;
 
     /**
      * Constructs the object.
      *
-     * @param database   The current UserDAO to write users.
-     * @param properties The properties of the converter.
+     * @param database     The current UserDAO to write users.
+     * @param pluginPath   The plugin's data path.
+     * @param requestDelay delay between requests that succeed.
+     * @param failureDelay delay between requests that do NOT succeed.
      */
     @Inject
-    public PluginConverter(final Database database, final ConverterProperties properties) {
-        super(database, properties);
+    public PluginConverter(final Database database, final Path pluginPath, final long requestDelay, final long failureDelay) {
+        this.database = database;
+        this.requestDelay = requestDelay;
+        this.failureDelay = failureDelay;
+        this.users = new HashSet<>();
         this.client = HttpClient.newHttpClient();
+        this.pluginPath = Bukkit.getPluginsFolder().toPath().resolve(pluginPath);
     }
 
     /**
@@ -72,19 +84,39 @@ public final class PluginConverter extends AbstractConverter {
     @Override
     public void load() throws IOException, InterruptedException {
         Map<UUID, String> cached = this.loadCache();
-        Set<User> users = this.getUsers();
-        File[] files = this.getExternalPath().toFile().listFiles();
+        File[] files = this.pluginPath.toFile().listFiles();
         int size = files.length;
         for (File file : files) {
             UUID uuid = UUID.fromString(file.getName().substring(0, file.getName().length() - 4));
             YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
             String username = cached.containsKey(uuid) ? cached.get(uuid) : this.getName(uuid);
-            users.add(new User(uuid, username, config.getInt("Credits", 0), config.getInt("Credits_Spent", 0)));
-            if (users.size() % 100 == 0) {
-                Bukkit.getLogger().info("Progress: " + users.size() + "/" + size);
+            this.users.add(new User(uuid, username, config.getInt("Credits", 0), config.getInt("Credits_Spent", 0)));
+            if (this.users.size() % 100 == 0) {
+                Bukkit.getLogger().info(() -> "Progress: " + this.users.size() + "/" + size);
             }
-            Thread.sleep(this.getConverterProperties().requestDelay());
+            Thread.sleep(this.requestDelay);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean convert() {
+        this.database.addUsers(this.users);
+        if (this.database.isH2()) {
+            this.database.jdbi().useHandle(x -> x.execute("CHECKPOINT SYNC"));
+        }
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean verify() {
+        List<User> updatedCurrentUsers = this.database.getAllUsers();
+        return this.users.parallelStream().allMatch(updatedCurrentUsers::contains);
     }
 
     /**
@@ -115,18 +147,9 @@ public final class PluginConverter extends AbstractConverter {
         JsonElement element = JsonParser.parseString(response.body());
         if (!element.isJsonObject() || responseCode != 200) {
             Bukkit.getLogger().log(Level.WARNING, () -> String.format("Bad response received Retrying shortly. UUID: %s, Response Code: %d.", uuid, responseCode));
-            Thread.sleep(this.getConverterProperties().failureDelay());
+            Thread.sleep(this.failureDelay);
             this.getName(uuid);
         }
         return element.getAsJsonObject().get("name").getAsString();
-    }
-
-    /**
-     * Gets the correct path for external data conversions.
-     *
-     * @return The Path.
-     */
-    private Path getExternalPath() {
-        return Bukkit.getPluginsFolder().toPath().resolve(this.getConverterProperties().type() == ConverterType.GUI_REDEEM_MCMMO ? Path.of("GuiRedeemMCMMO", "playerdata") : Path.of("MorphRedeem", "PlayerData"));
     }
 }

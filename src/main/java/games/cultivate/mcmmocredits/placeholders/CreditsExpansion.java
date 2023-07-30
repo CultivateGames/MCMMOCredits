@@ -93,7 +93,7 @@ public final class CreditsExpansion extends PlaceholderExpansion {
                 case "redeemed" -> String.valueOf(user.redeemed());
                 case "username" -> user.username();
                 case "uuid" -> user.uuid().toString();
-                case "cached" -> String.valueOf(this.service.isCached(user));
+                case "cached" -> String.valueOf(this.service.isUserCached(user));
                 default -> "0";
             };
         }

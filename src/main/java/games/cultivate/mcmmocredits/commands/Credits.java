@@ -193,7 +193,7 @@ public final class Credits {
         }
         int limit = this.configs.mainConfig().getInteger("settings", "leaderboard-page-size");
         int offset = Math.max(0, (page - 1) * limit);
-        List<User> users = service.getPageOfUsers(limit, offset);
+        List<User> users = service.rangeOfUsers(limit, offset);
         if (users.isEmpty()) {
             executor.sendText(this.configs.mainConfig().getMessage("invalid-leaderboard"));
             return;

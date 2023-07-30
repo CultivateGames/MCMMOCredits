@@ -24,43 +24,28 @@
 package games.cultivate.mcmmocredits.inject;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
 import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.actions.Action;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.config.ConfigService;
-import games.cultivate.mcmmocredits.config.properties.ConverterProperties;
-import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
 import games.cultivate.mcmmocredits.converters.CSVConverter;
 import games.cultivate.mcmmocredits.converters.Converter;
+import games.cultivate.mcmmocredits.converters.ConverterProperties;
 import games.cultivate.mcmmocredits.converters.InternalConverter;
 import games.cultivate.mcmmocredits.converters.PluginConverter;
 import games.cultivate.mcmmocredits.database.Database;
-import games.cultivate.mcmmocredits.menu.Item;
-import games.cultivate.mcmmocredits.menu.Menu;
-import games.cultivate.mcmmocredits.serializers.ActionSerializer;
-import games.cultivate.mcmmocredits.serializers.ItemSerializer;
-import games.cultivate.mcmmocredits.serializers.MenuSerializer;
-import games.cultivate.mcmmocredits.user.UserCache;
-import games.cultivate.mcmmocredits.user.UserDAO;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
 import games.cultivate.mcmmocredits.util.Dir;
 import jakarta.inject.Singleton;
-import org.spongepowered.configurate.loader.HeaderMode;
-import org.spongepowered.configurate.yaml.NodeStyle;
-import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.nio.file.Path;
-import java.util.Objects;
 
 /**
  * Handles Guice Dependency Injection.
  */
 public final class PluginModule extends AbstractModule {
     private final MCMMOCredits plugin;
-    private ConfigService configService;
 
     /**
      * Constructs the Guice Module.
@@ -79,76 +64,43 @@ public final class PluginModule extends AbstractModule {
         this.bind(MCMMOCredits.class).toInstance(this.plugin);
         this.bind(Path.class).annotatedWith(Dir.class).toInstance(this.plugin.getDataFolder().toPath());
         this.bind(UserService.class).asEagerSingleton();
-        this.bind(UserCache.class).asEagerSingleton();
         this.bind(ChatQueue.class).asEagerSingleton();
-        this.bind(UserDAO.class).toProvider(Database.class).in(Singleton.class);
         this.bind(Credits.class).asEagerSingleton();
-    }
-
-    @Provides
-    public ConfigService provideConfigService(final @Dir Path path) {
-        if (this.configService == null) {
-            this.configService = new ConfigService(YamlConfigurationLoader.builder()
-                    .defaultOptions(opts -> opts.serializers(build -> build
-                            .register(Item.class, ItemSerializer.INSTANCE)
-                            .register(Menu.class, MenuSerializer.INSTANCE)
-                            .register(Action.class, ActionSerializer.INSTANCE)))
-                    .headerMode(HeaderMode.PRESET)
-                    .indent(2)
-                    .nodeStyle(NodeStyle.BLOCK), path);
-        }
-        return this.configService;
+        this.bind(ConfigService.class).asEagerSingleton();
     }
 
     /**
-     * Provides the Database from DatabaseProperties.
+     * Provides the Database from the Config.
      *
-     * @param properties The properties of the database.
-     * @param path       The plugin's data path.
+     * @param configService The ConfigService to read the database.
      * @return The Database.
      */
     @Provides
     @Singleton
-    public Database provideDatabase(final DatabaseProperties properties, @Dir final Path path) {
-        return Database.getDatabase(properties, path);
+    public Database provideDatabase(final ConfigService configService) {
+        return configService.mainConfig().get(Database.class, null, "settings", "database");
     }
 
     /**
-     * Provides the ConverterProperties from the config.
+     * Provides the Converter from the Config.
      *
-     * @param configService The injected ConfigService.
-     * @return The ConverterProperties.
-     */
-    @Provides
-    public ConverterProperties provideConverterProperties(final ConfigService configService) {
-        return configService.mainConfig().getConverterProperties("converter");
-    }
-
-    /**
-     * Provides the DatabaseProperties from the config.
-     *
-     * @param configService The injected ConfigService.
-     * @return The DatabaseProperties.
-     */
-    @Provides
-    public DatabaseProperties provideProperties(final ConfigService configService) {
-        return configService.mainConfig().getDatabaseProperties("settings", "database");
-    }
-
-    /**
-     * Provides the Converter for injection.
-     *
-     * @param properties The converter's properties.
-     * @param injector   The injector to grab a specific instance of the Converter.
-     * @return A Converter.
+     * @param configService The ConfigService to read the database.
+     * @param database      The current database.
+     * @param path          The current plugin's data path.
+     * @return The Converter
      */
     @Provides
     @Singleton
-    public Converter provideConverter(final ConverterProperties properties, final Injector injector) {
-        return switch (Objects.requireNonNull(properties.type())) {
-            case GUI_REDEEM_MCMMO, MORPH_REDEEM -> injector.getInstance(PluginConverter.class);
-            case CSV -> injector.getInstance(CSVConverter.class);
-            case INTERNAL -> injector.getInstance(InternalConverter.class);
+    public Converter provideConverter(final ConfigService configService, final Database database, final @Dir Path path) {
+        ConverterProperties properties = configService.mainConfig().getConverterProperties("converter");
+        Database oldDatabase = configService.mainConfig().get(Database.class, null, "converter", "oldDatabase");
+        return switch (properties.type()) {
+            case MORPH_REDEEM ->
+                    new PluginConverter(database, Path.of("MorphRedeem", "PlayerData"), properties.requestDelay(), properties.failureDelay());
+            case GUI_REDEEM_MCMMO ->
+                    new PluginConverter(database, Path.of("GuiRedeemMCMMO", "playerdata"), properties.requestDelay(), properties.failureDelay());
+            case CSV -> new CSVConverter(database, path);
+            case INTERNAL -> new InternalConverter(database, oldDatabase);
         };
     }
 }

@@ -38,7 +38,6 @@ import org.incendo.interfaces.core.view.InterfaceView;
 import org.incendo.interfaces.paper.PlayerViewer;
 import org.incendo.interfaces.paper.pane.ChestPane;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -91,14 +90,6 @@ class ActionTest {
         ConfigAction action = new ConfigAction(NodePath.of(List.of("settings", "debug")));
         action.execute(this.mockContext);
         verify(this.mockQueue).act(any(UUID.class), any(Consumer.class));
-    }
-
-    @Test
-    @Disabled("Add Mocked Static for Bukkit")
-    void execute_executesCommand() {
-        CommandAction action = new CommandAction("help");
-        action.execute(this.mockContext);
-        verify(this.mockPlugin).execute(any(Runnable.class));
     }
 
     @Test
