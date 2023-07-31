@@ -28,12 +28,10 @@ import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.commands.Credits;
 import games.cultivate.mcmmocredits.config.ConfigService;
-import games.cultivate.mcmmocredits.converters.CSVConverter;
 import games.cultivate.mcmmocredits.converters.Converter;
 import games.cultivate.mcmmocredits.converters.ConverterProperties;
-import games.cultivate.mcmmocredits.converters.InternalConverter;
-import games.cultivate.mcmmocredits.converters.PluginConverter;
 import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
 import games.cultivate.mcmmocredits.util.Dir;
@@ -77,8 +75,8 @@ public final class PluginModule extends AbstractModule {
      */
     @Provides
     @Singleton
-    public Database provideDatabase(final ConfigService configService) {
-        return configService.mainConfig().get(Database.class, null, "settings", "database");
+    public Database provideDatabase(final ConfigService configService, final @Dir Path path) {
+        return configService.mainConfig().get(DatabaseProperties.class, DatabaseProperties.defaults(), "settings", "database").create(path);
     }
 
     /**
@@ -92,15 +90,7 @@ public final class PluginModule extends AbstractModule {
     @Provides
     @Singleton
     public Converter provideConverter(final ConfigService configService, final Database database, final @Dir Path path) {
-        ConverterProperties properties = configService.mainConfig().getConverterProperties("converter");
-        Database oldDatabase = configService.mainConfig().get(Database.class, null, "converter", "oldDatabase");
-        return switch (properties.type()) {
-            case MORPH_REDEEM ->
-                    new PluginConverter(database, Path.of("MorphRedeem", "PlayerData"), properties.requestDelay(), properties.failureDelay());
-            case GUI_REDEEM_MCMMO ->
-                    new PluginConverter(database, Path.of("GuiRedeemMCMMO", "playerdata"), properties.requestDelay(), properties.failureDelay());
-            case CSV -> new CSVConverter(database, path);
-            case INTERNAL -> new InternalConverter(database, oldDatabase);
-        };
+        ConverterProperties properties = configService.mainConfig().get(ConverterProperties.class, null, "converter");
+        return properties.create(database, path);
     }
 }

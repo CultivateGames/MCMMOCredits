@@ -24,11 +24,9 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.actions.Action;
-import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.serializers.ActionSerializer;
-import games.cultivate.mcmmocredits.serializers.DatabaseSerializer;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import games.cultivate.mcmmocredits.util.Dir;
@@ -63,8 +61,7 @@ public final class ConfigService {
                 .defaultOptions(opts -> opts.serializers(build -> build
                         .register(Item.class, ItemSerializer.INSTANCE)
                         .register(Menu.class, MenuSerializer.INSTANCE)
-                        .register(Action.class, ActionSerializer.INSTANCE)
-                        .register(Database.class, new DatabaseSerializer(path))))
+                        .register(Action.class, ActionSerializer.INSTANCE)))
                 .headerMode(HeaderMode.PRESET)
                 .indent(2)
                 .nodeStyle(NodeStyle.BLOCK);

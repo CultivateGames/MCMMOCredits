@@ -25,6 +25,8 @@ package games.cultivate.mcmmocredits.database;
 
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
+import java.nio.file.Path;
+
 /**
  * Properties used in creation of the Database.
  *
@@ -42,5 +44,15 @@ public record DatabaseProperties(DatabaseType type, String url, String user, Str
      */
     public static DatabaseProperties defaults() {
         return new DatabaseProperties(DatabaseType.H2, "jdbc:mysql://127.0.0.1:3306/DATABASE_NAME", "root", "passw0rd+");
+    }
+
+    /**
+     * Creates an instance of the database using the provided path.
+     *
+     * @param path The path.
+     * @return The database.
+     */
+    public Database create(final Path path) {
+        return this.type.apply(this, path);
     }
 }

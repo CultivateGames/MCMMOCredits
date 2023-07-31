@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.converters.ConverterProperties;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.util.Util;
 import org.jetbrains.annotations.NotNull;
@@ -117,23 +116,6 @@ public final class Config<D extends Data> {
     }
 
     /**
-     * Generates a list of possible paths from the configuration file.
-     */
-    private void updatePaths() {
-        Queue<ConfigurationNode> queue = new ArrayDeque<>(this.root.childrenMap().values());
-        List<String> sorted = new LinkedList<>();
-        while (!queue.isEmpty()) {
-            ConfigurationNode node = queue.poll();
-            if (node.isMap()) {
-                queue.addAll(node.childrenMap().values());
-            } else {
-                sorted.add(Util.joinString(".", node.path()));
-            }
-        }
-        this.paths = sorted;
-    }
-
-    /**
      * Filters configuration node paths based on the provided Predicate.
      *
      * @param filter Predicate to filter list against.
@@ -208,13 +190,19 @@ public final class Config<D extends Data> {
     }
 
     /**
-     * Gets the ConverterProperties object from the configuration.
-     * A default is not returned to prevent execution of a conversion.
-     *
-     * @param path Node path where the value is found.
-     * @return The value, or null.
+     * Generates a list of possible paths from the configuration file.
      */
-    public @Nullable ConverterProperties getConverterProperties(final Object... path) {
-        return this.get(ConverterProperties.class, null, path);
+    private void updatePaths() {
+        Queue<ConfigurationNode> queue = new ArrayDeque<>(this.root.childrenMap().values());
+        List<String> sorted = new LinkedList<>();
+        while (!queue.isEmpty()) {
+            ConfigurationNode node = queue.poll();
+            if (node.isMap()) {
+                queue.addAll(node.childrenMap().values());
+            } else {
+                sorted.add(Util.joinString(".", node.path()));
+            }
+        }
+        this.paths = sorted;
     }
 }

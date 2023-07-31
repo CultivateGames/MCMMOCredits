@@ -79,7 +79,7 @@ public final class Database {
      * @param user The user to add.
      * @return True if the transaction was successful, otherwise false.
      */
-    public boolean addUser(User user) {
+    public boolean addUser(final User user) {
         return this.jdbi.withHandle(handle -> handle.createUpdate("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed);").bindMethods(user).execute() == 1);
     }
 
@@ -88,7 +88,7 @@ public final class Database {
      *
      * @param users The users to add.
      */
-    public void addUsers(Collection<User> users) {
+    public void addUsers(final Collection<User> users) {
         this.jdbi.useHandle(handle -> {
             PreparedBatch batch = handle.prepareBatch("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed);");
             users.forEach(x -> batch.bindMethods(x).add());
@@ -103,7 +103,7 @@ public final class Database {
      * @param uuid The UUID of a user.
      * @return A user if it exists, otherwise an empty optional.
      */
-    public Optional<User> getUser(UUID uuid) {
+    public Optional<User> getUser(final UUID uuid) {
         return this.jdbi.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits WHERE uuid = :uuid;").bind("uuid", uuid).mapTo(User.class).findOne());
     }
 
@@ -114,7 +114,7 @@ public final class Database {
      * @param username The username of a user.
      * @return A user if it exists, otherwise an empty optional.
      */
-    public Optional<User> getUser(String username) {
+    public Optional<User> getUser(final String username) {
         return this.jdbi.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits WHERE username LIKE :username LIMIT 1;").bind("username", username).mapTo(User.class).findOne());
     }
 
@@ -125,7 +125,7 @@ public final class Database {
      * @param offset The starting index of where to start getting users.
      * @return A list of users within the provided bounds.
      */
-    public List<User> rangeOfUsers(int limit, int offset) {
+    public List<User> rangeOfUsers(final int limit, final int offset) {
         return this.jdbi.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits ORDER BY credits DESC LIMIT :limit OFFSET :offset;").bind("limit", limit).bind("offset", offset).mapTo(User.class).list());
     }
 
@@ -145,7 +145,7 @@ public final class Database {
      * @param username The username of a user.
      * @return True if the transaction was successful, otherwise false.
      */
-    public boolean setUsername(UUID uuid, String username) {
+    public boolean setUsername(final UUID uuid, final String username) {
         return this.jdbi.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET username = :username WHERE UUID = :uuid;").bind("uuid", uuid).bind("username", username).execute() == 1);
     }
 
@@ -156,7 +156,7 @@ public final class Database {
      * @param amount The new amount of credits.
      * @return True if the transaction was successful, otherwise false.
      */
-    public boolean setCredits(UUID uuid, int amount) {
+    public boolean setCredits(final UUID uuid, final int amount) {
         return this.jdbi.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET credits = :amount WHERE UUID = :uuid;").bind("uuid", uuid).bind("amount", amount).execute() == 1);
     }
 
@@ -166,13 +166,13 @@ public final class Database {
      * @param user The user to update.
      * @return True if the transaction was successful, otherwise false.
      */
-    public boolean updateUser(User user) {
+    public boolean updateUser(final User user) {
         return this.jdbi.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET username = :username, credits = :credits, redeemed = :redeemed WHERE UUID = :uuid;").bindMethods(user).execute() == 1);
     }
 
     static class UserMapper implements RowMapper<User> {
         @Override
-        public User map(ResultSet rs, StatementContext ctx) throws SQLException {
+        public User map(final ResultSet rs, final StatementContext ctx) throws SQLException {
             return new User(UUID.fromString(rs.getString("UUID")), rs.getString("username"), rs.getInt("credits"), rs.getInt("redeemed"));
         }
     }

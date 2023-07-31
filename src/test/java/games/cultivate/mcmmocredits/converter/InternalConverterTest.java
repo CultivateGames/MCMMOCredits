@@ -23,18 +23,24 @@
 //
 package games.cultivate.mcmmocredits.converter;
 
-import games.cultivate.mcmmocredits.converters.InternalConverter;
+import games.cultivate.mcmmocredits.converters.Converter;
+import games.cultivate.mcmmocredits.converters.ConverterProperties;
+import games.cultivate.mcmmocredits.converters.DataLoadingStrategy;
 import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import games.cultivate.mcmmocredits.database.DatabaseUtil;
 import games.cultivate.mcmmocredits.user.User;
 import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class InternalConverterTest {
     private final Database oldDatabase = DatabaseUtil.create();
@@ -42,12 +48,15 @@ class InternalConverterTest {
 
     @Test
     void run_ValidUsers_ConvertsUsersCorrectly() {
+        DatabaseProperties dproperties = mock(DatabaseProperties.class);
+        when(dproperties.create(any())).thenReturn(this.oldDatabase);
         this.oldDatabase.addUser(new User(new UUID(0, 0), "tester0", 0, 0));
         this.oldDatabase.addUser(new User(new UUID(1, 1), "tester1", 10, 10));
         this.oldDatabase.addUser(new User(new UUID(2, 2), "tester2", 20, 20));
         List<User> users = this.oldDatabase.getAllUsers();
-        InternalConverter converter = new InternalConverter(this.currentDatabase, this.oldDatabase);
-        converter.run(LoggerFactory.getLogger(this.getClass()));
+        ConverterProperties properties = new ConverterProperties(DataLoadingStrategy.INTERNAL, dproperties, 60000L, 300L, false);
+        Converter converter = new Converter(properties, this.currentDatabase, Path.of(""));
+        assertTrue(converter.run());
         assertEquals(users.size(), this.currentDatabase.getAllUsers().size());
         assertTrue(this.currentDatabase.getAllUsers().containsAll(users));
     }

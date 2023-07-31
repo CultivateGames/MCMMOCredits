@@ -24,7 +24,7 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.actions.Action;
-import games.cultivate.mcmmocredits.converters.ConverterType;
+import games.cultivate.mcmmocredits.converters.DataLoadingStrategy;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.serializers.ActionSerializer;
@@ -127,7 +127,7 @@ class ConfigTest {
 
     @Test
     void get_ReturnsDefaultOnBadSection() {
-        assertEquals(ConverterType.CSV, this.config.get(ConverterType.class, ConverterType.CSV, "fake-section", "converter-type"));
+        assertEquals(DataLoadingStrategy.CSV, this.config.get(DataLoadingStrategy.class, DataLoadingStrategy.CSV, "fake-section", "converter-type"));
     }
 
     @Test
