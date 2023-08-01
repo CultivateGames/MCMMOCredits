@@ -24,10 +24,8 @@
 package games.cultivate.mcmmocredits.serializers;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import games.cultivate.mcmmocredits.actions.Action;
-import games.cultivate.mcmmocredits.actions.CommandAction;
-import games.cultivate.mcmmocredits.actions.ConfigAction;
-import games.cultivate.mcmmocredits.actions.RedeemAction;
+import games.cultivate.mcmmocredits.menu.Action;
+import games.cultivate.mcmmocredits.menu.Action.Command;
 import games.cultivate.mcmmocredits.util.Util;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.configurate.ConfigurationNode;
@@ -48,15 +46,15 @@ public final class ActionSerializer implements TypeSerializer<Action> {
     public Action deserialize(final Type type, final ConfigurationNode node) {
         String key = node.key().toString();
         if (key.equals("messages") || key.equals("settings")) {
-            return new ConfigAction(node.path());
+            return Action.editConfig(node.path());
         }
         if (!node.node("command").virtual()) {
-            return new CommandAction(node.node("command").getString());
+            return new Command(node.node("command").getString());
         }
         if (Util.getSkillNames().contains(key)) {
-            return new RedeemAction(PrimarySkillType.valueOf(key.toUpperCase()));
+            return Action.redeem(PrimarySkillType.valueOf(key.toUpperCase()));
         }
-        return Action.dummy();
+        return Action.nothing();
     }
 
     /**

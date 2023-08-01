@@ -24,8 +24,8 @@
 package games.cultivate.mcmmocredits.config;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import games.cultivate.mcmmocredits.actions.CommandAction;
-import games.cultivate.mcmmocredits.actions.RedeemAction;
+import games.cultivate.mcmmocredits.menu.Action;
+import games.cultivate.mcmmocredits.menu.Action.Command;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.RegularMenu;
 import games.cultivate.mcmmocredits.util.Util;
@@ -105,25 +105,25 @@ public class MenuData implements Data {
         String command = "credits menu main";
         String name = "<red>Previous Menu";
         List<String> lore = List.of("<gray>Left Click to go back!");
-        return new Item(new ItemStack(Material.DIAMOND), name, lore, slot, new CommandAction(command));
+        return new Item(new ItemStack(Material.DIAMOND), name, lore, slot, new Command(command));
     }
 
     private Item createConfigShortcut() {
         String command = "credits menu config";
         String name = "<#FF253C>Edit Config";
         List<String> lore = List.of("<gray>Left Click to edit config!");
-        return new Item(new ItemStack(Material.DIAMOND), name, lore, 11, new CommandAction(command));
+        return new Item(new ItemStack(Material.DIAMOND), name, lore, 11, new Command(command));
     }
 
     private Item createRedeemShortcut() {
         String command = "credits menu redeem";
         String name = "<green>Redeem MCMMO Credits!";
         List<String> lore = List.of("<gray>Left Click to redeem Credits!");
-        return new Item(new ItemStack(Material.EMERALD), name, lore, 15, new CommandAction(command));
+        return new Item(new ItemStack(Material.EMERALD), name, lore, 15, new Command(command));
     }
 
     private Item createRedeemItem(final Material material, final PrimarySkillType skill, final int slot) {
         List<String> lore = List.of("<yellow><sender>, click here to redeem!");
-        return new Item(new ItemStack(material), "<yellow>" + Util.capitalizeWord(skill.name()), lore, slot, new RedeemAction(skill));
+        return new Item(new ItemStack(material), "<yellow>" + Util.capitalizeWord(skill.name()), lore, slot, Action.redeem(skill));
     }
 }

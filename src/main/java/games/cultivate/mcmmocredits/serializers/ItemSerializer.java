@@ -25,8 +25,8 @@ package games.cultivate.mcmmocredits.serializers;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
-import games.cultivate.mcmmocredits.actions.Action;
-import games.cultivate.mcmmocredits.actions.CommandAction;
+import games.cultivate.mcmmocredits.menu.Action;
+import games.cultivate.mcmmocredits.menu.Action.Command;
 import games.cultivate.mcmmocredits.menu.Item;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -70,7 +70,7 @@ public final class ItemSerializer implements TypeSerializer<Item> {
         }
         meta.setCustomModelData(customModelData);
         stack.setItemMeta(texture.isEmpty() ? meta : this.createSkullMeta(meta, texture));
-        Action action = node.get(Action.class, Action.dummy());
+        Action action = node.get(Action.class);
         return new Item(stack, name, lore, slot, action);
     }
 
@@ -89,7 +89,7 @@ public final class ItemSerializer implements TypeSerializer<Item> {
         node.node("texture").set(meta instanceof SkullMeta skullMeta ? this.getTexture(skullMeta) : "");
         node.node("custom-model-data").set(meta.hasCustomModelData() ? meta.getCustomModelData() : 0);
         node.node("glow").set(!stack.getEnchantments().isEmpty());
-        if (item.action() instanceof CommandAction commandAction) {
+        if (item.action() instanceof Command commandAction) {
             node.node("command").set(commandAction.command());
         }
     }

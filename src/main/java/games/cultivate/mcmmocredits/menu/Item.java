@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.actions.Action;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.Component;
@@ -60,7 +59,7 @@ public record Item(ItemStack stack, String name, List<String> lore, int slot, Ac
      * @return The item.
      */
     public static Item of(final Material material, final String name, final List<String> lore, final int slot) {
-        return new Item(new ItemStack(material), name, lore, slot, Action.dummy());
+        return new Item(new ItemStack(material), name, lore, slot, x -> {});
     }
 
     /**
@@ -73,7 +72,7 @@ public record Item(ItemStack stack, String name, List<String> lore, int slot, Ac
      * @return The item.
      */
     public static Item of(final ItemStack stack, final String name, final List<String> lore, final int slot) {
-        return new Item(stack, name, lore, slot, Action.dummy());
+        return new Item(stack, name, lore, slot, x -> {});
     }
 
     /**
@@ -83,7 +82,7 @@ public record Item(ItemStack stack, String name, List<String> lore, int slot, Ac
      * @return The item.
      */
     public static Item of(final Material material) {
-        return new Item(new ItemStack(material), "", List.of(), -1, Action.dummy());
+        return new Item(new ItemStack(material), "", List.of(), -1, x -> {});
     }
 
     /**
@@ -93,7 +92,7 @@ public record Item(ItemStack stack, String name, List<String> lore, int slot, Ac
      * @return The transformation.
      */
     public Transform<ChestPane, PlayerViewer> transform(final User user) {
-        return PaperTransform.chestItem(() -> ItemStackElement.of(this.parseUser(user), this.action::execute), this.slot % 9, this.slot / 9);
+        return PaperTransform.chestItem(() -> ItemStackElement.of(this.parseUser(user), this.action), this.slot % 9, this.slot / 9);
     }
 
     /**

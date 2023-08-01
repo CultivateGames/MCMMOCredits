@@ -71,6 +71,7 @@ public final class PluginModule extends AbstractModule {
      * Provides the Database from the Config.
      *
      * @param configService The ConfigService to read the database.
+     * @param path          Path to create the database if needed.
      * @return The Database.
      */
     @Provides

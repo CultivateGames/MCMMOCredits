@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.actions.ConfigAction;
 import games.cultivate.mcmmocredits.user.User;
 import org.spongepowered.configurate.NodePath;
 
@@ -47,7 +46,7 @@ public record ConfigMenu(Menu menu, List<String> keys) implements Menu {
         for (int i = 0; i < this.keys.size(); i++) {
             String key = this.keys.get(i);
             Item item = key.contains("settings") ? settings : messages;
-            this.items().put(key, new Item(item.stack(), key, item.lore(), i, new ConfigAction(NodePath.of(key.split("\\.")))));
+            this.items().put(key, new Item(item.stack(), key, item.lore(), i, Action.editConfig(NodePath.of(key.split("\\.")))));
         }
     }
 

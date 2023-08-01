@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.actions.CommandAction;
+import games.cultivate.mcmmocredits.menu.Action;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.menu.RegularMenu;
@@ -46,7 +46,7 @@ public class FakeData implements Data {
     private Map<String, Item> items() {
         Map<String, Item> map = new HashMap<>();
         map.put("fill", Item.of(Material.BLACK_STAINED_GLASS_PANE));
-        map.put("navigation", Item.of(Material.COMPASS).action(new CommandAction("credits menu main")));
+        map.put("navigation", Item.of(Material.COMPASS).action(new Action.Command("credits menu main")));
         return map;
     }
 }

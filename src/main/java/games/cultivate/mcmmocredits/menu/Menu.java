@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.actions.Action;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.Component;
@@ -100,7 +99,8 @@ public interface Menu {
             Set<Integer> itemSlots = new HashSet<>(this.items().values().stream().map(Item::slot).toList());
             for (int i = 0; i < this.slots(); i++) {
                 if (!itemSlots.contains(i)) {
-                    Item item = new Item(filler.stack(), filler.name(), filler.lore(), filler.slot(), Action.dummy());
+                    //TODO: replace.
+                    Item item = new Item(filler.stack(), filler.name(), filler.lore(), filler.slot(), x -> {});
                     this.items().put("fill" + i, item);
                 }
             }

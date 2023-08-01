@@ -27,6 +27,7 @@ import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.MainData;
+import games.cultivate.mcmmocredits.menu.Action;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.util.ChatQueue;
 import org.bukkit.entity.Player;
@@ -87,16 +88,16 @@ class ActionTest {
         when(this.mockUser.credits()).thenReturn(0);
         when(this.mockUser.redeemed()).thenReturn(0);
         when(this.mockUser.username()).thenReturn("tester");
-        ConfigAction action = new ConfigAction(NodePath.of(List.of("settings", "debug")));
-        action.execute(this.mockContext);
+        Action action = Action.editConfig(NodePath.of(List.of("settings", "debug")));
+        action.accept(this.mockContext);
         verify(this.mockQueue).act(any(UUID.class), any(Consumer.class));
     }
 
     @Test
     void execute_executesTransaction() {
         when(this.mockUser.uuid()).thenReturn(new UUID(0, 0));
-        RedeemAction action = new RedeemAction(PrimarySkillType.HERBALISM);
-        action.execute(this.mockContext);
+        Action action = Action.redeem(PrimarySkillType.HERBALISM);
+        action.accept(this.mockContext);
         verify(this.mockQueue).act(any(UUID.class), any(Consumer.class));
     }
 }

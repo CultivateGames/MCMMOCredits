@@ -23,7 +23,6 @@
 //
 package games.cultivate.mcmmocredits.serializers;
 
-import games.cultivate.mcmmocredits.actions.Action;
 import games.cultivate.mcmmocredits.menu.Item;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -94,7 +93,7 @@ class ItemSerializerTest {
         ConfigurationNode itemNode = this.node.node("item");
         ItemStack stack = new ItemStack(Material.STONE, 1);
         stack.editMeta(m -> m.setCustomModelData(1));
-        Item item = new Item(stack, "test item!", List.of("the lore."), 5, Action.dummy());
+        Item item = new Item(stack, "test item!", List.of("the lore."), 5, x -> {});
         ItemSerializer.INSTANCE.serialize(Item.class, item, itemNode);
         assertEquals("test item!", itemNode.node("name").getString());
         assertEquals(List.of("the lore."), itemNode.node("lore").getList(String.class, List.of()));

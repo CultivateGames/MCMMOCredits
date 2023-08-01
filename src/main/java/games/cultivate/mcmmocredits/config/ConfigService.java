@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.actions.Action;
+import games.cultivate.mcmmocredits.menu.Action;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.serializers.ActionSerializer;
