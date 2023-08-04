@@ -27,8 +27,7 @@ import cloud.commandframework.annotations.injection.GuiceInjectionService;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import games.cultivate.mcmmocredits.commands.CommandHandler;
-import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.config.MenuConfig;
+import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.converters.Converter;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.inject.PluginModule;
@@ -48,7 +47,7 @@ import org.slf4j.Logger;
 public final class MCMMOCredits extends JavaPlugin {
     private static MCMMOCreditsAPI api;
     private Injector injector;
-    private MainConfig config;
+    private ConfigService configs;
     private Logger logger;
 
     /**
@@ -70,14 +69,14 @@ public final class MCMMOCredits extends JavaPlugin {
         this.logger = this.getSLF4JLogger();
         this.injector = Guice.createInjector(new PluginModule(this));
         this.checkForDependencies();
-        this.config = this.injector.getInstance(MainConfig.class);
+        this.configs = this.injector.getInstance(ConfigService.class);
         this.runConversionProcess();
         this.loadCommands();
         this.registerListeners();
         api = this.injector.getInstance(MCMMOCreditsAPI.class);
         this.enableMetrics();
         long end = System.nanoTime();
-        if (this.config.getBoolean("settings", "debug")) {
+        if (this.configs.mainConfig().getBoolean("settings", "debug")) {
             this.logger.info("Plugin enabled! Startup took: {}s.", (double) (end - start) / 1000000000);
         }
     }
@@ -130,7 +129,7 @@ public final class MCMMOCredits extends JavaPlugin {
      * Enables BStats if it is enabled in configuration.
      */
     private void enableMetrics() {
-        if (this.config.getBoolean("settings", "metrics-enabled")) {
+        if (this.configs.mainConfig().getBoolean("settings", "metrics-enabled")) {
             this.logger.info("Enabling Bstats.. To disable metrics, set metrics-enabled to false in config.yml");
             new Metrics(this, 18254);
             return;
@@ -142,10 +141,9 @@ public final class MCMMOCredits extends JavaPlugin {
      * Runs a Data Converter if it is enabled in configuration.
      */
     private void runConversionProcess() {
-        if (this.config.getBoolean("converter", "enabled")) {
+        if (this.configs.mainConfig().getBoolean("converter", "enabled")) {
             long start = System.nanoTime();
-            Converter converter = this.injector.getInstance(Converter.class);
-            converter.run(this.logger);
+            this.injector.getInstance(Converter.class).run();
             long end = System.nanoTime();
             this.logger.info("Conversion completed! Process took: {}s.", (double) (end - start) / 1000000000);
         }
@@ -156,8 +154,8 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        this.injector.getInstance(MainConfig.class).save();
-        this.injector.getInstance(MenuConfig.class).save();
+        this.configs.mainConfig().save();
+        this.configs.menuConfig().save();
         this.injector.getInstance(Database.class).disable();
     }
 

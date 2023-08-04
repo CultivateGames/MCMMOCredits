@@ -25,11 +25,11 @@ package games.cultivate.mcmmocredits.placeholders;
 
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
+import jakarta.inject.Inject;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
-import jakarta.inject.Inject;
 import java.util.Optional;
 
 /**
@@ -69,7 +69,7 @@ public final class CreditsExpansion extends PlaceholderExpansion {
      */
     @Override
     public @NotNull String getVersion() {
-        return "0.4.1";
+        return "0.4.2";
     }
 
     /**
@@ -93,7 +93,7 @@ public final class CreditsExpansion extends PlaceholderExpansion {
                 case "redeemed" -> String.valueOf(user.redeemed());
                 case "username" -> user.username();
                 case "uuid" -> user.uuid().toString();
-                case "cached" -> String.valueOf(this.service.isCached(user));
+                case "cached" -> String.valueOf(this.service.isUserCached(user));
                 default -> "0";
             };
         }

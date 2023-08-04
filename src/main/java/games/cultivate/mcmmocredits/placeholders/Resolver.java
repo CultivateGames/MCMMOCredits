@@ -32,7 +32,6 @@ import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.util.Util;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -78,8 +77,8 @@ public final class Resolver {
      * @return The Resolver.
      */
     public static Resolver ofTransaction(final Transaction transaction) {
-        PrimarySkillType skill = transaction instanceof RedeemTransaction tr ? tr.skill() : null;
-        return Resolver.ofUsers(transaction.executor(), transaction.target()).addAmount(transaction.amount()).addSkill(skill);
+        Resolver resolver = Resolver.ofUsers(transaction.executor(), transaction.targets()[0]).addAmount(transaction.amount());
+        return transaction instanceof RedeemTransaction rt ? resolver.addSkill(rt.skill()) : resolver;
     }
 
     /**
@@ -89,9 +88,8 @@ public final class Resolver {
      * @return The Resolver.
      */
     public static Resolver ofTransactionResult(final TransactionResult result) {
-        Transaction transaction = result.transaction();
-        PrimarySkillType skill = transaction instanceof RedeemTransaction tr ? tr.skill() : null;
-        return Resolver.ofUsers(result.executor(), result.target()).addAmount(transaction.amount()).addSkill(skill);
+        Resolver resolver = Resolver.ofUsers(result.executor(), result.target()).addAmount(result.transaction().amount());
+        return result.transaction() instanceof RedeemTransaction rt ? resolver.addSkill(rt.skill()) : resolver;
     }
 
     /**
@@ -100,6 +98,7 @@ public final class Resolver {
      * @param key   Placeholder key of the tag.
      * @param value Value of the tag.
      * @param <T>   Type of the value.
+     * @return The resolver.
      */
     public <T> Resolver addTag(final String key, final T value) {
         this.placeholders.put(key, value.toString());
@@ -111,12 +110,10 @@ public final class Resolver {
      *
      * @param user   A user.
      * @param prefix Prefix to apply to the placeholder keys.
+     * @return The resolver.
      */
     public Resolver addUser(final CommandExecutor user, final String prefix) {
-        return this.addTag(prefix, user.username())
-                .addTag(prefix + "_uuid", user.uuid())
-                .addTag(prefix + "_credits", user.credits())
-                .addTag(prefix + "_redeemed", user.redeemed());
+        return this.addTag(prefix, user.username()).addTag(prefix + "_uuid", user.uuid()).addTag(prefix + "_credits", user.credits()).addTag(prefix + "_redeemed", user.redeemed());
     }
 
     /**
@@ -124,15 +121,17 @@ public final class Resolver {
      * If null is passed, the unmodified resolver is returned.
      *
      * @param skill The skill.
+     * @return The resolver.
      */
-    public Resolver addSkill(@Nullable final PrimarySkillType skill) {
-        return skill == null ? this : this.addTag("skill", Util.capitalizeWord(skill.name())).addTag("cap", mcMMO.p.getGeneralConfig().getLevelCap(skill));
+    public Resolver addSkill(final PrimarySkillType skill) {
+        return this.addTag("skill", Util.capitalizeWord(skill.name())).addTag("cap", mcMMO.p.getGeneralConfig().getLevelCap(skill));
     }
 
     /**
      * Adds transaction amount to the Resolver.
      *
      * @param amount The amount.
+     * @return The resolver.
      */
     public Resolver addAmount(final int amount) {
         return this.addTag("amount", amount);

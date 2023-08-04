@@ -1,3 +1,26 @@
+//
+// MIT License
+//
+// Copyright (c) 2023 Cultivate Games
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
 package games.cultivate.mcmmocredits.transaction;
 
 import games.cultivate.mcmmocredits.user.User;
@@ -22,7 +45,7 @@ class PayTransactionTest {
 
     @Test
     void execute_ValidUsers_TransactionApplied() {
-        PayTransaction pay = PayTransaction.of(this.executor, this.target, 600);
+        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(600).type(TransactionType.PAY).build();
         TransactionResult result = pay.execute();
         assertEquals(900, result.executor().credits());
         assertEquals(1600, result.target().credits());
@@ -30,22 +53,22 @@ class PayTransactionTest {
 
     @Test
     void of_ValidProperties_ValidTransaction() {
-        PayTransaction pay = PayTransaction.of(this.executor, this.target, 600);
+        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(600).type(TransactionType.PAY).build();
         assertEquals(this.executor, pay.executor());
-        assertEquals(this.target, pay.target());
+        assertEquals(this.target, pay.targets()[0]);
         assertEquals(600, pay.amount());
-        assertEquals(Optional.empty(), pay.executable());
+        assertEquals(Optional.empty(), pay.valid());
     }
 
     @Test
     void executable_InvalidTransaction_ReturnsFailure() {
-        PayTransaction pay = PayTransaction.of(this.executor, this.target, 10000);
-        assertEquals(Optional.of(FailureReason.NOT_ENOUGH_CREDITS), pay.executable());
+        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(10000).type(TransactionType.PAY).build();
+        assertEquals(Optional.of("not-enough-credits"), pay.valid());
     }
 
     @Test
     void isSelfTransaction_regularTransactionReturnsFalse() {
-        PayTransaction pay = PayTransaction.of(this.executor, this.target, 10000);
+        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(10000).type(TransactionType.PAY).build();
         assertFalse(pay.isSelfTransaction());
     }
 }

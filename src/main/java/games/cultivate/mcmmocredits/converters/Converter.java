@@ -23,41 +23,43 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-import org.slf4j.Logger;
+import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.util.Dir;
+import jakarta.inject.Inject;
+import org.bukkit.Bukkit;
 
-import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
 
-/**
- * Represents a Data Converter.
- */
-public interface Converter {
-    /**
-     * Loads all required user data for conversion.
-     *
-     * @throws IOException          If there is an issue loading users from file.
-     * @throws InterruptedException If theres an issue obtaining user information.
-     */
-    void load() throws IOException, InterruptedException;
+public final class Converter {
+    private final Database database;
+    private final Path path;
+    private final ConverterProperties properties;
 
-    /**
-     * Converts user data between sources. May include writing to another database.
-     * Flat file conversions will have data flushed to disk. MySQL will use default behavior.
-     *
-     * @return Returns true if successful, false otherwise. Does not guarantee data equality.
-     */
-    boolean convert();
-
-    /**
-     * Verifies that user data conversion was successful by checking if data is present in destination database.
-     *
-     * @return Returns true if all previous data can be found in the new data source, false otherwise.
-     */
-    boolean verify();
+    @Inject
+    public Converter(final ConverterProperties properties, final Database database, final @Dir Path path) {
+        this.properties = properties;
+        this.database = database;
+        switch (this.properties.type()) {
+            case GUI_REDEEM_MCMMO -> this.path = Bukkit.getPluginsFolder().toPath().resolve(Path.of("GuiRedeemMCMMO", "playerdata"));
+            case MORPH_REDEEM -> this.path = Bukkit.getPluginsFolder().toPath().resolve(Path.of("MorphRedeem", "PlayerData"));
+            default -> this.path = path;
+        }
+    }
 
     /**
      * Runs the data conversion process.
      *
-     * @param logger The logger used to log current status of the converter.
+     * @return If the process was successful.
      */
-    void run(Logger logger);
+    public boolean run() {
+        List<User> loaded = this.properties.type().apply(this.properties, this.path);
+        this.database.addUsers(loaded);
+        if (this.database.isH2()) {
+            this.database.jdbi().useHandle(x -> x.execute("CHECKPOINT SYNC"));
+        }
+        List<User> updatedCurrentUsers = this.database.getAllUsers();
+        return loaded.parallelStream().allMatch(updatedCurrentUsers::contains);
+    }
 }

@@ -23,45 +23,157 @@
 //
 package games.cultivate.mcmmocredits.database;
 
-import games.cultivate.mcmmocredits.config.properties.DatabaseProperties;
-import games.cultivate.mcmmocredits.user.UserDAO;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import games.cultivate.mcmmocredits.user.User;
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.mapper.RowMapper;
+import org.jdbi.v3.core.statement.PreparedBatch;
+import org.jdbi.v3.core.statement.StatementContext;
 
-import jakarta.inject.Provider;
-import java.nio.file.Path;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.UnaryOperator;
 
-/**
- * Represents a Database connection and provider of the UserDAO.
- */
-public interface Database extends Provider<UserDAO> {
-    /**
-     * Returns a Database from the provided parameters.
-     *
-     * @param properties The database's properties.
-     * @param path       The plugin's data path.
-     * @return The Database.
-     */
-    static Database getDatabase(final DatabaseProperties properties, final Path path) {
-        return switch (properties.type()) {
-            case H2 -> new H2Database(properties, path);
-            case SQLITE -> new SQLiteDatabase(properties, path);
-            case MYSQL -> new MySQLDatabase(properties);
-        };
+public final class Database {
+    private final Jdbi jdbi;
+    private final HikariDataSource source;
+    private final boolean h2;
+
+    public Database(final HikariConfig config, final UnaryOperator<Jdbi> modifier) {
+        this.source = new HikariDataSource(config);
+        this.jdbi = modifier.apply(Jdbi.create(this.source).registerRowMapper(new UserMapper()));
+        this.h2 = this.source.getDataSourceClassName().contains("org.h2");
+        this.createTable();
+    }
+
+    public void disable() {
+        if (this.source != null) {
+            this.source.close();
+        }
+    }
+
+    public boolean isH2() {
+        return this.h2;
+    }
+
+    public Jdbi jdbi() {
+        return this.jdbi;
+    }
+
+    public void createTable() {
+        if (this.source.getDataSourceClassName().contains("org.sqlite")) {
+            this.jdbi.useHandle(handle -> handle.execute("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTOINCREMENT,UUID VARCHAR NOT NULL,username VARCHAR NOT NULL,credits INT CHECK(credits >= 0),redeemed INT);"));
+            return;
+        }
+        this.jdbi.useHandle(handle -> handle.execute("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTO_INCREMENT,UUID VARCHAR(36) NOT NULL,username VARCHAR(16) NOT NULL,credits INT CHECK(credits >= 0),redeemed INT);"));
     }
 
     /**
-     * Loads the DAO.
-     */
-    void load();
-
-    /**
-     * Disables the connection. Reserved for shutdown.
-     */
-    void disable();
-
-    /**
-     * Gets the underlying DatabaseProperties.
+     * Adds a user to the database.
      *
-     * @return The properties.
+     * @param user The user to add.
+     * @return True if the transaction was successful, otherwise false.
      */
-    DatabaseProperties getProperties();
+    public boolean addUser(final User user) {
+        return this.jdbi.withHandle(handle -> handle.createUpdate("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed);").bindMethods(user).execute() == 1);
+    }
+
+    /**
+     * Adds a collection of users to the database.
+     *
+     * @param users The users to add.
+     */
+    public void addUsers(final Collection<User> users) {
+        this.jdbi.useHandle(handle -> {
+            PreparedBatch batch = handle.prepareBatch("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed);");
+            users.forEach(x -> batch.bindMethods(x).add());
+            batch.execute();
+        });
+    }
+
+    /**
+     * Gets a user with the specified UUID.
+     * The optional is empty if the database does not contain the UUID.
+     *
+     * @param uuid The UUID of a user.
+     * @return A user if it exists, otherwise an empty optional.
+     */
+    public Optional<User> getUser(final UUID uuid) {
+        return this.jdbi.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits WHERE uuid = :uuid;").bind("uuid", uuid).mapTo(User.class).findOne());
+    }
+
+    /**
+     * Gets a user with the specified username.
+     * The optional is empty if the database does not contain the username.
+     *
+     * @param username The username of a user.
+     * @return A user if it exists, otherwise an empty optional.
+     */
+    public Optional<User> getUser(final String username) {
+        return this.jdbi.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits WHERE username LIKE :username LIMIT 1;").bind("username", username).mapTo(User.class).findOne());
+    }
+
+    /**
+     * Gets a range of users using the specified limit and offset.
+     *
+     * @param limit  The max amount of users to get.
+     * @param offset The starting index of where to start getting users.
+     * @return A list of users within the provided bounds.
+     */
+    public List<User> rangeOfUsers(final int limit, final int offset) {
+        return this.jdbi.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits ORDER BY credits DESC LIMIT :limit OFFSET :offset;").bind("limit", limit).bind("offset", offset).mapTo(User.class).list());
+    }
+
+    /**
+     * Gets all users.
+     *
+     * @return a list of all users.
+     */
+    public List<User> getAllUsers() {
+        return this.jdbi.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits").mapTo(User.class).list());
+    }
+
+    /**
+     * Updates the username of a user with the specified UUID.
+     *
+     * @param uuid     The UUID of a user.
+     * @param username The username of a user.
+     * @return True if the transaction was successful, otherwise false.
+     */
+    public boolean setUsername(final UUID uuid, final String username) {
+        return this.jdbi.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET username = :username WHERE UUID = :uuid;").bind("uuid", uuid).bind("username", username).execute() == 1);
+    }
+
+    /**
+     * Sets the credit balance of a user with the specified UUID.
+     *
+     * @param uuid   The UUID of the user.
+     * @param amount The new amount of credits.
+     * @return True if the transaction was successful, otherwise false.
+     */
+    public boolean setCredits(final UUID uuid, final int amount) {
+        return this.jdbi.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET credits = :amount WHERE UUID = :uuid;").bind("uuid", uuid).bind("amount", amount).execute() == 1);
+    }
+
+    /**
+     * Updates an existing user in the database with the provided user.
+     *
+     * @param user The user to update.
+     * @return True if the transaction was successful, otherwise false.
+     */
+    public boolean updateUser(final User user) {
+        return this.jdbi.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET username = :username, credits = :credits, redeemed = :redeemed WHERE UUID = :uuid;").bindMethods(user).execute() == 1);
+    }
+
+    static class UserMapper implements RowMapper<User> {
+        @Override
+        public User map(final ResultSet rs, final StatementContext ctx) throws SQLException {
+            return new User(UUID.fromString(rs.getString("UUID")), rs.getString("username"), rs.getInt("credits"), rs.getInt("redeemed"));
+        }
+    }
 }

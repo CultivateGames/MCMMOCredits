@@ -27,6 +27,9 @@ import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
+/**
+ * CommandExecutor which represents the Bukkit ConsoleCommandSender.
+ */
 public final class Console implements CommandExecutor {
     public static final Console INSTANCE = new Console();
     private static final UUID UUID = new UUID(0, 0);
@@ -53,21 +56,33 @@ public final class Console implements CommandExecutor {
         throw new UnsupportedOperationException("Console is not a player!");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public UUID uuid() {
         return UUID;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String username() {
         return USERNAME;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int credits() {
         return CREDITS;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int redeemed() {
         return REDEEMED;

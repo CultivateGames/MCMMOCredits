@@ -23,9 +23,9 @@
 //
 package games.cultivate.mcmmocredits.serializers;
 
-import games.cultivate.mcmmocredits.ui.item.Item;
-import games.cultivate.mcmmocredits.ui.menu.BaseMenu;
-import games.cultivate.mcmmocredits.ui.menu.Menu;
+import games.cultivate.mcmmocredits.menu.Item;
+import games.cultivate.mcmmocredits.menu.Menu;
+import games.cultivate.mcmmocredits.menu.RegularMenu;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.serialize.TypeSerializer;
@@ -54,7 +54,7 @@ public final class MenuSerializer implements TypeSerializer<Menu> {
         int slots = node.node("slots").getInt();
         boolean fill = node.node("fill").getBoolean();
         boolean navigation = node.node("navigation").getBoolean();
-        return BaseMenu.of(items, title, slots, fill, navigation);
+        return new RegularMenu(items, title, slots, fill, navigation);
     }
 
     /**

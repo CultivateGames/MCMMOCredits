@@ -23,15 +23,16 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import games.cultivate.mcmmocredits.config.MainConfig;
+import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
-import games.cultivate.mcmmocredits.transaction.FailureReason;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import games.cultivate.mcmmocredits.user.Console;
+import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import io.papermc.paper.event.player.AsyncChatEvent;
+import jakarta.inject.Inject;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -44,7 +45,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.incendo.interfaces.paper.view.ChestView;
 
-import jakarta.inject.Inject;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -54,18 +54,18 @@ import java.util.UUID;
 public class Listeners implements Listener {
     private final ChatQueue queue;
     private final UserService service;
-    private final MainConfig config;
+    private final ConfigService configs;
 
     /**
      * Constructs the object.
      *
-     * @param config  MainConfig, used to read properties for event handlers.
+     * @param configs ConfigService, used to get configs.
      * @param queue   ChatQueue, used to listen for relevant chat messages.
      * @param service UserService, required to modify users.
      */
     @Inject
-    public Listeners(final MainConfig config, final ChatQueue queue, final UserService service) {
-        this.config = config;
+    public Listeners(final ConfigService configs, final ChatQueue queue, final UserService service) {
+        this.configs = configs;
         this.queue = queue;
         this.service = service;
     }
@@ -87,9 +87,9 @@ public class Listeners implements Listener {
             this.service.setUsername(uuid, username);
             return;
         }
-        this.service.addUser(uuid, username);
-        if (this.config.getBoolean("settings", "add-user-message")) {
-            Console.INSTANCE.sendText(this.config.getMessage("add-user"), r -> r.addTag("username", username));
+        this.service.addUser(new User(uuid, username, 0, 0));
+        if (this.configs.mainConfig().getBoolean("settings", "add-user-message")) {
+            Console.INSTANCE.sendText(this.configs.mainConfig().getMessage("add-user"), r -> r.addTag("username", username));
         }
     }
 
@@ -100,8 +100,8 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(final PlayerJoinEvent e) {
-        if (this.config.getBoolean("settings", "send-login-message")) {
-            this.service.getUser(e.getPlayer().getUniqueId()).orElseThrow().sendText(this.config.getMessage("login-message"));
+        if (this.configs.mainConfig().getBoolean("settings", "send-login-message")) {
+            this.service.getUser(e.getPlayer().getUniqueId()).orElseThrow().sendText(this.configs.mainConfig().getMessage("login-message"));
         }
     }
 
@@ -117,7 +117,7 @@ public class Listeners implements Listener {
             String completion = PlainTextComponentSerializer.plainText().serialize(e.message());
             if (completion.equalsIgnoreCase("cancel")) {
                 this.queue.remove(uuid);
-                this.service.getUser(uuid).orElseThrow().sendText(this.config.getMessage("cancel-prompt"));
+                this.service.getUser(uuid).orElseThrow().sendText(this.configs.mainConfig().getMessage("cancel-prompt"));
             }
             this.queue.complete(uuid, completion);
             e.setCancelled(true);
@@ -143,15 +143,24 @@ public class Listeners implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onTransaction(final CreditTransactionEvent e) {
+        if (e.isCancelled()) {
+            return;
+        }
         Transaction transaction = e.transaction();
-        Optional<FailureReason> failure = transaction.executable();
+        Optional<String> failure = transaction.valid();
         if (failure.isPresent()) {
-            transaction.executor().sendText(this.config.getMessage(failure.get().getKey()), Resolver.ofTransaction(transaction));
+            transaction.executor().sendText(this.configs.mainConfig().getMessage(failure.get()), Resolver.ofTransaction(transaction));
             return;
         }
         TransactionResult result = transaction.execute();
         this.service.processTransaction(result);
-        result.sendFeedback(this.config, e.senderFeedback(), e.userFeedback());
+        Resolver resolver = Resolver.ofTransactionResult(result);
+        if (!e.senderFeedback()) {
+            result.executor().sendText(this.configs.mainConfig().getMessage(transaction.messageKey()), resolver);
+        }
+        if (!e.userFeedback() && result.target().player() != null) {
+            result.target().sendText(this.configs.mainConfig().getMessage(transaction.userMessageKey()), resolver);
+        }
     }
 
     /**

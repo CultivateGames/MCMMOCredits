@@ -29,36 +29,30 @@ import games.cultivate.mcmmocredits.user.User;
 import java.util.Optional;
 
 /**
- * Represents a transaction in which the executor gives credits to the target.
+ * Represents a transaction in which an amount is added to a user's balance and taken from another user's balance.
+ *
+ * @param executor The executor of the transaction.
+ * @param targets  The targets of the transaction.
+ * @param amount   The amount of credits to add to targets.
  */
-public final class PayTransaction implements Transaction {
-    private final User executor;
-    private final User target;
-    private final int amount;
+public record PayTransaction(CommandExecutor executor, User[] targets, int amount) implements Transaction {
+    private static final String MESSAGE_KEY = "credits-pay";
+    private static final String USER_MESSAGE_KEY = "credits-pay-user";
 
     /**
-     * Constructs the object.
-     *
-     * @param executor The executor of the transaction.
-     * @param target   The user to apply the transaction to.
-     * @param amount   The amount to use.
+     * {@inheritDoc}
      */
-    private PayTransaction(final User executor, final User target, final int amount) {
-        this.executor = executor;
-        this.target = target;
-        this.amount = amount;
+    @Override
+    public String userMessageKey() {
+        return USER_MESSAGE_KEY;
     }
 
     /**
-     * Creates a transaction using the provided information.
-     *
-     * @param executor The executor of the transaction.
-     * @param target   The user to apply the transaction to.
-     * @param amount   The amount to use.
-     * @return The transaction.
+     * {@inheritDoc}
      */
-    public static PayTransaction of(final User executor, final User target, final int amount) {
-        return new PayTransaction(executor, target, amount);
+    @Override
+    public String messageKey() {
+        return MESSAGE_KEY;
     }
 
     /**
@@ -66,73 +60,21 @@ public final class PayTransaction implements Transaction {
      */
     @Override
     public TransactionResult execute() {
-        int execResult = BasicTransactionType.TAKE.apply(this.executor.credits(), this.amount);
-        int targetResult = BasicTransactionType.ADD.apply(this.target.credits(), this.amount);
-        return TransactionResult.of(this, this.executor.withCredits(execResult), this.target.withCredits(targetResult));
+        User exec = (User) this.executor;
+        return TransactionResult.of(this, exec.takeCredits(this.amount), this.targets[0].addCredits(this.amount));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Optional<FailureReason> executable() {
-        if (this.executor.equals(this.target)) {
-            return Optional.of(FailureReason.SAME_USER);
+    public Optional<String> valid() {
+        if (this.executor.credits() - this.amount < 0 || this.targets[0].credits() + this.amount < 0) {
+            return Optional.of("not-enough-credits");
         }
-        try {
-            int execBalance = BasicTransactionType.TAKE.apply(this.executor.credits(), this.amount);
-            int targetBalance = BasicTransactionType.ADD.apply(this.target.credits(), this.amount);
-            return execBalance < 0 || targetBalance < 0 ? Optional.of(FailureReason.NOT_ENOUGH_CREDITS) : Optional.empty();
-        } catch (ArithmeticException e) {
-            return Optional.of(FailureReason.NOT_ENOUGH_CREDITS);
+        if (this.isSelfTransaction()) {
+            return Optional.of("credits-pay-same-user");
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int amount() {
-        return this.amount;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isSelfTransaction() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getMessageKey() {
-        return "credits-pay";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getUserMessageKey() {
-        return "credits-pay-user";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public CommandExecutor executor() {
-        return this.executor;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public User target() {
-        return this.target;
+        return Optional.empty();
     }
 }

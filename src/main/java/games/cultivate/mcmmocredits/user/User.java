@@ -68,11 +68,31 @@ public record User(UUID uuid, String username, int credits, int redeemed) implem
     /**
      * Provides a copy of the User with an updated credit amount.
      *
-     * @param credits credit amount to set on the User.
+     * @param amount credit amount to set on the User.
      * @return An updated User.
      */
-    public User withCredits(final int credits) {
-        return new User(this.uuid, this.username, credits, this.redeemed);
+    public User setCredits(final int amount) {
+        return new User(this.uuid, this.username, amount, this.redeemed);
+    }
+
+    /**
+     * Provides a copy of the User with an updated credit amount.
+     *
+     * @param amount credit amount to add to the User.
+     * @return An updated User.
+     */
+    public User addCredits(final int amount) {
+        return new User(this.uuid, this.username, this.credits + amount, this.redeemed);
+    }
+
+    /**
+     * Provides a copy of the User with an updated credit amount.
+     *
+     * @param amount credit amount to take from the User.
+     * @return An updated User.
+     */
+    public User takeCredits(final int amount) {
+        return new User(this.uuid, this.username, this.credits - amount, this.redeemed);
     }
 
     /**
@@ -88,10 +108,20 @@ public record User(UUID uuid, String username, int credits, int redeemed) implem
     /**
      * Provides a copy of the User with an updated redeemed amount.
      *
-     * @param redeemed credit redeemed amount to set on the User.
+     * @param amount credit redeemed amount to set on the User.
      * @return An updated User.
      */
-    public User withRedeemed(final int redeemed) {
-        return new User(this.uuid, this.username, this.credits, redeemed);
+    public User setRedeemed(final int amount) {
+        return new User(this.uuid, this.username, this.credits, amount);
+    }
+
+    /**
+     * Provides a copy of the User with an updated redeemed amount.
+     *
+     * @param amount credit redeemed amount to add to the User.
+     * @return An updated User.
+     */
+    public User addRedeemed(final int amount) {
+        return new User(this.uuid, this.username, this.credits, this.redeemed + amount);
     }
 }

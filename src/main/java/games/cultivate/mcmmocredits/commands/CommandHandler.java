@@ -44,17 +44,17 @@ import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.paper.PaperCommandManager;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.config.MainConfig;
+import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import io.leangen.geantyref.TypeToken;
+import jakarta.inject.Inject;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -68,11 +68,10 @@ public final class CommandHandler {
     private static final Pattern TO_PATH = Pattern.compile("[.|_]");
     private final Credits commands;
     private final UserService service;
-    private final MainConfig config;
+    private final ConfigService configs;
     private final MCMMOCredits plugin;
     private final List<Caption> keys = List.of(StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_BOOLEAN,
             StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_NO_INPUT_PROVIDED,
-            StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_BOOLEAN,
             StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_NUMBER,
             StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_STRING,
             StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_ENUM,
@@ -88,19 +87,21 @@ public final class CommandHandler {
      *
      * @param commands Command class used for registration.
      * @param service  UserService to get CommandExecutor instances from cache.
-     * @param config   MainConfig to load relevant settings.
+     * @param configs  ConfigService to get configs.
      * @param plugin   Plugin instance to register the CommandManager.
      */
     @Inject
-    public CommandHandler(final Credits commands, final UserService service, final MainConfig config, final MCMMOCredits plugin) {
+    public CommandHandler(final Credits commands, final UserService service, final ConfigService configs, final MCMMOCredits plugin) {
         this.commands = commands;
         this.service = service;
-        this.config = config;
+        this.configs = configs;
         this.plugin = plugin;
     }
 
     /**
      * Loads the CommandManager.
+     *
+     * @param injectionService An injection service. Used to inject into commands.
      */
     public void load(final GuiceInjectionService<CommandExecutor> injectionService) {
         Function<CommandSender, CommandExecutor> forwardsMapper = this.service::fromSender;
@@ -128,7 +129,7 @@ public final class CommandHandler {
     private void loadCommandParser() {
         ParserRegistry<CommandExecutor> parser = this.manager.parserRegistry();
         parser.registerParserSupplier(TypeToken.get(PrimarySkillType.class), x -> new SkillParser<>());
-        parser.registerParserSupplier(TypeToken.get(User.class), x -> new UserParser<>(this.service, this.config.getBoolean("settings", "user-tab-complete")));
+        parser.registerParserSupplier(TypeToken.get(User.class), x -> new UserParser<>(this.service, this.configs.mainConfig().getBoolean("settings", "user-tab-complete")));
         List<String> menus = List.of("main", "config", "redeem");
         parser.registerSuggestionProvider("menus", (c, i) -> menus);
     }
@@ -140,7 +141,7 @@ public final class CommandHandler {
      */
     private void parseCommands() {
         AnnotationParser<CommandExecutor> annotationParser = new AnnotationParser<>(this.manager, CommandExecutor.class, p -> SimpleCommandMeta.empty());
-        String commandPrefix = this.config.getString("command-prefix");
+        String commandPrefix = this.configs.mainConfig().getString("command-prefix");
         annotationParser.stringProcessor(new PropertyReplacingStringProcessor(x -> x.equals("command.prefix") ? commandPrefix : x));
         annotationParser.parse(this.commands);
     }
@@ -162,7 +163,7 @@ public final class CommandHandler {
         this.manager.captionVariableReplacementHandler(new CaptionFormatter());
         CaptionRegistry<CommandExecutor> registry = this.manager.captionRegistry();
         if (registry instanceof FactoryDelegatingCaptionRegistry<CommandExecutor> factory) {
-            this.keys.forEach(x -> factory.registerMessageFactory(x, (c, e) -> this.config.getString(TO_PATH.matcher(x.getKey()).replaceAll("-"))));
+            this.keys.forEach(x -> factory.registerMessageFactory(x, (c, e) -> this.configs.mainConfig().getString(TO_PATH.matcher(x.getKey()).replaceAll("-"))));
             this.manager.captionRegistry(factory);
         }
     }
@@ -177,7 +178,7 @@ public final class CommandHandler {
      * @param <E>   The Exception type. Differs per registration.
      */
     private <E extends Exception> void register(final Class<E> ex, final String path, final String key, final BiFunction<CommandExecutor, E, String> value) {
-        this.manager.registerExceptionHandler(ex, (c, e) -> c.sendText(this.config.getMessage(path), r -> r.addTag(key, value.apply(c, e))));
+        this.manager.registerExceptionHandler(ex, (c, e) -> c.sendText(this.configs.mainConfig().getMessage(path), r -> r.addTag(key, value.apply(c, e))));
     }
 
     /**

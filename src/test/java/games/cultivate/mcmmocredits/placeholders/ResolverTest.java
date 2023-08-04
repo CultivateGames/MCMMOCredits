@@ -26,11 +26,9 @@ package games.cultivate.mcmmocredits.placeholders;
 import com.gmail.nossr50.config.GeneralConfig;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.mcMMO;
-import games.cultivate.mcmmocredits.transaction.BasicTransaction;
-import games.cultivate.mcmmocredits.transaction.BasicTransactionType;
-import games.cultivate.mcmmocredits.transaction.RedeemTransaction;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
+import games.cultivate.mcmmocredits.transaction.TransactionType;
 import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -135,7 +133,7 @@ class ResolverTest {
         GeneralConfig config = mock(GeneralConfig.class);
         when(mcMMO.p.getGeneralConfig()).thenReturn(config);
         when(config.getLevelCap(PrimarySkillType.HERBALISM)).thenReturn(1000);
-        Transaction transaction = RedeemTransaction.of(this.sender, this.target, PrimarySkillType.HERBALISM, 25);
+        Transaction transaction = Transaction.builder().users(this.sender, this.target).skill(PrimarySkillType.HERBALISM).amount(25).build();
         Resolver resolver = Resolver.ofTransaction(transaction);
         assertEquals(this.sender.username(), this.convert("<sender>", resolver));
         assertEquals(this.sender.uuid().toString(), this.convert("<sender_uuid>", resolver));
@@ -152,7 +150,7 @@ class ResolverTest {
 
     @Test
     void ofTransactionResult_ValidTransactionResult_BuildsCorrectResolver() {
-        Transaction transaction = BasicTransaction.of(this.sender, this.target, BasicTransactionType.SET, 25);
+        Transaction transaction = Transaction.builder().users(this.sender, this.target).amount(25).type(TransactionType.SET).build();
         TransactionResult result = TransactionResult.of(transaction, this.sender, this.target);
         Resolver resolver = Resolver.ofTransactionResult(result);
         assertEquals(this.sender.username(), this.convert("<sender>", resolver));

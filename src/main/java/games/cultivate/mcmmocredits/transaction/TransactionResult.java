@@ -23,8 +23,6 @@
 //
 package games.cultivate.mcmmocredits.transaction;
 
-import games.cultivate.mcmmocredits.config.MainConfig;
-import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 
@@ -37,6 +35,8 @@ import games.cultivate.mcmmocredits.user.User;
  */
 public record TransactionResult(Transaction transaction, CommandExecutor executor, User target) {
     /**
+     * Constructs a TransactionResult.
+     *
      * @param transaction The transaction.
      * @param executor    The updated executor of the transaction.
      * @param target      The updated user for the transaction.
@@ -47,19 +47,31 @@ public record TransactionResult(Transaction transaction, CommandExecutor executo
     }
 
     /**
-     * Sends feedback for the transaction.
+     * Constructs a TransactionResult for a transaction which only impacts the target.
      *
-     * @param config       MainConfig used to extract messages.
-     * @param userSilent   If process sends feedback to the user. True will silence feedback.
-     * @param senderSilent If process sends feedback to the executor. True will silence feedback except for errors.
+     * @param transaction The transaction.
+     * @param target      The updated user for the transaction.
+     * @return The result of the provided transaction.
      */
-    public void sendFeedback(final MainConfig config, final boolean senderSilent, final boolean userSilent) {
-        Resolver resolver = Resolver.ofTransactionResult(this);
-        if (!senderSilent) {
-            this.executor.sendText(config.getMessage(this.transaction.getMessageKey()), resolver);
-        }
-        if (!userSilent && this.target.player() != null) {
-            this.target.sendText(config.getMessage(this.transaction.getUserMessageKey(), resolver));
-        }
+    public static TransactionResult of(final Transaction transaction, final User target) {
+        return new TransactionResult(transaction, target, target);
+    }
+
+    /**
+     * Returns if the executor was updated by the transaction.
+     *
+     * @return if the executor was updated by the transaction.
+     */
+    public boolean isExecutorUpdated() {
+        return this.transaction.executor() != this.executor;
+    }
+
+    /**
+     * Returns if the target was updated by the transaction.
+     *
+     * @return if the target was updated by the transaction.
+     */
+    public boolean isTargetUpdated() {
+        return this.transaction().targets()[0] != this.target;
     }
 }

@@ -35,88 +35,31 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 
 /**
- * Represents a transaction in which a user will exchange credits for levels in MCMMO Skills.
+ * Represents a transaction in which a user exchanges credits for levels in the provided skill.
  *
  * @param executor The executor of the transaction.
- * @param target   The user to apply the transaction to.
- * @param skill    The affected skill.
- * @param amount   The amount to use.
+ * @param targets  The targets of the transaction.
+ * @param skill    The skill to add levels to.
+ * @param amount   The amount of credits to remove from the user.
  */
-public record RedeemTransaction(CommandExecutor executor, User target, PrimarySkillType skill, int amount) implements Transaction {
+public record RedeemTransaction(CommandExecutor executor, User[] targets, PrimarySkillType skill, int amount) implements Transaction {
     private static final String MESSAGE_KEY = "redeem";
     private static final String SUDO_REDEEM_KEY = "redeem-sudo";
     private static final String USER_MESSAGE_KEY = "redeem-sudo-user";
 
     /**
-     * Creates a solo transaction using the provided information.
-     *
-     * @param target The user to apply the transaction to.
-     * @param skill  The affected skill.
-     * @param amount The amount to use.
-     * @return The transaction.
+     * {@inheritDoc}
      */
-    public static RedeemTransaction of(final User target, final PrimarySkillType skill, final int amount) {
-        return new RedeemTransaction(target, target, skill, amount);
-    }
-
-    /**
-     * Creates a transaction using the provided information.
-     *
-     * @param executor The executor of the transaction.
-     * @param target   The user to apply the transaction to.
-     * @param skill    The affected skill.
-     * @param amount   The amount to use.
-     * @return The transaction.
-     */
-    public static RedeemTransaction of(final CommandExecutor executor, final User target, final PrimarySkillType skill, final int amount) {
-        return new RedeemTransaction(executor, target, skill, amount);
+    @Override
+    public String userMessageKey() {
+        return USER_MESSAGE_KEY;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public TransactionResult execute() {
-        int credits = this.target.credits();
-        int redeemed = this.target.redeemed();
-        User updatedUser = this.target.withCredits(credits - this.amount).withRedeemed(redeemed + this.amount);
-        PlayerProfile profile = this.getPlayerProfile();
-        profile.addLevels(this.skill, this.amount);
-        profile.save(true);
-        return TransactionResult.of(this, this.executor, updatedUser);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Optional<FailureReason> executable() {
-        if (this.target.credits() < this.amount) {
-            return Optional.of(FailureReason.NOT_ENOUGH_CREDITS);
-        }
-        PlayerProfile profile = this.getPlayerProfile();
-        if (profile == null || !profile.isLoaded()) {
-            return Optional.of(FailureReason.MCMMO_PROFILE_FAIL);
-        }
-        if (profile.getSkillLevel(this.skill) + this.amount > mcMMO.p.getGeneralConfig().getLevelCap(this.skill)) {
-            return Optional.of(FailureReason.MCMMO_SKILL_CAP);
-        }
-        return Optional.empty();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isSelfTransaction() {
-        return this.executor.equals(this.target);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getMessageKey() {
+    public String messageKey() {
         return this.isSelfTransaction() ? MESSAGE_KEY : SUDO_REDEEM_KEY;
     }
 
@@ -124,17 +67,40 @@ public record RedeemTransaction(CommandExecutor executor, User target, PrimarySk
      * {@inheritDoc}
      */
     @Override
-    public String getUserMessageKey() {
-        return USER_MESSAGE_KEY;
+    public TransactionResult execute() {
+        PlayerProfile profile = this.getPlayerProfile(this.targets[0]);
+        profile.addLevels(this.skill, this.amount);
+        profile.save(true);
+        User updated = this.targets[0].takeCredits(this.amount).addRedeemed(this.amount);
+        return this.isSelfTransaction() ? TransactionResult.of(this, updated) : TransactionResult.of(this, this.executor, updated);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<String> valid() {
+        if (this.targets[0].credits() < this.amount) {
+            return Optional.of("not-enough-credits");
+        }
+        PlayerProfile profile = this.getPlayerProfile(this.targets[0]);
+        if (profile == null || !profile.isLoaded()) {
+            return Optional.of("mcmmo-profile-fail");
+        }
+        if (profile.getSkillLevel(this.skill) + this.amount > mcMMO.p.getGeneralConfig().getLevelCap(this.skill)) {
+            return Optional.of("mcmmo-skill-cap");
+        }
+        return Optional.empty();
     }
 
     /**
      * Gets the target's MCMMO profile.
      *
+     * @param user The user to fetch a profile for.
      * @return The profile.
      */
-    private @Nullable PlayerProfile getPlayerProfile() {
-        Player player = this.target.player();
-        return player == null ? mcMMO.getDatabaseManager().loadPlayerProfile(this.target.uuid()) : UserManager.getPlayer(player).getProfile();
+    private @Nullable PlayerProfile getPlayerProfile(final User user) {
+        Player player = user.player();
+        return player == null ? mcMMO.getDatabaseManager().loadPlayerProfile(user.uuid()) : UserManager.getPlayer(player).getProfile();
     }
 }
