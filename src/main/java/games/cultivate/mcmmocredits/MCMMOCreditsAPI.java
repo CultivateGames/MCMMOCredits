@@ -67,7 +67,7 @@ public class MCMMOCreditsAPI {
      */
     public boolean addCredits(final UUID uuid, final int amount) {
         int result = this.getCredits(uuid) + amount;
-        return result >= 0 && this.service.setCredits(uuid, result) != null;
+        return result >= 0 && this.service.setCredits(uuid, result);
     }
 
     /**
@@ -78,7 +78,7 @@ public class MCMMOCreditsAPI {
      * @return True if the transaction was successful, otherwise false.
      */
     public boolean setCredits(final UUID uuid, final int amount) {
-        return amount >= 0 && this.service.setCredits(uuid, amount) != null;
+        return amount >= 0 && this.service.setCredits(uuid, amount);
     }
 
     /**
@@ -90,7 +90,7 @@ public class MCMMOCreditsAPI {
      */
     public boolean takeCredits(final UUID uuid, final int amount) {
         int result = this.getCredits(uuid) - amount;
-        return result >= 0 && this.service.setCredits(uuid, result) != null;
+        return result >= 0 && this.service.setCredits(uuid, result);
     }
 
     /**

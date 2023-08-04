@@ -132,7 +132,7 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerQuit(final PlayerQuitEvent e) {
         UUID uuid = e.getPlayer().getUniqueId();
-        this.service.removeUser(uuid);
+        this.service.removeFromCache(uuid);
         this.queue.remove(uuid);
     }
 
@@ -141,8 +141,11 @@ public class Listeners implements Listener {
      *
      * @param e The event.
      */
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onTransaction(final CreditTransactionEvent e) {
+        if (e.isCancelled()) {
+            return;
+        }
         Transaction transaction = e.transaction();
         Optional<String> failure = transaction.valid();
         if (failure.isPresent()) {

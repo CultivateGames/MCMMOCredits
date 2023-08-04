@@ -21,13 +21,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.actions;
+package games.cultivate.mcmmocredits.menu;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.MainData;
-import games.cultivate.mcmmocredits.menu.Action;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.util.ChatQueue;
 import org.bukkit.entity.Player;

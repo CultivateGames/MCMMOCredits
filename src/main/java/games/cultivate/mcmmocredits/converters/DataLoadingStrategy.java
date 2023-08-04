@@ -27,15 +27,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.user.User;
-import org.bukkit.Bukkit;
+import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -43,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiFunction;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 /**
@@ -80,15 +75,13 @@ public enum DataLoadingStrategy implements BiFunction<ConverterProperties, Path,
         }
     };
 
-    private static final HttpClient CLIENT = HttpClient.newBuilder().build();
-
     private static List<User> getUsersForPlugin(final ConverterProperties properties, final Path path) {
         Map<UUID, String> cached = loadMojangCache();
         List<User> users = new ArrayList<>();
         for (File file : path.toFile().listFiles()) {
             UUID uuid = UUID.fromString(file.getName().substring(0, file.getName().length() - 4));
             YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-            String username = cached.containsKey(uuid) ? cached.get(uuid) : getMojangUsername(uuid, properties.failureDelay());
+            String username = cached.containsKey(uuid) ? cached.get(uuid) : getMojangUser(uuid, properties.failureDelay());
             users.add(new User(uuid, username, config.getInt("Credits", 0), config.getInt("Credits_Spent", 0)));
             try {
                 Thread.sleep(properties.requestDelay());
@@ -124,23 +117,16 @@ public enum DataLoadingStrategy implements BiFunction<ConverterProperties, Path,
      * @param failureDelay Delay to wait before trying again on a failure.
      * @return The username.
      */
-    private static String getMojangUsername(final UUID uuid, final long failureDelay) {
+    private static String getMojangUser(final UUID uuid, final long failureDelay) {
+        String name = Util.getMojangUsername(uuid);
+        if (name != null) {
+            return name;
+        }
         try {
-            HttpRequest req = HttpRequest.newBuilder(URI.create("https://api.mojang.com/user/profile/" + uuid)).GET().build();
-            HttpResponse<String> response = CLIENT.send(req, HttpResponse.BodyHandlers.ofString());
-            int responseCode = response.statusCode();
-            JsonElement element = JsonParser.parseString(response.body());
-            if (!element.isJsonObject() || responseCode != 200) {
-                Bukkit.getLogger().log(Level.WARNING, () -> String.format("Bad response received Retrying shortly. UUID: %s, Response Code: %d.", uuid, responseCode));
-                Thread.sleep(failureDelay);
-                getMojangUsername(uuid, failureDelay);
-            }
-            return element.getAsJsonObject().get("name").getAsString();
-        } catch (IOException e) {
-            e.printStackTrace();
+            Thread.sleep(failureDelay);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        return "";
+        return getMojangUser(uuid, failureDelay);
     }
 }

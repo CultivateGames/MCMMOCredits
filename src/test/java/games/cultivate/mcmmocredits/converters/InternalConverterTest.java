@@ -21,11 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.converter;
+package games.cultivate.mcmmocredits.converters;
 
-import games.cultivate.mcmmocredits.converters.Converter;
-import games.cultivate.mcmmocredits.converters.ConverterProperties;
-import games.cultivate.mcmmocredits.converters.DataLoadingStrategy;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import games.cultivate.mcmmocredits.database.DatabaseUtil;

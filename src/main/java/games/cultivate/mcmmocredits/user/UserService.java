@@ -26,17 +26,16 @@ package games.cultivate.mcmmocredits.user;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import games.cultivate.mcmmocredits.database.Database;
-import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
+import games.cultivate.mcmmocredits.util.Util;
 import jakarta.inject.Inject;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.UnaryOperator;
 
 /**
  * Handles getting and modifying users.
@@ -74,19 +73,9 @@ public final class UserService {
      * @param user The user to add.
      */
     public void addUser(final User user) {
-        this.database.addUser(user);
-        this.addToCache(user);
-    }
-
-    /**
-     * Removes a user from the cache.
-     *
-     * @param uuid The UUID of a user.
-     */
-    public void removeUser(final UUID uuid) {
-        User user = this.fromCache(uuid);
-        this.removeFromCache(uuid);
-        this.removeFromCache(user.username());
+        if (this.database.addUser(user)) {
+            this.addToCache(user);
+        }
     }
 
     /**
@@ -146,13 +135,27 @@ public final class UserService {
 
     /**
      * Updates the username of a user with the specified UUID.
+     * If there is a username conflict, update the user already in database with Mojang call.
      *
      * @param uuid     The UUID of a user.
      * @param username The username of a user.
-     * @return The updated user, or null if the update failed.
      */
-    public @Nullable User setUsername(final UUID uuid, final String username) {
-        return this.database.setUsername(uuid, username) ? this.updateUser(uuid, u -> u.withUsername(username)) : null;
+    public void setUsername(final UUID uuid, final String username) {
+        Optional<User> existingUser = this.getUser(username);
+        if (existingUser.isPresent() && !existingUser.get().uuid().equals(uuid)) {
+            User us = existingUser.get();
+            this.database.setUsername(us.uuid(), Util.getMojangUsername(us.uuid()));
+            Bukkit.getLogger().severe(() -> String.format("""
+                    Duplicate username found!
+                    Old User: UUID = %s, Username = %s
+                    New User: UUID = %s, Username = %s
+                    Updating the older user's username... If you are seeing this message frequently, you likely have a corrupted database!
+                    """, us.uuid(), us.username(), uuid, username));
+        }
+        if (this.database.setUsername(uuid, username)) {
+            User user = this.getUser(uuid).orElseThrow(() -> new IllegalArgumentException("User not found!")).withUsername(username);
+            this.addToCache(user);
+        }
     }
 
     /**
@@ -160,21 +163,14 @@ public final class UserService {
      *
      * @param uuid   The UUID of a user.
      * @param amount Amount of credits to apply to balance.
-     * @return The updated user, or null if the update failed.
      */
-    public @Nullable User setCredits(final UUID uuid, final int amount) {
-        return this.database.setCredits(uuid, amount) ? this.updateUser(uuid, u -> u.setCredits(amount)) : null;
-    }
-
-    /**
-     * Updates an existing user in the DAO/Cache with the provided user.
-     *
-     * @param user The user to use in update.
-     */
-    public void updateUser(final User user) {
-        if (this.database.updateUser(user)) {
-            this.updateUser(user.uuid(), x -> user);
+    public boolean setCredits(final UUID uuid, final int amount) {
+        if (this.database.setCredits(uuid, amount)) {
+            User user = this.getUser(uuid).orElseThrow(() -> new IllegalArgumentException("User not found!")).setCredits(amount);
+            this.addToCache(user);
+            return true;
         }
+        return false;
     }
 
     /**
@@ -183,13 +179,17 @@ public final class UserService {
      * @param result The transaction result to process.
      */
     public void processTransaction(final TransactionResult result) {
-        Transaction transaction = result.transaction();
         if (result.isTargetUpdated()) {
-            this.updateUser(result.target());
+            User target = result.target();
+            if (this.database.updateUser(target)) {
+                this.addToCache(target);
+            }
         }
-        CommandExecutor exec = result.executor();
-        if (!transaction.isSelfTransaction() && result.isExecutorUpdated()) {
-            this.updateUser((User) exec);
+        if (!result.transaction().isSelfTransaction() && result.isExecutorUpdated()) {
+            User exec = (User) result.executor();
+            if (this.database.updateUser(exec)) {
+                this.addToCache(exec);
+            }
         }
     }
 
@@ -204,32 +204,12 @@ public final class UserService {
     }
 
     /**
-     * Applies a function to a user, and updates the existing user with the function's result.
-     *
-     * @param uuid   UUID of the user.
-     * @param action Action to apply to the cached user.
-     * @return The updated user.
-     */
-    public User updateUser(final UUID uuid, final UnaryOperator<User> action) {
-        User user = this.fromCache(uuid);
-        if (user == null) {
-            throw new IllegalArgumentException("User not found in database!");
-        }
-        this.removeFromCache(uuid);
-        this.removeFromCache(user.username());
-        User updatedUser = action.apply(user);
-        this.addToCache(updatedUser);
-        return updatedUser;
-    }
-
-    /**
      * Adds a user to the cache.
      *
      * @param user The user to add.
      */
     private void addToCache(final User user) {
         this.removeFromCache(user.uuid());
-        this.removeFromCache(user.username());
         this.uuidCache.put(user.uuid(), user);
         this.stringCache.put(user.username(), user);
     }
@@ -239,44 +219,11 @@ public final class UserService {
      *
      * @param uuid The UUID to remove.
      */
-    private void removeFromCache(final UUID uuid) {
-        User oldUUID = this.fromCache(uuid);
+    public void removeFromCache(final UUID uuid) {
+        User oldUUID = this.uuidCache.getIfPresent(uuid);
         if (oldUUID != null) {
             this.stringCache.invalidate(oldUUID.username());
             this.uuidCache.invalidate(oldUUID.uuid());
         }
-    }
-
-    /**
-     * Removes a user from the cache.
-     *
-     * @param username The username to remove.
-     */
-    private void removeFromCache(final String username) {
-        User oldString = this.fromCache(username);
-        if (oldString != null) {
-            this.uuidCache.invalidate(oldString.uuid());
-            this.stringCache.invalidate(oldString.username());
-        }
-    }
-
-    /**
-     * Gets a user from the cache with the specified UUID.
-     *
-     * @param uuid UUID of the user.
-     * @return The user.
-     */
-    private User fromCache(final UUID uuid) {
-        return this.uuidCache.getIfPresent(uuid);
-    }
-
-    /**
-     * Gets a user from the cache with the specified UUID.
-     *
-     * @param username Username of the user.
-     * @return The user.
-     */
-    private User fromCache(final String username) {
-        return this.stringCache.getIfPresent(username);
     }
 }
