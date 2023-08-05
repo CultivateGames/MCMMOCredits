@@ -86,7 +86,7 @@ public class MainData implements Data {
         private boolean addUserMessage = true;
         private boolean metricsEnabled = true;
         private boolean debug = false;
-        private boolean leaderboardEnabled = true;
+        private boolean leaderboardEnabled = false;
         private int leaderboardPageSize = 10;
         private boolean sendLoginMessage = true;
         private boolean userTabComplete = true;

@@ -70,6 +70,7 @@ public final class MCMMOCredits extends JavaPlugin {
         this.injector = Guice.createInjector(new PluginModule(this));
         this.checkForDependencies();
         this.configs = this.injector.getInstance(ConfigService.class);
+        this.configs.reloadConfigs();
         this.runConversionProcess();
         this.loadCommands();
         this.registerListeners();

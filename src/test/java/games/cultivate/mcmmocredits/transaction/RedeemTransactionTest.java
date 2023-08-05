@@ -97,7 +97,7 @@ class RedeemTransactionTest {
     }
 
     @Test
-    void executable_ValidTransaction_ReturnsNoFailure() {
+    void valid_ValidTransaction_ReturnsNoFailure() {
         when(this.mockMCMMOPlayer.getProfile()).thenReturn(this.mockProfile);
         when(this.mockProfile.isLoaded()).thenReturn(true);
         when(mcMMO.p.getGeneralConfig()).thenReturn(this.mockConfig);
@@ -107,20 +107,20 @@ class RedeemTransactionTest {
     }
 
     @Test
-    void executable_NotEnoughCredits_ReturnsFailure() {
+    void valid_NotEnoughCredits_ReturnsFailure() {
         Transaction tooManyCredits = Transaction.builder().users(this.executor, this.target).skill(PrimarySkillType.HERBALISM).amount(1100).build();
         assertEquals(Optional.of("not-enough-credits"), tooManyCredits.valid());
     }
 
     @Test
-    void executable_ProfileNotLoaded_ReturnsFailure() {
+    void valid_ProfileNotLoaded_ReturnsFailure() {
         when(this.mockMCMMOPlayer.getProfile()).thenReturn(this.mockProfile);
         Transaction profileNotLoaded = Transaction.builder().users(this.executor, this.target).skill(PrimarySkillType.HERBALISM).amount(100).build();
         assertEquals(Optional.of("mcmmo-profile-fail"), profileNotLoaded.valid());
     }
 
     @Test
-    void executable_SkillLevelCap_ReturnsFailure() {
+    void valid_SkillLevelCap_ReturnsFailure() {
         when(this.mockMCMMOPlayer.getProfile()).thenReturn(this.mockProfile);
         when(this.mockProfile.isLoaded()).thenReturn(true);
         when(mcMMO.p.getGeneralConfig()).thenReturn(this.mockConfig);

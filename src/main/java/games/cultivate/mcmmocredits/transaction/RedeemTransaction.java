@@ -42,7 +42,8 @@ import java.util.Optional;
  * @param skill    The skill to add levels to.
  * @param amount   The amount of credits to remove from the user.
  */
-public record RedeemTransaction(CommandExecutor executor, User[] targets, PrimarySkillType skill, int amount) implements Transaction {
+public record RedeemTransaction(CommandExecutor executor, User[] targets, PrimarySkillType skill,
+                                int amount) implements Transaction {
     private static final String MESSAGE_KEY = "redeem";
     private static final String SUDO_REDEEM_KEY = "redeem-sudo";
     private static final String USER_MESSAGE_KEY = "redeem-sudo-user";
@@ -101,6 +102,12 @@ public record RedeemTransaction(CommandExecutor executor, User[] targets, Primar
      */
     private @Nullable PlayerProfile getPlayerProfile(final User user) {
         Player player = user.player();
-        return player == null ? mcMMO.getDatabaseManager().loadPlayerProfile(user.uuid()) : UserManager.getPlayer(player).getProfile();
+        if (player == null) {
+            return mcMMO.getDatabaseManager().loadPlayerProfile(user.uuid());
+        }
+        if (player.getLastLogin() + 5000 < System.currentTimeMillis()) {
+            return UserManager.getPlayer(player).getProfile();
+        }
+        return null;
     }
 }

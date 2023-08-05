@@ -62,7 +62,7 @@ public record User(UUID uuid, String username, int credits, int redeemed) implem
      */
     @Override
     public Player player() {
-        return Bukkit.getPlayer(this.uuid());
+        return Bukkit.getPlayer(this.uuid);
     }
 
     /**
