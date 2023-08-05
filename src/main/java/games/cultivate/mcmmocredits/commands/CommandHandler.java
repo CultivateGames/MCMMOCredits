@@ -107,7 +107,11 @@ public final class CommandHandler {
         Function<CommandSender, CommandExecutor> forwardsMapper = this.service::fromSender;
         var coordinator = AsynchronousCommandExecutionCoordinator.<CommandExecutor>builder().withAsynchronousParsing().build();
         try {
-            this.manager = new PaperCommandManager<>(this.plugin, coordinator, forwardsMapper, CommandExecutor::sender);
+            this.manager = new PaperCommandManager<>(this.plugin, coordinator, forwardsMapper, x -> {
+                //TODO: better fix for command tree being sent early.
+                while (x.sender() == null) {}
+                return x.sender();
+            });
         } catch (Exception e) {
             e.printStackTrace();
             return;
