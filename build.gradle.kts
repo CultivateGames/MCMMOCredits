@@ -36,9 +36,6 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.mockito:mockito-core:5.4.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.4.0")
-    implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
-        exclude(module = "paper-api")
-    }
     compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.11.3") {
         exclude(group = "net.kyori")

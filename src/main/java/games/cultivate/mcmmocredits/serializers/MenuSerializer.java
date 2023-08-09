@@ -24,44 +24,58 @@
 package games.cultivate.mcmmocredits.serializers;
 
 import games.cultivate.mcmmocredits.menu.Item;
-import games.cultivate.mcmmocredits.menu.Menu;
-import games.cultivate.mcmmocredits.menu.RegularMenu;
+import games.cultivate.mcmmocredits.menu.RedeemMenu;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.serialize.TypeSerializer;
 
 import java.lang.reflect.Type;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 /**
- * Handles serialization/deserialization of a Menu.
+ * Handles serialization/deserialization of a RedeemMenu.
  */
-public final class MenuSerializer implements TypeSerializer<Menu> {
+public final class MenuSerializer implements TypeSerializer<RedeemMenu> {
     public static final MenuSerializer INSTANCE = new MenuSerializer();
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Menu deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
-        Map<String, Item> items = new HashMap<>();
-        for (ConfigurationNode entry : node.node("items").childrenMap().values()) {
-            items.put(Objects.requireNonNull(entry.key()).toString(), entry.get(Item.class));
-        }
+    public RedeemMenu deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
         String title = node.node("title").getString();
         int slots = node.node("slots").getInt();
         boolean fill = node.node("fill").getBoolean();
         boolean navigation = node.node("navigation").getBoolean();
-        return new RegularMenu(items, title, slots, fill, navigation);
+        Map<String, Item> items = new HashMap<>();
+        BitSet occupiedSlots = new BitSet(slots);
+        for (ConfigurationNode entry : node.node("items").childrenMap().values()) {
+            Item item = entry.get(Item.class);
+            items.put(Objects.requireNonNull(entry.key()).toString(), item);
+            occupiedSlots.set(item.slot());
+        }
+        Item filler = items.remove("fill");
+        if (!navigation) {
+            int nav = items.remove("navigation").slot();
+            items.put("fill" + nav, filler.slot(nav));
+        }
+        if (fill) {
+            for (int i = occupiedSlots.nextClearBit(0); i < slots; i = occupiedSlots.nextClearBit(++i)) {
+                items.put("fill" + i, filler.slot(i));
+                occupiedSlots.set(i);
+            }
+        }
+        return new RedeemMenu(items, title, slots, fill, navigation);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void serialize(final Type type, final Menu menu, final ConfigurationNode node) throws SerializationException {
+    public void serialize(final Type type, final RedeemMenu menu, final ConfigurationNode node) throws SerializationException {
         node.node("title").set(menu.title());
         node.node("slots").set(menu.slots());
         node.node("fill").set(menu.fill());

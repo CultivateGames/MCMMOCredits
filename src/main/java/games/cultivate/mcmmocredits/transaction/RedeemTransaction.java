@@ -70,8 +70,10 @@ public record RedeemTransaction(CommandExecutor executor, User[] targets, Primar
     @Override
     public TransactionResult execute() {
         PlayerProfile profile = this.getPlayerProfile(this.targets[0]);
-        profile.addLevels(this.skill, this.amount);
-        profile.save(true);
+        if (profile != null) {
+            profile.addLevels(this.skill, this.amount);
+            profile.save(true);
+        }
         User updated = this.targets[0].takeCredits(this.amount).addRedeemed(this.amount);
         return this.isSelfTransaction() ? TransactionResult.of(this, updated) : TransactionResult.of(this, this.executor, updated);
     }

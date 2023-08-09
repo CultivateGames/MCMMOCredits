@@ -37,8 +37,6 @@ import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.incendo.interfaces.paper.PaperInterfaceListeners;
-import org.incendo.interfaces.paper.utils.PaperUtils;
 import org.slf4j.Logger;
 
 /**
@@ -77,9 +75,7 @@ public final class MCMMOCredits extends JavaPlugin {
         api = this.injector.getInstance(MCMMOCreditsAPI.class);
         this.enableMetrics();
         long end = System.nanoTime();
-        if (this.configs.mainConfig().getBoolean("settings", "debug")) {
-            this.logger.info("Plugin enabled! Startup took: {}s.", (double) (end - start) / 1000000000);
-        }
+        this.logger.info("Plugin enabled! Startup took: {}s.", (double) (end - start) / 1000000000);
     }
 
     /**
@@ -89,9 +85,12 @@ public final class MCMMOCredits extends JavaPlugin {
     @SuppressWarnings("UnstableApiUsage")
     private void checkForDependencies() {
         this.logger.info("Checking Dependencies...");
-        if (!PaperUtils.isPaper()) {
+        try {
+            Class.forName("com.destroystokyo.paper.ParticleBuilder");
+        } catch (Exception e) {
             this.logger.warn("Not using Paper, disabling plugin...");
             this.setEnabled(false);
+            return;
         }
         this.logger.info("Paper has been found! Continuing to load...");
         PluginManager pluginManager = Bukkit.getPluginManager();
@@ -121,7 +120,6 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     private void registerListeners() {
         this.logger.info("Registering Listeners...");
-        Bukkit.getPluginManager().registerEvents(new PaperInterfaceListeners(this, 10L), this);
         Bukkit.getPluginManager().registerEvents(this.injector.getInstance(Listeners.class), this);
         this.logger.info("Listeners registered!");
     }
@@ -155,6 +153,7 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onDisable() {
+        Bukkit.getScheduler().cancelTasks(this);
         this.configs.mainConfig().save();
         this.configs.menuConfig().save();
         this.injector.getInstance(Database.class).disable();

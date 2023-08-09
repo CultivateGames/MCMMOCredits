@@ -24,8 +24,7 @@
 package games.cultivate.mcmmocredits.serializers;
 
 import games.cultivate.mcmmocredits.menu.Item;
-import games.cultivate.mcmmocredits.menu.Menu;
-import games.cultivate.mcmmocredits.menu.RegularMenu;
+import games.cultivate.mcmmocredits.menu.RedeemMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFactory;
@@ -41,6 +40,7 @@ import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.ConfigurationOptions;
 import org.spongepowered.configurate.serialize.SerializationException;
 
+import java.awt.*;
 import java.util.List;
 import java.util.Map;
 
@@ -63,7 +63,7 @@ class MenuSerializerTest {
 
     @BeforeEach
     void setUp() {
-        ConfigurationOptions opts = ConfigurationOptions.defaults().serializers(b -> b.register(Item.class, ItemSerializer.INSTANCE).register(Menu.class, MenuSerializer.INSTANCE));
+        ConfigurationOptions opts = ConfigurationOptions.defaults().serializers(b -> b.register(Item.class, ItemSerializer.INSTANCE).register(RedeemMenu.class, MenuSerializer.INSTANCE));
         this.node = BasicConfigurationNode.root(opts);
         this.mockBukkit.when(Bukkit::getItemFactory).thenReturn(this.mockFactory);
         when(this.mockFactory.getItemMeta(any(Material.class))).thenReturn(this.mockMeta);
@@ -77,27 +77,25 @@ class MenuSerializerTest {
         ConfigurationNode menuNode = this.node.node("menu");
         menuNode.node("title").set("Menu Title!");
         menuNode.node("slots").set(54);
-        menuNode.node("fill").set(false);
+        menuNode.node("fill").set(true);
         menuNode.node("navigation").set(true);
         ConfigurationNode itemNode = this.node.node("menu", "items");
-        Item fill = Item.of(Material.STONE, "fill item!", List.of("the lore."), -1);
-        Item navigation = Item.of(Material.STONE, "navigation item!", List.of("the lore."), -1);
+        Item fill = Item.of(Material.STONE, "fill item!", List.of("the lore."), 0);
+        Item navigation = Item.of(Material.STONE, "navigation item!", List.of("the lore."), 0);
         ItemSerializer.INSTANCE.serialize(Item.class, fill, itemNode.node("fill"));
         ItemSerializer.INSTANCE.serialize(Item.class, navigation, itemNode.node("navigation"));
-        Menu menu = MenuSerializer.INSTANCE.deserialize(Menu.class, menuNode);
+        RedeemMenu menu = MenuSerializer.INSTANCE.deserialize(RedeemMenu.class, menuNode);
         assertEquals("Menu Title!", menu.title());
         assertEquals(54, menu.slots());
-        assertFalse(menu.fill());
-        assertTrue(menu.navigation());
-        assertEquals("fill item!", menu.items().get("fill").name());
+        assertEquals("fill item!", menu.items().get("fill1").name());
         assertEquals("navigation item!", menu.items().get("navigation").name());
     }
 
     @Test
     void serialize_ValidMenu_ReturnsCorrectNode() throws SerializationException {
-        Item fill = Item.of(Material.STONE, "fill item!", List.of("the lore."), -1);
-        Item navigation = Item.of(Material.STONE, "navigation item!", List.of("the lore."), -1);
-        Menu menu = RegularMenu.of(Map.of("fill", fill, "navigation", navigation), "Menu title!", 9, false, true);
+        Item fill = Item.of(Material.STONE, "fill item!", List.of("the lore."), 0);
+        Item navigation = Item.of(Material.STONE, "navigation item!", List.of("the lore."), 0);
+        RedeemMenu menu = new RedeemMenu(Map.of("fill", fill, "navigation", navigation), "Menu title!", 9, false, true);
         ConfigurationNode menuNode = this.node.node("menu");
         MenuSerializer.INSTANCE.serialize(Menu.class, menu, menuNode);
         assertEquals("Menu title!", menuNode.node("title").getString());

@@ -163,6 +163,7 @@ public final class UserService {
      *
      * @param uuid   The UUID of a user.
      * @param amount Amount of credits to apply to balance.
+     * @return If the transaction was successful.
      */
     public boolean setCredits(final UUID uuid, final int amount) {
         if (this.database.setCredits(uuid, amount)) {

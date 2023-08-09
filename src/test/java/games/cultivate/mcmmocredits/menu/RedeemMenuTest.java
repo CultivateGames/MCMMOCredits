@@ -23,10 +23,8 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,29 +34,19 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 //TODO: expand to test built ChestInterface
 @ExtendWith(MockitoExtension.class)
-class RegularMenuTest {
+class RedeemMenuTest {
     @Mock
     private MockedStatic<Bukkit> mockBukkit;
     @Mock
     private ItemFactory mockFactory;
-    @Mock
-    private User mockUser;
-    @Mock
-    private Player mockPlayer;
 
     @BeforeEach
     void setUp() {
@@ -66,31 +54,14 @@ class RegularMenuTest {
     }
 
     @Test
-    void of_ValidProperties_ValidMenu() {
-        Item fill = Item.of(new ItemStack(Material.BLACK_STAINED_GLASS_PANE, 1), "filler!", List.of(), -1);
+    void newMenu_ValidProperties_ValidMenu() {
+        Item fill = Item.of(new ItemStack(Material.BLACK_STAINED_GLASS_PANE, 1), "filler!", List.of(), 0);
         Item navigation = Item.of(Material.COMPASS);
         Map<String, Item> map = Map.of("fill", fill, "navigation", navigation);
-        Menu menu = RegularMenu.of(map, "The menu!", 54, true, false);
+        RedeemMenu menu = new RedeemMenu(map, "The menu!", 54, true, true);
         assertNotNull(menu.items().get("fill"));
         assertNotNull(menu.items().get("navigation"));
         assertEquals(54, menu.slots());
         assertEquals("The menu!", menu.title());
-        assertFalse(menu.navigation());
-        assertTrue(menu.fill());
-    }
-
-    @Test
-    void addExtraItems_CorrectlyModifiesItemMap() {
-        when(this.mockUser.player()).thenReturn(this.mockPlayer);
-        when(this.mockPlayer.hasPermission(anyString())).thenReturn(false);
-        Item config = Item.of(new ItemStack(Material.BLACK_STAINED_GLASS_PANE, 1), "filler!", List.of(), -1);
-        Item redeem = Item.of(Material.COMPASS);
-        Map<String, Item> map = new HashMap<>();
-        map.put("config", config);
-        map.put("redeem", redeem);
-        Menu menu = RegularMenu.of(map, "The menu!", 54, true, false);
-        menu.addExtraItems(this.mockUser);
-        assertNull(menu.items().get("config"));
-        assertNull(menu.items().get("redeem"));
     }
 }

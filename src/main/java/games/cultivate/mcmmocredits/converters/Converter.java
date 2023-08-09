@@ -32,11 +32,21 @@ import org.bukkit.Bukkit;
 import java.nio.file.Path;
 import java.util.List;
 
+/**
+ * Represents an object that moves user data from one data source to another.
+ */
 public final class Converter {
     private final Database database;
     private final Path path;
     private final ConverterProperties properties;
 
+    /**
+     * Constructs the object.
+     *
+     * @param properties Properties of the converter.
+     * @param database   The current database.
+     * @param path       The plugin's path.
+     */
     @Inject
     public Converter(final ConverterProperties properties, final Database database, final @Dir Path path) {
         this.properties = properties;

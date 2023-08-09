@@ -32,7 +32,7 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
  */
 @SuppressWarnings({"FieldMayBeFinal, unused"})
 @ConfigSerializable
-public class MainData implements Data {
+public final class MainData implements Data {
     private String prefix = "<hover:show_text:'<green><sender>: <sender_credits> Credits'><gold><bold>CREDITS</bold> ";
     private String addUser = "<target> has been added to the database!";
     private String argumentParseFailureNoInputWasProvided = "No input was provided";
@@ -85,7 +85,6 @@ public class MainData implements Data {
     static class Settings {
         private boolean addUserMessage = true;
         private boolean metricsEnabled = true;
-        private boolean debug = false;
         private boolean leaderboardEnabled = false;
         private int leaderboardPageSize = 10;
         private boolean sendLoginMessage = true;

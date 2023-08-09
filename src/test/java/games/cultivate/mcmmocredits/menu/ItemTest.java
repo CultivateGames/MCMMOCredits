@@ -79,7 +79,7 @@ class ItemTest {
         assertEquals(1, item.stack().getAmount());
         assertEquals("", item.name());
         assertEquals(List.of(), item.lore());
-        assertEquals(-1, item.slot());
+        assertEquals(0, item.slot());
     }
 
     @Test

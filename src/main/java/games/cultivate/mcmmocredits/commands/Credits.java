@@ -33,20 +33,14 @@ import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
-import games.cultivate.mcmmocredits.menu.ConfigMenu;
-import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionType;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
-import games.cultivate.mcmmocredits.util.ChatQueue;
 import jakarta.inject.Inject;
 import org.bukkit.Bukkit;
-import org.incendo.interfaces.core.arguments.ArgumentKey;
-import org.incendo.interfaces.core.arguments.HashMapInterfaceArguments;
-import org.incendo.interfaces.paper.PlayerViewer;
 
 import java.util.List;
 
@@ -54,8 +48,8 @@ import java.util.List;
  * Handles all commands. Prefix is customizable via config.
  * Default is /credits.
  */
-@CommandMethod("${command.prefix}")
 @SuppressWarnings("checkstyle:linelength")
+@CommandMethod("${command.prefix}")
 public final class Credits {
     private final ConfigService configs;
     private final MCMMOCredits plugin;
@@ -207,61 +201,15 @@ public final class Credits {
     }
 
     /**
-     * Processes the {@literal /credits menu main} command.
+     * Processes the {@literal /credits menu} command.
      *
      * @param executor CommandExecutor. Must be an online player.
-     * @param queue    Injected instance of the ChatQueue used for item actions.
      */
-    @CommandMethod("menu main")
-    @CommandPermission("mcmmocredits.menu.main")
-    @CommandDescription("Allows user to open the Main Menu.")
-    public void openMainMenu(final User executor, final ChatQueue queue) {
-        HashMapInterfaceArguments args = HashMapInterfaceArguments.with(ArgumentKey.of("config"), this.configs.mainConfig())
-                .with(ArgumentKey.of("queue"), queue)
-                .with(ArgumentKey.of("plugin"), this.plugin)
-                .with(ArgumentKey.of("user"), executor)
-                .build();
-        PlayerViewer viewer = PlayerViewer.of(executor.player());
-        this.configs.menuConfig().getMenu("main").build(executor).open(viewer, args);
-    }
-
-    /**
-     * Processes the {@literal /credits menu redeem} command.
-     *
-     * @param executor CommandExecutor. Must be an online player.
-     * @param queue    Injected instance of the ChatQueue used for item actions.
-     */
-    @CommandMethod("menu redeem")
-    @CommandPermission("mcmmocredits.menu.redeem")
+    @CommandMethod("menu")
+    @CommandPermission("mcmmocredits.redeem.menu")
     @CommandDescription("Allows user to open the Redeem Menu.")
-    public void openRedeemMenu(final User executor, final ChatQueue queue) {
-        HashMapInterfaceArguments args = HashMapInterfaceArguments.with(ArgumentKey.of("config"), this.configs.mainConfig())
-                .with(ArgumentKey.of("queue"), queue)
-                .with(ArgumentKey.of("plugin"), this.plugin)
-                .with(ArgumentKey.of("user"), executor)
-                .build();
-        PlayerViewer viewer = PlayerViewer.of(executor.player());
-        this.configs.menuConfig().getMenu("redeem").build(executor).open(viewer, args);
-    }
-
-    /**
-     * Processes the {@literal /credits menu config} command.
-     *
-     * @param executor CommandExecutor. Must be an online player.
-     * @param queue    Injected instance of the ChatQueue used for item actions.
-     */
-    @CommandMethod("menu config")
-    @CommandPermission("mcmmocredits.menu.config")
-    @CommandDescription("Allows user to open the Config Menu.")
-    public void openConfigMenu(final User executor, final ChatQueue queue) {
-        HashMapInterfaceArguments args = HashMapInterfaceArguments.with(ArgumentKey.of("config"), this.configs.mainConfig())
-                .with(ArgumentKey.of("queue"), queue)
-                .with(ArgumentKey.of("plugin"), this.plugin)
-                .with(ArgumentKey.of("user"), executor)
-                .build();
-        PlayerViewer viewer = PlayerViewer.of(executor.player());
-        Menu menu = new ConfigMenu(this.configs.menuConfig().getMenu("config"), this.configs.mainConfig().filterNodes(x -> x.contains("database") || x.contains("converter")));
-        menu.build(executor).open(viewer, args);
+    public void openRedeemMenu(final User executor) {
+        this.configs.menuConfig().getMenu().openInventory(this.plugin, executor);
     }
 
     /**

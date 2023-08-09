@@ -24,10 +24,8 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.converters.DataLoadingStrategy;
-import games.cultivate.mcmmocredits.menu.Action;
 import games.cultivate.mcmmocredits.menu.Item;
-import games.cultivate.mcmmocredits.menu.Menu;
-import games.cultivate.mcmmocredits.serializers.ActionSerializer;
+import games.cultivate.mcmmocredits.menu.RedeemMenu;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import org.bukkit.Bukkit;
@@ -53,7 +51,6 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -83,14 +80,12 @@ class ConfigTest {
                 .sink(() -> new BufferedWriter(new StringWriter()))
                 .defaultOptions(opts -> opts.serializers(build -> build
                         .register(Item.class, ItemSerializer.INSTANCE)
-                        .register(Menu.class, MenuSerializer.INSTANCE)
-                        .register(Action.class, ActionSerializer.INSTANCE)));
+                        .register(RedeemMenu.class, MenuSerializer.INSTANCE)));
         this.config = configService.loadConfig(FakeData.class, builder);
     }
 
     @Test
     void getBoolean_ReturnsCorrectValue() {
-        assertTrue(this.config.getBoolean("leaderboard-enabled"));
         assertFalse(this.config.getBoolean("debug"));
     }
 
@@ -110,19 +105,11 @@ class ConfigTest {
     }
 
     @Test
-    void getLong_ReturnsCorrectValue() {
-        assertEquals(60000L, this.config.getInteger("retry-delay"));
-    }
-
-    @Test
     void getMenu_ReturnsCorrectValue() {
-        Menu menu = this.config.getMenu("menu");
-        assertEquals(Material.BLACK_STAINED_GLASS_PANE, menu.items().get("fill").stack().getType());
-        assertEquals(Material.COMPASS, menu.items().get("navigation").stack().getType());
+        RedeemMenu menu = this.config.getMenu("menu");
+        assertEquals(Material.BLACK_STAINED_GLASS_PANE, menu.items().get("fill1").stack().getType());
         assertEquals(54, menu.slots());
         assertEquals("The menu title!", menu.title());
-        assertFalse(menu.fill());
-        assertTrue(menu.navigation());
     }
 
     @Test
@@ -136,11 +123,5 @@ class ConfigTest {
         assertNotEquals(test, this.config.get(String.class, "", "fake-message"));
         this.config.set(test, "fake-message");
         assertEquals(test, this.config.get(String.class, "", "fake-message"));
-    }
-
-    @Test
-    void filterNodes_FiltersCorrectNodes() {
-        assertTrue(this.config.filterNodes(x -> false).contains("retry-delay"));
-        assertFalse(this.config.filterNodes(x -> x.contains("retry")).contains("retry-delay"));
     }
 }

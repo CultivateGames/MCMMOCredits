@@ -39,11 +39,20 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
+/**
+ * Represents the database which stores users.
+ */
 public final class Database {
     private final Jdbi jdbi;
     private final HikariDataSource source;
     private final boolean h2;
 
+    /**
+     * Constructs the object.
+     *
+     * @param config   The HikariConfig.
+     * @param modifier Function to modify JDBI before it is built.
+     */
     public Database(final HikariConfig config, final UnaryOperator<Jdbi> modifier) {
         this.source = new HikariDataSource(config);
         this.jdbi = modifier.apply(Jdbi.create(this.source).registerRowMapper(new UserMapper()));
@@ -51,20 +60,36 @@ public final class Database {
         this.createTable();
     }
 
+    /**
+     * Shuts down the underlying data source.
+     */
     public void disable() {
         if (this.source != null) {
             this.source.close();
         }
     }
 
+    /**
+     * Returns if the database is H2.
+     *
+     * @return If the database is H2.
+     */
     public boolean isH2() {
         return this.h2;
     }
 
+    /**
+     * Gets the current Jdbi instance.
+     *
+     * @return The Jdbi instance.
+     */
     public Jdbi jdbi() {
         return this.jdbi;
     }
 
+    /**
+     * Creates the Database's table based on properties.
+     */
     public void createTable() {
         if (this.source.getDataSourceClassName().contains("org.sqlite")) {
             this.jdbi.useHandle(handle -> handle.execute("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTOINCREMENT,UUID VARCHAR NOT NULL,username VARCHAR NOT NULL,credits INT CHECK(credits >= 0),redeemed INT);"));
@@ -170,6 +195,9 @@ public final class Database {
         return this.jdbi.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET username = :username, credits = :credits, redeemed = :redeemed WHERE UUID = :uuid;").bindMethods(user).execute() == 1);
     }
 
+    /**
+     * Builds a User from a ResultSet.
+     */
     static class UserMapper implements RowMapper<User> {
         @Override
         public User map(final ResultSet rs, final StatementContext ctx) throws SQLException {

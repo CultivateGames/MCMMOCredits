@@ -23,8 +23,11 @@
 //
 package games.cultivate.mcmmocredits.util;
 
+import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
+import games.cultivate.mcmmocredits.menu.RedeemMenu;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
@@ -34,16 +37,20 @@ import games.cultivate.mcmmocredits.user.UserService;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import jakarta.inject.Inject;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.incendo.interfaces.paper.view.ChestView;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -55,6 +62,7 @@ public class Listeners implements Listener {
     private final ChatQueue queue;
     private final UserService service;
     private final ConfigService configs;
+    private final MCMMOCredits plugin;
 
     /**
      * Constructs the object.
@@ -62,12 +70,14 @@ public class Listeners implements Listener {
      * @param configs ConfigService, used to get configs.
      * @param queue   ChatQueue, used to listen for relevant chat messages.
      * @param service UserService, required to modify users.
+     * @param plugin  Instance of the plugin to help with inventory management.
      */
     @Inject
-    public Listeners(final ConfigService configs, final ChatQueue queue, final UserService service) {
+    public Listeners(final ConfigService configs, final ChatQueue queue, final UserService service, final MCMMOCredits plugin) {
         this.configs = configs;
         this.queue = queue;
         this.service = service;
+        this.plugin = plugin;
     }
 
     /**
@@ -164,32 +174,87 @@ public class Listeners implements Listener {
     }
 
     /**
-     * Cancels shift-clicking inside of Interfaces due to a bug in the library.
-     * Can be removed if <a href="https://github.com/Incendo/interfaces/issues/69">this</a> is patched.
-     * <br><br>
-     * Note: The current solution will likely affect any Inventory that is a {@link ChestView}
+     * Cancels drag events for our holder.
      *
      * @param e The event.
      */
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onInventoryClick(final InventoryClickEvent e) {
-        if (e.getInventory().getHolder() instanceof ChestView && e.isShiftClick()) {
+    @EventHandler
+    public void onInventoryDrag(final InventoryDragEvent e) {
+        if (e.getInventory().getHolder(true) instanceof RedeemMenu) {
             e.setCancelled(true);
         }
     }
 
     /**
-     * Cancels dragging inside of Interfaces due to a bug in the library.
-     * Can be removed if <a href="https://github.com/Incendo/interfaces/issues/69">this</a> is patched.
-     * <br><br>
-     * Note: The current solution will likely affect any Inventory that is a {@link ChestView}
+     * Cancel item refresh task when our inventory is closed.
+     * Set item in offhand to avoid client desync issue.
      *
      * @param e The event.
      */
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onInventoryDrag(final InventoryDragEvent e) {
-        if (e.getInventory().getHolder() instanceof ChestView) {
-            e.setCancelled(true);
+    @EventHandler
+    public void onInventoryClose(final InventoryCloseEvent e) {
+        if (e.getInventory().getHolder(true) instanceof RedeemMenu menu) {
+            menu.cancelRefresh();
+            PlayerInventory inv = e.getPlayer().getInventory();
+            inv.setItemInOffHand(inv.getItemInOffHand());
         }
+    }
+
+    /**
+     * Manages inventory clicks for our inventories.
+     *
+     * @param e The event.
+     */
+    @EventHandler
+    public void onInventoryClick(final InventoryClickEvent e) {
+        InventoryView view = e.getView();
+        Inventory inv = view.getInventory(e.getRawSlot());
+        if (inv == null) {
+            return;
+        }
+        if (view.getTopInventory().getHolder(true) instanceof RedeemMenu menu) {
+            e.setCancelled(true);
+            if (inv.equals(view.getBottomInventory())) {
+                return;
+            }
+            menu.getItem(e.getSlot()).ifPresent(x -> {
+                switch (x.getValue().action()) {
+                    case COMMAND -> this.doCommand(e, x.getKey());
+                    case REDEEM -> this.doRedeem(e, x.getKey());
+                    default -> { /* do nothing */ }
+                }
+            });
+        }
+    }
+
+    /**
+     * Executes a command when specific items are clicked in the RedeemMenu.
+     *
+     * @param event The inventory event.
+     * @param key   The key of the item in the inventory's item map.
+     */
+    private void doCommand(final InventoryClickEvent event, final String key) {
+        event.getClickedInventory().close();
+        String command = this.configs.menuConfig().getString("items", key, "command");
+        Bukkit.getScheduler().runTaskLater(this.plugin, () -> Bukkit.dispatchCommand(event.getWhoClicked(), command), 1L);
+    }
+
+    /**
+     * Executes a redemption when specific items are clicked in the RedeemMenu.
+     *
+     * @param event The inventory event.
+     * @param key   The key of the item in the inventory's item map.
+     */
+    private void doRedeem(final InventoryClickEvent event, final String key) {
+        event.getClickedInventory().close();
+        User user = this.service.getUser(event.getWhoClicked().getUniqueId()).orElseThrow(() -> new IllegalArgumentException("User not found!"));
+        PrimarySkillType skill = PrimarySkillType.valueOf(key.toUpperCase());
+        user.sendText(this.configs.mainConfig().getMessage("redeem-prompt"), r -> r.addSkill(skill));
+        this.queue.act(user.uuid(), i -> Bukkit.getScheduler().runTaskLater(this.plugin, () -> {
+            if (i != null) {
+                Transaction transaction = Transaction.builder().self(user).skill(skill).amount(Integer.parseInt(i)).build();
+                Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false));
+            }
+        }, 1L));
     }
 }
