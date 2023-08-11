@@ -122,6 +122,14 @@ public final class ConfigService {
     }
 
     /**
+     * Saves the configurations.
+     */
+    public void saveConfigs() {
+        this.config.save();
+        this.menuConfig.save();
+    }
+
+    /**
      * Returns an instance of the Main Config.
      *
      * @return The Main Config.
