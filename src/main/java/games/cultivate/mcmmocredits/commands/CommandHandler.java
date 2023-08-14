@@ -159,7 +159,10 @@ public final class CommandHandler {
         this.register(InvalidSyntaxException.class, "invalid-syntax", "correct_syntax", (c, e) -> "/" + e.getCorrectSyntax());
         this.register(InvalidCommandSenderException.class, "invalid-sender", "correct_sender", (c, e) -> e.getRequiredSender().getSimpleName());
         this.register(NoPermissionException.class, "no-permission", "permission", (c, e) -> e.getMissingPermission());
-        this.register(CommandExecutionException.class, "command-execution", "command_context", (c, e) -> String.valueOf(e.getCommandContext()));
+        this.register(CommandExecutionException.class, "command-execution", "command_context", (c, e) -> {
+            e.printStackTrace();
+            return String.valueOf(e.getCommandContext());
+        });
         this.register(ArgumentParseException.class, "argument-parsing", "argument_error", (c, e) -> {
             String value = e.getCause().getMessage();
             return c.sender() instanceof Player p ? PlaceholderAPI.setPlaceholders(p, value) : value;
