@@ -31,6 +31,7 @@ import games.cultivate.mcmmocredits.menu.RedeemMenu;
 import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
+import games.cultivate.mcmmocredits.transaction.TransactionType;
 import games.cultivate.mcmmocredits.user.Console;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
@@ -52,7 +53,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.PlayerInventory;
 
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -99,7 +99,7 @@ public class Listeners implements Listener {
         }
         this.service.addUser(new User(uuid, username, 0, 0));
         if (this.configs.mainConfig().getBoolean("settings", "add-user-message")) {
-            Console.INSTANCE.sendText(this.configs.mainConfig().getMessage("add-user"), r -> r.addTag("username", username));
+            Console.INSTANCE.sendText(this.configs.getMessage("add-user"), r -> r.addTag("username", username));
         }
     }
 
@@ -111,7 +111,7 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerJoin(final PlayerJoinEvent e) {
         if (this.configs.mainConfig().getBoolean("settings", "send-login-message")) {
-            this.service.getUser(e.getPlayer().getUniqueId()).orElseThrow().sendText(this.configs.mainConfig().getMessage("login-message"));
+            this.service.getUser(e.getPlayer()).orElseThrow().sendText(this.configs.getMessage("login-message"));
         }
     }
 
@@ -127,7 +127,7 @@ public class Listeners implements Listener {
             String completion = PlainTextComponentSerializer.plainText().serialize(e.message());
             if (completion.equalsIgnoreCase("cancel")) {
                 this.queue.remove(uuid);
-                this.service.getUser(uuid).orElseThrow().sendText(this.configs.mainConfig().getMessage("cancel-prompt"));
+                this.service.getUser(uuid).orElseThrow().sendText(this.configs.getMessage("cancel-prompt"));
             }
             this.queue.complete(uuid, completion);
             e.setCancelled(true);
@@ -156,20 +156,21 @@ public class Listeners implements Listener {
         if (e.isCancelled()) {
             return;
         }
-        Transaction transaction = e.transaction();
-        Optional<String> failure = transaction.valid();
-        if (failure.isPresent()) {
-            transaction.executor().sendText(this.configs.mainConfig().getMessage(failure.get()), Resolver.ofTransaction(transaction));
+        Transaction tr = e.transaction();
+        tr.validateTransaction().forEach((k, v) -> v.ifPresent(y -> {
+            tr.executor().sendText(this.configs.getMessage(y), r -> r.addTransaction(tr).addUser(k, "target"));
+            tr.targets().remove(k);
+        }));
+        if (tr.targets().isEmpty()) {
             return;
         }
-        TransactionResult result = transaction.execute();
+        TransactionResult result = tr.execute();
         this.service.processTransaction(result);
-        Resolver resolver = Resolver.ofTransactionResult(result);
         if (!e.senderFeedback()) {
-            result.executor().sendText(this.configs.mainConfig().getMessage(transaction.messageKey()), resolver);
+            result.executor().sendText(this.configs.getMessage(tr.messageKey()), Resolver.ofResult(result));
         }
-        if (!e.userFeedback() && result.target().player() != null) {
-            result.target().sendText(this.configs.mainConfig().getMessage(transaction.userMessageKey()), resolver);
+        if (!e.userFeedback()) {
+            result.targets().stream().filter(x -> x.player().isOnline()).forEach(x -> x.sendText(this.configs.getMessage(tr.userMessageKey()), Resolver.ofResult(result, x)));
         }
     }
 
@@ -249,10 +250,10 @@ public class Listeners implements Listener {
         event.getClickedInventory().close();
         User user = this.service.getUser(event.getWhoClicked().getUniqueId()).orElseThrow(() -> new IllegalArgumentException("User not found!"));
         PrimarySkillType skill = PrimarySkillType.valueOf(key.toUpperCase());
-        user.sendText(this.configs.mainConfig().getMessage("redeem-prompt"), r -> r.addSkill(skill));
+        user.sendText(this.configs.getMessage("credits-redeem-prompt"), r -> r.addSkill(skill));
         this.queue.act(user.uuid(), i -> Bukkit.getScheduler().runTaskLater(this.plugin, () -> {
             if (i != null) {
-                Transaction transaction = Transaction.builder().self(user).skill(skill).amount(Integer.parseInt(i)).build();
+                Transaction transaction = Transaction.builder(user, TransactionType.REDEEM, Integer.parseInt(i)).skill(skill).build();
                 Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false));
             }
         }, 1L));

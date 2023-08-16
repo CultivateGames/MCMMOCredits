@@ -30,10 +30,11 @@ import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.serialize.TypeSerializer;
 
 import java.lang.reflect.Type;
-import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Handles serialization/deserialization of a RedeemMenu.
@@ -51,22 +52,18 @@ public final class MenuSerializer implements TypeSerializer<RedeemMenu> {
         boolean fill = node.node("fill").getBoolean();
         boolean navigation = node.node("navigation").getBoolean();
         Map<String, Item> items = new HashMap<>();
-        BitSet occupiedSlots = new BitSet(slots);
         for (ConfigurationNode entry : node.node("items").childrenMap().values()) {
             Item item = entry.get(Item.class);
-            items.put(Objects.requireNonNull(entry.key()).toString(), item);
-            occupiedSlots.set(item.slot());
+            items.put((String) entry.key(), item);
         }
         Item filler = items.remove("fill");
         if (!navigation) {
             int nav = items.remove("navigation").slot();
             items.put("fill" + nav, filler.slot(nav));
         }
+        Set<Integer> slotSet = items.values().stream().map(Item::slot).collect(Collectors.toSet());
         if (fill) {
-            for (int i = occupiedSlots.nextClearBit(0); i < slots; i = occupiedSlots.nextClearBit(++i)) {
-                items.put("fill" + i, filler.slot(i));
-                occupiedSlots.set(i);
-            }
+            IntStream.range(0, slots).filter(i -> !slotSet.contains(i)).forEach(i -> items.put("fill" + i, filler.slot(i)));
         }
         return new RedeemMenu(items, title, slots, fill, navigation);
     }

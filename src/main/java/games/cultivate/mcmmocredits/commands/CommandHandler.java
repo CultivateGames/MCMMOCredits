@@ -51,14 +51,12 @@ import games.cultivate.mcmmocredits.user.UserService;
 import io.leangen.geantyref.TypeToken;
 import jakarta.inject.Inject;
 import me.clip.placeholderapi.PlaceholderAPI;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -66,7 +64,7 @@ import java.util.regex.Pattern;
  */
 public final class CommandHandler {
     private static final Pattern TO_PATH = Pattern.compile("[.|_]");
-    private final Credits commands;
+    private final Commands commands;
     private final UserService service;
     private final ConfigService configs;
     private final MCMMOCredits plugin;
@@ -78,7 +76,6 @@ public final class CommandHandler {
             StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_FLAG_UNKNOWN_FLAG,
             StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_FLAG_DUPLICATE_FLAG,
             StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_FLAG_NO_FLAG_STARTED,
-            StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_FLAG_MISSING_ARGUMENT,
             BukkitCaptionKeys.ARGUMENT_PARSE_FAILURE_PLAYER);
     private PaperCommandManager<CommandExecutor> manager;
 
@@ -91,7 +88,7 @@ public final class CommandHandler {
      * @param plugin   Plugin instance to register the CommandManager.
      */
     @Inject
-    public CommandHandler(final Credits commands, final UserService service, final ConfigService configs, final MCMMOCredits plugin) {
+    public CommandHandler(final Commands commands, final UserService service, final ConfigService configs, final MCMMOCredits plugin) {
         this.commands = commands;
         this.service = service;
         this.configs = configs;
@@ -104,11 +101,8 @@ public final class CommandHandler {
      * @param injectionService An injection service. Used to inject into commands.
      */
     public void load(final GuiceInjectionService<CommandExecutor> injectionService) {
-        Function<CommandSender, CommandExecutor> forwardsMapper = this.service::fromSender;
-        var coordinator = AsynchronousCommandExecutionCoordinator.<CommandExecutor>builder().withAsynchronousParsing().build();
         try {
-            this.manager = new PaperCommandManager<>(this.plugin, coordinator, forwardsMapper, x -> {
-                //TODO: better fix for command tree being sent early.
+            this.manager = new PaperCommandManager<>(this.plugin, AsynchronousCommandExecutionCoordinator.<CommandExecutor>builder().build(), this.service::fromSender, x -> {
                 while (x.sender() == null) {}
                 return x.sender();
             });
@@ -185,7 +179,7 @@ public final class CommandHandler {
      * @param <E>   The Exception type. Differs per registration.
      */
     private <E extends Exception> void register(final Class<E> ex, final String path, final String key, final BiFunction<CommandExecutor, E, String> value) {
-        this.manager.registerExceptionHandler(ex, (c, e) -> c.sendText(this.configs.mainConfig().getMessage(path), r -> r.addTag(key, value.apply(c, e))));
+        this.manager.registerExceptionHandler(ex, (c, e) -> c.sendText(this.configs.getMessage(path), r -> r.addTag(key, value.apply(c, e))));
     }
 
     /**

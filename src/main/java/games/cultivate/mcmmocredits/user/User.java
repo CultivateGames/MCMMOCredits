@@ -82,7 +82,7 @@ public record User(UUID uuid, String username, int credits, int redeemed) implem
      * @return An updated User.
      */
     public User addCredits(final int amount) {
-        return new User(this.uuid, this.username, this.credits + amount, this.redeemed);
+        return this.setCredits(this.credits + amount);
     }
 
     /**
@@ -92,7 +92,7 @@ public record User(UUID uuid, String username, int credits, int redeemed) implem
      * @return An updated User.
      */
     public User takeCredits(final int amount) {
-        return new User(this.uuid, this.username, this.credits - amount, this.redeemed);
+        return this.setCredits(this.credits - amount);
     }
 
     /**
@@ -103,25 +103,5 @@ public record User(UUID uuid, String username, int credits, int redeemed) implem
      */
     public User withUsername(final String username) {
         return new User(this.uuid, username, this.credits, this.redeemed);
-    }
-
-    /**
-     * Provides a copy of the User with an updated redeemed amount.
-     *
-     * @param amount credit redeemed amount to set on the User.
-     * @return An updated User.
-     */
-    public User setRedeemed(final int amount) {
-        return new User(this.uuid, this.username, this.credits, amount);
-    }
-
-    /**
-     * Provides a copy of the User with an updated redeemed amount.
-     *
-     * @param amount credit redeemed amount to add to the User.
-     * @return An updated User.
-     */
-    public User addRedeemed(final int amount) {
-        return new User(this.uuid, this.username, this.credits, this.redeemed + amount);
     }
 }

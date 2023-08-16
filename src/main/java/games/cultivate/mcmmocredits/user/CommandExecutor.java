@@ -28,6 +28,7 @@ import games.cultivate.mcmmocredits.text.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 import java.util.function.UnaryOperator;
@@ -85,6 +86,15 @@ public interface CommandExecutor {
      */
     default CommandSender sender() {
         return this.isPlayer() ? this.player() : Bukkit.getConsoleSender();
+    }
+
+    /**
+     * Converts this instance to a User if the CommandExecutor is known to be a player.
+     *
+     * @return The User, or null if not a player.
+     */
+    default @Nullable User toUser() {
+        return this.isPlayer() ? (User) this : null;
     }
 
     /**

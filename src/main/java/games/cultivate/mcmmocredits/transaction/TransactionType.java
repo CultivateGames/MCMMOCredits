@@ -23,9 +23,51 @@
 //
 package games.cultivate.mcmmocredits.transaction;
 
+import cloud.commandframework.context.CommandContext;
+import games.cultivate.mcmmocredits.user.CommandExecutor;
+
+import java.util.function.Function;
+
 /**
  * Represents different types of transactions.
  */
 public enum TransactionType {
-    ADD, SET, TAKE, REDEEM, PAY
+    ADD("credits-add", "credits-add-user"),
+    SET("credits-set", "credits-set-user"),
+    TAKE("credits-take", "credits-take-user"),
+    PAY("credits-pay", "credits-pay-user"),
+    REDEEM(t -> t.isSelfTransaction() ? "credits-redeem" : "credits-redeem-sudo", "credits-redeem-user"),
+    ADDALL("credits-add-all", "credits-add-user"),
+    TAKEALL("credits-take-all", "credits-take-user"),
+    SETALL("credits-set-all", "credits-set-user"),
+    REDEEMALL("credits-redeem-all", "credits-redeem-user");
+
+    private final Function<Transaction, String> function;
+    private final String key;
+
+    TransactionType(final Function<Transaction, String> function, final String key) {
+        this.function = function;
+        this.key = key;
+    }
+
+    TransactionType(final String messageKey, final String key) {
+        this.function = t -> messageKey;
+        this.key = key;
+    }
+
+    public static TransactionType fromArgs(final CommandContext<CommandExecutor> args, int i) {
+        return TransactionType.valueOf(args.getRawInput().get(i).toUpperCase());
+    }
+
+    public String messageKey(final Transaction transaction) {
+        return this.function.apply(transaction);
+    }
+
+    public String userMessageKey() {
+        return this.key;
+    }
+
+    public String notEnoughCredits() {
+        return this.name().contains("ALL") ? "not-enough-credits-other" : "not-enough-credits";
+    }
 }

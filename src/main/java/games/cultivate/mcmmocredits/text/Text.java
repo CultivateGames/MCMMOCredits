@@ -77,7 +77,7 @@ public final class Text {
      * @return the Text.
      */
     public static Text fromString(final CommandExecutor executor, final String content, final Resolver resolver) {
-        return Text.fromString(executor.sender(), content, resolver);
+        return Text.fromString(executor.sender(), content, addMessageViewer(executor, resolver));
     }
 
     /**
@@ -101,6 +101,17 @@ public final class Text {
      */
     public static Text forOneUser(final CommandExecutor executor, final String content, final UnaryOperator<Resolver> operator) {
         return Text.fromString(executor, content, operator.apply(Resolver.ofUser(executor)));
+    }
+
+    /**
+     * Adds Resolver tags for the viewer of the Text.
+     *
+     * @param executor The message viewer.
+     * @param resolver The current resolver.
+     * @return modified or existing resolver, depending on if the user is a player.
+     */
+    private static Resolver addMessageViewer(final CommandExecutor executor, final Resolver resolver) {
+        return executor.isPlayer() ? resolver.addUser(executor.toUser(), "viewer") : resolver;
     }
 
     /**

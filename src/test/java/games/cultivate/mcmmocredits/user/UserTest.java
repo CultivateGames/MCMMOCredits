@@ -121,15 +121,4 @@ class UserTest {
         assertEquals(this.credits, updatedUser.credits());
         assertEquals(this.redeemed, updatedUser.redeemed());
     }
-
-    @Test
-    void setRedeemed_ReturnsUserWithUpdatedRedeemed() {
-        int newRedeemed = 75;
-        User updatedUser = this.user.setRedeemed(newRedeemed);
-        assertNotEquals(this.user, updatedUser);
-        assertEquals(newRedeemed, updatedUser.redeemed());
-        assertEquals(this.uuid, updatedUser.uuid());
-        assertEquals(this.username, updatedUser.username());
-        assertEquals(this.credits, updatedUser.credits());
-    }
 }

@@ -26,6 +26,7 @@ package games.cultivate.mcmmocredits.transaction;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -35,40 +36,29 @@ import java.util.Optional;
  * @param targets  The targets of the transaction.
  * @param amount   The amount of credits to remove from targets.
  */
-public record TakeTransaction(CommandExecutor executor, User[] targets, int amount) implements Transaction {
-    private static final String MESSAGE_KEY = "credits-take";
-    private static final String USER_MESSAGE_KEY = "credits-take-user";
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String userMessageKey() {
-        return USER_MESSAGE_KEY;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String messageKey() {
-        return MESSAGE_KEY;
-    }
-
+public record TakeTransaction(CommandExecutor executor, List<User> targets, int amount) implements Transaction {
     /**
      * {@inheritDoc}
      */
     @Override
     public TransactionResult execute() {
-        User updated = this.targets[0].takeCredits(this.amount);
-        return this.isSelfTransaction() ? TransactionResult.of(this, updated) : TransactionResult.of(this, this.executor, updated);
+        List<User> mapped = this.targets.stream().map(x -> x.takeCredits(this.amount)).toList();
+        return TransactionResult.of(this, this.executor, mapped);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Optional<String> valid() {
-        return this.targets[0].credits() - this.amount >= 0 ? Optional.empty() : Optional.of("not-enough-credits");
+    public Optional<String> validate(final User user) {
+        return user.credits() - this.amount >= 0 ? Optional.empty() : Optional.of(this.type().notEnoughCredits());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TransactionType type() {
+        return this.targets.size() > 1 ? TransactionType.TAKEALL : TransactionType.TAKE;
     }
 }

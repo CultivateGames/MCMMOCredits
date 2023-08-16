@@ -26,24 +26,27 @@ package games.cultivate.mcmmocredits.transaction;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 
+import java.util.HashSet;
+import java.util.List;
+
 /**
  * Represents the result of the transaction.
  *
  * @param transaction The transaction.
  * @param executor    The updated executor of the transaction.
- * @param target      The updated user for the transaction.
+ * @param targets     The updated users for the transaction.
  */
-public record TransactionResult(Transaction transaction, CommandExecutor executor, User target) {
+public record TransactionResult(Transaction transaction, CommandExecutor executor, List<User> targets) {
     /**
      * Constructs a TransactionResult.
      *
      * @param transaction The transaction.
      * @param executor    The updated executor of the transaction.
-     * @param target      The updated user for the transaction.
+     * @param targets     The updated users for the transaction.
      * @return The result of the provided transaction.
      */
-    public static TransactionResult of(final Transaction transaction, final CommandExecutor executor, final User target) {
-        return new TransactionResult(transaction, executor, target);
+    public static TransactionResult of(final Transaction transaction, final CommandExecutor executor, final List<User> targets) {
+        return new TransactionResult(transaction, executor, targets);
     }
 
     /**
@@ -54,7 +57,7 @@ public record TransactionResult(Transaction transaction, CommandExecutor executo
      * @return The result of the provided transaction.
      */
     public static TransactionResult of(final Transaction transaction, final User target) {
-        return new TransactionResult(transaction, target, target);
+        return new TransactionResult(transaction, target, List.of(target));
     }
 
     /**
@@ -62,16 +65,16 @@ public record TransactionResult(Transaction transaction, CommandExecutor executo
      *
      * @return if the executor was updated by the transaction.
      */
-    public boolean isExecutorUpdated() {
+    public boolean updatedExecutor() {
         return this.transaction.executor() != this.executor;
     }
 
     /**
-     * Returns if the target was updated by the transaction.
+     * Returns if the targets are updated by the transaction.
      *
-     * @return if the target was updated by the transaction.
+     * @return if the targets are updated by the transaction.
      */
-    public boolean isTargetUpdated() {
-        return this.transaction().targets()[0] != this.target;
+    public boolean updatedTargets() {
+        return !new HashSet<>(this.transaction.targets()).containsAll(this.targets);
     }
 }

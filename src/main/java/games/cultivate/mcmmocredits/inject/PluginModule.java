@@ -26,7 +26,7 @@ package games.cultivate.mcmmocredits.inject;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.commands.Credits;
+import games.cultivate.mcmmocredits.commands.Commands;
 import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.converters.Converter;
 import games.cultivate.mcmmocredits.converters.ConverterProperties;
@@ -63,7 +63,7 @@ public final class PluginModule extends AbstractModule {
         this.bind(Path.class).annotatedWith(Dir.class).toInstance(this.plugin.getDataFolder().toPath());
         this.bind(UserService.class).asEagerSingleton();
         this.bind(ChatQueue.class).asEagerSingleton();
-        this.bind(Credits.class).asEagerSingleton();
+        this.bind(Commands.class).asEagerSingleton();
         this.bind(ConfigService.class).asEagerSingleton();
     }
 

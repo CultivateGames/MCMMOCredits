@@ -118,7 +118,7 @@ public final class ConfigService {
      */
     public void reloadConfigs() {
         this.config = this.loadConfig(MainData.class, "config.yml");
-        this.menuConfig = this.loadConfig(MenuData.class, "menus.yml");
+        this.menuConfig = this.loadConfig(MenuData.class, "menu.yml");
     }
 
     /**
@@ -148,8 +148,18 @@ public final class ConfigService {
      */
     public Config<MenuData> menuConfig() {
         if (this.menuConfig == null) {
-            this.menuConfig = this.loadConfig(MenuData.class, "menus.yml");
+            this.menuConfig = this.loadConfig(MenuData.class, "menu.yml");
         }
         return this.menuConfig;
+    }
+
+    /**
+     * Convenience method to get messages from main configuration.
+     *
+     * @param path Path of the message.
+     * @return The message.
+     */
+    public String getMessage(final Object... path) {
+        return this.mainConfig().getMessage(path);
     }
 }

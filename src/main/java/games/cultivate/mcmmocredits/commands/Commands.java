@@ -29,6 +29,7 @@ import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.specifier.Range;
+import cloud.commandframework.context.CommandContext;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigService;
@@ -42,6 +43,7 @@ import games.cultivate.mcmmocredits.user.UserService;
 import jakarta.inject.Inject;
 import org.bukkit.Bukkit;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -50,9 +52,10 @@ import java.util.List;
  */
 @SuppressWarnings("checkstyle:linelength")
 @CommandMethod("${command.prefix}")
-public final class Credits {
+public final class Commands {
     private final ConfigService configs;
     private final MCMMOCredits plugin;
+    private final UserService service;
 
     /**
      * Constructs the object.
@@ -61,9 +64,10 @@ public final class Credits {
      * @param plugin  Plugin instance to obtain main thread executor.
      */
     @Inject
-    public Credits(final ConfigService configs, final MCMMOCredits plugin) {
+    public Commands(final ConfigService configs, final MCMMOCredits plugin, final UserService service) {
         this.configs = configs;
         this.plugin = plugin;
+        this.service = service;
     }
 
     /**
@@ -75,7 +79,7 @@ public final class Credits {
     @CommandPermission("mcmmocredits.balance.self")
     @CommandDescription("Allows user to check credit statistics.")
     public void balance(final User user) {
-        user.sendText(this.configs.mainConfig().getMessage("balance"));
+        user.sendText(this.configs.getMessage("balance"));
     }
 
     /**
@@ -88,7 +92,7 @@ public final class Credits {
     @CommandPermission("mcmmocredits.balance.other")
     @CommandDescription("Allows user to check someone else's credit statistics.")
     public void balanceOther(final CommandExecutor executor, final @Argument User user) {
-        executor.sendText(this.configs.mainConfig().getMessage("balance-other"), Resolver.ofUsers(executor, user));
+        executor.sendText(this.configs.getMessage("balance-other"), r -> r.addUser(user, "target"));
     }
 
     /**
@@ -102,8 +106,7 @@ public final class Credits {
     @CommandPermission("mcmmocredits.modify.self")
     @CommandDescription("Allows user to modify their own credit balance.")
     public void modify(final User executor, final @Argument TransactionType type, final @Argument @Range(min = "0") int amount) {
-        Transaction transaction = Transaction.builder().self(executor).amount(amount).type(type).build();
-        this.emitEvent(new CreditTransactionEvent(transaction, true, false));
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(Transaction.of(executor, type, amount), true, false));
     }
 
     /**
@@ -119,8 +122,22 @@ public final class Credits {
     @CommandPermission("mcmmocredits.modify.other")
     @CommandDescription("Allows user to modify someone else's credit balance.")
     public void modifyOther(final CommandExecutor executor, final @Argument TransactionType type, final @Argument @Range(min = "0") int amount, final @Argument User user, final @Flag("s") boolean silent) {
-        Transaction transaction = Transaction.builder().users(executor, user).amount(amount).type(type).build();
-        this.emitEvent(new CreditTransactionEvent(transaction, silent, false));
+        Transaction tr = Transaction.builder(executor, type, amount).targets(user).build();
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(tr, silent, false));
+    }
+
+    /**
+     * Processes the {@literal /credits <addall|setall|takeall|redeemall> <amount> [skill] [--s]} command.
+     *
+     * @param executor CommandExecutor. Must be an online player.
+     * @param amount   Amount of credits to apply to balance.
+     */
+    @CommandMethod("addall|setall|takeall <amount>")
+    @CommandPermission("mcmmocredits.modify.all")
+    @CommandDescription("Allows user to modify balance of all online players.")
+    public void modifyAll(final CommandExecutor executor, final CommandContext<CommandExecutor> args, final @Argument @Range(min = "0") int amount, final @Flag("s") boolean silent) {
+        Transaction tr = Transaction.builder(executor, TransactionType.fromArgs(args, 1), amount).targets(this.getOnlineUsers()).build();
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(tr, silent, false));
     }
 
     /**
@@ -134,8 +151,8 @@ public final class Credits {
     @CommandPermission("mcmmocredits.redeem.self")
     @CommandDescription("Allows user to redeem credits for MCMMO Skill levels.")
     public void redeem(final User executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount) {
-        Transaction transaction = Transaction.builder().self(executor).skill(skill).amount(amount).build();
-        this.emitEvent(new CreditTransactionEvent(transaction, true, false));
+        Transaction tr = Transaction.builder(executor, TransactionType.REDEEM, amount).skill(skill).build();
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(tr, true, false));
     }
 
     /**
@@ -151,8 +168,22 @@ public final class Credits {
     @CommandPermission("mcmmocredits.redeem.other")
     @CommandDescription("Allows a user to redeem credits for someone else.")
     public void redeemOther(final CommandExecutor executor, final @Argument PrimarySkillType skill, final @Argument @Range(min = "1") int amount, final @Argument User user, final @Flag("s") boolean silent) {
-        Transaction transaction = Transaction.builder().users(executor, user).skill(skill).amount(amount).build();
-        this.emitEvent(new CreditTransactionEvent(transaction, silent, false));
+        Transaction tr = Transaction.builder(executor, TransactionType.REDEEM, amount).targets(user).skill(skill).build();
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(tr, silent, false));
+    }
+
+    /**
+     * Processes the {@literal /credits <redeemall> <amount> <skill> [--s]} command.
+     *
+     * @param executor CommandExecutor. Must be an online player.
+     * @param amount   Amount of credits to apply to balance.
+     */
+    @CommandMethod("redeemall <amount> <skill>")
+    @CommandPermission("mcmmocredits.redeem.all")
+    @CommandDescription("Allows user to redeem credits for all online players.")
+    public void redeemAll(final CommandExecutor executor, final @Argument @Range(min = "1") int amount, final @Argument PrimarySkillType skill, final @Flag("s") boolean silent) {
+        Transaction tr = Transaction.builder(executor, TransactionType.REDEEMALL, amount).targets(this.getOnlineUsers()).skill(skill).build();
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(tr, silent, false));
     }
 
     /**
@@ -166,30 +197,29 @@ public final class Credits {
     @CommandPermission("mcmmocredits.pay")
     @CommandDescription("Allows user to give their credits to another user.")
     public void pay(final User executor, final @Argument @Range(min = "1") int amount, final @Argument User user) {
-        Transaction transaction = Transaction.builder().type(TransactionType.PAY).users(executor, user).amount(amount).build();
-        this.emitEvent(new CreditTransactionEvent(transaction, true, false));
+        Transaction tr = Transaction.builder(executor, TransactionType.PAY, amount).targets(user).build();
+        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(tr, false, false));
     }
 
     /**
      * Processes the {@literal /credits top <page>} command.
      *
-     * @param service  The UserService to fetch users.
      * @param executor CommandExecutor. Can be Console.
      * @param page     Page number of the leaderboard.
      */
     @CommandMethod("top <page>")
     @CommandPermission("mcmmocredits.leaderboard")
     @CommandDescription("Shows the specified page of the leaderboard.")
-    public void top(final CommandExecutor executor, final UserService service, final @Argument @Range(min = "1") int page) {
+    public void top(final CommandExecutor executor, final @Argument @Range(min = "1") int page) {
         if (!this.configs.mainConfig().getBoolean("settings", "leaderboard-enabled")) {
-            executor.sendText(this.configs.mainConfig().getMessage("invalid-leaderboard"));
+            executor.sendText(this.configs.getMessage("invalid-leaderboard"));
             return;
         }
         int limit = this.configs.mainConfig().getInteger("settings", "leaderboard-page-size");
         int offset = Math.max(0, (page - 1) * limit);
-        List<User> users = service.rangeOfUsers(limit, offset);
+        List<User> users = this.service.rangeOfUsers(limit, offset);
         if (users.isEmpty()) {
-            executor.sendText(this.configs.mainConfig().getMessage("invalid-leaderboard"));
+            executor.sendText(this.configs.getMessage("invalid-leaderboard"));
             return;
         }
         executor.sendText(this.configs.mainConfig().getString("leaderboard-title"));
@@ -222,15 +252,16 @@ public final class Credits {
     @CommandDescription("Reloads the configuration files with most changes applied.")
     public void reload(final CommandExecutor executor) {
         this.configs.reloadConfigs();
-        executor.sendText(this.configs.mainConfig().getMessage("reload"));
+        executor.sendText(this.configs.getMessage("reload"));
     }
 
     /**
-     * Fires a Transaction event on the main thread.
+     * Translates all online players into online users.
      *
-     * @param event The event.
+     * @return List of online users.
      */
-    private void emitEvent(final CreditTransactionEvent event) {
-        this.plugin.execute(() -> Bukkit.getPluginManager().callEvent(event));
+    private List<User> getOnlineUsers() {
+        List<User> users = Bukkit.getOnlinePlayers().stream().map(x -> this.service.getUser(x).orElseThrow()).toList();
+        return new ArrayList<>(users);
     }
 }

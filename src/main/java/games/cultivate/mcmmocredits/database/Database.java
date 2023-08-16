@@ -33,6 +33,7 @@ import org.jdbi.v3.core.statement.StatementContext;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -183,6 +184,20 @@ public final class Database {
      */
     public boolean setCredits(final UUID uuid, final int amount) {
         return this.jdbi.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET credits = :amount WHERE UUID = :uuid;").bind("uuid", uuid).bind("amount", amount).execute() == 1);
+    }
+
+    /**
+     * Updates credits and redeemed for the provided list of users.
+     *
+     * @param users The users.
+     */
+    public boolean applyTransaction(final List<User> users) {
+        return this.jdbi.withHandle(handle -> {
+            PreparedBatch batch = handle.prepareBatch("UPDATE MCMMOCredits SET credits = :credits, redeemed = :redeemed WHERE UUID = :uuid;");
+            users.forEach(x -> batch.bindMethods(x).add());
+            int[] results = batch.execute();
+            return Arrays.stream(results).allMatch(x -> x == 1);
+        });
     }
 
     /**

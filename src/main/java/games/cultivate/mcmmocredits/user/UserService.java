@@ -112,6 +112,10 @@ public final class UserService {
         return opt;
     }
 
+    public Optional<User> getUser(final Player player) {
+        return this.getUser(player.getUniqueId());
+    }
+
     /**
      * Gets a range of users using the specified limit and offset.
      *
@@ -180,13 +184,13 @@ public final class UserService {
      * @param result The transaction result to process.
      */
     public void processTransaction(final TransactionResult result) {
-        if (result.isTargetUpdated()) {
-            User target = result.target();
-            if (this.database.updateUser(target)) {
-                this.addToCache(target);
+        if (result.updatedTargets()) {
+            List<User> users = result.targets();
+            if (this.database.applyTransaction(users)) {
+                users.forEach(this::addToCache);
             }
         }
-        if (!result.transaction().isSelfTransaction() && result.isExecutorUpdated()) {
+        if (result.updatedExecutor()) {
             User exec = (User) result.executor();
             if (this.database.updateUser(exec)) {
                 this.addToCache(exec);

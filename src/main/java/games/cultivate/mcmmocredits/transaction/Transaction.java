@@ -23,12 +23,14 @@
 //
 package games.cultivate.mcmmocredits.transaction;
 
-import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Represents an interaction in which a user's credit balance is modified.
@@ -39,23 +41,18 @@ public interface Transaction {
      *
      * @return new instance of the Transaction builder.
      */
-    static Transaction.Builder builder() {
-        return new Transaction.Builder();
+    static TransactionBuilder builder(final CommandExecutor executor, final TransactionType type, final int amount) {
+        return new TransactionBuilder(executor, type, amount);
     }
 
     /**
-     * Gets the config key for feedback sent to the user during this transaction.
+     * Returns a new instance of the Transaction builder.
      *
-     * @return The config key.
+     * @return new instance of the Transaction builder.
      */
-    String userMessageKey();
-
-    /**
-     * Gets the config key for feedback sent to the executor during this transaction.
-     *
-     * @return The config key.
-     */
-    String messageKey();
+    static Transaction of(final CommandExecutor executor, final TransactionType type, final int amount) {
+        return new TransactionBuilder(executor, type, amount).build();
+    }
 
     /**
      * Executes the transaction.
@@ -69,7 +66,7 @@ public interface Transaction {
      *
      * @return An optional indicating execution status of the transaction.
      */
-    Optional<String> valid();
+    Optional<String> validate(final User user);
 
     /**
      * Gets the executor of the transaction.
@@ -83,7 +80,7 @@ public interface Transaction {
      *
      * @return The targets.
      */
-    User[] targets();
+    List<User> targets();
 
     /**
      * Gets the amount of credits applied in transaction.
@@ -93,109 +90,48 @@ public interface Transaction {
     int amount();
 
     /**
+     * Gets the type of the transaction.
+     *
+     * @return Type of the transaction.
+     */
+    TransactionType type();
+
+    /**
      * Returns if the executor and target are the same entity.
      *
      * @return True if the executor and target are the same entity, otherwise false.
      */
     default boolean isSelfTransaction() {
-        return this.executor().equals(this.targets()[0]);
+        if (!this.executor().isPlayer()) {
+            return false;
+        }
+        return this.targets().size() == 1 && this.targets().contains((User) this.executor());
     }
 
     /**
-     * Builder class for Transactions.
+     * Returns a map of users and failure messages, if they fail validation.
+     *
+     * @return Map of users and failure messages, if they fail validation.
      */
-    class Builder {
-        private int amount;
-        private CommandExecutor executor;
-        private User[] targets;
-        private PrimarySkillType skill;
-        private TransactionType type;
+    default Map<User, Optional<String>> validateTransaction() {
+        return this.targets().stream().collect(Collectors.toMap(Function.identity(), this::validate));
+    }
 
-        /**
-         * Sets PrimarySkillType of the transaction, and also sets the transaction type to REDEEM.
-         *
-         * @param skill The skill.
-         * @return The builder.
-         */
-        public Builder skill(final PrimarySkillType skill) {
-            this.skill = skill;
-            this.type = TransactionType.REDEEM;
-            return this;
-        }
+    /**
+     * Gets the config key for feedback sent to the user during this transaction.
+     *
+     * @return The config key.
+     */
+    default String userMessageKey() {
+        return this.type().userMessageKey();
+    }
 
-        /**
-         * Sets the type of the transaction.
-         *
-         * @param type The type.
-         * @return The builder.
-         */
-        public Builder type(final TransactionType type) {
-            this.type = type;
-            return this;
-        }
-
-        /**
-         * Sets the amount of the transaction.
-         *
-         * @param amount The amount.
-         * @return The builder.
-         */
-        public Builder amount(final int amount) {
-            this.amount = amount;
-            return this;
-        }
-
-        /**
-         * Sets the executor and target to the provided user.
-         *
-         * @param executor The user.
-         * @return The builder.
-         */
-        public Builder self(final User executor) {
-            this.executor = executor;
-            this.targets = new User[]{executor};
-            return this;
-        }
-
-        /**
-         * Sets the users of the transaction.
-         *
-         * @param executor The executor.
-         * @param targets  The targets.
-         * @return The builder.
-         */
-        public Builder users(final CommandExecutor executor, final User... targets) {
-            this.executor = executor;
-            this.targets = targets;
-            return this;
-        }
-
-        /**
-         * Sets the users of the transaction.
-         *
-         * @param executor The executor.
-         * @param targets  The targets.
-         * @return The builder.
-         */
-        public Builder users(final CommandExecutor executor, final List<User> targets) {
-            this.executor = executor;
-            this.targets = targets.toArray(new User[0]);
-            return this;
-        }
-
-        /**
-         * Builds the transaction.
-         *
-         * @return The transaction.
-         */
-        public Transaction build() {
-            return switch (this.type) {
-                case ADD -> new AddTransaction(this.executor, this.targets, this.amount);
-                case SET -> new SetTransaction(this.executor, this.targets, this.amount);
-                case TAKE -> new TakeTransaction(this.executor, this.targets, this.amount);
-                case PAY -> new PayTransaction(this.executor, this.targets, this.amount);
-                case REDEEM -> new RedeemTransaction(this.executor, this.targets, this.skill, this.amount);
-            };
-        }
+    /**
+     * Gets the config key for feedback sent to the executor during this transaction.
+     *
+     * @return The config key.
+     */
+    default String messageKey() {
+        return this.type().messageKey(this);
     }
 }

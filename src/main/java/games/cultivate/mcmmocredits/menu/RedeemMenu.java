@@ -73,7 +73,7 @@ public final class RedeemMenu implements InventoryHolder {
     public void openInventory(final MCMMOCredits plugin, final User user) {
         this.inventory = Bukkit.getServer().createInventory(this, this.slots, Text.forOneUser(user, this.title).toComponent());
         this.setItems(user);
-        plugin.execute(() -> user.player().openInventory(this.inventory));
+        Bukkit.getScheduler().runTask(plugin, () -> user.player().openInventory(this.inventory));
         this.taskID = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> this.setItems(user), 1L, 20L).getTaskId();
     }
 

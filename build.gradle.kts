@@ -32,7 +32,7 @@ dependencies {
     implementation("org.jdbi:jdbi3-sqlite:3.39.1")
     implementation("org.jdbi:jdbi3-sqlobject:3.39.1")
     testImplementation("org.jdbi:jdbi3-testing:3.39.1")
-    testImplementation(platform("org.junit:junit-bom:5.9.3"))
+    testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.mockito:mockito-core:5.4.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.4.0")

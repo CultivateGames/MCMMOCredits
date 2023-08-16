@@ -146,7 +146,7 @@ class UserServiceTest {
     @Test
     void processTransaction_UserExists_TransactionAppliedToService() {
         this.service.addUser(this.user);
-        Transaction transaction = Transaction.builder().self(this.user).amount(1000).type(TransactionType.ADD).build();
+        Transaction transaction = Transaction.builder(this.user, TransactionType.ADD, 1000).build();
         TransactionResult result = transaction.execute();
         this.service.processTransaction(result);
         assertEquals(1100, this.service.getUser(this.user.uuid()).orElseThrow().credits());

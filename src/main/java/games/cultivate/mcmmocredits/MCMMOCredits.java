@@ -153,17 +153,7 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        Bukkit.getScheduler().cancelTasks(this);
-        this.configs.saveConfigs();
         this.injector.getInstance(Database.class).disable();
-    }
-
-    /**
-     * Ensures runnable execution is on the main thread.
-     *
-     * @param command Runnable to execute on the main thread.
-     */
-    public void execute(final Runnable command) {
-        Bukkit.getScheduler().getMainThreadExecutor(this).execute(command);
+        this.configs.saveConfigs();
     }
 }
