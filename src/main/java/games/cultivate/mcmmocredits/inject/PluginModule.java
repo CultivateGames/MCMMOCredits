@@ -28,15 +28,21 @@ import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.commands.Commands;
 import games.cultivate.mcmmocredits.config.ConfigService;
-import games.cultivate.mcmmocredits.converters.Converter;
+import games.cultivate.mcmmocredits.converters.CSVConverter;
 import games.cultivate.mcmmocredits.converters.ConverterProperties;
+import games.cultivate.mcmmocredits.converters.ConverterType;
+import games.cultivate.mcmmocredits.converters.Converter;
+import games.cultivate.mcmmocredits.converters.InternalConverter;
+import games.cultivate.mcmmocredits.converters.PluginConverter;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
 import games.cultivate.mcmmocredits.util.Dir;
 import jakarta.inject.Singleton;
+import org.bukkit.Bukkit;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -90,8 +96,13 @@ public final class PluginModule extends AbstractModule {
      */
     @Provides
     @Singleton
-    public Converter provideConverter(final ConfigService configService, final Database database, final @Dir Path path) {
+    public Converter provideConverter(final ConfigService configService, final Database database, final @Dir Path path) throws IOException {
         ConverterProperties properties = configService.mainConfig().get(ConverterProperties.class, null, "converter");
-        return properties.create(database, path);
+        Path bpath = Bukkit.getPluginsFolder().toPath().resolve(properties.type() == ConverterType.MORPH_REDEEM ? Path.of("MorphRedeem", "PlayerData") : Path.of("GuiRedeemMCMMO", "playerdata"));
+        return switch (properties.type()) {
+            case CSV -> new CSVConverter(database, path);
+            case INTERNAL -> new InternalConverter(database, properties.previous().create(path));
+            case GUI_REDEEM_MCMMO, MORPH_REDEEM -> new PluginConverter(database, bpath, properties.requestDelay(), properties.failureDelay());
+        };
     }
 }

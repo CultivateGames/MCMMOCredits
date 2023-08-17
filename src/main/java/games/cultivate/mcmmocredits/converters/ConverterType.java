@@ -23,26 +23,12 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-
 /**
- * Represents properties of a Data Converter.
- *
- * @param type         Type of the Converter.
- * @param previous  Properties of the old Database.
- * @param failureDelay Delay used when a Mojang request fails.
- * @param requestDelay Delay used between Mojang requests.
- * @param enabled      If conversion is enabled.
+ * Namespace for Data Converters.
+ * CSV: Data is sourced from a file named database.csv in the plugin's directory.
+ * GUI_REDEEM_MCMMO: Data is sourced from GuiRedeemMCMMO user data.
+ * INTERNAL: Data is sourced from another plugin database type (ex. SQLITE to H2)
  */
-@ConfigSerializable
-public record ConverterProperties(ConverterType type, DatabaseProperties previous, long failureDelay, long requestDelay, boolean enabled) {
-    /**
-     * Constructs the object with sane defaults.
-     *
-     * @return The object.
-     */
-    public static ConverterProperties defaults() {
-        return new ConverterProperties(ConverterType.INTERNAL, DatabaseProperties.defaults(), 60000L, 300L, false);
-    }
+public enum ConverterType {
+    CSV, GUI_REDEEM_MCMMO, INTERNAL, MORPH_REDEEM;
 }

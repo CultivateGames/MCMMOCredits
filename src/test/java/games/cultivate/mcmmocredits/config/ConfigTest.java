@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.converters.DataLoadingStrategy;
+import games.cultivate.mcmmocredits.converters.ConverterType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
@@ -75,7 +75,7 @@ class ConfigTest {
 
     @Test
     void get_ReturnsDefaultOnBadSection() {
-        assertEquals(DataLoadingStrategy.CSV, config.get(DataLoadingStrategy.class, DataLoadingStrategy.CSV, "fake-section", "converter-type"));
+        assertEquals(ConverterType.CSV, config.get(ConverterType.class, ConverterType.CSV, "fake-section", "converter-type"));
     }
 
     @Test

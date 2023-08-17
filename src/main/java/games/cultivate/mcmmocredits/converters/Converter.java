@@ -23,55 +23,11 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-import games.cultivate.mcmmocredits.database.Database;
-import games.cultivate.mcmmocredits.user.User;
-import games.cultivate.mcmmocredits.util.Dir;
-import jakarta.inject.Inject;
-import org.bukkit.Bukkit;
-
-import java.nio.file.Path;
-import java.util.List;
-
-/**
- * Represents an object that moves user data from one data source to another.
- */
-public final class Converter {
-    private final Database database;
-    private final Path path;
-    private final ConverterProperties properties;
-
-    /**
-     * Constructs the object.
-     *
-     * @param properties Properties of the converter.
-     * @param database   The current database.
-     * @param path       The plugin's path.
-     */
-    @Inject
-    public Converter(final ConverterProperties properties, final Database database, final @Dir Path path) {
-        this.properties = properties;
-        this.database = database;
-        if (this.properties.type() == DataLoadingStrategy.GUI_REDEEM_MCMMO) {
-            this.path = Bukkit.getPluginsFolder().toPath().resolve(Path.of("GuiRedeemMCMMO", "playerdata"));
-        } else if (this.properties.type() == DataLoadingStrategy.MORPH_REDEEM) {
-            this.path = Bukkit.getPluginsFolder().toPath().resolve(Path.of("MorphRedeem", "PlayerData"));
-        } else {
-            this.path = path;
-        }
-    }
-
+public interface Converter {
     /**
      * Runs the data conversion process.
      *
      * @return If the process was successful.
      */
-    public boolean run() {
-        List<User> loaded = this.properties.type().apply(this.properties, this.path);
-        this.database.addUsers(loaded);
-        if (this.database.isH2()) {
-            this.database.jdbi().useHandle(x -> x.execute("CHECKPOINT SYNC"));
-        }
-        List<User> updatedCurrentUsers = this.database.getAllUsers();
-        return loaded.parallelStream().allMatch(updatedCurrentUsers::contains);
-    }
+    boolean run();
 }

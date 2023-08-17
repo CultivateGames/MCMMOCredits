@@ -24,30 +24,38 @@
 package games.cultivate.mcmmocredits.converters;
 
 import games.cultivate.mcmmocredits.database.Database;
-import games.cultivate.mcmmocredits.database.DatabaseUtil;
 import games.cultivate.mcmmocredits.user.User;
-import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+/**
+ * Data Converter which uses an older database to convert.
+ */
+public final class InternalConverter implements Converter {
+    private final List<User> users;
+    private final Database database;
 
-class InternalConverterTest {
-    private final Database oldDatabase = DatabaseUtil.create();
-    private final Database currentDatabase = DatabaseUtil.create("jdbc:h2:mem:testdb2;DB_CLOSE_DELAY=-1;MODE=MYSQL");
+    /**
+     * Constructs the object.
+     *
+     * @param old The old database.
+     */
+    public InternalConverter(final Database database, final Database old) {
+        this.database = database;
+        this.users = old.getAllUsers();
+        old.disable();
+    }
 
-    @Test
-    void run_ValidUsers_ConvertsUsersCorrectly() {
-        this.oldDatabase.addUser(new User(new UUID(0, 0), "tester0", 0, 0));
-        this.oldDatabase.addUser(new User(new UUID(1, 1), "tester1", 10, 10));
-        this.oldDatabase.addUser(new User(new UUID(2, 2), "tester2", 20, 20));
-        List<User> users = this.oldDatabase.getAllUsers();
-        Converter converter = new InternalConverter(this.currentDatabase, this.oldDatabase);
-        assertTrue(converter.run());
-        List<User> currentUsers = this.currentDatabase.getAllUsers();
-        assertEquals(users.size(), currentUsers.size());
-        assertTrue(currentUsers.containsAll(users));
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean run() {
+        this.database.addUsers(this.users);
+        if (this.database.isH2()) {
+            this.database.jdbi().useHandle(x -> x.execute("CHECKPOINT SYNC"));
+        }
+        List<User> updatedCurrentUsers = this.database.getAllUsers();
+        return this.users.parallelStream().allMatch(updatedCurrentUsers::contains);
     }
 }

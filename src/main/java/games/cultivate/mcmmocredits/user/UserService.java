@@ -27,7 +27,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
-import games.cultivate.mcmmocredits.util.Util;
+import games.cultivate.mcmmocredits.util.MojangUtil;
 import jakarta.inject.Inject;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -167,7 +167,7 @@ public final class UserService {
         Optional<User> existingUser = this.getUser(username);
         if (existingUser.isPresent() && !existingUser.get().uuid().equals(uuid)) {
             User us = existingUser.get();
-            this.database.setUsername(us.uuid(), Util.getMojangUsername(us.uuid()));
+            this.database.setUsername(us.uuid(), MojangUtil.fetchUsername(us.uuid()));
             Bukkit.getLogger().severe(() -> String.format("""
                     Duplicate username found!
                     Old User: UUID = %s, Username = %s
