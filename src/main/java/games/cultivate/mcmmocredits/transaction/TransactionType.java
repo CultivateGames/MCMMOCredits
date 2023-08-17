@@ -45,24 +45,54 @@ public enum TransactionType {
     private final Function<Transaction, String> function;
     private final String key;
 
+    /**
+     * Constructs the object when the transaction is required to derive message key.
+     *
+     * @param function The function used to derive a message key.
+     * @param key      The user message key.
+     */
     TransactionType(final Function<Transaction, String> function, final String key) {
         this.function = function;
         this.key = key;
     }
 
+    /**
+     * Constructs the object when the transaction is not required to derive message key.
+     *
+     * @param messageKey The message key.
+     * @param key        The user message key.
+     */
     TransactionType(final String messageKey, final String key) {
         this.function = t -> messageKey;
         this.key = key;
     }
 
-    public static TransactionType fromArgs(final CommandContext<CommandExecutor> args, int i) {
+    /**
+     * Derives the transaction type from command context.
+     *
+     * @param args The command context.
+     * @param i    The location of the transaction type.
+     * @return The type.
+     */
+    public static TransactionType fromArgs(final CommandContext<CommandExecutor> args, final int i) {
         return TransactionType.valueOf(args.getRawInput().get(i).toUpperCase());
     }
 
+    /**
+     * Gets the config key for feedback sent to the executor during the transaction.
+     *
+     * @param transaction The transaction.
+     * @return The config key.
+     */
     public String messageKey(final Transaction transaction) {
         return this.function.apply(transaction);
     }
 
+    /**
+     * Gets the config key for feedback sent to the user during this transaction.
+     *
+     * @return The config key.
+     */
     public String userMessageKey() {
         return this.key;
     }

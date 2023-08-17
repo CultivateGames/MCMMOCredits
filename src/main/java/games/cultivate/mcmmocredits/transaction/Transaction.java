@@ -39,16 +39,22 @@ public interface Transaction {
     /**
      * Returns a new instance of the Transaction builder.
      *
-     * @return new instance of the Transaction builder.
+     * @param executor The executor of the transaction.
+     * @param type     The type of the transaction.
+     * @param amount   The amount of the transaction.
+     * @return The builder.
      */
     static TransactionBuilder builder(final CommandExecutor executor, final TransactionType type, final int amount) {
         return new TransactionBuilder(executor, type, amount);
     }
 
     /**
-     * Returns a new instance of the Transaction builder.
+     * Returns a basic, built transaction (self add|set|take).
      *
-     * @return new instance of the Transaction builder.
+     * @param executor The executor of the transaction.
+     * @param type     The type of the transaction.
+     * @param amount   The amount of the transaction.
+     * @return The transaction.
      */
     static Transaction of(final CommandExecutor executor, final TransactionType type, final int amount) {
         return new TransactionBuilder(executor, type, amount).build();
@@ -64,9 +70,10 @@ public interface Transaction {
     /**
      * Gets if the transaction is valid. The optional is empty if the transaction can be executed.
      *
+     * @param user The user to validate against.
      * @return An optional indicating execution status of the transaction.
      */
-    Optional<String> validate(final User user);
+    Optional<String> validate(User user);
 
     /**
      * Gets the executor of the transaction.

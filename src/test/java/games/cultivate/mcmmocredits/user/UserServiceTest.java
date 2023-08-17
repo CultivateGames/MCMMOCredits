@@ -25,9 +25,9 @@ package games.cultivate.mcmmocredits.user;
 
 import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.database.DatabaseUtil;
+import games.cultivate.mcmmocredits.transaction.AddTransaction;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
-import games.cultivate.mcmmocredits.transaction.TransactionType;
 import org.bukkit.Bukkit;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
@@ -46,7 +46,6 @@ import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -93,7 +92,6 @@ class UserServiceTest {
     void getUser_CachedUser_ReturnsUser() {
         this.service.addUser(this.user);
         Optional<User> result = this.service.getUser(this.user.uuid());
-        assertTrue(result.isPresent());
         assertEquals(this.user, result.get());
     }
 
@@ -101,7 +99,6 @@ class UserServiceTest {
     void getUser_NotCachedUser_ReturnsUser() {
         this.database.addUser(this.user);
         Optional<User> result = this.service.getUser(this.user.uuid());
-        assertTrue(result.isPresent());
         assertEquals(this.user, result.get());
     }
 
@@ -146,7 +143,7 @@ class UserServiceTest {
     @Test
     void processTransaction_UserExists_TransactionAppliedToService() {
         this.service.addUser(this.user);
-        Transaction transaction = Transaction.builder(this.user, TransactionType.ADD, 1000).build();
+        Transaction transaction = new AddTransaction(this.user, List.of(this.user), 1000);
         TransactionResult result = transaction.execute();
         this.service.processTransaction(result);
         assertEquals(1100, this.service.getUser(this.user.uuid()).orElseThrow().credits());
@@ -159,8 +156,6 @@ class UserServiceTest {
         this.service.addUser(this.user);
         this.service.addUser(tester);
         List<User> result = this.service.rangeOfUsers(2, 0);
-        assertNotNull(result);
-        assertEquals(2, result.size());
         assertEquals(users, result);
     }
 
@@ -170,8 +165,6 @@ class UserServiceTest {
         this.mockBukkit.when(() -> Bukkit.getPlayer(this.user.uuid())).thenReturn(this.mockPlayer);
         when(this.mockPlayer.getUniqueId()).thenReturn(this.user.uuid());
         CommandExecutor test = this.service.fromSender(this.mockPlayer);
-        assertNotNull(test);
-        assertTrue(test instanceof User);
         assertEquals(this.user, test);
     }
 
@@ -179,7 +172,6 @@ class UserServiceTest {
     void fromSender_SenderIsConsole_ReturnsConsole() {
         ConsoleCommandSender sender = mock(ConsoleCommandSender.class);
         CommandExecutor result = this.service.fromSender(sender);
-        assertTrue(result instanceof Console);
         assertEquals(Console.INSTANCE, result);
     }
 
@@ -194,12 +186,21 @@ class UserServiceTest {
     void setUsername_UsernameConflict_OlderUserReplaced() {
         User notch = new User(UUID.fromString("069a79f4-44e9-4726-a5be-fca90e38aaf5"), "jeb_", 100, 100);
         User jeb = new User(UUID.fromString("853c80ef-3c37-49fd-aa49-938b674adae6"), "Notch", 500, 500);
-        this.mockBukkit.when(Bukkit::getLogger).thenReturn(Logger.getAnonymousLogger());
+        this.mockBukkit.when(Bukkit::getLogger).thenReturn(Logger.getLogger("MCMMOCredits"));
         this.database.addUser(notch);
         this.database.addUser(jeb);
         this.service.setUsername(jeb.uuid(), "jeb_");
         this.service.setUsername(notch.uuid(), "Notch");
         assertEquals("Notch", this.service.getUser(notch.uuid()).get().username());
         assertEquals("jeb_", this.service.getUser(jeb.uuid()).get().username());
+    }
+
+    @Test
+    void getOnlineUsers_ValidPlayers_GetsAll() {
+        this.service.addUser(this.user);
+        this.mockBukkit.when(() -> Bukkit.getPlayer(this.user.uuid())).thenReturn(this.mockPlayer);
+        this.mockBukkit.when(Bukkit::getOnlinePlayers).thenReturn(List.of(this.mockPlayer));
+        when(this.mockPlayer.getUniqueId()).thenReturn(this.user.uuid());
+        assertEquals(this.user.uuid(), this.service.getOnlineUsers().get(0).uuid());
     }
 }

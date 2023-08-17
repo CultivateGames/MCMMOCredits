@@ -1,73 +1,53 @@
-# MCMMO Credits v0.4.4-SNAPSHOT Configuration
-# Repository: https://github.com/CultivateGames/MCMMOCredits
-# Wiki: https://github.com/CultivateGames/MCMMOCredits/wiki/
-
-prefix: '<hover:show_text:''<green><sender>: <sender_credits> Credits''><gold><bold>CREDITS</bold> '
+prefix: '<hover:show_text:''<green><viewer>: <viewer_credits> Credits''><gold><bold>CREDITS</bold> '
 add-user: <target> has been added to the database!
 argument-parse-failure-no-input-was-provided: No input was provided
 argument-parse-failure-boolean: Could not parse boolean from <input>
 argument-parse-failure-enum: '<input> is not one of the following: <acceptableValues>'
 argument-parse-failure-flag-unknown-flag: Unknown flag <flag>
 argument-parse-failure-flag-duplicate-flag: Duplicate flag <flag>
-argument-parse-failure-flag-no-flag-started: No flag started. Don't know what to do
-  with <input>
-argument-parse-failure-flag-missing-argument: Missing argument for <flag>
-argument-parse-failure-number: <input> is not a valid number in the range <min> to
-  <max>
+argument-parse-failure-flag-no-flag-started: No flag started. Don't know what to do with <input>
+argument-parse-failure-number: <input> is not a valid number in the range <min> to <max>
 argument-parse-failure-player: <red><input> does not exist in our database!
 argument-parse-failure-string: <input> is not a valid string of type <stringMode>
-argument-parsing: '<red>Argument Error: <argument_error>'
-balance: <green>You have <sender_credits> MCMMO Credits! You have redeemed <sender_redeemed>
-  Credits.
-balance-other: <green><target> has <target_credits> MCMMO Credits! They have redeemed
-  <target_redeemed> Credits.
+argument-parsing: '<red>Error: <argument_error>'
+balance: <green>You have <sender_credits> credits! You have redeemed <sender_redeemed> Credits.
+balance-other: <green><target> has <target_credits> credits! They have redeemed <target_redeemed> Credits.
 cancel-prompt: <red>You have cancelled the current operation.
 command-execution: <red>There was an error executing this command!
 command-prefix: credits
 credits-add: <green>You have given <amount> Credits to <target>.
-credits-pay: <green>You have paid <amount> Credits to <target>. You now have <sender_credits>
-  Credits.
-credits-set: <yellow>You have set <target>'s Credits to <amount>.
-credits-take: <red>You have taken <amount> Credits from <target>.
-credits-add-user: <green><amount> Credits have been added to your balance by <sender>.
-  You have <target_credits> Credits.
-credits-pay-user: <green><sender> has given you <amount> Credits. You have <target_credits>
-  Credits.
+credits-add-all: <green>You have given <amount> Credits to all online players!
+credits-add-user: <green><amount> Credits have been added to your balance by <sender>. You have <target_credits> Credits.
+credits-pay: <green>You have paid <amount> Credits to <target>. You now have <sender_credits> Credits.
 credits-pay-same-user: <red>Users cannot pay themselves! Cancelling transaction...
+credits-pay-user: <green><sender> has paid you <amount> credits. You have <target_credits> credits.
+credits-redeem: <green>You have redeemed <amount> Credits into <skill>. You have <target_credits> Credits remaining.
+credits-redeem-all: <green>You have redeemed <amount> Credits into <skill> for all online players!
+credits-redeem-prompt: <gray>How many credits would you like to redeem into <green><skill>? <gray>You have <green><sender_credits> <gray>Credits available.
+credits-redeem-sudo: <green>You have redeemed <amount> Credits into <skill> for <target>. They have <target_credits> Credits remaining.
+credits-redeem-user: <green><sender> has redeemed <amount> Credits into <skill> for you! You have <target_credits> Credits remaining.
+credits-set: <yellow>You have set <target>'s Credits to <amount>.
+credits-set-all: <yellow>You have the credit balance of all online players to <amount>!
 credits-set-user: <yellow>Your MCMMO Credit balance has been set to <amount> by <sender>.
-credits-take-user: <red>You had <amount> taken out of your Credit balance by <sender>.
-  You now have <target_credits> Credits.
-edit-config: <green>You have changed <gray><setting> <green>to <gray><change>.
-edit-config-fail: <red>There was an error while changing settings, operation aborted.
-edit-config-prompt: <red>Enter the new value for <gray><setting><red>, or type 'cancel'
-  to abort.
+credits-take: <red>You have taken <amount> Credits from <target>.
+credits-take-all: <red>You have taken <amount> Credits from  all online players!
+credits-take-user: <red>You had <amount> removed from your Credit balance by <sender>. You now have <target_credits> Credits.
 invalid-leaderboard: <#FF253C>This leaderboard page is invalid or not enabled!
 invalid-sender: '<red>Invalid command sender! You must be of type: <gray><correct_sender>'
 invalid-syntax: '<red>Invalid syntax! Correct syntax: <gray><correct_syntax>'
 leaderboard-entry: '<rank>. <green><target>: <white><target_credits>'
 leaderboard-title: <#FF253C>MCMMO Credits Leaderboard
-login-message: <hover:show_text:'<green>You have <sender_credits> MCMMO Credits!'><yellow>Hover
-  to see your MCMMO Credit balance!
+login-message: <hover:show_text:'<green>You have <sender_credits> credits!'><yellow>Hover to see your MCMMO Credit balance!
 mcmmo-profile-fail: The mcMMO Profile for <target> is not loaded! Aborting operation...
-mcmmo-skill-cap: <red>You cannot redeem this many MCMMO Credits into <skill>, due
-  to the Level Cap (<cap>).
-no-permission: '<hover:show_text:''<red>Required permission: <permission>''><red>You
-  do not have permission to do this!'
-not-enough-credits: <red>You do not have enough MCMMO Credits to do this!
-redeem: <green>Redemption Successful! You have redeemed <amount> Credits into <skill>.
-  You have <target_credits> Credits remaining.
-redeem-prompt: <gray>How many credits would you like to redeem into <green><skill>?
-  <gray>You have <green><sender_credits> Credits available.
-redeem-sudo: <green>Redemption Successful! You have redeemed <amount> Credits into
-  <skill> for <target>. They have <target_credits> Credits remaining.
-redeem-sudo-user: <green>Redemption Successful! <sender> has redeemed <amount> Credits
-  into <skill> for you! You have <target_credits> Credits remaining.
+mcmmo-skill-cap: <red>You cannot redeem this many credits into <skill>, due to the Level Cap (<cap>).
+no-permission: '<hover:show_text:''<red>Required permission: <permission>''><red>You do not have permission to do this!'
+not-enough-credits: <red>You do not have enough credits to do this!
+not-enough-credits-other: '<red><target> does not have enough credits for: <transaction>!'
 reload: <green>The configuration file has been reloaded.
 settings:
   add-user-message: true
   metrics-enabled: true
-  debug: false
-  leaderboard-enabled: true
+  leaderboard-enabled: false
   leaderboard-page-size: 10
   send-login-message: true
   user-tab-complete: true

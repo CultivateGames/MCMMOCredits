@@ -51,10 +51,12 @@ public final class Converter {
     public Converter(final ConverterProperties properties, final Database database, final @Dir Path path) {
         this.properties = properties;
         this.database = database;
-        switch (this.properties.type()) {
-            case GUI_REDEEM_MCMMO -> this.path = Bukkit.getPluginsFolder().toPath().resolve(Path.of("GuiRedeemMCMMO", "playerdata"));
-            case MORPH_REDEEM -> this.path = Bukkit.getPluginsFolder().toPath().resolve(Path.of("MorphRedeem", "PlayerData"));
-            default -> this.path = path;
+        if (this.properties.type() == DataLoadingStrategy.GUI_REDEEM_MCMMO) {
+            this.path = Bukkit.getPluginsFolder().toPath().resolve(Path.of("GuiRedeemMCMMO", "playerdata"));
+        } else if (this.properties.type() == DataLoadingStrategy.MORPH_REDEEM) {
+            this.path = Bukkit.getPluginsFolder().toPath().resolve(Path.of("MorphRedeem", "PlayerData"));
+        } else {
+            this.path = path;
         }
     }
 

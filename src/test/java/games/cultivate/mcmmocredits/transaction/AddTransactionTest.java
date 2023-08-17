@@ -56,6 +56,13 @@ class AddTransactionTest {
     }
 
     @Test
+    void execute_ValidSelf_TransactionApplied() {
+        Transaction set = new AddTransaction(this.target, List.of(this.target), 600);
+        TransactionResult result = set.execute();
+        assertEquals(1600, result.targets().get(0).credits());
+    }
+
+    @Test
     void validate_ValidTransaction_ReturnsNoFailure() {
         Transaction transaction = new AddTransaction(this.executor, List.of(this.target), 100);
         assertEquals(Optional.empty(), transaction.validate(this.target));

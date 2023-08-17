@@ -54,7 +54,8 @@ class InternalConverterTest {
         ConverterProperties properties = new ConverterProperties(DataLoadingStrategy.INTERNAL, dproperties, 60000L, 300L, false);
         Converter converter = new Converter(properties, this.currentDatabase, Path.of(""));
         assertTrue(converter.run());
-        assertEquals(users.size(), this.currentDatabase.getAllUsers().size());
-        assertTrue(this.currentDatabase.getAllUsers().containsAll(users));
+        List<User> currentUsers = this.currentDatabase.getAllUsers();
+        assertEquals(users.size(), currentUsers.size());
+        assertTrue(currentUsers.containsAll(users));
     }
 }

@@ -50,17 +50,6 @@ public record TransactionResult(Transaction transaction, CommandExecutor executo
     }
 
     /**
-     * Constructs a TransactionResult for a transaction which only impacts the target.
-     *
-     * @param transaction The transaction.
-     * @param target      The updated user for the transaction.
-     * @return The result of the provided transaction.
-     */
-    public static TransactionResult of(final Transaction transaction, final User target) {
-        return new TransactionResult(transaction, target, List.of(target));
-    }
-
-    /**
      * Returns if the executor was updated by the transaction.
      *
      * @return if the executor was updated by the transaction.

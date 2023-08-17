@@ -46,32 +46,6 @@ import java.util.List;
 @ConfigSerializable
 public record Item(ItemStack stack, String name, List<String> lore, int slot, ItemAction action) {
     /**
-     * Constructs the object.
-     *
-     * @param material The material of the ItemStack. Updated with refreshing name/lore.
-     * @param name     Raw name of the item. Always parsed.
-     * @param lore     Raw lore of the item. Always parsed.
-     * @param slot     Location of item in a Menu.
-     * @return The item.
-     */
-    public static Item of(final Material material, final String name, final List<String> lore, final int slot) {
-        return new Item(new ItemStack(material), name, lore, slot, ItemAction.CANCEL);
-    }
-
-    /**
-     * Constructs the object.
-     *
-     * @param stack The representative ItemStack. Updated with refreshing name/lore.
-     * @param name  Raw name of the item. Always parsed.
-     * @param lore  Raw lore of the item. Always parsed.
-     * @param slot  Location of item in a Menu.
-     * @return The item.
-     */
-    public static Item of(final ItemStack stack, final String name, final List<String> lore, final int slot) {
-        return new Item(stack, name, lore, slot, ItemAction.CANCEL);
-    }
-
-    /**
      * Constructs the object with sane defaults.
      *
      * @param material The type of the Item.
@@ -79,16 +53,6 @@ public record Item(ItemStack stack, String name, List<String> lore, int slot, It
      */
     public static Item of(final Material material) {
         return new Item(new ItemStack(material), "", new ArrayList<>(), 0, ItemAction.CANCEL);
-    }
-
-    /**
-     * Returns a copy of the item with a new action.
-     *
-     * @param action The action.
-     * @return The new item.
-     */
-    public Item action(final ItemAction action) {
-        return new Item(this.stack, this.name, this.lore, this.slot, action);
     }
 
     /**

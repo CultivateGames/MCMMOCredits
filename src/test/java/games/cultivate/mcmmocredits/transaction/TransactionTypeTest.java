@@ -75,4 +75,17 @@ class TransactionTypeTest {
         Transaction redeem = new RedeemTransaction(this.executor, List.of(new User(UUID.randomUUID(), "tester1", 10000, 1), this.target), PrimarySkillType.HERBALISM, 100);
         assertEquals("credits-redeem-all", redeem.messageKey());
     }
+
+    @Test
+    void notEnoughCredits_AllTransaction_ReturnsCorrectKey() {
+        User user2 = new User(UUID.randomUUID(), "test2", 2000, 200);
+        Transaction addition = new AddTransaction(this.executor, List.of(this.target, user2), 50);
+        assertEquals("not-enough-credits-other", addition.type().notEnoughCredits());
+    }
+
+    @Test
+    void notEnoughCredits_SelfTransaction_ReturnsCorrectKey() {
+        Transaction addition = new AddTransaction(this.executor, List.of(this.target), 50);
+        assertEquals("not-enough-credits", addition.type().notEnoughCredits());
+    }
 }

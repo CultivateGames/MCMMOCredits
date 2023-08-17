@@ -21,42 +21,49 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.menu;
+package games.cultivate.mcmmocredits.events;
 
+import games.cultivate.mcmmocredits.transaction.Transaction;
+import games.cultivate.mcmmocredits.transaction.TransactionType;
+import games.cultivate.mcmmocredits.user.User;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.inventory.ItemFactory;
-import org.bukkit.inventory.ItemStack;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-//TODO: expand to test built ChestInterface
 @ExtendWith(MockitoExtension.class)
-class RedeemMenuTest {
+class CreditTransactionEventTest {
+    private Transaction transaction;
+    private CreditTransactionEvent event;
     @Mock
     private MockedStatic<Bukkit> mockBukkit;
-    @Mock
-    private ItemFactory mockFactory;
+
+    @BeforeEach
+    void setUp() {
+        this.mockBukkit.when(Bukkit::isPrimaryThread).thenReturn(true);
+        this.transaction = Transaction.of(new User(UUID.randomUUID(), "tester1", 100, 50), TransactionType.ADD, 200);
+        this.event = new CreditTransactionEvent(this.transaction, false, false);
+    }
 
     @Test
-    void newMenu_ValidProperties_ValidMenu() {
-        this.mockBukkit.when(Bukkit::getItemFactory).thenReturn(this.mockFactory);
-        Item fill = new Item(new ItemStack(Material.BLACK_STAINED_GLASS_PANE, 1), "filler!", List.of(), 0, ItemAction.CANCEL);
-        Item navigation = Item.of(Material.COMPASS);
-        Map<String, Item> map = Map.of("fill", fill, "navigation", navigation);
-        RedeemMenu menu = new RedeemMenu(map, "The menu!", 54, true, true);
-        assertNotNull(menu.items().get("fill"));
-        assertNotNull(menu.items().get("navigation"));
-        assertEquals(54, menu.slots());
-        assertEquals("The menu!", menu.title());
+    void setCancelled_EnsuresEventIsCancelled() {
+        this.event.setCancelled(true);
+        assertTrue(this.event.isCancelled());
+    }
+
+    @Test
+    void createEvent_ValidTraits_ValidEvent() {
+        assertEquals(this.transaction, this.event.transaction());
+        assertFalse(this.event.userFeedback());
+        assertFalse(this.event.senderFeedback());
     }
 }

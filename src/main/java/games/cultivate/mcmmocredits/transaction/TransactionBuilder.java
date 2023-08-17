@@ -40,6 +40,13 @@ public final class TransactionBuilder {
     private List<User> targets = new ArrayList<>();
     private PrimarySkillType skill;
 
+    /**
+     * Constructs the object.
+     *
+     * @param executor The executor of the transaction.
+     * @param type     The type of the transaction.
+     * @param amount   The amount of the transaction.
+     */
     public TransactionBuilder(final CommandExecutor executor, final TransactionType type, final int amount) {
         this.executor = executor;
         this.amount = amount;

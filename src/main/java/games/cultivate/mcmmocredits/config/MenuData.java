@@ -47,26 +47,29 @@ public final class MenuData implements Data {
     private boolean navigation = false;
     private Map<String, Item> items = new HashMap<>();
 
+    /**
+     * Constructs the object. Adds items to the default item map.
+     */
     public MenuData() {
-        this.items.put("acrobatics", this.createRedeemItem(Material.NETHERITE_BOOTS, PrimarySkillType.ACROBATICS, 10));
-        this.items.put("alchemy", this.createRedeemItem(Material.BREWING_STAND, PrimarySkillType.ALCHEMY, 11));
-        this.items.put("archery", this.createRedeemItem(Material.BOW, PrimarySkillType.ARCHERY, 12));
-        this.items.put("axes", this.createRedeemItem(Material.NETHERITE_AXE, PrimarySkillType.AXES, 13));
-        this.items.put("excavation", this.createRedeemItem(Material.NETHERITE_SHOVEL, PrimarySkillType.EXCAVATION, 14));
-        this.items.put("fishing", this.createRedeemItem(Material.FISHING_ROD, PrimarySkillType.FISHING, 15));
-        this.items.put("herbalism", this.createRedeemItem(Material.SUGAR_CANE, PrimarySkillType.HERBALISM, 16));
-        this.items.put("mining", this.createRedeemItem(Material.NETHERITE_PICKAXE, PrimarySkillType.MINING, 19));
-        this.items.put("repair", this.createRedeemItem(Material.ANVIL, PrimarySkillType.REPAIR, 20));
-        this.items.put("swords", this.createRedeemItem(Material.NETHERITE_SWORD, PrimarySkillType.SWORDS, 21));
-        this.items.put("taming", this.createRedeemItem(Material.LEAD, PrimarySkillType.TAMING, 23));
-        this.items.put("unarmed", this.createRedeemItem(Material.CARROT_ON_A_STICK, PrimarySkillType.UNARMED, 24));
-        this.items.put("woodcutting", this.createRedeemItem(Material.OAK_LOG, PrimarySkillType.WOODCUTTING, 25));
+        List<String> lore = List.of("<yellow><sender>, click here to redeem!");
+        this.createRedeemItem(Material.NETHERITE_BOOTS, PrimarySkillType.ACROBATICS, lore, 10);
+        this.createRedeemItem(Material.BREWING_STAND, PrimarySkillType.ALCHEMY, lore, 11);
+        this.createRedeemItem(Material.BOW, PrimarySkillType.ARCHERY, lore, 12);
+        this.createRedeemItem(Material.NETHERITE_AXE, PrimarySkillType.AXES, lore, 13);
+        this.createRedeemItem(Material.NETHERITE_SHOVEL, PrimarySkillType.EXCAVATION, lore, 14);
+        this.createRedeemItem(Material.FISHING_ROD, PrimarySkillType.FISHING, lore, 15);
+        this.createRedeemItem(Material.SUGAR_CANE, PrimarySkillType.HERBALISM, lore, 16);
+        this.createRedeemItem(Material.NETHERITE_PICKAXE, PrimarySkillType.MINING, lore, 19);
+        this.createRedeemItem(Material.ANVIL, PrimarySkillType.REPAIR, lore, 20);
+        this.createRedeemItem(Material.NETHERITE_SWORD, PrimarySkillType.SWORDS, lore, 21);
+        this.createRedeemItem(Material.LEAD, PrimarySkillType.TAMING, lore, 23);
+        this.createRedeemItem(Material.CARROT_ON_A_STICK, PrimarySkillType.UNARMED, lore, 24);
+        this.createRedeemItem(Material.OAK_LOG, PrimarySkillType.WOODCUTTING, lore, 25);
         this.items.put("fill", Item.of(Material.BLACK_STAINED_GLASS_PANE));
         this.items.put("navigation", new Item(new ItemStack(Material.COMPASS), "<red>Previous Menu", List.of("<gray>Left Click to go back!"), 40, ItemAction.COMMAND));
     }
 
-    private Item createRedeemItem(final Material material, final PrimarySkillType skill, final int slot) {
-        List<String> lore = List.of("<yellow><sender>, click here to redeem!");
-        return new Item(new ItemStack(material), "<yellow>" + Util.capitalizeWord(skill.name()), lore, slot, ItemAction.REDEEM);
+    private void createRedeemItem(final Material material, final PrimarySkillType skill, final List<String> lore, final int slot) {
+        this.items.put(skill.name().toLowerCase(), new Item(new ItemStack(material), "<yellow>" + Util.capitalizeWord(skill.name()), lore, slot, ItemAction.REDEEM));
     }
 }

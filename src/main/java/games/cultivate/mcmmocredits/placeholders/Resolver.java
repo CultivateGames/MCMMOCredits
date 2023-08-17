@@ -124,16 +124,6 @@ public final class Resolver {
     }
 
     /**
-     * Adds a "viewer" tag to the Resolver. Can be used to derive the viewer of a message.
-     *
-     * @param user The user.
-     * @return The Resolver.
-     */
-    public Resolver addViewer(final User user) {
-        return this.addUser(user, "viewer");
-    }
-
-    /**
      * Adds basic info about a transaction to a resolver.
      *
      * @param transaction The transaction.

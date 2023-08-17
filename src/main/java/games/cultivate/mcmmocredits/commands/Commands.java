@@ -43,7 +43,6 @@ import games.cultivate.mcmmocredits.user.UserService;
 import jakarta.inject.Inject;
 import org.bukkit.Bukkit;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -62,6 +61,7 @@ public final class Commands {
      *
      * @param configs ConfigService to obtain configs.
      * @param plugin  Plugin instance to obtain main thread executor.
+     * @param service The UserService to obtain users.
      */
     @Inject
     public Commands(final ConfigService configs, final MCMMOCredits plugin, final UserService service) {
@@ -130,13 +130,17 @@ public final class Commands {
      * Processes the {@literal /credits <addall|setall|takeall|redeemall> <amount> [skill] [--s]} command.
      *
      * @param executor CommandExecutor. Must be an online player.
+     * @param args     Command args to derive the transaction type.
      * @param amount   Amount of credits to apply to balance.
+     * @param silent   If the process should send feedback to the user based on presence.
      */
     @CommandMethod("addall|setall|takeall <amount>")
     @CommandPermission("mcmmocredits.modify.all")
     @CommandDescription("Allows user to modify balance of all online players.")
     public void modifyAll(final CommandExecutor executor, final CommandContext<CommandExecutor> args, final @Argument @Range(min = "0") int amount, final @Flag("s") boolean silent) {
-        Transaction tr = Transaction.builder(executor, TransactionType.fromArgs(args, 1), amount).targets(this.getOnlineUsers()).build();
+        Transaction tr = Transaction.builder(executor, TransactionType.fromArgs(args, 1), amount)
+                .targets(this.service.getOnlineUsers())
+                .build();
         Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(tr, silent, false));
     }
 
@@ -177,12 +181,17 @@ public final class Commands {
      *
      * @param executor CommandExecutor. Must be an online player.
      * @param amount   Amount of credits to apply to balance.
+     * @param skill    The affected skill.
+     * @param silent   If the process should send feedback to the user based on presence.
      */
     @CommandMethod("redeemall <amount> <skill>")
     @CommandPermission("mcmmocredits.redeem.all")
     @CommandDescription("Allows user to redeem credits for all online players.")
     public void redeemAll(final CommandExecutor executor, final @Argument @Range(min = "1") int amount, final @Argument PrimarySkillType skill, final @Flag("s") boolean silent) {
-        Transaction tr = Transaction.builder(executor, TransactionType.REDEEMALL, amount).targets(this.getOnlineUsers()).skill(skill).build();
+        Transaction tr = Transaction.builder(executor, TransactionType.REDEEMALL, amount)
+                .targets(this.service.getOnlineUsers())
+                .skill(skill)
+                .build();
         Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(tr, silent, false));
     }
 
@@ -253,15 +262,5 @@ public final class Commands {
     public void reload(final CommandExecutor executor) {
         this.configs.reloadConfigs();
         executor.sendText(this.configs.getMessage("reload"));
-    }
-
-    /**
-     * Translates all online players into online users.
-     *
-     * @return List of online users.
-     */
-    private List<User> getOnlineUsers() {
-        List<User> users = Bukkit.getOnlinePlayers().stream().map(x -> this.service.getUser(x).orElseThrow()).toList();
-        return new ArrayList<>(users);
     }
 }

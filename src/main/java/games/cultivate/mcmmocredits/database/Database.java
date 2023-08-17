@@ -190,6 +190,7 @@ public final class Database {
      * Updates credits and redeemed for the provided list of users.
      *
      * @param users The users.
+     * @return Returns if update count of each statement in the batch is equal to 1.
      */
     public boolean applyTransaction(final List<User> users) {
         return this.jdbi.withHandle(handle -> {

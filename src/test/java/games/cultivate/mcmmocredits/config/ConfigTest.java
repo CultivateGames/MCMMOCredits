@@ -24,104 +24,64 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.converters.DataLoadingStrategy;
-import games.cultivate.mcmmocredits.menu.Item;
-import games.cultivate.mcmmocredits.menu.RedeemMenu;
-import games.cultivate.mcmmocredits.serializers.ItemSerializer;
-import games.cultivate.mcmmocredits.serializers.MenuSerializer;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.inventory.ItemFactory;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.spongepowered.configurate.loader.HeaderMode;
-import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@ExtendWith(MockitoExtension.class)
 class ConfigTest {
-    private String configString;
-    @Mock
-    private MockedStatic<Bukkit> mockBukkit;
-    @Mock
-    private ItemFactory mockFactory;
-    @Mock
-    private ItemMeta mockMeta;
-    private Config<FakeData> config;
+    private static final String CONF = "";
+    private static Config<MainData> config;
 
-    @BeforeEach
-    void setUp() {
-        this.configString = """
-                """;
-        this.mockBukkit.when(Bukkit::getItemFactory).thenReturn(this.mockFactory);
-        when(this.mockFactory.getItemMeta(any(Material.class))).thenReturn(this.mockMeta);
-        ConfigService configService = new ConfigService(Path.of(""));
-        YamlConfigurationLoader.Builder builder = YamlConfigurationLoader.builder()
-                .headerMode(HeaderMode.PRESET)
-                .indent(2)
-                .nodeStyle(NodeStyle.BLOCK)
-                .source(() -> new BufferedReader(new StringReader(this.configString)))
+    @BeforeAll
+    static void setUp() {
+        YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
+                .source(() -> new BufferedReader(new StringReader(CONF)))
                 .sink(() -> new BufferedWriter(new StringWriter()))
-                .defaultOptions(opts -> opts.serializers(build -> build
-                        .register(Item.class, ItemSerializer.INSTANCE)
-                        .register(RedeemMenu.class, MenuSerializer.INSTANCE)));
-        this.config = configService.loadConfig(FakeData.class, builder);
+                .build();
+        config = new Config<>(loader);
+        config.load(MainData.class);
     }
 
     @Test
     void getBoolean_ReturnsCorrectValue() {
-        assertFalse(this.config.getBoolean("debug"));
+        assertFalse(config.getBoolean("settings", "leaderboard-enabled"));
     }
 
     @Test
     void getString_ReturnsCorrectValue() {
-        assertEquals("The message prefix!!", this.config.getString("prefix"));
+        assertEquals("credits", config.getString("command-prefix"));
     }
 
     @Test
     void getMessage_ReturnsStringAndPrefix() {
-        assertEquals("The message prefix!!The actual message!", this.config.getMessage("fake-message"));
+        config.set("The message prefix!!", "prefix");
+        config.set("The actual message!", "test-message-section");
+        assertEquals("The message prefix!!The actual message!", config.getMessage("test-message-section"));
     }
 
     @Test
     void getInteger_ReturnsCorrectValue() {
-        assertEquals(10, this.config.getInteger("leaderboard-page-size"));
-    }
-
-    @Test
-    void getMenu_ReturnsCorrectValue() {
-        RedeemMenu menu = this.config.getMenu("menu");
-        assertEquals(Material.BLACK_STAINED_GLASS_PANE, menu.items().get("fill1").stack().getType());
-        assertEquals(54, menu.slots());
-        assertEquals("The menu title!", menu.title());
+        assertEquals(10, config.getInteger("settings", "leaderboard-page-size"));
     }
 
     @Test
     void get_ReturnsDefaultOnBadSection() {
-        assertEquals(DataLoadingStrategy.CSV, this.config.get(DataLoadingStrategy.class, DataLoadingStrategy.CSV, "fake-section", "converter-type"));
+        assertEquals(DataLoadingStrategy.CSV, config.get(DataLoadingStrategy.class, DataLoadingStrategy.CSV, "fake-section", "converter-type"));
     }
 
     @Test
     void set_SetsCorrectValue() {
         String test = "The test string--";
-        assertNotEquals(test, this.config.get(String.class, "", "fake-message"));
-        this.config.set(test, "fake-message");
-        assertEquals(test, this.config.get(String.class, "", "fake-message"));
+        assertTrue(config.set(test, "fake-message"));
+        assertEquals(test, config.get(String.class, "", "fake-message"));
     }
 }

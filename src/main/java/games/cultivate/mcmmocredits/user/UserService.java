@@ -33,9 +33,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Handles getting and modifying users.
@@ -112,6 +114,12 @@ public final class UserService {
         return opt;
     }
 
+    /**
+     * Gets a user via the specified player.
+     *
+     * @param player The player.
+     * @return A user representing the player.
+     */
     public Optional<User> getUser(final Player player) {
         return this.getUser(player.getUniqueId());
     }
@@ -125,6 +133,17 @@ public final class UserService {
      */
     public List<User> rangeOfUsers(final int limit, final int offset) {
         return this.database.rangeOfUsers(limit, offset);
+    }
+
+    /**
+     * Translates all online players into online users.
+     *
+     * @return List of online users.
+     */
+    public List<User> getOnlineUsers() {
+        return Bukkit.getOnlinePlayers().stream()
+                .map(x -> this.getUser(x).orElseThrow())
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /**

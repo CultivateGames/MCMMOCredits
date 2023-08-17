@@ -85,20 +85,6 @@ public final class ConfigService {
     }
 
     /**
-     * Loads a configuration using the provided type and builder.
-     *
-     * @param type        The data type to load data.
-     * @param yamlBuilder The builder used to load the config.
-     * @param <T>         The data type.
-     * @return The configuration.
-     */
-    public <T extends Data> Config<T> loadConfig(final Class<T> type, final YamlConfigurationLoader.Builder yamlBuilder) {
-        Config<T> conf = new Config<>(yamlBuilder.build());
-        conf.load(type);
-        return conf;
-    }
-
-    /**
      * Loads a configuration using the provided type and file name. Creates the file for writing.
      *
      * @param type The data type to load data.
