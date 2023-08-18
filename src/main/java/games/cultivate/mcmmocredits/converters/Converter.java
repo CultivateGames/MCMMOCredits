@@ -23,6 +23,9 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
+/**
+ * Represents a Data Converter.
+ */
 public interface Converter {
     /**
      * Runs the data conversion process.

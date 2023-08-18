@@ -23,30 +23,36 @@
 //
 package games.cultivate.mcmmocredits.database;
 
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.sqlite3.SQLitePlugin;
+
 import javax.sql.DataSource;
-import java.util.function.Function;
 
 /**
- * Database connection strategies.
+ * Represents a SQLite Database.
  */
-public enum DatabaseType {
-    MYSQL(MySqlDatabase::new),
-    SQLITE(SQLiteDatabase::new),
-    H2(H2Database::new);
-
-    private final Function<DataSource, AbstractDatabase> function;
-
-    DatabaseType(final Function<DataSource, AbstractDatabase> function) {
-        this.function = function;
+public class SQLiteDatabase extends AbstractDatabase {
+    /**
+     * Constructs the object.
+     *
+     * @param source The DataSource.
+     */
+    public SQLiteDatabase(final DataSource source) {
+        super(source);
+    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    Jdbi createJdbi() {
+        return Jdbi.create(this.source).registerRowMapper(new UserMapper()).installPlugin(new SQLitePlugin());
     }
 
     /**
-     * Creates a Database using the assigned function.
-     *
-     * @param source The DataSource.
-     * @return A database.
+     * {@inheritDoc}
      */
-    public AbstractDatabase create(final DataSource source) {
-        return this.function.apply(source);
+    @Override
+    public void createTable() {
+        this.jdbi.useHandle(handle -> handle.execute("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTOINCREMENT,UUID VARCHAR NOT NULL,username VARCHAR NOT NULL,credits INT CHECK(credits >= 0),redeemed INT);"));
     }
 }

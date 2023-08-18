@@ -23,30 +23,51 @@
 //
 package games.cultivate.mcmmocredits.database;
 
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.argument.AbstractArgumentFactory;
+import org.jdbi.v3.core.argument.Argument;
+import org.jdbi.v3.core.config.ConfigRegistry;
+
 import javax.sql.DataSource;
-import java.util.function.Function;
+import java.sql.Types;
+import java.util.UUID;
 
 /**
- * Database connection strategies.
+ * Represents a MySql Database.
  */
-public enum DatabaseType {
-    MYSQL(MySqlDatabase::new),
-    SQLITE(SQLiteDatabase::new),
-    H2(H2Database::new);
-
-    private final Function<DataSource, AbstractDatabase> function;
-
-    DatabaseType(final Function<DataSource, AbstractDatabase> function) {
-        this.function = function;
+public class MySqlDatabase extends AbstractDatabase {
+    /**
+     * Constructs the object.
+     *
+     * @param source The DataSource.
+     */
+    public MySqlDatabase(final DataSource source) {
+        super(source);
     }
 
     /**
-     * Creates a Database using the assigned function.
-     *
-     * @param source The DataSource.
-     * @return A database.
+     * {@inheritDoc}
      */
-    public AbstractDatabase create(final DataSource source) {
-        return this.function.apply(source);
+    @Override
+    protected Jdbi createJdbi() {
+        return Jdbi.create(this.source).registerArgument(new UUIDFactory()).registerRowMapper(new UserMapper());
     }
+
+    /**
+     * Argument Factory required for better MySQL compatibility with UUID data type.
+     */
+    static class UUIDFactory extends AbstractArgumentFactory<UUID> {
+        protected UUIDFactory() {
+            super(Types.VARCHAR);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected Argument build(final UUID value, final ConfigRegistry config) {
+            return (p, s, c) -> s.setString(p, value.toString());
+        }
+    }
+
 }

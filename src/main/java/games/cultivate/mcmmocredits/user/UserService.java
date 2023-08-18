@@ -25,7 +25,7 @@ package games.cultivate.mcmmocredits.user;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import games.cultivate.mcmmocredits.util.MojangUtil;
 import jakarta.inject.Inject;
@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
  * Handles getting and modifying users.
  */
 public final class UserService {
-    private final Database database;
+    private final AbstractDatabase database;
     private final Cache<UUID, User> uuidCache;
     private final Cache<String, User> stringCache;
 
@@ -53,7 +53,7 @@ public final class UserService {
      * @param database Database, used to interact with the user database.
      */
     @Inject
-    public UserService(final Database database) {
+    public UserService(final AbstractDatabase database) {
         this.database = database;
         this.stringCache = Caffeine.newBuilder().build();
         this.uuidCache = Caffeine.newBuilder().build();

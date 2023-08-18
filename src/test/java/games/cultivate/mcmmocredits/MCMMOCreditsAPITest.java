@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits;
 
-import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.database.DatabaseUtil;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
@@ -42,7 +42,7 @@ class MCMMOCreditsAPITest {
     private final int credits = 100;
     private MCMMOCreditsAPI api;
     private User user;
-    private final Database database = DatabaseUtil.create();
+    private final AbstractDatabase database = DatabaseUtil.create("test");
     private UserService service;
 
     @BeforeEach

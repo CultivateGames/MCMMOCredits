@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.user.User;
 
 import java.util.List;
@@ -33,14 +33,15 @@ import java.util.List;
  */
 public final class InternalConverter implements Converter {
     private final List<User> users;
-    private final Database database;
+    private final AbstractDatabase database;
 
     /**
      * Constructs the object.
      *
-     * @param old The old database.
+     * @param database The current database.
+     * @param old      The old database.
      */
-    public InternalConverter(final Database database, final Database old) {
+    public InternalConverter(final AbstractDatabase database, final AbstractDatabase old) {
         this.database = database;
         this.users = old.getAllUsers();
         old.disable();

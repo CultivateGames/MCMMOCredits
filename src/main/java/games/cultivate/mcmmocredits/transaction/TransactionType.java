@@ -97,6 +97,11 @@ public enum TransactionType {
         return this.key;
     }
 
+    /**
+     * Determines message key when transaction fails due to not having enough credits.
+     *
+     * @return The message key.
+     */
     public String notEnoughCredits() {
         return this.name().contains("ALL") ? "not-enough-credits-other" : "not-enough-credits";
     }

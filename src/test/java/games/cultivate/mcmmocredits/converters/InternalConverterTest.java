@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.database.DatabaseUtil;
 import games.cultivate.mcmmocredits.user.User;
 import org.junit.jupiter.api.Test;
@@ -35,8 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InternalConverterTest {
-    private final Database oldDatabase = DatabaseUtil.create();
-    private final Database currentDatabase = DatabaseUtil.create("jdbc:h2:mem:testdb2;DB_CLOSE_DELAY=-1;MODE=MYSQL");
+    private final AbstractDatabase oldDatabase = DatabaseUtil.create("test");
+    private final AbstractDatabase currentDatabase = DatabaseUtil.create("test1");
 
     @Test
     void run_ValidUsers_ConvertsUsersCorrectly() {

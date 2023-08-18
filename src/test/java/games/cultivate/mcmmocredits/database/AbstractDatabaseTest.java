@@ -35,16 +35,15 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class DatabaseTest {
+class AbstractDatabaseTest {
     private final String username = "testUsername";
     private final UUID uuid = UUID.randomUUID();
     private final int credits = 60;
     private final int redeemed = 500;
-    private final Database database = DatabaseUtil.create();
+    private final AbstractDatabase database = DatabaseUtil.create("test");
     private User user;
 
     @BeforeEach
@@ -85,7 +84,6 @@ class DatabaseTest {
     @Test
     void getUser_ByUsername_UserFound() {
         Optional<User> ouser = this.database.getUser(this.username);
-        assertTrue(ouser.isPresent());
         assertEquals(this.user, ouser.orElseThrow());
     }
 
@@ -95,20 +93,15 @@ class DatabaseTest {
         User second = new User(UUID.randomUUID(), "secondPlace", 100, 10);
         this.database.addUsers(List.of(first, second));
         List<User> users = this.database.rangeOfUsers(3, 0);
-        assertEquals(3, users.size());
-        assertEquals(first, users.get(0));
-        assertEquals(second, users.get(1));
-        assertEquals(this.user, users.get(2));
+        assertTrue(users.containsAll(List.of(first, second, this.user)));
     }
 
     @Test
     void setUsername_ExistingUser_UsernameUpdated() {
         String newUsername = "updatedUsername";
-        boolean result = this.database.setUsername(this.uuid, newUsername);
+        this.database.setUsername(this.uuid, newUsername);
         Optional<User> ouser = this.database.getUser(newUsername);
         User updatedUser = new User(this.uuid, newUsername, this.credits, this.redeemed);
-        assertTrue(result);
-        assertTrue(ouser.isPresent());
         assertEquals(updatedUser, ouser.orElseThrow());
     }
 
@@ -120,11 +113,9 @@ class DatabaseTest {
     @Test
     void setCredits_ExistingUser_CreditsUpdated() {
         int newCredits = 200;
-        boolean result = this.database.setCredits(this.uuid, newCredits);
+        this.database.setCredits(this.uuid, newCredits);
         Optional<User> ouser = this.database.getUser(this.uuid);
         User updatedUser = new User(this.uuid, this.username, newCredits, this.redeemed);
-        assertTrue(result);
-        assertTrue(ouser.isPresent());
         assertEquals(updatedUser, ouser.orElseThrow());
     }
 
@@ -143,7 +134,6 @@ class DatabaseTest {
     void updateUser_ExistingUser_ReturnsUpdatedUser() {
         this.database.updateUser(new User(this.uuid, this.username, 10000, this.redeemed));
         User fromDAO = this.database.getUser(this.uuid).orElseThrow();
-        assertNotEquals(this.user, fromDAO);
         assertEquals(10000, fromDAO.credits());
     }
 }

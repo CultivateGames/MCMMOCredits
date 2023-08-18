@@ -51,7 +51,7 @@ class CreditExpansionTest {
     @BeforeEach
     void setUp() {
         this.user = new User(new UUID(2, 2), "testUser", 1000, 500);
-        this.service = new UserService(DatabaseUtil.create());
+        this.service = new UserService(DatabaseUtil.create("test"));
         this.map = new HashMap<>();
         this.map.put("mcmmocredits", new CreditsExpansion(this.service));
     }

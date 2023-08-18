@@ -23,30 +23,37 @@
 //
 package games.cultivate.mcmmocredits.database;
 
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.h2.H2DatabasePlugin;
+
 import javax.sql.DataSource;
-import java.util.function.Function;
 
 /**
- * Database connection strategies.
+ * Represents a H2 Database.
  */
-public enum DatabaseType {
-    MYSQL(MySqlDatabase::new),
-    SQLITE(SQLiteDatabase::new),
-    H2(H2Database::new);
-
-    private final Function<DataSource, AbstractDatabase> function;
-
-    DatabaseType(final Function<DataSource, AbstractDatabase> function) {
-        this.function = function;
+public class H2Database extends AbstractDatabase {
+    /**
+     * Constructs the object.
+     *
+     * @param source The DataSource.
+     */
+    public H2Database(final DataSource source) {
+        super(source);
     }
 
     /**
-     * Creates a Database using the assigned function.
-     *
-     * @param source The DataSource.
-     * @return A database.
+     * {@inheritDoc}
      */
-    public AbstractDatabase create(final DataSource source) {
-        return this.function.apply(source);
+    @Override
+    public Jdbi createJdbi() {
+        return Jdbi.create(this.source).registerRowMapper(new UserMapper()).installPlugin(new H2DatabasePlugin());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isH2() {
+        return true;
     }
 }

@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.user.User;
 
 import java.io.IOException;
@@ -35,7 +35,7 @@ import java.util.List;
  * Data converter which uses database.csv in the plugin's folder.
  */
 public final class CSVConverter implements Converter {
-    private final Database database;
+    private final AbstractDatabase database;
     private final List<User> users;
 
     /**
@@ -45,7 +45,7 @@ public final class CSVConverter implements Converter {
      * @param path     The plugin's data folder.
      * @throws IOException If reading the csv file errors.
      */
-    public CSVConverter(final Database database, final Path path) throws IOException {
+    public CSVConverter(final AbstractDatabase database, final Path path) throws IOException {
         this.database = database;
         this.users = Files.readAllLines(path.resolve("database.csv")).stream().map(User::fromCSV).toList();
     }

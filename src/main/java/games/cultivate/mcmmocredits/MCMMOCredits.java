@@ -29,7 +29,7 @@ import com.google.inject.Injector;
 import games.cultivate.mcmmocredits.commands.CommandHandler;
 import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.converters.Converter;
-import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.placeholders.CreditsExpansion;
 import games.cultivate.mcmmocredits.util.Listeners;
@@ -153,7 +153,7 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        this.injector.getInstance(Database.class).disable();
+        this.injector.getInstance(AbstractDatabase.class).disable();
         this.configs.saveConfigs();
     }
 }

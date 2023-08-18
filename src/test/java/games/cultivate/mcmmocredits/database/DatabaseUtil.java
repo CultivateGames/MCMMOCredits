@@ -23,23 +23,16 @@
 //
 package games.cultivate.mcmmocredits.database;
 
-import com.zaxxer.hikari.HikariConfig;
-import org.jdbi.v3.core.h2.H2DatabasePlugin;
+import org.h2.jdbcx.JdbcDataSource;
 
 public class DatabaseUtil {
 
     private DatabaseUtil() {
     }
 
-    public static Database create(final String url) {
-        HikariConfig config = new HikariConfig();
-        config.setPoolName("MCMMOCredits H2");
-        config.setDataSourceClassName("org.h2.jdbcx.JdbcDataSource");
-        config.addDataSourceProperty("url", url);
-        return new Database(config, jdbi -> jdbi.installPlugin(new H2DatabasePlugin()));
-    }
-
-    public static Database create() {
-        return create("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MYSQL");
+    public static AbstractDatabase create(final String name) {
+        JdbcDataSource ds = new JdbcDataSource();
+        ds.setURL("jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1;MODE=MYSQL".formatted(name));
+        return new H2Database(ds);
     }
 }

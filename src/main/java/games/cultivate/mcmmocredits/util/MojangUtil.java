@@ -31,31 +31,56 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.UUID;
 
-public class MojangUtil {
+/**
+ * Util for Mojang web requests.
+ */
+public final class MojangUtil {
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
 
     private MojangUtil() {
         throw new AssertionError("Util cannot be instantiated!");
     }
 
+    /**
+     * Synchronously fetches username for a UUID from Mojang.
+     *
+     * @param uuid The UUID.
+     * @return The username.
+     */
     public static String fetchUsername(final UUID uuid) {
         return fetchUsername(uuid, 0, 0, false);
     }
 
+    /**
+     * Synchronously fetches username for a UUID from Mojang.
+     *
+     * @param uuid  The UUID.
+     * @param delay delay between requests.
+     * @param retry delay between failed requests.
+     * @param sleep if delays are enabled.
+     * @return The username.
+     */
     public static String fetchUsername(final UUID uuid, final long delay, final long retry, final boolean sleep) {
         HttpRequest req = HttpRequest.newBuilder(URI.create("https://api.mojang.com/user/profile/" + uuid)).GET().build();
         String name = CLIENT.sendAsync(req, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> JsonParser.parseString(response.body()).getAsJsonObject().get("name").getAsString())
                 .join();
         if (name != null) {
-            if (sleep) sleep(delay);
+            if (sleep) {
+                sleep(delay);
+            }
             return name;
         }
         sleep(retry);
         return fetchUsername(uuid, delay, retry, true);
     }
 
-    private static void sleep(long millis) {
+    /**
+     * Sleeps the current thread.
+     *
+     * @param millis Duration of sleep.
+     */
+    private static void sleep(final long millis) {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {

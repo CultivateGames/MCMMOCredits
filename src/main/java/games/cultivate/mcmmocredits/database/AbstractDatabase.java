@@ -23,14 +23,15 @@
 //
 package games.cultivate.mcmmocredits.database;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import games.cultivate.mcmmocredits.user.User;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.PreparedBatch;
 import org.jdbi.v3.core.statement.StatementContext;
 
+import javax.sql.DataSource;
+import java.io.Closeable;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -38,26 +39,22 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.UnaryOperator;
 
 /**
- * Represents the database which stores users.
+ * Represents a database.
  */
-public final class Database {
-    private final Jdbi jdbi;
-    private final HikariDataSource source;
-    private final boolean h2;
+public abstract class AbstractDatabase {
+    final Jdbi jdbi;
+    final DataSource source;
 
     /**
      * Constructs the object.
      *
-     * @param config   The HikariConfig.
-     * @param modifier Function to modify JDBI before it is built.
+     * @param source The DataSource to wrap.
      */
-    public Database(final HikariConfig config, final UnaryOperator<Jdbi> modifier) {
-        this.source = new HikariDataSource(config);
-        this.jdbi = modifier.apply(Jdbi.create(this.source).registerRowMapper(new UserMapper()));
-        this.h2 = this.source.getDataSourceClassName().contains("org.h2");
+    AbstractDatabase(final DataSource source) {
+        this.source = source;
+        this.jdbi = this.createJdbi();
         this.createTable();
     }
 
@@ -65,37 +62,19 @@ public final class Database {
      * Shuts down the underlying data source.
      */
     public void disable() {
-        if (this.source != null) {
-            this.source.close();
+        if (this.source instanceof Closeable closeable) {
+            try {
+                closeable.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-    }
-
-    /**
-     * Returns if the database is H2.
-     *
-     * @return If the database is H2.
-     */
-    public boolean isH2() {
-        return this.h2;
-    }
-
-    /**
-     * Gets the current Jdbi instance.
-     *
-     * @return The Jdbi instance.
-     */
-    public Jdbi jdbi() {
-        return this.jdbi;
     }
 
     /**
      * Creates the Database's table based on properties.
      */
     public void createTable() {
-        if (this.source.getDataSourceClassName().contains("org.sqlite")) {
-            this.jdbi.useHandle(handle -> handle.execute("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTOINCREMENT,UUID VARCHAR NOT NULL,username VARCHAR NOT NULL,credits INT CHECK(credits >= 0),redeemed INT);"));
-            return;
-        }
         this.jdbi.useHandle(handle -> handle.execute("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTO_INCREMENT,UUID VARCHAR(36) NOT NULL,username VARCHAR(16) NOT NULL,credits INT CHECK(credits >= 0),redeemed INT);"));
     }
 
@@ -201,6 +180,7 @@ public final class Database {
         });
     }
 
+
     /**
      * Updates an existing user in the database with the provided user.
      *
@@ -209,6 +189,31 @@ public final class Database {
      */
     public boolean updateUser(final User user) {
         return this.jdbi.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET username = :username, credits = :credits, redeemed = :redeemed WHERE UUID = :uuid;").bindMethods(user).execute() == 1);
+    }
+
+    /**
+     * Gets the current Jdbi instance.
+     *
+     * @return The Jdbi instance.
+     */
+    public Jdbi jdbi() {
+        return this.jdbi == null ? this.createJdbi() : this.jdbi;
+    }
+
+    /**
+     * Method used to wrap a DataSource with JDBI.
+     *
+     * @return JDBI instance.
+     */
+    abstract Jdbi createJdbi();
+
+    /**
+     * Returns if the database is H2.
+     *
+     * @return If the database is H2.
+     */
+    public boolean isH2() {
+        return false;
     }
 
     /**

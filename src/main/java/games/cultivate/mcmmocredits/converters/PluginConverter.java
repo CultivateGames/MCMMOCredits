@@ -26,7 +26,7 @@ package games.cultivate.mcmmocredits.converters;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.util.MojangUtil;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -45,7 +45,7 @@ import java.util.stream.Stream;
  * Plugin which uses external plugin data and the usercache to convert.
  */
 public final class PluginConverter implements Converter {
-    private final Database database;
+    private final AbstractDatabase database;
     private final List<User> users = new ArrayList<>();
     private final Map<UUID, String> cache;
     private final long requestTime;
@@ -61,7 +61,7 @@ public final class PluginConverter implements Converter {
      * @param failureTime The time between re-attempts if a Mojang request fails.
      * @throws IOException Thrown if loading the cache fails.
      */
-    public PluginConverter(final Database database, final Path path, final long requestTime, final long failureTime) throws IOException {
+    public PluginConverter(final AbstractDatabase database, final Path path, final long requestTime, final long failureTime) throws IOException {
         this.database = database;
         this.path = path;
         this.requestTime = requestTime;
@@ -83,6 +83,9 @@ public final class PluginConverter implements Converter {
         return this.users.parallelStream().allMatch(updatedCurrentUsers::contains);
     }
 
+    /**
+     * Loads users from the provided file path.
+     */
     private void loadUsers() {
         try (Stream<Path> stream = Files.list(this.path)) {
             stream.forEach(x -> {
@@ -96,6 +99,12 @@ public final class PluginConverter implements Converter {
         }
     }
 
+    /**
+     * Loads users from the usercache.json
+     *
+     * @return Cached users.
+     * @throws IOException Thrown if there is an issue reading the file.
+     */
     private Map<UUID, String> loadMojangCache() throws IOException {
         String json = new String(Files.readAllBytes(this.path.resolve("usercache.json")));
         Map<UUID, String> map = new HashMap<>();

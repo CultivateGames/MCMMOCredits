@@ -29,12 +29,13 @@ import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.commands.Commands;
 import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.converters.CSVConverter;
+import games.cultivate.mcmmocredits.converters.Converter;
 import games.cultivate.mcmmocredits.converters.ConverterProperties;
 import games.cultivate.mcmmocredits.converters.ConverterType;
-import games.cultivate.mcmmocredits.converters.Converter;
 import games.cultivate.mcmmocredits.converters.InternalConverter;
 import games.cultivate.mcmmocredits.converters.PluginConverter;
-import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.AbstractDatabase;
+import games.cultivate.mcmmocredits.database.DataSourceFactory;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
@@ -42,6 +43,7 @@ import games.cultivate.mcmmocredits.util.Dir;
 import jakarta.inject.Singleton;
 import org.bukkit.Bukkit;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -82,8 +84,10 @@ public final class PluginModule extends AbstractModule {
      */
     @Provides
     @Singleton
-    public Database provideDatabase(final ConfigService configService, final @Dir Path path) {
-        return configService.mainConfig().get(DatabaseProperties.class, DatabaseProperties.defaults(), "settings", "database").create(path);
+    public AbstractDatabase provideDatabase(final ConfigService configService, final @Dir Path path) {
+        DatabaseProperties properties = configService.getProperties("settings", "database");
+        DataSource source = DataSourceFactory.createSource(properties, path);
+        return properties.create(source);
     }
 
     /**
@@ -93,16 +97,22 @@ public final class PluginModule extends AbstractModule {
      * @param database      The current database.
      * @param path          The current plugin's data path.
      * @return The Converter
+     * @throws IOException Thrown if the file cannot be read.
      */
     @Provides
     @Singleton
-    public Converter provideConverter(final ConfigService configService, final Database database, final @Dir Path path) throws IOException {
+    public Converter provideConverter(final ConfigService configService, final AbstractDatabase database, final @Dir Path path) throws IOException {
         ConverterProperties properties = configService.mainConfig().get(ConverterProperties.class, null, "converter");
-        Path bpath = Bukkit.getPluginsFolder().toPath().resolve(properties.type() == ConverterType.MORPH_REDEEM ? Path.of("MorphRedeem", "PlayerData") : Path.of("GuiRedeemMCMMO", "playerdata"));
         return switch (properties.type()) {
             case CSV -> new CSVConverter(database, path);
-            case INTERNAL -> new InternalConverter(database, properties.previous().create(path));
-            case GUI_REDEEM_MCMMO, MORPH_REDEEM -> new PluginConverter(database, bpath, properties.requestDelay(), properties.failureDelay());
+            case INTERNAL -> {
+                DatabaseProperties previous = properties.previous();
+                yield new InternalConverter(database, previous.create(DataSourceFactory.createSource(previous, path)));
+            }
+            case GUI_REDEEM_MCMMO, MORPH_REDEEM -> {
+                Path bpath = Bukkit.getPluginsFolder().toPath().resolve(properties.type() == ConverterType.MORPH_REDEEM ? Path.of("MorphRedeem", "PlayerData") : Path.of("GuiRedeemMCMMO", "playerdata"));
+                yield new PluginConverter(database, bpath, properties.requestDelay(), properties.failureDelay());
+            }
         };
     }
 }
