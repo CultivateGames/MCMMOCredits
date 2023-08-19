@@ -126,8 +126,8 @@ public final class CommandHandler {
      */
     private void loadCommandParser() {
         ParserRegistry<CommandExecutor> parser = this.manager.parserRegistry();
-        parser.registerParserSupplier(TypeToken.get(PrimarySkillType.class), x -> new SkillParser<>());
-        parser.registerParserSupplier(TypeToken.get(User.class), x -> new UserParser<>(this.service, this.configs.mainConfig().getBoolean("settings", "user-tab-complete")));
+        parser.registerParserSupplier(TypeToken.get(PrimarySkillType.class), x -> new SkillParser());
+        parser.registerParserSupplier(TypeToken.get(User.class), x -> new UserParser(this.service, this.configs.mainConfig().getBoolean("settings", "user-tab-complete")));
         List<String> menus = List.of("main", "config", "redeem");
         parser.registerSuggestionProvider("menus", (c, i) -> menus);
     }

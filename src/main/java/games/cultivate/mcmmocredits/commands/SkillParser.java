@@ -31,6 +31,7 @@ import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.exceptions.parsing.NoInputProvidedException;
 import cloud.commandframework.exceptions.parsing.ParserException;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
+import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.util.Util;
 import org.jetbrains.annotations.NotNull;
 
@@ -40,15 +41,13 @@ import java.util.Queue;
 
 /**
  * Argument Parser for MCMMO skill types.
- *
- * @param <C> CommandExecutor.
  */
-public final class SkillParser<C> implements ArgumentParser<C, PrimarySkillType> {
+public final class SkillParser implements ArgumentParser<CommandExecutor, PrimarySkillType> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public @NotNull ArgumentParseResult<PrimarySkillType> parse(@NotNull final CommandContext<C> commandContext, final Queue<String> inputQueue) {
+    public @NotNull ArgumentParseResult<PrimarySkillType> parse(@NotNull final CommandContext<CommandExecutor> commandContext, final Queue<String> inputQueue) {
         String input = inputQueue.peek();
         if (input == null) {
             return ArgumentParseResult.failure(new NoInputProvidedException(SkillParser.class, commandContext));
@@ -64,7 +63,7 @@ public final class SkillParser<C> implements ArgumentParser<C, PrimarySkillType>
      * {@inheritDoc}
      */
     @Override
-    public @NotNull List<String> suggestions(@NotNull final CommandContext<C> commandContext, @NotNull final String input) {
+    public @NotNull List<String> suggestions(@NotNull final CommandContext<CommandExecutor> commandContext, @NotNull final String input) {
         return Util.getSkillNames();
     }
 
