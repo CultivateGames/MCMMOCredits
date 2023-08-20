@@ -49,7 +49,7 @@ public class MySqlDatabase extends AbstractDatabase {
      * {@inheritDoc}
      */
     @Override
-    protected Jdbi createJdbi() {
+    Jdbi createJdbi() {
         return Jdbi.create(this.source).registerArgument(new UUIDFactory()).registerRowMapper(new UserMapper());
     }
 

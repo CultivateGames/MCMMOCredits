@@ -29,6 +29,7 @@ import jakarta.inject.Inject;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Handles basic user modification for 3rd party applications.
@@ -55,7 +56,7 @@ public class MCMMOCreditsAPI {
      * @return The credit balance of the user.
      */
     public int getCredits(final UUID uuid) {
-        return this.service.getCredits(uuid);
+        return this.service.getCredits(uuid).join();
     }
 
     /**
@@ -67,7 +68,7 @@ public class MCMMOCreditsAPI {
      */
     public boolean addCredits(final UUID uuid, final int amount) {
         int result = this.getCredits(uuid) + amount;
-        return result >= 0 && this.service.setCredits(uuid, result);
+        return result >= 0 && this.service.setCredits(uuid, result).join();
     }
 
     /**
@@ -78,7 +79,7 @@ public class MCMMOCreditsAPI {
      * @return True if the transaction was successful, otherwise false.
      */
     public boolean setCredits(final UUID uuid, final int amount) {
-        return amount >= 0 && this.service.setCredits(uuid, amount);
+        return amount >= 0 && this.service.setCredits(uuid, amount).join();
     }
 
     /**
@@ -90,7 +91,7 @@ public class MCMMOCreditsAPI {
      */
     public boolean takeCredits(final UUID uuid, final int amount) {
         int result = this.getCredits(uuid) - amount;
-        return result >= 0 && this.service.setCredits(uuid, result);
+        return result >= 0 && this.service.setCredits(uuid, result).join();
     }
 
     /**
@@ -101,7 +102,7 @@ public class MCMMOCreditsAPI {
      * @return The user.
      */
     public Optional<User> getUser(final UUID uuid) {
-        return this.service.getUser(uuid);
+        return this.service.getUser(uuid).join();
     }
 
     /**
@@ -112,6 +113,71 @@ public class MCMMOCreditsAPI {
      * @return The user.
      */
     public Optional<User> getUser(final String username) {
+        return this.service.getUser(username).join();
+    }
+
+    /**
+     * Gets the credit balance of a user with the specified UUID.
+     *
+     * @param uuid The UUID of the user.
+     * @return The credit balance of the user.
+     */
+    public CompletableFuture<Integer> getCreditsAsync(final UUID uuid) {
+        return this.service.getCredits(uuid);
+    }
+
+    /**
+     * Adds credits to the credit balance of a user with the specified UUID.
+     *
+     * @param uuid   The UUID of the user.
+     * @param amount The amount of credits to add.
+     * @return True if the transaction was successful, otherwise false.
+     */
+    public CompletableFuture<Boolean> addCreditsAsync(final UUID uuid, final int amount) {
+        return this.service.getCredits(uuid).thenCompose(c -> this.setCreditsAsync(uuid, c + amount));
+    }
+
+    /**
+     * Sets the credit balance of a user with the specified UUID.
+     *
+     * @param uuid   The UUID of the user.
+     * @param amount The new amount of credits.
+     * @return True if the transaction was successful, otherwise false.
+     */
+    public CompletableFuture<Boolean> setCreditsAsync(final UUID uuid, final int amount) {
+        return amount >= 0 ? this.service.setCredits(uuid, amount) : CompletableFuture.completedFuture(false);
+    }
+
+    /**
+     * Removes credits from the credit balance of a user with the specified UUID.
+     *
+     * @param uuid   The UUID of the user.
+     * @param amount The amount of credits to remove.
+     * @return True if the transaction was successful, otherwise false.
+     */
+    public CompletableFuture<Boolean> takeCreditsAsync(final UUID uuid, final int amount) {
+        return this.service.getCredits(uuid).thenCompose(c -> this.setCreditsAsync(uuid, c - amount));
+    }
+
+    /**
+     * Gets a user from the UserService.
+     * Can be used in conjunction with the Transaction system to call an event.
+     *
+     * @param uuid UUID of the user.
+     * @return The user.
+     */
+    public CompletableFuture<Optional<User>> getUserAsync(final UUID uuid) {
+        return this.service.getUser(uuid);
+    }
+
+    /**
+     * Gets a user from the UserService.
+     * Can be used in conjunction with the Transaction system to call an event.
+     *
+     * @param username Username of the user.
+     * @return The user.
+     */
+    public CompletableFuture<Optional<User>> getUserAsync(final String username) {
         return this.service.getUser(username);
     }
 }

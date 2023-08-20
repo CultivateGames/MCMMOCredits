@@ -23,45 +23,33 @@
 //
 package games.cultivate.mcmmocredits.transaction;
 
-import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
+import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 
-/**
- * Represents the result of the transaction.
- *
- * @param transaction The transaction.
- * @param executor    The updated executor of the transaction.
- * @param targets     The updated users for the transaction.
- */
-public record TransactionResult(Transaction transaction, CommandExecutor executor, List<User> targets) {
-    /**
-     * Returns if the executor was updated by the transaction.
-     *
-     * @return if the executor was updated by the transaction.
-     */
-    public boolean updatedExecutor() {
-        return this.transaction.executor() != this.executor;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class TransactionResultTest {
+
+    @Test
+    void updatedUsers_ValidTransaction_ValidResult() {
+        User executor = new User(UUID.randomUUID(), "username69", 100, 10);
+        User target = new User(UUID.randomUUID(), "username71", 200, 20);
+        Transaction transaction = new TransactionBuilder(executor, TransactionType.PAY, 100).targets(target).build();
+        TransactionResult result = new TransactionResult(transaction, executor.takeCredits(100), List.of(target.addCredits(100)));
+        assertTrue(result.updatedExecutor());
+        assertTrue(result.updatedTargets());
+        assertTrue(result.targetExecutor().isEmpty());
     }
 
-    /**
-     * Returns if the targets are updated by the transaction.
-     *
-     * @return if the targets are updated by the transaction.
-     */
-    public boolean updatedTargets() {
-        return !new HashSet<>(this.transaction.targets()).containsAll(this.targets);
-    }
-
-    /**
-     * Returns the executor if they are in the target list.
-     *
-     * @return User if the executor is in the target list, otherwise empty.
-     */
-    public Optional<User> targetExecutor() {
-        return this.targets.stream().filter(x -> x.username().equals(this.executor.username())).findAny();
+    @Test
+    void targetExecutor_SelfTransaction_ReturnsTrue() {
+        User executor = new User(UUID.randomUUID(), "username69", 100, 10);
+        Transaction transaction = Transaction.of(executor, TransactionType.ADD, 100);
+        TransactionResult result = new TransactionResult(transaction, executor, List.of(executor.addCredits(100)));
+        assertEquals(executor.addCredits(100), result.targetExecutor().get());
     }
 }

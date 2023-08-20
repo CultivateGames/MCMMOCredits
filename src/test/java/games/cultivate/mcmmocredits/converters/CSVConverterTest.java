@@ -26,28 +26,47 @@ package games.cultivate.mcmmocredits.converters;
 import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.database.DatabaseUtil;
 import games.cultivate.mcmmocredits.user.User;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class InternalConverterTest {
-    private final AbstractDatabase oldDatabase = DatabaseUtil.create("oldic");
-    private final AbstractDatabase currentDatabase = DatabaseUtil.create("newic");
+class CSVConverterTest {
+    private final AbstractDatabase currentDatabase = DatabaseUtil.create("csv");
+    private final Random random = new Random();
+
+    @AfterEach
+    void tearDown() {
+        Path.of("src", "test", "resources", "database.csv").toFile().delete();
+    }
 
     @Test
-    void run_ValidUsers_ConvertsUsersCorrectly() {
-        this.oldDatabase.addUser(new User(new UUID(0, 0), "tester0", 0, 0)).join();
-        this.oldDatabase.addUser(new User(new UUID(1, 1), "tester1", 10, 10)).join();
-        this.oldDatabase.addUser(new User(new UUID(2, 2), "tester2", 20, 20)).join();
-        List<User> users = this.oldDatabase.getAllUsers().join();
-        Converter converter = new InternalConverter(this.currentDatabase, this.oldDatabase);
+    void run_ValidUsers_ConvertsUsersCorrectly() throws IOException {
+        List<User> newUsers = new ArrayList<>();
+        Path csvPath = Path.of("src", "test", "resources", "database.csv");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvPath.toFile()))) {
+            for (int i = 0; i < 500; i++) {
+                User user = new User(UUID.randomUUID(), RandomStringUtils.randomAlphanumeric(16), this.random.nextInt(0, Integer.MAX_VALUE), this.random.nextInt(0, Integer.MAX_VALUE));
+                newUsers.add(user);
+                writer.write(String.format("%s,%s,%d,%d", user.uuid(), user.username(), user.credits(), user.redeemed()));
+                writer.newLine();
+            }
+        }
+        Converter converter = new CSVConverter(this.currentDatabase, csvPath);
         assertTrue(converter.run().join());
         List<User> currentUsers = this.currentDatabase.getAllUsers().join();
-        assertEquals(users.size(), currentUsers.size());
-        assertTrue(currentUsers.containsAll(users));
+        assertEquals(newUsers.size(), currentUsers.size());
+        assertTrue(currentUsers.containsAll(newUsers));
     }
 }

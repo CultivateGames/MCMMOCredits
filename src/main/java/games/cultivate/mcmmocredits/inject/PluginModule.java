@@ -35,15 +35,12 @@ import games.cultivate.mcmmocredits.converters.ConverterType;
 import games.cultivate.mcmmocredits.converters.InternalConverter;
 import games.cultivate.mcmmocredits.converters.PluginConverter;
 import games.cultivate.mcmmocredits.database.AbstractDatabase;
-import games.cultivate.mcmmocredits.database.DataSourceFactory;
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
 import games.cultivate.mcmmocredits.util.Dir;
 import jakarta.inject.Singleton;
 import org.bukkit.Bukkit;
 
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -85,9 +82,7 @@ public final class PluginModule extends AbstractModule {
     @Provides
     @Singleton
     public AbstractDatabase provideDatabase(final ConfigService configService, final @Dir Path path) {
-        DatabaseProperties properties = configService.getProperties("settings", "database");
-        DataSource source = DataSourceFactory.createSource(properties, path);
-        return properties.create(source);
+        return configService.getProperties("settings", "database").create(path);
     }
 
     /**
@@ -103,14 +98,12 @@ public final class PluginModule extends AbstractModule {
     @Singleton
     public Converter provideConverter(final ConfigService configService, final AbstractDatabase database, final @Dir Path path) throws IOException {
         ConverterProperties properties = configService.mainConfig().get(ConverterProperties.class, null, "converter");
-        return switch (properties.type()) {
-            case CSV -> new CSVConverter(database, path);
-            case INTERNAL -> {
-                DatabaseProperties previous = properties.previous();
-                yield new InternalConverter(database, previous.create(DataSourceFactory.createSource(previous, path)));
-            }
+        ConverterType type = properties.type();
+        return switch (type) {
+            case CSV -> new CSVConverter(database, path.resolve(type.path()));
+            case INTERNAL -> new InternalConverter(database, properties.previous().create(path));
             case GUI_REDEEM_MCMMO, MORPH_REDEEM -> {
-                Path bpath = Bukkit.getPluginsFolder().toPath().resolve(properties.type() == ConverterType.MORPH_REDEEM ? Path.of("MorphRedeem", "PlayerData") : Path.of("GuiRedeemMCMMO", "playerdata"));
+                Path bpath = Bukkit.getPluginsFolder().toPath().resolve(type.path());
                 yield new PluginConverter(database, bpath, properties.requestDelay(), properties.failureDelay());
             }
         };

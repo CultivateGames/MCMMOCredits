@@ -58,7 +58,7 @@ public record RedeemTransaction(CommandExecutor executor, List<User> targets, Pr
             profile.save(true);
             return new User(x.uuid(), x.username(), x.credits() - this.amount, x.redeemed() + this.amount);
         }).toList();
-        return TransactionResult.of(this, this.executor, mapped);
+        return new TransactionResult(this, this.executor, mapped);
     }
 
     /**

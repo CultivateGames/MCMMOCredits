@@ -40,6 +40,7 @@ public class SQLiteDatabase extends AbstractDatabase {
     public SQLiteDatabase(final DataSource source) {
         super(source);
     }
+
     /**
      * {@inheritDoc}
      */

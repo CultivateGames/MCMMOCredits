@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TransactionBuilderTest {
     private TransactionBuilder builder;
@@ -61,5 +62,16 @@ class TransactionBuilderTest {
     void targets_SingleTarget_AddedToBuilder() {
         Transaction transaction = this.builder.targets(this.target).build();
         assertEquals(this.target, transaction.targets().get(0));
+    }
+
+    @Test
+    void skill_AddedToBadTransaction_Throws() {
+        TransactionBuilder build = new TransactionBuilder(this.user, TransactionType.SET, 100);
+        assertThrows(IllegalStateException.class, () -> build.skill(PrimarySkillType.HERBALISM));
+    }
+
+    @Test
+    void of_SelfPayTransaction_Throws() {
+        assertThrows(IllegalStateException.class, () -> Transaction.of(this.user, TransactionType.PAY, 100));
     }
 }

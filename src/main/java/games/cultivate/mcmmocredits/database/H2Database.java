@@ -45,7 +45,7 @@ public class H2Database extends AbstractDatabase {
      * {@inheritDoc}
      */
     @Override
-    public Jdbi createJdbi() {
+    Jdbi createJdbi() {
         return Jdbi.create(this.source).registerRowMapper(new UserMapper()).installPlugin(new H2DatabasePlugin());
     }
 

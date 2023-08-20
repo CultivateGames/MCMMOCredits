@@ -43,7 +43,7 @@ public record TakeTransaction(CommandExecutor executor, List<User> targets, int 
     @Override
     public TransactionResult execute() {
         List<User> mapped = this.targets.stream().map(x -> x.takeCredits(this.amount)).toList();
-        return TransactionResult.of(this, this.executor, mapped);
+        return new TransactionResult(this, this.executor, mapped);
     }
 
     /**

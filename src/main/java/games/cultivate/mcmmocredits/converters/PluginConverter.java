@@ -36,9 +36,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 /**
@@ -74,13 +77,11 @@ public final class PluginConverter implements Converter {
      * {@inheritDoc}
      */
     @Override
-    public boolean run() {
-        this.database.addUsers(this.users);
-        if (this.database.isH2()) {
-            this.database.jdbi().useHandle(handle -> handle.execute("CHECKPOINT SYNC"));
-        }
-        List<User> updatedCurrentUsers = this.database.getAllUsers();
-        return this.users.parallelStream().allMatch(updatedCurrentUsers::contains);
+    public CompletableFuture<Boolean> run() {
+        return this.database.addUsers(this.users)
+                .thenAccept(x -> { if (this.database.isH2()) this.database.jdbi().useHandle(y -> y.execute("CHECKPOINT SYNC")); })
+                .thenCompose(y -> this.database.getAllUsers())
+                .thenApply(z -> new HashSet<>(this.users).containsAll(z));
     }
 
     /**
@@ -91,12 +92,50 @@ public final class PluginConverter implements Converter {
             stream.forEach(x -> {
                 UUID uuid = UUID.fromString(x.getFileName().toString().replace(".yml", ""));
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(x.toFile());
-                String username = this.cache.getOrDefault(uuid, MojangUtil.fetchUsername(uuid, this.requestTime, this.failureTime, true));
-                this.users.add(new User(uuid, username, config.getInt("Credits", 0), config.getInt("Credits_Spent", 0)));
+                String username = this.cache.get(uuid);
+                if (username != null) {
+                    this.users.add(new User(uuid, username, config.getInt("Credits", 0), config.getInt("Credits_Spent", 0)));
+                    return;
+                }
+                CompletableFuture<String> future = this.handleName(uuid, this.requestTime, this.failureTime);
+                this.users.add(new User(uuid, future.join(), config.getInt("Credits", 0), config.getInt("Credits_Spent", 0)));
             });
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Attempts to fetch name for a UUID from Mojang.
+     *
+     * @param uuid  The UUID.
+     * @param delay delay between requests.
+     * @param retry delay between failed requests.
+     * @return The username.
+     */
+    private CompletableFuture<String> handleName(final UUID uuid, final long delay, final long retry) {
+        return MojangUtil.getNameAsync(uuid)
+                .completeOnTimeout(null, 15, TimeUnit.SECONDS)
+                .thenCompose(name -> name != null ? this.sleep(delay, name) : this.sleep(retry, null).thenCompose(v -> this.handleName(uuid, delay, retry)));
+    }
+
+    /**
+     * Returns the provided result after waiting for provided delay time.
+     *
+     * @param delay  The delay.
+     * @param result The result.
+     * @param <T>    The type of the result.
+     * @return The result.
+     */
+    private <T> CompletableFuture<T> sleep(final long delay, T result) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                TimeUnit.MILLISECONDS.sleep(delay);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return result;
+        });
     }
 
     /**

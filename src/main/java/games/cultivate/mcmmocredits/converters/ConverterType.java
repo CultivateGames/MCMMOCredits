@@ -23,6 +23,8 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
+import java.nio.file.Path;
+
 /**
  * Namespace for Data Converters.
  * CSV: Data is sourced from a file named database.csv in the plugin's directory.
@@ -30,5 +32,23 @@ package games.cultivate.mcmmocredits.converters;
  * INTERNAL: Data is sourced from another plugin database type (ex. SQLITE to H2)
  */
 public enum ConverterType {
-    CSV, GUI_REDEEM_MCMMO, INTERNAL, MORPH_REDEEM;
+    CSV(Path.of("database.csv")),
+    GUI_REDEEM_MCMMO(Path.of("GuiRedeemMCMMO", "playerdata")),
+    INTERNAL(null),
+    MORPH_REDEEM(Path.of("MorphRedeem", "PlayerData"));
+
+    private final Path path;
+
+    ConverterType(final Path path) {
+        this.path = path;
+    }
+
+    /**
+     * Returns the path.
+     *
+     * @return The path.
+     */
+    public Path path() {
+        return this.path;
+    }
 }

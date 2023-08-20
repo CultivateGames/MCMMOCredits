@@ -44,7 +44,7 @@ public record PayTransaction(User executor, List<User> targets, int amount) impl
     @Override
     public TransactionResult execute() {
         List<User> mapped = List.of(this.targets.get(0).addCredits(this.amount));
-        return TransactionResult.of(this, this.executor.takeCredits(this.amount), mapped);
+        return new TransactionResult(this, this.executor.takeCredits(this.amount), mapped);
     }
 
     /**

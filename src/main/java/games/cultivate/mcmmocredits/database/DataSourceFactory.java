@@ -56,10 +56,11 @@ public final class DataSourceFactory {
     public static DataSource createSource(final DatabaseProperties properties, final Path path) {
         HikariConfig config = new HikariConfig();
         config.setPoolName("MCMMOCredits %s".formatted(properties.type().name()));
+        config.setMaximumPoolSize(20);
         switch (properties.type()) {
             case H2 -> {
                 ConfigService.createFile(path, "database.mv.db");
-                config.setJdbcUrl(String.format("jdbc:h2:file:./%s;DB_CLOSE_DELAY=-1;MODE=MYSQL", path.resolve("database")));
+                config.setJdbcUrl(String.format("jdbc:h2:file:./%s;MODE=MYSQL;DB_CLOSE_ON_EXIT=FALSE;IGNORECASE=TRUE", path.resolve("database")));
             }
             case SQLITE -> {
                 Path p = ConfigService.createFile(path, "database.db");

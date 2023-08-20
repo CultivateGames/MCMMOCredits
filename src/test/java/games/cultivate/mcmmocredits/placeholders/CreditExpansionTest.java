@@ -51,14 +51,14 @@ class CreditExpansionTest {
     @BeforeEach
     void setUp() {
         this.user = new User(new UUID(2, 2), "testUser", 1000, 500);
-        this.service = new UserService(DatabaseUtil.create("test"));
+        this.service = new UserService(DatabaseUtil.create("cs"));
         this.map = new HashMap<>();
         this.map.put("mcmmocredits", new CreditsExpansion(this.service));
     }
 
     @Test
     void onRequest_ValidUser_ValidPlaceholders() {
-        this.service.addUser(this.user);
+        this.service.addUser(this.user).join();
         String content = "%mcmmocredits_credits%, %mcmmocredits_redeemed%, %mcmmocredits_username%, %mcmmocredits_uuid%, %mcmmocredits_cached%";
         String expected = String.format("%s, %s, %s, %s, %s", this.user.credits(), this.user.redeemed(), this.user.username(), this.user.uuid().toString(), this.service.isUserCached(this.user));
         OfflinePlayer player = mock(OfflinePlayer.class);

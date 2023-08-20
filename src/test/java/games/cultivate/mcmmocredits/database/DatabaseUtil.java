@@ -32,7 +32,7 @@ public class DatabaseUtil {
 
     public static AbstractDatabase create(final String name) {
         JdbcDataSource ds = new JdbcDataSource();
-        ds.setURL("jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1;MODE=MYSQL".formatted(name));
+        ds.setURL("jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1;MODE=MYSQL;IGNORECASE=TRUE".formatted(name));
         return new H2Database(ds);
     }
 }

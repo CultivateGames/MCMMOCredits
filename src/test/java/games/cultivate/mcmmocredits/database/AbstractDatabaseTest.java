@@ -24,7 +24,6 @@
 package games.cultivate.mcmmocredits.database;
 
 import games.cultivate.mcmmocredits.user.User;
-import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +31,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -49,7 +50,7 @@ class AbstractDatabaseTest {
     @BeforeEach
     void setUp() {
         this.user = new User(this.uuid, this.username, this.credits, this.redeemed);
-        this.database.addUser(this.user);
+        this.database.addUser(this.user).join();
     }
 
     @AfterEach
@@ -59,81 +60,80 @@ class AbstractDatabaseTest {
 
     @Test
     void addUser_NewUser_UserAdded() {
-        Optional<User> ouser = this.database.getUser(this.uuid);
-        assertTrue(ouser.isPresent());
-        assertEquals(this.user, ouser.orElseThrow());
+        CompletableFuture<Optional<User>> ouser = this.database.getUser(this.uuid);
+        assertEquals(this.user, ouser.join().orElseThrow());
     }
 
     @Test
     void addUsers_NewUsers_UsersAdded() {
         User first = new User(UUID.randomUUID(), "tester1", 1000, 10);
         User second = new User(UUID.randomUUID(), "tester2", 2000, 20);
-        this.database.addUsers(List.of(first, second));
-        assertEquals(first, this.database.getUser(first.uuid()).orElseThrow());
-        assertEquals(second, this.database.getUser(second.uuid()).orElseThrow());
+        this.database.addUsers(List.of(first, second)).join();
+        assertEquals(first, this.database.getUser(first.uuid()).join().orElseThrow());
+        assertEquals(second, this.database.getUser(second.uuid()).join().orElseThrow());
     }
 
     @Test
     void getAllUsers_ReturnAllUsers() {
         User first = new User(UUID.randomUUID(), "tester1", 1000, 10);
         User second = new User(UUID.randomUUID(), "tester2", 2000, 20);
-        this.database.addUsers(List.of(first, second));
-        assertTrue(this.database.getAllUsers().containsAll(List.of(first, second, this.user)));
+        this.database.addUsers(List.of(first, second)).join();
+        assertTrue(this.database.getAllUsers().join().containsAll(List.of(first, second, this.user)));
     }
 
     @Test
     void getUser_ByUsername_UserFound() {
-        Optional<User> ouser = this.database.getUser(this.username);
-        assertEquals(this.user, ouser.orElseThrow());
+        CompletableFuture<Optional<User>> ouser = this.database.getUser(this.username);
+        assertEquals(this.user, ouser.join().orElseThrow());
     }
 
     @Test
     void rangeOfUsers_ThreeUsers_UsersRetrieved() {
         User first = new User(UUID.randomUUID(), "firstPlace", 1000, 10);
         User second = new User(UUID.randomUUID(), "secondPlace", 100, 10);
-        this.database.addUsers(List.of(first, second));
-        List<User> users = this.database.rangeOfUsers(3, 0);
+        this.database.addUsers(List.of(first, second)).join();
+        List<User> users = this.database.rangeOfUsers(3, 0).join();
         assertTrue(users.containsAll(List.of(first, second, this.user)));
     }
 
     @Test
     void setUsername_ExistingUser_UsernameUpdated() {
         String newUsername = "updatedUsername";
-        this.database.setUsername(this.uuid, newUsername);
-        Optional<User> ouser = this.database.getUser(newUsername);
+        this.database.setUsername(this.uuid, newUsername).join();
+        Optional<User> ouser = this.database.getUser(newUsername).join();
         User updatedUser = new User(this.uuid, newUsername, this.credits, this.redeemed);
         assertEquals(updatedUser, ouser.orElseThrow());
     }
 
     @Test
     void setUsername_MissingUser_ReturnsFalse() {
-        assertFalse(this.database.setUsername(UUID.randomUUID(), "missingUser"));
+        assertFalse(this.database.setUsername(UUID.randomUUID(), "missingUser").join());
     }
 
     @Test
     void setCredits_ExistingUser_CreditsUpdated() {
         int newCredits = 200;
-        this.database.setCredits(this.uuid, newCredits);
-        Optional<User> ouser = this.database.getUser(this.uuid);
+        this.database.setCredits(this.uuid, newCredits).join();
+        CompletableFuture<Optional<User>> ouser = this.database.getUser(this.uuid);
         User updatedUser = new User(this.uuid, this.username, newCredits, this.redeemed);
-        assertEquals(updatedUser, ouser.orElseThrow());
+        assertEquals(updatedUser, ouser.join().orElseThrow());
     }
 
     @Test
     void setCredits_MissingUser_ReturnsFalse() {
-        assertFalse(this.database.setCredits(UUID.randomUUID(), 500));
+        assertFalse(this.database.setCredits(UUID.randomUUID(), 500).join());
     }
 
     @Test
     void setCredits_InvalidAmount_ThrowsException() {
-        assertThrows(UnableToExecuteStatementException.class, () -> this.database.setCredits(this.uuid, -1));
-        assertEquals(this.user, this.database.getUser(this.uuid).orElseThrow());
+        assertThrows(CompletionException.class, this.database.setCredits(this.uuid, -1)::join);
+        assertEquals(this.user, this.database.getUser(this.uuid).join().orElseThrow());
     }
 
     @Test
     void updateUser_ExistingUser_ReturnsUpdatedUser() {
-        this.database.updateUser(new User(this.uuid, this.username, 10000, this.redeemed));
-        User fromDAO = this.database.getUser(this.uuid).orElseThrow();
+        this.database.updateUser(new User(this.uuid, this.username, 10000, this.redeemed)).join();
+        User fromDAO = this.database.getUser(this.uuid).join().orElseThrow();
         assertEquals(10000, fromDAO.credits());
     }
 }

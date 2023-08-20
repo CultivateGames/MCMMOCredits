@@ -26,6 +26,7 @@ package games.cultivate.mcmmocredits.database;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import javax.sql.DataSource;
+import java.nio.file.Path;
 
 /**
  * Properties used in creation of the Database.
@@ -54,5 +55,15 @@ public record DatabaseProperties(DatabaseType type, String url, String user, Str
      */
     public AbstractDatabase create(final DataSource source) {
         return this.type.create(source);
+    }
+
+    /**
+     * Creates an instance of the database using the provided path to create a DataSource.
+     *
+     * @param path The path.
+     * @return The database.
+     */
+    public AbstractDatabase create(final Path path) {
+        return this.type.create(DataSourceFactory.createSource(this, path));
     }
 }

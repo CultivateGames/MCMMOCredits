@@ -151,6 +151,8 @@ tasks {
 
     runServer {
         minecraftVersion("1.20.1")
+        //MCMMO spams legacy text and run-task adds this flag by default.
+        systemProperty("net.kyori.adventure.text.warnWhenLegacyFormattingDetected", false)
     }
 
     shadowJar {

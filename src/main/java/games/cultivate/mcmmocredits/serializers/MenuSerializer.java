@@ -56,11 +56,10 @@ public final class MenuSerializer implements TypeSerializer<RedeemMenu> {
             Item item = entry.get(Item.class);
             items.put((String) entry.key(), item);
         }
-        Item filler = items.remove("fill");
         if (!navigation) {
-            int nav = items.remove("navigation").slot();
-            items.put("fill" + nav, filler.slot(nav));
+            items.remove("navigation").slot();
         }
+        Item filler = items.remove("fill");
         Set<Integer> slotSet = items.values().stream().map(Item::slot).collect(Collectors.toSet());
         if (fill) {
             IntStream.range(0, slots).filter(i -> !slotSet.contains(i)).forEach(i -> items.put("fill" + i, filler.slot(i)));

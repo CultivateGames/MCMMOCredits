@@ -43,8 +43,6 @@ import games.cultivate.mcmmocredits.user.UserService;
 import jakarta.inject.Inject;
 import org.bukkit.Bukkit;
 
-import java.util.List;
-
 /**
  * Handles all commands. Prefix is customizable via config.
  * Default is /credits.
@@ -138,10 +136,9 @@ public final class Commands {
     @CommandPermission("mcmmocredits.modify.all")
     @CommandDescription("Allows user to modify balance of all online players.")
     public void modifyAll(final CommandExecutor executor, final CommandContext<CommandExecutor> args, final @Argument @Range(min = "0") int amount, final @Flag("s") boolean silent) {
-        Transaction tr = Transaction.builder(executor, TransactionType.fromArgs(args, 1), amount)
-                .targets(this.service.getOnlineUsers())
-                .build();
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(tr, silent, false));
+        this.service.getOnlineUsers()
+                .thenApply(x -> Transaction.builder(executor, TransactionType.fromArgs(args, 1), amount).targets(x).build())
+                .thenAccept(t -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(t, silent, false)));
     }
 
     /**
@@ -188,11 +185,9 @@ public final class Commands {
     @CommandPermission("mcmmocredits.redeem.all")
     @CommandDescription("Allows user to redeem credits for all online players.")
     public void redeemAll(final CommandExecutor executor, final @Argument @Range(min = "1") int amount, final @Argument PrimarySkillType skill, final @Flag("s") boolean silent) {
-        Transaction tr = Transaction.builder(executor, TransactionType.REDEEMALL, amount)
-                .targets(this.service.getOnlineUsers())
-                .skill(skill)
-                .build();
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(tr, silent, false));
+        this.service.getOnlineUsers()
+                .thenApply(x -> Transaction.builder(executor, TransactionType.REDEEMALL, amount).targets(x).skill(skill).build())
+                .thenAccept(t -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(t, silent, false)));
     }
 
     /**
@@ -226,17 +221,18 @@ public final class Commands {
         }
         int limit = this.configs.mainConfig().getInteger("settings", "leaderboard-page-size");
         int offset = Math.max(0, (page - 1) * limit);
-        List<User> users = this.service.rangeOfUsers(limit, offset);
-        if (users.isEmpty()) {
-            executor.sendText(this.configs.getMessage("invalid-leaderboard"));
-            return;
-        }
-        executor.sendText(this.configs.mainConfig().getString("leaderboard-title"));
-        Resolver resolver = Resolver.ofUser(executor);
-        String entry = this.configs.mainConfig().getString("leaderboard-entry");
-        for (int i = 1; i <= users.size(); i++) {
-            executor.sendText(entry, resolver.addUser(users.get(i - 1), "target").addTag("rank", i + offset));
-        }
+        this.service.rangeOfUsers(limit, offset).thenAccept(users -> {
+            if (users.isEmpty()) {
+                executor.sendText(this.configs.getMessage("invalid-leaderboard"));
+                return;
+            }
+            executor.sendText(this.configs.mainConfig().getString("leaderboard-title"));
+            Resolver resolver = Resolver.ofUser(executor);
+            String entry = this.configs.mainConfig().getString("leaderboard-entry");
+            for (int i = 1; i <= users.size(); i++) {
+                executor.sendText(entry, resolver.addUser(users.get(i - 1), "target").addTag("rank", i + offset));
+            }
+        });
     }
 
     /**

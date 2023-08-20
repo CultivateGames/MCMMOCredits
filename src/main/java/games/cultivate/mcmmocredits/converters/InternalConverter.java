@@ -26,7 +26,9 @@ package games.cultivate.mcmmocredits.converters;
 import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.user.User;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Data Converter which uses an older database to convert.
@@ -43,7 +45,8 @@ public final class InternalConverter implements Converter {
      */
     public InternalConverter(final AbstractDatabase database, final AbstractDatabase old) {
         this.database = database;
-        this.users = old.getAllUsers();
+        //All users must be loaded before proceeding.
+        this.users = old.getAllUsers().join();
         old.disable();
     }
 
@@ -51,12 +54,10 @@ public final class InternalConverter implements Converter {
      * {@inheritDoc}
      */
     @Override
-    public boolean run() {
-        this.database.addUsers(this.users);
-        if (this.database.isH2()) {
-            this.database.jdbi().useHandle(x -> x.execute("CHECKPOINT SYNC"));
-        }
-        List<User> updatedCurrentUsers = this.database.getAllUsers();
-        return this.users.parallelStream().allMatch(updatedCurrentUsers::contains);
+    public CompletableFuture<Boolean> run() {
+        return this.database.addUsers(this.users)
+                .thenAccept(x -> { if (this.database.isH2()) this.database.jdbi().useHandle(y -> y.execute("CHECKPOINT SYNC")); })
+                .thenCompose(y -> this.database.getAllUsers())
+                .thenApply(z -> new HashSet<>(this.users).containsAll(z));
     }
 }

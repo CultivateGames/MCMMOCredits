@@ -29,7 +29,9 @@ import games.cultivate.mcmmocredits.user.User;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Data converter which uses database.csv in the plugin's folder.
@@ -47,19 +49,17 @@ public final class CSVConverter implements Converter {
      */
     public CSVConverter(final AbstractDatabase database, final Path path) throws IOException {
         this.database = database;
-        this.users = Files.readAllLines(path.resolve("database.csv")).stream().map(User::fromCSV).toList();
+        this.users = Files.readAllLines(path).stream().map(User::fromCSV).toList();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean run() {
-        this.database.addUsers(this.users);
-        if (this.database.isH2()) {
-            this.database.jdbi().useHandle(x -> x.execute("CHECKPOINT SYNC"));
-        }
-        List<User> updatedCurrentUsers = this.database.getAllUsers();
-        return this.users.parallelStream().allMatch(updatedCurrentUsers::contains);
+    public CompletableFuture<Boolean> run() {
+        return this.database.addUsers(this.users)
+                .thenAccept(x -> { if (this.database.isH2()) this.database.jdbi().useHandle(y -> y.execute("CHECKPOINT SYNC")); })
+                .thenCompose(y -> this.database.getAllUsers())
+                .thenApply(z -> new HashSet<>(this.users).containsAll(z));
     }
 }

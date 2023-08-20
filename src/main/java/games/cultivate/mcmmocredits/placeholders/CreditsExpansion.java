@@ -85,7 +85,8 @@ public final class CreditsExpansion extends PlaceholderExpansion {
      */
     @Override
     public String onRequest(final OfflinePlayer player, final @NotNull String id) {
-        Optional<User> optionalUser = this.service.getUser(player.getName());
+        //No control over PAPI methods here, have to join() for user.
+        Optional<User> optionalUser = this.service.getUser(player.getName()).join();
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             return switch (id.toLowerCase()) {

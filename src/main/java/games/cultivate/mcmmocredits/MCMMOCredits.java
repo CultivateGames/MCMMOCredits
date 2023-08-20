@@ -142,7 +142,7 @@ public final class MCMMOCredits extends JavaPlugin {
     private void runConversionProcess() {
         if (this.configs.mainConfig().getBoolean("converter", "enabled")) {
             long start = System.nanoTime();
-            this.injector.getInstance(Converter.class).run();
+            this.injector.getInstance(Converter.class).run().join();
             long end = System.nanoTime();
             this.logger.info("Conversion completed! Process took: {}s.", (double) (end - start) / 1000000000);
         }

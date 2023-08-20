@@ -23,6 +23,8 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * Represents a Data Converter.
  */
@@ -32,5 +34,5 @@ public interface Converter {
      *
      * @return If the process was successful.
      */
-    boolean run();
+    CompletableFuture<Boolean> run();
 }

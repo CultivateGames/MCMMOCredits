@@ -25,6 +25,7 @@ package games.cultivate.mcmmocredits.database;
 
 import games.cultivate.mcmmocredits.user.User;
 import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.async.JdbiExecutor;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.PreparedBatch;
 import org.jdbi.v3.core.statement.StatementContext;
@@ -39,6 +40,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 
 /**
  * Represents a database.
@@ -46,6 +49,7 @@ import java.util.UUID;
 public abstract class AbstractDatabase {
     final Jdbi jdbi;
     final DataSource source;
+    final JdbiExecutor executor;
 
     /**
      * Constructs the object.
@@ -55,8 +59,16 @@ public abstract class AbstractDatabase {
     AbstractDatabase(final DataSource source) {
         this.source = source;
         this.jdbi = this.createJdbi();
+        this.executor = JdbiExecutor.create(this.jdbi, Executors.newFixedThreadPool(2));
         this.createTable();
     }
+
+    /**
+     * Method used to wrap a DataSource with JDBI.
+     *
+     * @return JDBI instance.
+     */
+    abstract Jdbi createJdbi();
 
     /**
      * Shuts down the underlying data source.
@@ -84,8 +96,8 @@ public abstract class AbstractDatabase {
      * @param user The user to add.
      * @return True if the transaction was successful, otherwise false.
      */
-    public boolean addUser(final User user) {
-        return this.jdbi.withHandle(handle -> handle.createUpdate("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed);").bindMethods(user).execute() == 1);
+    public CompletableFuture<Boolean> addUser(final User user) {
+        return this.executor.withHandle(handle -> handle.createUpdate("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed);").bindMethods(user).execute() == 1).toCompletableFuture();
     }
 
     /**
@@ -93,12 +105,12 @@ public abstract class AbstractDatabase {
      *
      * @param users The users to add.
      */
-    public void addUsers(final Collection<User> users) {
-        this.jdbi.useHandle(handle -> {
+    public CompletableFuture<Void> addUsers(final Collection<User> users) {
+        return this.executor.useHandle(handle -> {
             PreparedBatch batch = handle.prepareBatch("INSERT INTO MCMMOCredits(uuid, username, credits, redeemed) VALUES(:uuid,:username,:credits,:redeemed);");
             users.forEach(x -> batch.bindMethods(x).add());
             batch.execute();
-        });
+        }).toCompletableFuture();
     }
 
     /**
@@ -108,8 +120,8 @@ public abstract class AbstractDatabase {
      * @param uuid The UUID of a user.
      * @return A user if it exists, otherwise an empty optional.
      */
-    public Optional<User> getUser(final UUID uuid) {
-        return this.jdbi.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits WHERE uuid = :uuid;").bind("uuid", uuid).mapTo(User.class).findOne());
+    public CompletableFuture<Optional<User>> getUser(final UUID uuid) {
+        return this.executor.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits WHERE uuid = :uuid;").bind("uuid", uuid).mapTo(User.class).findOne()).toCompletableFuture();
     }
 
     /**
@@ -119,8 +131,8 @@ public abstract class AbstractDatabase {
      * @param username The username of a user.
      * @return A user if it exists, otherwise an empty optional.
      */
-    public Optional<User> getUser(final String username) {
-        return this.jdbi.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits WHERE username LIKE :username LIMIT 1;").bind("username", username).mapTo(User.class).findOne());
+    public CompletableFuture<Optional<User>> getUser(final String username) {
+        return this.executor.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits WHERE username LIKE :username LIMIT 1;").bind("username", username).mapTo(User.class).findOne()).toCompletableFuture();
     }
 
     /**
@@ -130,8 +142,8 @@ public abstract class AbstractDatabase {
      * @param offset The starting index of where to start getting users.
      * @return A list of users within the provided bounds.
      */
-    public List<User> rangeOfUsers(final int limit, final int offset) {
-        return this.jdbi.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits ORDER BY credits DESC LIMIT :limit OFFSET :offset;").bind("limit", limit).bind("offset", offset).mapTo(User.class).list());
+    public CompletableFuture<List<User>> rangeOfUsers(final int limit, final int offset) {
+        return this.executor.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits ORDER BY credits DESC LIMIT :limit OFFSET :offset;").bind("limit", limit).bind("offset", offset).mapTo(User.class).list()).toCompletableFuture();
     }
 
     /**
@@ -139,8 +151,8 @@ public abstract class AbstractDatabase {
      *
      * @return a list of all users.
      */
-    public List<User> getAllUsers() {
-        return this.jdbi.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits").mapTo(User.class).list());
+    public CompletableFuture<List<User>> getAllUsers() {
+        return this.executor.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits").mapTo(User.class).list()).toCompletableFuture();
     }
 
     /**
@@ -150,8 +162,8 @@ public abstract class AbstractDatabase {
      * @param username The username of a user.
      * @return True if the transaction was successful, otherwise false.
      */
-    public boolean setUsername(final UUID uuid, final String username) {
-        return this.jdbi.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET username = :username WHERE UUID = :uuid;").bind("uuid", uuid).bind("username", username).execute() == 1);
+    public CompletableFuture<Boolean> setUsername(final UUID uuid, final String username) {
+        return this.executor.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET username = :username WHERE UUID = :uuid;").bind("uuid", uuid).bind("username", username).execute() == 1).toCompletableFuture();
     }
 
     /**
@@ -161,8 +173,8 @@ public abstract class AbstractDatabase {
      * @param amount The new amount of credits.
      * @return True if the transaction was successful, otherwise false.
      */
-    public boolean setCredits(final UUID uuid, final int amount) {
-        return this.jdbi.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET credits = :amount WHERE UUID = :uuid;").bind("uuid", uuid).bind("amount", amount).execute() == 1);
+    public CompletableFuture<Boolean> setCredits(final UUID uuid, final int amount) {
+        return this.executor.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET credits = :amount WHERE UUID = :uuid;").bind("uuid", uuid).bind("amount", amount).execute() == 1).toCompletableFuture();
     }
 
     /**
@@ -171,15 +183,14 @@ public abstract class AbstractDatabase {
      * @param users The users.
      * @return Returns if update count of each statement in the batch is equal to 1.
      */
-    public boolean applyTransaction(final List<User> users) {
-        return this.jdbi.withHandle(handle -> {
+    public CompletableFuture<Boolean> applyTransaction(final List<User> users) {
+        return this.executor.withHandle(handle -> {
             PreparedBatch batch = handle.prepareBatch("UPDATE MCMMOCredits SET credits = :credits, redeemed = :redeemed WHERE UUID = :uuid;");
             users.forEach(x -> batch.bindMethods(x).add());
             int[] results = batch.execute();
             return Arrays.stream(results).allMatch(x -> x == 1);
-        });
+        }).toCompletableFuture();
     }
-
 
     /**
      * Updates an existing user in the database with the provided user.
@@ -187,8 +198,8 @@ public abstract class AbstractDatabase {
      * @param user The user to update.
      * @return True if the transaction was successful, otherwise false.
      */
-    public boolean updateUser(final User user) {
-        return this.jdbi.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET username = :username, credits = :credits, redeemed = :redeemed WHERE UUID = :uuid;").bindMethods(user).execute() == 1);
+    public CompletableFuture<Boolean> updateUser(final User user) {
+        return this.executor.withHandle(handle -> handle.createUpdate("UPDATE MCMMOCredits SET username = :username, credits = :credits, redeemed = :redeemed WHERE UUID = :uuid;").bindMethods(user).execute() == 1).toCompletableFuture();
     }
 
     /**
@@ -199,13 +210,6 @@ public abstract class AbstractDatabase {
     public Jdbi jdbi() {
         return this.jdbi == null ? this.createJdbi() : this.jdbi;
     }
-
-    /**
-     * Method used to wrap a DataSource with JDBI.
-     *
-     * @return JDBI instance.
-     */
-    abstract Jdbi createJdbi();
 
     /**
      * Returns if the database is H2.
