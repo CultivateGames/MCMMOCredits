@@ -125,7 +125,7 @@ public final class Commands {
     }
 
     /**
-     * Processes the {@literal /credits <addall|setall|takeall|redeemall> <amount> [skill] [--s]} command.
+     * Processes the {@literal /credits <addall|setall|takeall> <amount> [--s]} command.
      *
      * @param executor CommandExecutor. Must be an online player.
      * @param args     Command args to derive the transaction type.
