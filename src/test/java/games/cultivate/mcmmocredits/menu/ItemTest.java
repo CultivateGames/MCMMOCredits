@@ -64,7 +64,7 @@ class ItemTest {
     @Test
     void of_ValidProperties_ReturnsValidItem() {
         ItemStack stack = new ItemStack(Material.ACACIA_BOAT, 20);
-        Item item = Item.of(stack, "The item!", List.of("the lore!"), 10);
+        Item item = new Item(stack, "The item!", List.of("the lore!"), 10, ItemAction.CANCEL);
         assertEquals(Material.ACACIA_BOAT, item.stack().getType());
         assertEquals(20, item.stack().getAmount());
         assertEquals("The item!", item.name());
@@ -79,13 +79,13 @@ class ItemTest {
         assertEquals(1, item.stack().getAmount());
         assertEquals("", item.name());
         assertEquals(List.of(), item.lore());
-        assertEquals(-1, item.slot());
+        assertEquals(0, item.slot());
     }
 
     @Test
     void parseUser_ValidItemUser_ReturnsParsedItem() {
         ItemStack stack = new ItemStack(Material.ACACIA_BOAT, 20);
-        Item item = Item.of(stack, "<sender_credits> credits!", List.of("<sender_redeemed> credits redeemed"), 10);
+        Item item = new Item(stack, "<sender_credits> credits!", List.of("<sender_redeemed> credits redeemed"), 10, ItemAction.CANCEL);
         User user = new User(UUID.randomUUID(), "testUser", 1500, 10);
         ItemMeta meta = mock(ItemMeta.class);
         when(this.mockFactory.getItemMeta(Material.ACACIA_BOAT)).thenReturn(meta);

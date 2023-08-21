@@ -23,18 +23,8 @@
 //
 package games.cultivate.mcmmocredits.util;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Utility class for methods with no clear association.
@@ -42,7 +32,6 @@ import java.util.UUID;
 public final class Util {
     @SuppressWarnings("checkstyle:linelength")
     private static final List<String> MCMMO_SKILLS = List.of("acrobatics", "alchemy", "archery", "axes", "excavation", "fishing", "herbalism", "mining", "repair", "swords", "taming", "unarmed", "woodcutting");
-    private static final HttpClient CLIENT = HttpClient.newHttpClient();
 
     private Util() {
         throw new AssertionError("Util cannot be instantiated!");
@@ -100,27 +89,5 @@ public final class Util {
      */
     public static <T> String joinString(final String delimiter, final T[] array) {
         return Util.joinString(delimiter, Arrays.asList(array));
-    }
-
-    /**
-     * Obtains a username for the provided UUID from Mojang synchronously.
-     *
-     * @param uuid UUID of the user.
-     * @return The username, or null if the request failed.
-     */
-    public static @Nullable String getMojangUsername(final UUID uuid) {
-        try {
-            HttpRequest req = HttpRequest.newBuilder(URI.create("https://api.mojang.com/user/profile/" + uuid)).GET().build();
-            HttpResponse<String> response = CLIENT.send(req, HttpResponse.BodyHandlers.ofString());
-            JsonElement element = JsonParser.parseString(response.body());
-            if (element.isJsonObject() && response.statusCode() == 200) {
-                return element.getAsJsonObject().get("name").getAsString();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        return null;
     }
 }

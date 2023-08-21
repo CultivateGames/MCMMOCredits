@@ -25,9 +25,9 @@ package games.cultivate.mcmmocredits.serializers;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
-import games.cultivate.mcmmocredits.menu.Action;
-import games.cultivate.mcmmocredits.menu.Action.Command;
 import games.cultivate.mcmmocredits.menu.Item;
+import games.cultivate.mcmmocredits.menu.ItemAction;
+import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -70,7 +70,13 @@ public final class ItemSerializer implements TypeSerializer<Item> {
         }
         meta.setCustomModelData(customModelData);
         stack.setItemMeta(texture.isEmpty() ? meta : this.createSkullMeta(meta, texture));
-        Action action = node.get(Action.class);
+        ItemAction action = ItemAction.CANCEL;
+        if (!node.node("command").virtual()) {
+            action = ItemAction.COMMAND;
+        }
+        if (Util.getSkillNames().contains(node.key().toString().toLowerCase())) {
+            action = ItemAction.REDEEM;
+        }
         return new Item(stack, name, lore, slot, action);
     }
 
@@ -89,8 +95,8 @@ public final class ItemSerializer implements TypeSerializer<Item> {
         node.node("texture").set(meta instanceof SkullMeta skullMeta ? this.getTexture(skullMeta) : "");
         node.node("custom-model-data").set(meta.hasCustomModelData() ? meta.getCustomModelData() : 0);
         node.node("glow").set(!stack.getEnchantments().isEmpty());
-        if (item.action() instanceof Command commandAction) {
-            node.node("command").set(commandAction.command());
+        if (node.key().toString().equalsIgnoreCase("navigation")) {
+            node.node("command").set("credits menu");
         }
     }
 

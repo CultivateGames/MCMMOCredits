@@ -23,30 +23,33 @@
 //
 package games.cultivate.mcmmocredits.transaction;
 
-import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@ExtendWith(MockitoExtension.class)
 class TransactionResultTest {
-    @Mock
-    private CommandExecutor mockExecutor;
 
     @Test
-    void of_ValidProperties_ValidTransactionResult() {
-        User target = new User(UUID.randomUUID(), "testUser", 100, 10);
-        Transaction transaction = Transaction.builder().amount(100).users(this.mockExecutor, target).type(TransactionType.ADD).build();
-        TransactionResult result = transaction.execute();
-        assertNotEquals(target, result.target());
-        assertEquals(this.mockExecutor, result.executor());
-        assertEquals(transaction, result.transaction());
+    void updatedUsers_ValidTransaction_ValidResult() {
+        User executor = new User(UUID.randomUUID(), "username69", 100, 10);
+        User target = new User(UUID.randomUUID(), "username71", 200, 20);
+        Transaction transaction = new TransactionBuilder(executor, TransactionType.PAY, 100).targets(target).build();
+        TransactionResult result = new TransactionResult(transaction, executor.takeCredits(100), List.of(target.addCredits(100)));
+        assertTrue(result.updatedExecutor());
+        assertTrue(result.updatedTargets());
+        assertTrue(result.targetExecutor().isEmpty());
+    }
+
+    @Test
+    void targetExecutor_SelfTransaction_ReturnsTrue() {
+        User executor = new User(UUID.randomUUID(), "username69", 100, 10);
+        Transaction transaction = Transaction.of(executor, TransactionType.ADD, 100);
+        TransactionResult result = new TransactionResult(transaction, executor, List.of(executor.addCredits(100)));
+        assertEquals(executor.addCredits(100), result.targetExecutor().get());
     }
 }

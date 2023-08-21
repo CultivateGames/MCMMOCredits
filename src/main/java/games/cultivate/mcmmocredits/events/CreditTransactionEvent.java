@@ -24,6 +24,7 @@
 package games.cultivate.mcmmocredits.events;
 
 import games.cultivate.mcmmocredits.transaction.Transaction;
+import org.bukkit.Bukkit;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -47,6 +48,7 @@ public class CreditTransactionEvent extends Event implements Cancellable {
      * @param senderFeedback If process sends feedback to the executor. True will silence feedback except for errors.
      */
     public CreditTransactionEvent(final Transaction transaction, final boolean userFeedback, final boolean senderFeedback) {
+        super(!Bukkit.isPrimaryThread());
         this.transaction = transaction;
         this.userFeedback = userFeedback;
         this.senderFeedback = senderFeedback;

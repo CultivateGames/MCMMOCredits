@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.4.3"
+version = "0.4.4"
 description = "MCMMOCredits"
 
 plugins {
@@ -28,17 +28,13 @@ dependencies {
     implementation("com.google.inject:guice:7.0.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.7")
-    implementation("org.jdbi:jdbi3-core:3.39.1")
-    implementation("org.jdbi:jdbi3-sqlite:3.39.1")
-    implementation("org.jdbi:jdbi3-sqlobject:3.39.1")
-    testImplementation("org.jdbi:jdbi3-testing:3.39.1")
-    testImplementation(platform("org.junit:junit-bom:5.9.3"))
+    implementation("org.jdbi:jdbi3-core:3.41.0")
+    implementation("org.jdbi:jdbi3-sqlite:3.41.0")
+    testImplementation("org.jdbi:jdbi3-testing:3.41.0")
+    testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.mockito:mockito-core:5.4.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.4.0")
-    implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT") {
-        exclude(module = "paper-api")
-    }
     compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.11.3") {
         exclude(group = "net.kyori")
@@ -155,6 +151,8 @@ tasks {
 
     runServer {
         minecraftVersion("1.20.1")
+        //MCMMO spams legacy text and run-task adds this flag by default.
+        systemProperty("net.kyori.adventure.text.warnWhenLegacyFormattingDetected", false)
     }
 
     shadowJar {

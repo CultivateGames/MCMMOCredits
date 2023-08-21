@@ -29,6 +29,7 @@ import games.cultivate.mcmmocredits.transaction.RedeemTransaction;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
+import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.util.Util;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -71,25 +72,20 @@ public final class Resolver {
     }
 
     /**
-     * Creates a Resolver with the provided transaction properties.
-     *
-     * @param transaction The transaction to parse.
-     * @return The Resolver.
-     */
-    public static Resolver ofTransaction(final Transaction transaction) {
-        Resolver resolver = Resolver.ofUsers(transaction.executor(), transaction.targets()[0]).addAmount(transaction.amount());
-        return transaction instanceof RedeemTransaction rt ? resolver.addSkill(rt.skill()) : resolver;
-    }
-
-    /**
      * Creates a Resolver with the provided transaction result.
      *
      * @param result The result of a transaction to parse.
+     * @param user   The target to parse for.
      * @return The Resolver.
      */
-    public static Resolver ofTransactionResult(final TransactionResult result) {
-        Resolver resolver = Resolver.ofUsers(result.executor(), result.target()).addAmount(result.transaction().amount());
-        return result.transaction() instanceof RedeemTransaction rt ? resolver.addSkill(rt.skill()) : resolver;
+    public static Resolver ofResult(final TransactionResult result, final User... user) {
+        Transaction tr = result.transaction();
+        if (user.length > 0) {
+            return Resolver.ofUsers(result.executor(), user[0]).addTransaction(tr);
+        }
+        User target = result.targets().get(0);
+        CommandExecutor executor = tr.isSelfTransaction() ? target : result.executor();
+        return Resolver.ofUsers(executor, target).addTransaction(tr);
     }
 
     /**
@@ -128,13 +124,14 @@ public final class Resolver {
     }
 
     /**
-     * Adds transaction amount to the Resolver.
+     * Adds basic info about a transaction to a resolver.
      *
-     * @param amount The amount.
+     * @param transaction The transaction.
      * @return The resolver.
      */
-    public Resolver addAmount(final int amount) {
-        return this.addTag("amount", amount);
+    public Resolver addTransaction(final Transaction transaction) {
+        Resolver resolver = this.addTag("type", transaction.type().name()).addTag("amount", transaction.amount());
+        return transaction instanceof RedeemTransaction rt ? resolver.addSkill(rt.skill()) : resolver;
     }
 
     /**

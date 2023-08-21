@@ -41,6 +41,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -70,18 +71,18 @@ class RedeemTransactionTest {
 
     @BeforeEach
     void setUp() {
-        this.target = new User(this.uuid, "tester1", 1000, 100);
         this.mockBukkit.when(() -> Bukkit.getPlayer(this.uuid)).thenReturn(this.mockPlayer);
         this.mockUser.when(() -> UserManager.getPlayer(this.mockPlayer)).thenReturn(this.mockMCMMOPlayer);
         mcMMO.p = this.mockMCMMO;
+        this.target = new User(this.uuid, "tester1", 1000, 100);
     }
 
     @Test
     void execute_ValidUser_TransactionApplied() {
         when(this.mockMCMMOPlayer.getProfile()).thenReturn(this.mockProfile);
-        Transaction herbalism = Transaction.builder().self(this.target).skill(PrimarySkillType.HERBALISM).amount(100).build();
+        Transaction herbalism = new RedeemTransaction(this.executor, List.of(this.target), PrimarySkillType.HERBALISM, 100);
         TransactionResult result = herbalism.execute();
-        assertEquals(900, result.target().credits());
+        assertEquals(900, result.targets().get(0).credits());
         verify(this.mockProfile).addLevels(PrimarySkillType.HERBALISM, 100);
         verify(this.mockProfile).save(true);
     }
@@ -89,43 +90,43 @@ class RedeemTransactionTest {
     @Test
     void execute_ValidUsers_TransactionApplied() {
         when(this.mockMCMMOPlayer.getProfile()).thenReturn(this.mockProfile);
-        Transaction herbalism = Transaction.builder().users(this.executor, this.target).skill(PrimarySkillType.HERBALISM).amount(100).build();
+        Transaction herbalism = new RedeemTransaction(this.executor, List.of(this.target), PrimarySkillType.HERBALISM, 100);
         TransactionResult result = herbalism.execute();
-        assertEquals(900, result.target().credits());
+        assertEquals(900, result.targets().get(0).credits());
         verify(this.mockProfile).addLevels(PrimarySkillType.HERBALISM, 100);
         verify(this.mockProfile).save(true);
     }
 
     @Test
-    void valid_ValidTransaction_ReturnsNoFailure() {
+    void validate_ValidTransaction_ReturnsNoFailure() {
         when(this.mockMCMMOPlayer.getProfile()).thenReturn(this.mockProfile);
         when(this.mockProfile.isLoaded()).thenReturn(true);
         when(mcMMO.p.getGeneralConfig()).thenReturn(this.mockConfig);
         when(this.mockConfig.getLevelCap(PrimarySkillType.HERBALISM)).thenReturn(10000);
-        Transaction herbalism = Transaction.builder().users(this.executor, this.target).skill(PrimarySkillType.HERBALISM).amount(100).build();
-        assertEquals(Optional.empty(), herbalism.valid());
+        Transaction herbalism = new RedeemTransaction(this.executor, List.of(this.target), PrimarySkillType.HERBALISM, 100);
+        assertEquals(Optional.empty(), herbalism.validate(this.target));
     }
 
     @Test
-    void valid_NotEnoughCredits_ReturnsFailure() {
-        Transaction tooManyCredits = Transaction.builder().users(this.executor, this.target).skill(PrimarySkillType.HERBALISM).amount(1100).build();
-        assertEquals(Optional.of("not-enough-credits"), tooManyCredits.valid());
+    void validate_NotEnoughCredits_ReturnsFailure() {
+        Transaction tooManyCredits = new RedeemTransaction(this.executor, List.of(this.target), PrimarySkillType.HERBALISM, 1100);
+        assertEquals(Optional.of("not-enough-credits"), tooManyCredits.validate(this.target));
     }
 
     @Test
-    void valid_ProfileNotLoaded_ReturnsFailure() {
+    void validate_ProfileNotLoaded_ReturnsFailure() {
         when(this.mockMCMMOPlayer.getProfile()).thenReturn(this.mockProfile);
-        Transaction profileNotLoaded = Transaction.builder().users(this.executor, this.target).skill(PrimarySkillType.HERBALISM).amount(100).build();
-        assertEquals(Optional.of("mcmmo-profile-fail"), profileNotLoaded.valid());
+        Transaction profileNotLoaded = new RedeemTransaction(this.executor, List.of(this.target), PrimarySkillType.HERBALISM, 100);
+        assertEquals(Optional.of("mcmmo-profile-fail"), profileNotLoaded.validate(this.target));
     }
 
     @Test
-    void valid_SkillLevelCap_ReturnsFailure() {
+    void validate_SkillLevelCap_ReturnsFailure() {
         when(this.mockMCMMOPlayer.getProfile()).thenReturn(this.mockProfile);
         when(this.mockProfile.isLoaded()).thenReturn(true);
         when(mcMMO.p.getGeneralConfig()).thenReturn(this.mockConfig);
         when(this.mockConfig.getLevelCap(PrimarySkillType.HERBALISM)).thenReturn(99);
-        Transaction profileNotLoaded = Transaction.builder().users(this.executor, this.target).skill(PrimarySkillType.HERBALISM).amount(100).build();
-        assertEquals(Optional.of("mcmmo-skill-cap"), profileNotLoaded.valid());
+        Transaction profileNotLoaded = new RedeemTransaction(this.executor, List.of(this.target), PrimarySkillType.HERBALISM, 100);
+        assertEquals(Optional.of("mcmmo-skill-cap"), profileNotLoaded.validate(this.target));
     }
 }

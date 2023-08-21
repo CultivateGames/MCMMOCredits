@@ -21,32 +21,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.config;
+package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.menu.Action;
-import games.cultivate.mcmmocredits.menu.Item;
-import games.cultivate.mcmmocredits.menu.Menu;
-import games.cultivate.mcmmocredits.menu.RegularMenu;
-import org.bukkit.Material;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-
-import java.util.HashMap;
-import java.util.Map;
-
-@ConfigSerializable
-public class FakeData implements Data {
-    private String prefix = "The message prefix!!";
-    private String fakeMessage = "The actual message!";
-    private boolean leaderboardEnabled = true;
-    private boolean debug = false;
-    private int leaderboardPageSize = 10;
-    private long retryDelay = 60000L;
-    private Menu menu = new RegularMenu(this.items(), "The menu title!", 54, false, true);
-
-    private Map<String, Item> items() {
-        Map<String, Item> map = new HashMap<>();
-        map.put("fill", Item.of(Material.BLACK_STAINED_GLASS_PANE));
-        map.put("navigation", Item.of(Material.COMPASS).action(new Action.Command("credits menu main")));
-        return map;
-    }
+/**
+ * Defines what happens when an item is clicked in a Bukkit Inventory.
+ * CANCEL is the default.
+ */
+public enum ItemAction {
+    COMMAND, REDEEM, CANCEL
 }

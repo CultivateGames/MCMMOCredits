@@ -32,6 +32,7 @@ import games.cultivate.mcmmocredits.user.User;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -42,49 +43,33 @@ import java.util.Optional;
  * @param skill    The skill to add levels to.
  * @param amount   The amount of credits to remove from the user.
  */
-public record RedeemTransaction(CommandExecutor executor, User[] targets, PrimarySkillType skill,
-                                int amount) implements Transaction {
-    private static final String MESSAGE_KEY = "redeem";
-    private static final String SUDO_REDEEM_KEY = "redeem-sudo";
-    private static final String USER_MESSAGE_KEY = "redeem-sudo-user";
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String userMessageKey() {
-        return USER_MESSAGE_KEY;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String messageKey() {
-        return this.isSelfTransaction() ? MESSAGE_KEY : SUDO_REDEEM_KEY;
-    }
-
+public record RedeemTransaction(CommandExecutor executor, List<User> targets, PrimarySkillType skill, int amount) implements Transaction {
     /**
      * {@inheritDoc}
      */
     @Override
     public TransactionResult execute() {
-        PlayerProfile profile = this.getPlayerProfile(this.targets[0]);
-        profile.addLevels(this.skill, this.amount);
-        profile.save(true);
-        User updated = this.targets[0].takeCredits(this.amount).addRedeemed(this.amount);
-        return this.isSelfTransaction() ? TransactionResult.of(this, updated) : TransactionResult.of(this, this.executor, updated);
+        List<User> mapped = this.targets.stream().map(x -> {
+            PlayerProfile profile = this.getPlayerProfile(x);
+            if (profile == null) {
+                return x;
+            }
+            profile.addLevels(this.skill, this.amount);
+            profile.save(true);
+            return new User(x.uuid(), x.username(), x.credits() - this.amount, x.redeemed() + this.amount);
+        }).toList();
+        return new TransactionResult(this, this.executor, mapped);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Optional<String> valid() {
-        if (this.targets[0].credits() < this.amount) {
-            return Optional.of("not-enough-credits");
+    public Optional<String> validate(final User user) {
+        if (user.credits() < this.amount) {
+            return Optional.of(this.type().notEnoughCredits());
         }
-        PlayerProfile profile = this.getPlayerProfile(this.targets[0]);
+        PlayerProfile profile = this.getPlayerProfile(user);
         if (profile == null || !profile.isLoaded()) {
             return Optional.of("mcmmo-profile-fail");
         }
@@ -92,6 +77,14 @@ public record RedeemTransaction(CommandExecutor executor, User[] targets, Primar
             return Optional.of("mcmmo-skill-cap");
         }
         return Optional.empty();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TransactionType type() {
+        return this.targets.size() > 1 ? TransactionType.REDEEMALL : TransactionType.REDEEM;
     }
 
     /**

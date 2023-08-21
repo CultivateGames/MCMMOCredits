@@ -23,40 +23,26 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-import games.cultivate.mcmmocredits.database.Database;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-
-import java.nio.file.Path;
 
 /**
  * Represents properties of a Data Converter.
  *
  * @param type         Type of the Converter.
- * @param oldDatabase  Properties of the old Database.
+ * @param previous  Properties of the old Database.
  * @param failureDelay Delay used when a Mojang request fails.
  * @param requestDelay Delay used between Mojang requests.
  * @param enabled      If conversion is enabled.
  */
 @ConfigSerializable
-public record ConverterProperties(DataLoadingStrategy type, DatabaseProperties oldDatabase, long failureDelay, long requestDelay, boolean enabled) {
+public record ConverterProperties(ConverterType type, DatabaseProperties previous, long failureDelay, long requestDelay, boolean enabled) {
     /**
      * Constructs the object with sane defaults.
      *
      * @return The object.
      */
     public static ConverterProperties defaults() {
-        return new ConverterProperties(DataLoadingStrategy.INTERNAL, DatabaseProperties.defaults(), 60000L, 300L, false);
-    }
-
-    /**
-     * Creates a converter using the provided database and path.
-     *
-     * @param database The current database.
-     * @param path     The provided path.
-     * @return A new Converter.
-     */
-    public Converter create(final Database database, final Path path) {
-        return new Converter(this, database, path);
+        return new ConverterProperties(ConverterType.INTERNAL, DatabaseProperties.defaults(), 60000L, 300L, false);
     }
 }

@@ -23,8 +23,7 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.menu.Menu;
-import games.cultivate.mcmmocredits.util.Util;
+import games.cultivate.mcmmocredits.menu.RedeemMenu;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.ConfigurateException;
@@ -35,13 +34,6 @@ import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.util.NamingSchemes;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.function.Predicate;
-
 /**
  * A Configuration File.
  *
@@ -51,7 +43,6 @@ public final class Config<D extends Data> {
     private final YamlConfigurationLoader loader;
     private final ObjectMapper.Factory factory;
     private ConfigurationNode root;
-    private List<String> paths;
 
     /**
      * Constructs the object.
@@ -61,11 +52,12 @@ public final class Config<D extends Data> {
     public Config(final YamlConfigurationLoader loader) {
         this.loader = loader;
         this.factory = ObjectMapper.factoryBuilder().defaultNamingScheme(NamingSchemes.LOWER_CASE_DASHED).build();
-        this.paths = new ArrayList<>();
     }
 
     /**
-     * {@inheritDoc}
+     * Loads the configuration using the provided type.
+     *
+     * @param type Type of the data.
      */
     public void load(final Class<D> type) {
         try {
@@ -78,19 +70,23 @@ public final class Config<D extends Data> {
     }
 
     /**
-     * {@inheritDoc}
+     * Saves the configuration using the current root node.
      */
     public void save() {
         try {
             this.loader.save(this.root);
-            this.updatePaths();
         } catch (ConfigurateException e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * {@inheritDoc}
+     * Modifies the configuration.
+     *
+     * @param value The value to apply.
+     * @param path  Node path used to locate the value.
+     * @param <T>   Type of the value.
+     * @return If the operation was successful.
      */
     public <T> boolean set(@NotNull final T value, final Object... path) {
         try {
@@ -104,7 +100,13 @@ public final class Config<D extends Data> {
     }
 
     /**
-     * {@inheritDoc}
+     * Gets a value from the configuration at the provided path.
+     *
+     * @param type Class of the value.
+     * @param def  Default value used if value is missing.
+     * @param path Node path where the value is found.
+     * @param <T>  Type of the value.
+     * @return The value.
      */
     public <T> T get(final Class<T> type, final T def, final Object... path) {
         try {
@@ -113,18 +115,6 @@ public final class Config<D extends Data> {
             e.printStackTrace();
         }
         return def;
-    }
-
-    /**
-     * Filters configuration node paths based on the provided Predicate.
-     *
-     * @param filter Predicate to filter list against.
-     * @return A filtered list of configuration node paths.
-     */
-    public List<String> filterNodes(final Predicate<? super String> filter) {
-        List<String> sorted = new ArrayList<>(this.paths);
-        sorted.removeIf(filter);
-        return sorted;
     }
 
     /**
@@ -185,24 +175,7 @@ public final class Config<D extends Data> {
      * @param path Node path where the value is found.
      * @return The value, or the public if the value is null.
      */
-    public @Nullable Menu getMenu(final Object... path) {
-        return this.get(Menu.class, null, path);
-    }
-
-    /**
-     * Generates a list of possible paths from the configuration file.
-     */
-    private void updatePaths() {
-        Queue<ConfigurationNode> queue = new ArrayDeque<>(this.root.childrenMap().values());
-        List<String> sorted = new LinkedList<>();
-        while (!queue.isEmpty()) {
-            ConfigurationNode node = queue.poll();
-            if (node.isMap()) {
-                queue.addAll(node.childrenMap().values());
-            } else {
-                sorted.add(Util.joinString(".", node.path()));
-            }
-        }
-        this.paths = sorted;
+    public @Nullable RedeemMenu getMenu(final Object... path) {
+        return this.get(RedeemMenu.class, null, path);
     }
 }

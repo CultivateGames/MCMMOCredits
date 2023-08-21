@@ -25,23 +25,26 @@ package games.cultivate.mcmmocredits.user;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
-import games.cultivate.mcmmocredits.util.Util;
+import games.cultivate.mcmmocredits.util.MojangUtil;
 import jakarta.inject.Inject;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
 
 /**
  * Handles getting and modifying users.
  */
 public final class UserService {
-    private final Database database;
+    private final AbstractDatabase database;
     private final Cache<UUID, User> uuidCache;
     private final Cache<String, User> stringCache;
 
@@ -51,7 +54,7 @@ public final class UserService {
      * @param database Database, used to interact with the user database.
      */
     @Inject
-    public UserService(final Database database) {
+    public UserService(final AbstractDatabase database) {
         this.database = database;
         this.stringCache = Caffeine.newBuilder().build();
         this.uuidCache = Caffeine.newBuilder().build();
@@ -72,10 +75,8 @@ public final class UserService {
      *
      * @param user The user to add.
      */
-    public void addUser(final User user) {
-        if (this.database.addUser(user)) {
-            this.addToCache(user);
-        }
+    public CompletableFuture<Void> addUser(final User user) {
+        return this.database.addUser(user).thenRun(() -> this.addToCache(user));
     }
 
     /**
@@ -85,14 +86,15 @@ public final class UserService {
      * @param username The username of a user.
      * @return A user if it exists, otherwise an empty optional.
      */
-    public Optional<User> getUser(final String username) {
+    public CompletableFuture<Optional<User>> getUser(final String username) {
         User user = this.stringCache.getIfPresent(username);
         if (user != null) {
-            return Optional.of(user);
+            return CompletableFuture.completedFuture(Optional.of(user));
         }
-        Optional<User> opt = this.database.getUser(username);
-        opt.ifPresent(this::addToCache);
-        return opt;
+        return this.database.getUser(username).thenApply(opt -> {
+            opt.ifPresent(this::addToCache);
+            return opt;
+        });
     }
 
     /**
@@ -102,14 +104,25 @@ public final class UserService {
      * @param uuid The UUID of a user.
      * @return A user if it exists, otherwise an empty optional.
      */
-    public Optional<User> getUser(final UUID uuid) {
+    public CompletableFuture<Optional<User>> getUser(final UUID uuid) {
         User user = this.uuidCache.getIfPresent(uuid);
         if (user != null) {
-            return Optional.of(user);
+            return CompletableFuture.completedFuture(Optional.of(user));
         }
-        Optional<User> opt = this.database.getUser(uuid);
-        opt.ifPresent(this::addToCache);
-        return opt;
+        return this.database.getUser(uuid).thenApply(opt -> {
+            opt.ifPresent(this::addToCache);
+            return opt;
+        });
+    }
+
+    /**
+     * Gets a user via the specified player.
+     *
+     * @param player The player.
+     * @return A user representing the player.
+     */
+    public CompletableFuture<Optional<User>> getUser(final Player player) {
+        return this.getUser(player.getUniqueId());
     }
 
     /**
@@ -119,8 +132,19 @@ public final class UserService {
      * @param offset The starting index of where to start getting users.
      * @return A list of users within the provided bounds.
      */
-    public List<User> rangeOfUsers(final int limit, final int offset) {
+    public CompletableFuture<List<User>> rangeOfUsers(final int limit, final int offset) {
         return this.database.rangeOfUsers(limit, offset);
+    }
+
+    /**
+     * Translates all online players into online users.
+     *
+     * @return List of online users.
+     */
+    public CompletableFuture<List<User>> getOnlineUsers() {
+        List<CompletableFuture<Optional<User>>> futures = Bukkit.getOnlinePlayers().stream().map(this::getUser).toList();
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(v -> futures.stream().map(CompletableFuture::join).filter(Optional::isPresent).map(Optional::get).toList());
     }
 
     /**
@@ -129,8 +153,8 @@ public final class UserService {
      * @param uuid The UUID of a user.
      * @return The credit balance of a user, or 0 if the user does not exist.
      */
-    public int getCredits(final UUID uuid) {
-        return this.getUser(uuid).map(User::credits).orElse(0);
+    public CompletableFuture<Integer> getCredits(final UUID uuid) {
+        return this.getUser(uuid).thenApply(x -> x.map(User::credits).orElse(0));
     }
 
     /**
@@ -140,22 +164,23 @@ public final class UserService {
      * @param uuid     The UUID of a user.
      * @param username The username of a user.
      */
-    public void setUsername(final UUID uuid, final String username) {
-        Optional<User> existingUser = this.getUser(username);
-        if (existingUser.isPresent() && !existingUser.get().uuid().equals(uuid)) {
-            User us = existingUser.get();
-            this.database.setUsername(us.uuid(), Util.getMojangUsername(us.uuid()));
-            Bukkit.getLogger().severe(() -> String.format("""
-                    Duplicate username found!
-                    Old User: UUID = %s, Username = %s
-                    New User: UUID = %s, Username = %s
-                    Updating the older user's username... If you are seeing this message frequently, you likely have a corrupted database!
-                    """, us.uuid(), us.username(), uuid, username));
-        }
-        if (this.database.setUsername(uuid, username)) {
-            User user = this.getUser(uuid).orElseThrow(() -> new IllegalArgumentException("User not found!")).withUsername(username);
-            this.addToCache(user);
-        }
+    public CompletableFuture<Void> setUsername(final UUID uuid, final String username) {
+        return this.getUser(username).thenCompose(u -> {
+                    if (u.isPresent() && !u.get().uuid().equals(uuid)) {
+                        User old = u.get();
+                        Logger.getLogger("Minecraft").severe(String.format("Duplicate username found! Old: %s, %s. New: %s, %s. Updating old user data ...", old.uuid(), old.username(), uuid, username));
+                        return MojangUtil.getNameAsync(old.uuid())
+                                .thenCompose(x -> this.database.setUsername(old.uuid(), x).thenApply(c -> {
+                                    this.addToCache(old.withUsername(x));
+                                    return c;
+                                }));
+                    }
+                    return CompletableFuture.completedFuture(true);
+                })
+                .thenCompose(b -> this.database.setUsername(uuid, username))
+                .thenAccept(z -> {
+                    if (z) this.getUser(uuid).join().ifPresent(x -> this.addToCache(x.withUsername(username)));
+                });
     }
 
     /**
@@ -163,14 +188,16 @@ public final class UserService {
      *
      * @param uuid   The UUID of a user.
      * @param amount Amount of credits to apply to balance.
+     * @return If the transaction was successful.
      */
-    public boolean setCredits(final UUID uuid, final int amount) {
-        if (this.database.setCredits(uuid, amount)) {
-            User user = this.getUser(uuid).orElseThrow(() -> new IllegalArgumentException("User not found!")).setCredits(amount);
-            this.addToCache(user);
-            return true;
-        }
-        return false;
+    public CompletableFuture<Boolean> setCredits(final UUID uuid, final int amount) {
+        return this.database.setCredits(uuid, amount).thenCompose(x -> {
+            if (x) {
+                this.getUser(uuid).join().ifPresent(y -> this.addToCache(y.setCredits(amount)));
+                return CompletableFuture.completedFuture(true);
+            }
+            return CompletableFuture.completedFuture(false);
+        });
     }
 
     /**
@@ -178,29 +205,27 @@ public final class UserService {
      *
      * @param result The transaction result to process.
      */
-    public void processTransaction(final TransactionResult result) {
-        if (result.isTargetUpdated()) {
-            User target = result.target();
-            if (this.database.updateUser(target)) {
-                this.addToCache(target);
-            }
+    public CompletableFuture<Void> processTransaction(final TransactionResult result) {
+        List<User> users = new ArrayList<>(result.targets());
+        if (!result.updatedTargets()) {
+            users.removeAll(result.targets());
         }
-        if (!result.transaction().isSelfTransaction() && result.isExecutorUpdated()) {
-            User exec = (User) result.executor();
-            if (this.database.updateUser(exec)) {
-                this.addToCache(exec);
-            }
+        if (result.updatedExecutor()) {
+            users.add(result.executor().toUser());
         }
+        return this.database.applyTransaction(users).thenAccept(x -> {
+            if (x) users.forEach(this::addToCache);
+        });
     }
 
     /**
-     * Maps a Bukkit CommandSender to a CommandExecutor.
+     * Maps a Bukkit CommandSender to a CommandExecutor, synchronously.
      *
      * @param sender The Bukkit CommandSender.
      * @return A user if one exists for the CommandSender, otherwise Console.
      */
     public CommandExecutor fromSender(final CommandSender sender) {
-        return sender instanceof Player p ? this.getUser(p.getUniqueId()).orElseThrow() : Console.INSTANCE;
+        return sender instanceof Player p ? this.getUser(p.getUniqueId()).join().orElseThrow() : Console.INSTANCE;
     }
 
     /**

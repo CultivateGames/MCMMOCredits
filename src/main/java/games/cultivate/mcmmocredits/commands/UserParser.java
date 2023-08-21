@@ -30,6 +30,7 @@ import cloud.commandframework.captions.CaptionVariable;
 import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.exceptions.parsing.NoInputProvidedException;
 import cloud.commandframework.exceptions.parsing.ParserException;
+import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import org.bukkit.Bukkit;
@@ -37,16 +38,15 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serial;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 
 /**
- * Argument Parser for Users
- *
- * @param <C> CommandExecutor.
+ * Argument Parser for Users.
  */
-public final class UserParser<C> implements ArgumentParser<C, User> {
+public final class UserParser implements ArgumentParser<CommandExecutor, User> {
     private final UserService service;
     private final boolean tabCompletion;
 
@@ -65,13 +65,13 @@ public final class UserParser<C> implements ArgumentParser<C, User> {
      * {@inheritDoc}
      */
     @Override
-    public @NotNull ArgumentParseResult<User> parse(@NotNull final CommandContext<C> commandContext, final Queue<String> inputQueue) {
+    public @NotNull ArgumentParseResult<User> parse(@NotNull final CommandContext<CommandExecutor> commandContext, final Queue<String> inputQueue) {
         String input = inputQueue.peek();
         if (input == null) {
             return ArgumentParseResult.failure(new NoInputProvidedException(UserParser.class, commandContext));
         }
-        //TODO: better optional usage?
-        Optional<User> user = this.service.getUser(input);
+        //No choice but to block (parsing occurs in an async context, should be okay!).
+        Optional<User> user = this.service.getUser(input).join();
         if (user.isPresent()) {
             inputQueue.remove();
             return ArgumentParseResult.success(user.get());
@@ -83,8 +83,24 @@ public final class UserParser<C> implements ArgumentParser<C, User> {
      * {@inheritDoc}
      */
     @Override
-    public @NotNull List<String> suggestions(@NotNull final CommandContext<C> commandContext, @NotNull final String input) {
-        return this.tabCompletion ? Bukkit.getOnlinePlayers().stream().filter(x -> !(commandContext.getSender() instanceof Player p) || x.canSee(p)).map(Player::getName).toList() : List.of();
+    public @NotNull List<String> suggestions(@NotNull final CommandContext<CommandExecutor> commandContext, @NotNull final String input) {
+        //Method is frequently accessed, so we attempt to return fast.
+        if (!this.tabCompletion) {
+            return List.of();
+        }
+        CommandExecutor executor = commandContext.getSender();
+        if (!executor.isPlayer()) {
+            return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
+        }
+        List<String> names = new ArrayList<>();
+        Player sender = executor.player();
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (!sender.canSee(p)) {
+                continue;
+            }
+            names.add(p.getName());
+        }
+        return names;
     }
 
     /**

@@ -24,10 +24,8 @@
 package games.cultivate.mcmmocredits.config;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import games.cultivate.mcmmocredits.menu.Action;
-import games.cultivate.mcmmocredits.menu.Action.Command;
 import games.cultivate.mcmmocredits.menu.Item;
-import games.cultivate.mcmmocredits.menu.RegularMenu;
+import games.cultivate.mcmmocredits.menu.ItemAction;
 import games.cultivate.mcmmocredits.util.Util;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -42,88 +40,36 @@ import java.util.Map;
  */
 @SuppressWarnings({"FieldMayBeFinal, unused"})
 @ConfigSerializable
-public class MenuData implements Data {
-    private RegularMenu main = RegularMenu.of(this.createMainItems(), "<#ff253c><bold>MCMMO Credits", 54, false, false);
-    private RegularMenu config = RegularMenu.of(this.createConfigItems(), "<dark_gray>Edit Your Configuration...", 54, false, false);
-    private RegularMenu redeem = RegularMenu.of(this.createRedeemItems(), "<dark_gray>Redeem Your Credits...", 45, false, false);
-
-    private Map<String, Item> createMainItems() {
-        Map<String, Item> items = new HashMap<>();
-        items.put("config", this.createConfigShortcut());
-        items.put("redeem", this.createRedeemShortcut());
-        items.put("fill", this.createFill());
-        items.put("navigation", this.createCompass(49));
-        return items;
-    }
-
-    private Map<String, Item> createConfigItems() {
-        List<String> lore = List.of("<gray>Click here to edit this config option!");
-        Map<String, Item> items = new HashMap<>();
-        items.put("messages", Item.of(Material.WRITABLE_BOOK, "", lore, -1));
-        items.put("settings", Item.of(Material.REDSTONE, "", lore, -1));
-        items.put("fill", this.createFill());
-        items.put("navigation", this.createCompass(49));
-        return items;
-    }
-
-    private Map<String, Item> createRedeemItems() {
-        Map<String, Item> items = new HashMap<>();
-        items.put("acrobatics", this.createRedeemItem(Material.NETHERITE_BOOTS, PrimarySkillType.ACROBATICS, 10));
-        items.put("alchemy", this.createRedeemItem(Material.BREWING_STAND, PrimarySkillType.ALCHEMY, 11));
-        items.put("archery", this.createRedeemItem(Material.BOW, PrimarySkillType.ARCHERY, 12));
-        items.put("axes", this.createRedeemItem(Material.NETHERITE_AXE, PrimarySkillType.AXES, 13));
-        items.put("excavation", this.createRedeemItem(Material.NETHERITE_SHOVEL, PrimarySkillType.EXCAVATION, 14));
-        items.put("fishing", this.createRedeemItem(Material.FISHING_ROD, PrimarySkillType.FISHING, 15));
-        items.put("herbalism", this.createRedeemItem(Material.SUGAR_CANE, PrimarySkillType.HERBALISM, 16));
-        items.put("mining", this.createRedeemItem(Material.NETHERITE_PICKAXE, PrimarySkillType.MINING, 19));
-        items.put("repair", this.createRedeemItem(Material.ANVIL, PrimarySkillType.REPAIR, 20));
-        items.put("swords", this.createRedeemItem(Material.NETHERITE_SWORD, PrimarySkillType.SWORDS, 21));
-        items.put("taming", this.createRedeemItem(Material.LEAD, PrimarySkillType.TAMING, 23));
-        items.put("unarmed", this.createRedeemItem(Material.CARROT_ON_A_STICK, PrimarySkillType.UNARMED, 24));
-        items.put("woodcutting", this.createRedeemItem(Material.OAK_LOG, PrimarySkillType.WOODCUTTING, 25));
-        items.put("fill", this.createFill());
-        items.put("navigation", this.createCompass(40));
-        return items;
-    }
+public final class MenuData implements Data {
+    private String title = "<dark_gray>Redeem Your Credits...";
+    private int slots = 45;
+    private boolean fill = false;
+    private boolean navigation = false;
+    private Map<String, Item> items = new HashMap<>();
 
     /**
-     * Creates default fill item.
-     *
-     * @return The created item.
+     * Constructs the object. Adds items to the default item map.
      */
-    private Item createFill() {
-        return Item.of(Material.BLACK_STAINED_GLASS_PANE);
-    }
-
-    /**
-     * Creates default navigation item.
-     *
-     * @param slot The slot location of the created item.
-     * @return The created item.
-     */
-    private Item createCompass(final int slot) {
-        String command = "credits menu main";
-        String name = "<red>Previous Menu";
-        List<String> lore = List.of("<gray>Left Click to go back!");
-        return new Item(new ItemStack(Material.DIAMOND), name, lore, slot, new Command(command));
-    }
-
-    private Item createConfigShortcut() {
-        String command = "credits menu config";
-        String name = "<#FF253C>Edit Config";
-        List<String> lore = List.of("<gray>Left Click to edit config!");
-        return new Item(new ItemStack(Material.DIAMOND), name, lore, 11, new Command(command));
-    }
-
-    private Item createRedeemShortcut() {
-        String command = "credits menu redeem";
-        String name = "<green>Redeem MCMMO Credits!";
-        List<String> lore = List.of("<gray>Left Click to redeem Credits!");
-        return new Item(new ItemStack(Material.EMERALD), name, lore, 15, new Command(command));
-    }
-
-    private Item createRedeemItem(final Material material, final PrimarySkillType skill, final int slot) {
+    public MenuData() {
         List<String> lore = List.of("<yellow><sender>, click here to redeem!");
-        return new Item(new ItemStack(material), "<yellow>" + Util.capitalizeWord(skill.name()), lore, slot, Action.redeem(skill));
+        this.createRedeemItem(Material.NETHERITE_BOOTS, PrimarySkillType.ACROBATICS, lore, 10);
+        this.createRedeemItem(Material.BREWING_STAND, PrimarySkillType.ALCHEMY, lore, 11);
+        this.createRedeemItem(Material.BOW, PrimarySkillType.ARCHERY, lore, 12);
+        this.createRedeemItem(Material.NETHERITE_AXE, PrimarySkillType.AXES, lore, 13);
+        this.createRedeemItem(Material.NETHERITE_SHOVEL, PrimarySkillType.EXCAVATION, lore, 14);
+        this.createRedeemItem(Material.FISHING_ROD, PrimarySkillType.FISHING, lore, 15);
+        this.createRedeemItem(Material.SUGAR_CANE, PrimarySkillType.HERBALISM, lore, 16);
+        this.createRedeemItem(Material.NETHERITE_PICKAXE, PrimarySkillType.MINING, lore, 19);
+        this.createRedeemItem(Material.ANVIL, PrimarySkillType.REPAIR, lore, 20);
+        this.createRedeemItem(Material.NETHERITE_SWORD, PrimarySkillType.SWORDS, lore, 21);
+        this.createRedeemItem(Material.LEAD, PrimarySkillType.TAMING, lore, 23);
+        this.createRedeemItem(Material.CARROT_ON_A_STICK, PrimarySkillType.UNARMED, lore, 24);
+        this.createRedeemItem(Material.OAK_LOG, PrimarySkillType.WOODCUTTING, lore, 25);
+        this.items.put("fill", Item.of(Material.BLACK_STAINED_GLASS_PANE));
+        this.items.put("navigation", new Item(new ItemStack(Material.COMPASS), "<red>Previous Menu", List.of("<gray>Left Click to go back!"), 40, ItemAction.COMMAND));
+    }
+
+    private void createRedeemItem(final Material material, final PrimarySkillType skill, final List<String> lore, final int slot) {
+        this.items.put(skill.name().toLowerCase(), new Item(new ItemStack(material), "<yellow>" + Util.capitalizeWord(skill.name()), lore, slot, ItemAction.REDEEM));
     }
 }

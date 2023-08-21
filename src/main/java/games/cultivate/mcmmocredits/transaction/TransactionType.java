@@ -23,9 +23,86 @@
 //
 package games.cultivate.mcmmocredits.transaction;
 
+import cloud.commandframework.context.CommandContext;
+import games.cultivate.mcmmocredits.user.CommandExecutor;
+
+import java.util.function.Function;
+
 /**
  * Represents different types of transactions.
  */
 public enum TransactionType {
-    ADD, SET, TAKE, REDEEM, PAY
+    ADD("credits-add", "credits-add-user"),
+    SET("credits-set", "credits-set-user"),
+    TAKE("credits-take", "credits-take-user"),
+    PAY("credits-pay", "credits-pay-user"),
+    REDEEM(t -> t.isSelfTransaction() ? "credits-redeem" : "credits-redeem-sudo", "credits-redeem-user"),
+    ADDALL("credits-add-all", "credits-add-user"),
+    TAKEALL("credits-take-all", "credits-take-user"),
+    SETALL("credits-set-all", "credits-set-user"),
+    REDEEMALL("credits-redeem-all", "credits-redeem-user");
+
+    private final Function<Transaction, String> function;
+    private final String key;
+
+    /**
+     * Constructs the object when the transaction is required to derive message key.
+     *
+     * @param function The function used to derive a message key.
+     * @param key      The user message key.
+     */
+    TransactionType(final Function<Transaction, String> function, final String key) {
+        this.function = function;
+        this.key = key;
+    }
+
+    /**
+     * Constructs the object when the transaction is not required to derive message key.
+     *
+     * @param messageKey The message key.
+     * @param key        The user message key.
+     */
+    TransactionType(final String messageKey, final String key) {
+        this.function = t -> messageKey;
+        this.key = key;
+    }
+
+    /**
+     * Derives the transaction type from command context.
+     *
+     * @param args The command context.
+     * @param i    The location of the transaction type.
+     * @return The type.
+     */
+    public static TransactionType fromArgs(final CommandContext<CommandExecutor> args, final int i) {
+        return TransactionType.valueOf(args.getRawInput().get(i).toUpperCase());
+    }
+
+    /**
+     * Gets the config key for feedback sent to the executor during the transaction.
+     *
+     * @param transaction The transaction.
+     * @return The config key.
+     */
+    public String messageKey(final Transaction transaction) {
+        return this.function.apply(transaction);
+    }
+
+    /**
+     * Gets the config key for feedback sent to the user during this transaction.
+     *
+     * @return The config key.
+     */
+    public String userMessageKey() {
+        return this.key;
+    }
+
+    /**
+     * Determines message key when transaction fails due to not having enough credits.
+     *
+     * @return The message key.
+     */
+    public String notEnoughCredits() {
+        return this.name().contains("ALL") ? "not-enough-credits-other" : "not-enough-credits";
+    }
 }

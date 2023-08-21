@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits;
 
-import games.cultivate.mcmmocredits.database.Database;
+import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.database.DatabaseUtil;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
@@ -42,7 +42,7 @@ class MCMMOCreditsAPITest {
     private final int credits = 100;
     private MCMMOCreditsAPI api;
     private User user;
-    private final Database database = DatabaseUtil.create();
+    private final AbstractDatabase database = DatabaseUtil.create("api");
     private UserService service;
 
     @BeforeEach
@@ -59,7 +59,7 @@ class MCMMOCreditsAPITest {
 
     @Test
     void getCredits_ValidUser_ReturnsCredits() {
-        this.service.addUser(this.user);
+        this.service.addUser(this.user).join();
         assertEquals(this.credits, this.api.getCredits(this.uuid));
     }
 
@@ -70,7 +70,7 @@ class MCMMOCreditsAPITest {
 
     @Test
     void addCredits_ValidUser_ReturnsUpdatedCredits() {
-        this.service.addUser(this.user);
+        this.service.addUser(this.user).join();
         assertTrue(this.api.addCredits(this.uuid, 200));
         assertEquals(this.credits + 200, this.api.getCredits(this.uuid));
     }
@@ -84,7 +84,7 @@ class MCMMOCreditsAPITest {
 
     @Test
     void setCredits_ValidUser_ReturnsUpdatedCredits() {
-        this.service.addUser(this.user);
+        this.service.addUser(this.user).join();
         assertTrue(this.api.setCredits(this.uuid, 250));
         assertEquals(250, this.api.getCredits(this.uuid));
     }
@@ -98,7 +98,7 @@ class MCMMOCreditsAPITest {
 
     @Test
     void takeCredits_ValidUser_ReturnsUpdatedCredits() {
-        this.service.addUser(this.user);
+        this.service.addUser(this.user).join();
         assertTrue(this.api.takeCredits(this.uuid, 20));
         assertEquals(this.credits - 20, this.api.getCredits(this.uuid));
     }

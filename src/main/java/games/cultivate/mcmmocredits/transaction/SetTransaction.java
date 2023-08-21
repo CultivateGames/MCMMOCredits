@@ -26,6 +26,7 @@ package games.cultivate.mcmmocredits.transaction;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -35,40 +36,30 @@ import java.util.Optional;
  * @param targets  The targets of the transaction.
  * @param amount   The amount of credits to set on targets.
  */
-public record SetTransaction(CommandExecutor executor, User[] targets, int amount) implements Transaction {
-    private static final String MESSAGE_KEY = "credits-set";
-    private static final String USER_MESSAGE_KEY = "credits-set-user";
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String userMessageKey() {
-        return USER_MESSAGE_KEY;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String messageKey() {
-        return MESSAGE_KEY;
-    }
-
+public record SetTransaction(CommandExecutor executor, List<User> targets, int amount) implements Transaction {
     /**
      * {@inheritDoc}
      */
     @Override
     public TransactionResult execute() {
-        User updated = this.targets[0].setCredits(this.amount);
-        return this.isSelfTransaction() ? TransactionResult.of(this, updated) : TransactionResult.of(this, this.executor, updated);
+        List<User> mapped = this.targets.stream().map(x -> x.setCredits(this.amount)).toList();
+        return new TransactionResult(this, this.executor, mapped);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Optional<String> valid() {
-        return this.amount >= 0 ? Optional.empty() : Optional.of("not-enough-credits");
+    public Optional<String> validate(final User user) {
+        return this.amount >= 0 ? Optional.empty() : Optional.of(this.type().notEnoughCredits());
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TransactionType type() {
+        return this.targets.size() > 1 ? TransactionType.SETALL : TransactionType.SET;
+    }
+
 }

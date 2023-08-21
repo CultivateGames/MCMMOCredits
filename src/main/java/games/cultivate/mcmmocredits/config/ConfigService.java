@@ -23,10 +23,9 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.menu.Action;
+import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import games.cultivate.mcmmocredits.menu.Item;
-import games.cultivate.mcmmocredits.menu.Menu;
-import games.cultivate.mcmmocredits.serializers.ActionSerializer;
+import games.cultivate.mcmmocredits.menu.RedeemMenu;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
 import games.cultivate.mcmmocredits.util.Dir;
@@ -60,8 +59,7 @@ public final class ConfigService {
         this.builder = YamlConfigurationLoader.builder()
                 .defaultOptions(opts -> opts.serializers(build -> build
                         .register(Item.class, ItemSerializer.INSTANCE)
-                        .register(Menu.class, MenuSerializer.INSTANCE)
-                        .register(Action.class, ActionSerializer.INSTANCE)))
+                        .register(RedeemMenu.class, MenuSerializer.INSTANCE)))
                 .headerMode(HeaderMode.PRESET)
                 .indent(2)
                 .nodeStyle(NodeStyle.BLOCK);
@@ -88,20 +86,6 @@ public final class ConfigService {
     }
 
     /**
-     * Loads a configuration using the provided type and builder.
-     *
-     * @param type        The data type to load data.
-     * @param yamlBuilder The builder used to load the config.
-     * @param <T>         The data type.
-     * @return The configuration.
-     */
-    public <T extends Data> Config<T> loadConfig(final Class<T> type, final YamlConfigurationLoader.Builder yamlBuilder) {
-        Config<T> conf = new Config<>(yamlBuilder.build());
-        conf.load(type);
-        return conf;
-    }
-
-    /**
      * Loads a configuration using the provided type and file name. Creates the file for writing.
      *
      * @param type The data type to load data.
@@ -121,7 +105,15 @@ public final class ConfigService {
      */
     public void reloadConfigs() {
         this.config = this.loadConfig(MainData.class, "config.yml");
-        this.menuConfig = this.loadConfig(MenuData.class, "menus.yml");
+        this.menuConfig = this.loadConfig(MenuData.class, "menu.yml");
+    }
+
+    /**
+     * Saves the configurations.
+     */
+    public void saveConfigs() {
+        this.config.save();
+        this.menuConfig.save();
     }
 
     /**
@@ -143,8 +135,28 @@ public final class ConfigService {
      */
     public Config<MenuData> menuConfig() {
         if (this.menuConfig == null) {
-            this.menuConfig = this.loadConfig(MenuData.class, "menus.yml");
+            this.menuConfig = this.loadConfig(MenuData.class, "menu.yml");
         }
         return this.menuConfig;
+    }
+
+    /**
+     * Convenience method to get messages from main configuration.
+     *
+     * @param path Path of the message.
+     * @return The message.
+     */
+    public String getMessage(final Object... path) {
+        return this.mainConfig().getMessage(path);
+    }
+
+    /**
+     * Convenience method to get DatabaseProperties.
+     *
+     * @param path The path.
+     * @return The properties.
+     */
+    public DatabaseProperties getProperties(final Object... path) {
+        return this.mainConfig().get(DatabaseProperties.class, DatabaseProperties.defaults(), path);
     }
 }

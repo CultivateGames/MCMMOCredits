@@ -29,13 +29,9 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.incendo.interfaces.core.transform.Transform;
-import org.incendo.interfaces.paper.PlayerViewer;
-import org.incendo.interfaces.paper.element.ItemStackElement;
-import org.incendo.interfaces.paper.pane.ChestPane;
-import org.incendo.interfaces.paper.transform.PaperTransform;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -48,33 +44,7 @@ import java.util.List;
  * @param action Action to execute when the item is clicked in a menu.
  */
 @ConfigSerializable
-public record Item(ItemStack stack, String name, List<String> lore, int slot, Action action) {
-    /**
-     * Constructs the object.
-     *
-     * @param material The material of the ItemStack. Updated with refreshing name/lore.
-     * @param name     Raw name of the item. Always parsed.
-     * @param lore     Raw lore of the item. Always parsed.
-     * @param slot     Location of item in a Menu.
-     * @return The item.
-     */
-    public static Item of(final Material material, final String name, final List<String> lore, final int slot) {
-        return new Item(new ItemStack(material), name, lore, slot, x -> {});
-    }
-
-    /**
-     * Constructs the object.
-     *
-     * @param stack The representative ItemStack. Updated with refreshing name/lore.
-     * @param name  Raw name of the item. Always parsed.
-     * @param lore  Raw lore of the item. Always parsed.
-     * @param slot  Location of item in a Menu.
-     * @return The item.
-     */
-    public static Item of(final ItemStack stack, final String name, final List<String> lore, final int slot) {
-        return new Item(stack, name, lore, slot, x -> {});
-    }
-
+public record Item(ItemStack stack, String name, List<String> lore, int slot, ItemAction action) {
     /**
      * Constructs the object with sane defaults.
      *
@@ -82,31 +52,24 @@ public record Item(ItemStack stack, String name, List<String> lore, int slot, Ac
      * @return The item.
      */
     public static Item of(final Material material) {
-        return new Item(new ItemStack(material), "", List.of(), -1, x -> {});
+        return new Item(new ItemStack(material), "", new ArrayList<>(), 0, ItemAction.CANCEL);
     }
 
     /**
-     * Returns a menu transformation for the item.
+     * Returns a copy of the item with a new slot.
      *
-     * @param user The user to parse against.
-     * @return The transformation.
-     */
-    public Transform<ChestPane, PlayerViewer> transform(final User user) {
-        return PaperTransform.chestItem(() -> ItemStackElement.of(this.parseUser(user), this.action), this.slot % 9, this.slot / 9);
-    }
-
-    /**
-     * Returns a copy of the item with a new action.
-     *
-     * @param action The action.
+     * @param slot The slot.
      * @return The new item.
      */
-    public Item action(final Action action) {
-        return new Item(this.stack, this.name, this.lore, this.slot, action);
+    public Item slot(final int slot) {
+        return new Item(this.stack, this.name, this.lore, slot, this.action);
     }
 
     /**
-     * {@inheritDoc}
+     * Updates the name and lore based on the User.
+     *
+     * @param user The user to parse against.
+     * @return A Bukkit ItemStack with updated properties.
      */
     public ItemStack parseUser(final User user) {
         ItemMeta meta = this.stack.getItemMeta();

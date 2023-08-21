@@ -23,58 +23,66 @@
 //
 package games.cultivate.mcmmocredits.transaction;
 
-import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
  * Represents a transaction in which an amount is added to a user's balance and taken from another user's balance.
  *
  * @param executor The executor of the transaction.
- * @param targets  The targets of the transaction.
+ * @param targets  The target of the transaction.
  * @param amount   The amount of credits to add to targets.
  */
-public record PayTransaction(CommandExecutor executor, User[] targets, int amount) implements Transaction {
-    private static final String MESSAGE_KEY = "credits-pay";
-    private static final String USER_MESSAGE_KEY = "credits-pay-user";
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String userMessageKey() {
-        return USER_MESSAGE_KEY;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String messageKey() {
-        return MESSAGE_KEY;
-    }
+public record PayTransaction(User executor, List<User> targets, int amount) implements Transaction {
 
     /**
      * {@inheritDoc}
      */
     @Override
     public TransactionResult execute() {
-        User exec = (User) this.executor;
-        return TransactionResult.of(this, exec.takeCredits(this.amount), this.targets[0].addCredits(this.amount));
+        List<User> mapped = List.of(this.targets.get(0).addCredits(this.amount));
+        return new TransactionResult(this, this.executor.takeCredits(this.amount), mapped);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Optional<String> valid() {
-        if (this.executor.credits() - this.amount < 0 || this.targets[0].credits() + this.amount < 0) {
-            return Optional.of("not-enough-credits");
-        }
+    public Optional<String> validate(final User user) {
         if (this.isSelfTransaction()) {
             return Optional.of("credits-pay-same-user");
         }
+        if (this.executor.credits() - this.amount < 0 || user.credits() + this.amount < 0 || this.amount < 1) {
+            return Optional.of(this.type().notEnoughCredits());
+        }
         return Optional.empty();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TransactionType type() {
+        return TransactionType.PAY;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isSelfTransaction() {
+        return this.executor.equals(this.targets.get(0));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<User, Optional<String>> validateTransaction() {
+        User user = this.targets.get(0);
+        return Map.of(user, this.validate(user));
     }
 }

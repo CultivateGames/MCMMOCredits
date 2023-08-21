@@ -26,52 +26,42 @@ package games.cultivate.mcmmocredits.transaction;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import games.cultivate.mcmmocredits.user.User;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+
 /**
  * Represents the result of the transaction.
  *
  * @param transaction The transaction.
  * @param executor    The updated executor of the transaction.
- * @param target      The updated user for the transaction.
+ * @param targets     The updated users for the transaction.
  */
-public record TransactionResult(Transaction transaction, CommandExecutor executor, User target) {
-    /**
-     * Constructs a TransactionResult.
-     *
-     * @param transaction The transaction.
-     * @param executor    The updated executor of the transaction.
-     * @param target      The updated user for the transaction.
-     * @return The result of the provided transaction.
-     */
-    public static TransactionResult of(final Transaction transaction, final CommandExecutor executor, final User target) {
-        return new TransactionResult(transaction, executor, target);
-    }
-
-    /**
-     * Constructs a TransactionResult for a transaction which only impacts the target.
-     *
-     * @param transaction The transaction.
-     * @param target      The updated user for the transaction.
-     * @return The result of the provided transaction.
-     */
-    public static TransactionResult of(final Transaction transaction, final User target) {
-        return new TransactionResult(transaction, target, target);
-    }
-
+public record TransactionResult(Transaction transaction, CommandExecutor executor, List<User> targets) {
     /**
      * Returns if the executor was updated by the transaction.
      *
      * @return if the executor was updated by the transaction.
      */
-    public boolean isExecutorUpdated() {
+    public boolean updatedExecutor() {
         return this.transaction.executor() != this.executor;
     }
 
     /**
-     * Returns if the target was updated by the transaction.
+     * Returns if the targets are updated by the transaction.
      *
-     * @return if the target was updated by the transaction.
+     * @return if the targets are updated by the transaction.
      */
-    public boolean isTargetUpdated() {
-        return this.transaction().targets()[0] != this.target;
+    public boolean updatedTargets() {
+        return !new HashSet<>(this.transaction.targets()).containsAll(this.targets);
+    }
+
+    /**
+     * Returns the executor if they are in the target list.
+     *
+     * @return User if the executor is in the target list, otherwise empty.
+     */
+    public Optional<User> targetExecutor() {
+        return this.targets.stream().filter(x -> x.username().equals(this.executor.username())).findAny();
     }
 }

@@ -27,11 +27,11 @@ import games.cultivate.mcmmocredits.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class PayTransactionTest {
     private User target;
@@ -45,30 +45,34 @@ class PayTransactionTest {
 
     @Test
     void execute_ValidUsers_TransactionApplied() {
-        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(600).type(TransactionType.PAY).build();
+        Transaction pay = new PayTransaction(this.executor, List.of(this.target), 600);
         TransactionResult result = pay.execute();
         assertEquals(900, result.executor().credits());
-        assertEquals(1600, result.target().credits());
+        assertEquals(1600, result.targets().get(0).credits());
     }
 
     @Test
-    void of_ValidProperties_ValidTransaction() {
-        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(600).type(TransactionType.PAY).build();
-        assertEquals(this.executor, pay.executor());
-        assertEquals(this.target, pay.targets()[0]);
-        assertEquals(600, pay.amount());
-        assertEquals(Optional.empty(), pay.valid());
+    void validate_ValidTransaction_ReturnsNoFailure() {
+        Transaction transaction = new PayTransaction(this.executor, List.of(this.target), 100);
+        assertEquals(Optional.empty(), transaction.validate(this.target));
     }
 
     @Test
-    void executable_InvalidTransaction_ReturnsFailure() {
-        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(10000).type(TransactionType.PAY).build();
-        assertEquals(Optional.of("not-enough-credits"), pay.valid());
+    void validate_InvalidTransaction_ReturnsFailure() {
+        Transaction sub = new PayTransaction(this.executor, List.of(this.target), 1501);
+        assertEquals(Optional.of("not-enough-credits"), sub.validate(this.target));
     }
 
     @Test
-    void isSelfTransaction_regularTransactionReturnsFalse() {
-        Transaction pay = Transaction.builder().users(this.executor, this.target).amount(10000).type(TransactionType.PAY).build();
-        assertFalse(pay.isSelfTransaction());
+    void validate_SelfTransaction_ReturnsFailure() {
+        Transaction sub = new PayTransaction(this.target, List.of(this.target), 1501);
+        assertEquals(Optional.of("credits-pay-same-user"), sub.validate(this.target));
+    }
+
+    @Test
+    void validateTransaction_OverriddenMethod_DetectsInvalidUsers() {
+        Transaction invalid = new PayTransaction(this.executor, List.of(this.target), 1501);
+        var map = invalid.validateTransaction();
+        assertEquals(Optional.of("not-enough-credits"), map.get(this.target));
     }
 }
