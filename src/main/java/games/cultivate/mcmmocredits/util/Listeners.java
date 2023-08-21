@@ -94,17 +94,18 @@ public class Listeners implements Listener {
         var profile = e.getPlayerProfile();
         UUID uuid = profile.getId();
         String username = profile.getName();
+        //joining solves a race condition in which new user are not available during command registration
+        //when using a "slow" filesystem or MYSQL.
         this.service.getUser(uuid).thenAccept(u -> {
             if (u.isPresent()) {
                 this.service.setUsername(uuid, username);
                 return;
             }
-            this.service.addUser(new User(uuid, username, 0, 0)).thenRun(() -> {
-                if (this.configs.mainConfig().getBoolean("settings", "add-user-message")) {
-                    Console.INSTANCE.sendText(this.configs.getMessage("add-user"), r -> r.addTag("username", username));
-                }
-            });
-        });
+            this.service.addUser(new User(uuid, username, 0, 0)).join();
+            if (this.configs.mainConfig().getBoolean("settings", "add-user-message")) {
+                Console.INSTANCE.sendText(this.configs.getMessage("add-user"), r -> r.addTag("target", username));
+            }
+        }).join();
     }
 
     /**

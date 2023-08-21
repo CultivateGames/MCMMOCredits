@@ -134,7 +134,7 @@ public class MCMMOCreditsAPI {
      * @return True if the transaction was successful, otherwise false.
      */
     public CompletableFuture<Boolean> addCreditsAsync(final UUID uuid, final int amount) {
-        return this.service.getCredits(uuid).thenCompose(c -> this.setCreditsAsync(uuid, c + amount));
+        return this.getCreditsAsync(uuid).thenCompose(c -> this.setCreditsAsync(uuid, c + amount));
     }
 
     /**
@@ -156,7 +156,7 @@ public class MCMMOCreditsAPI {
      * @return True if the transaction was successful, otherwise false.
      */
     public CompletableFuture<Boolean> takeCreditsAsync(final UUID uuid, final int amount) {
-        return this.service.getCredits(uuid).thenCompose(c -> this.setCreditsAsync(uuid, c - amount));
+        return this.getCreditsAsync(uuid).thenCompose(c -> this.setCreditsAsync(uuid, c - amount));
     }
 
     /**
