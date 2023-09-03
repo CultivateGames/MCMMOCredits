@@ -30,6 +30,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.function.UnaryOperator;
@@ -120,7 +121,7 @@ public final class Text {
      * @return The converted Component.
      */
     public Component toComponent() {
-        if (this.audience instanceof Player player) {
+        if (this.audience instanceof Player player && Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             this.content = PlaceholderAPI.setPlaceholders(player, this.content);
         }
         return NO_ITALICS.append(MiniMessage.miniMessage().deserialize(this.content, this.resolver.toTagResolver()));

@@ -211,16 +211,16 @@ public final class Commands {
      * @param executor CommandExecutor. Can be Console.
      * @param page     Page number of the leaderboard.
      */
-    @CommandMethod("top <page>")
+    @CommandMethod("top [page]")
     @CommandPermission("mcmmocredits.leaderboard")
     @CommandDescription("Shows the specified page of the leaderboard.")
-    public void top(final CommandExecutor executor, final @Argument(defaultValue = "1") @Range(min = "1") int page) {
+    public void top(final CommandExecutor executor, @Argument @Range(min = "1") Integer page) {
         if (!this.configs.mainConfig().getBoolean("settings", "leaderboard-enabled")) {
             executor.sendText(this.configs.getMessage("invalid-leaderboard"));
             return;
         }
         int limit = this.configs.mainConfig().getInteger("settings", "leaderboard-page-size");
-        int offset = Math.max(0, (page - 1) * limit);
+        int offset = Math.max(0, (page == null  ? 0 : page - 1) * limit);
         this.service.rangeOfUsers(limit, offset).thenAccept(users -> {
             if (users.isEmpty()) {
                 executor.sendText(this.configs.getMessage("invalid-leaderboard"));

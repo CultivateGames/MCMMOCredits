@@ -39,7 +39,7 @@ dependencies {
     compileOnly("me.clip:placeholderapi:2.11.3") {
         exclude(group = "net.kyori")
     }
-    compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.222") {
+    compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.223") {
         exclude("com.sk89q.worldguard")
         exclude("com.sk89q.worldedit")
     }
@@ -113,6 +113,7 @@ bukkit {
     authors = listOf("CultivateGames")
     website = "https://cultivate.games/"
     softDepend = listOf("mcMMO", "PlaceholderAPI")
+    foliaSupported = true
 }
 
 license {
