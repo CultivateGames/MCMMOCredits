@@ -220,7 +220,7 @@ public final class Commands {
             return;
         }
         int limit = this.configs.mainConfig().getInteger("settings", "leaderboard-page-size");
-        int offset = Math.max(0, (page == null  ? 0 : page - 1) * limit);
+        int offset = Math.max(0, (page == null ? 0 : page - 1) * limit);
         this.service.rangeOfUsers(limit, offset).thenAccept(users -> {
             if (users.isEmpty()) {
                 executor.sendText(this.configs.getMessage("invalid-leaderboard"));

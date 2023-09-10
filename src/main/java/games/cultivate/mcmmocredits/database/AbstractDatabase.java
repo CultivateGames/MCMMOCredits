@@ -143,7 +143,7 @@ public abstract class AbstractDatabase {
      * @return A list of users within the provided bounds.
      */
     public CompletableFuture<List<User>> rangeOfUsers(final int limit, final int offset) {
-        return this.executor.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits ORDER BY credits DESC LIMIT :limit OFFSET :offset;").bind("limit", limit).bind("offset", offset).mapTo(User.class).list()).toCompletableFuture();
+        return this.executor.withHandle(handle -> handle.createQuery("SELECT * FROM MCMMOCredits INNER JOIN (SELECT id FROM MCMMOCredits ORDER BY credits DESC LIMIT :limit OFFSET :offset) AS tmp USING(id) ORDER BY credits DESC;").bind("limit", limit).bind("offset", offset).mapTo(User.class).list()).toCompletableFuture();
     }
 
     /**
