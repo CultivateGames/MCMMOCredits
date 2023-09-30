@@ -74,6 +74,7 @@ public final class UserService {
      * Adds a user with the specified UUID and username to the DAO and cache.
      *
      * @param user The user to add.
+     * @return CompletableFuture holding status of the task.
      */
     public CompletableFuture<Void> addUser(final User user) {
         return this.database.addUser(user).thenRun(() -> this.addToCache(user));
@@ -163,6 +164,7 @@ public final class UserService {
      *
      * @param uuid     The UUID of a user.
      * @param username The username of a user.
+     * @return CompletableFuture holding status of the task.
      */
     public CompletableFuture<Void> setUsername(final UUID uuid, final String username) {
         return this.getUser(username).thenCompose(u -> {
@@ -204,6 +206,7 @@ public final class UserService {
      * Processes a TransactionResult and applies any changes to DAO and cache.
      *
      * @param result The transaction result to process.
+     * @return CompletableFuture holding status of the task.
      */
     public CompletableFuture<Void> processTransaction(final TransactionResult result) {
         List<User> users = new ArrayList<>(result.targets());

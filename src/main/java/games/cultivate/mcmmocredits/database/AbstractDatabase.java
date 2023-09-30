@@ -104,6 +104,7 @@ public abstract class AbstractDatabase {
      * Adds a collection of users to the database.
      *
      * @param users The users to add.
+     * @return CompletableFuture holding status of the task.
      */
     public CompletableFuture<Void> addUsers(final Collection<User> users) {
         return this.executor.useHandle(handle -> {
