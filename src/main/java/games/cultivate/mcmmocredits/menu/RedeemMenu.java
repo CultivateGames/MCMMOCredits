@@ -26,6 +26,7 @@ package games.cultivate.mcmmocredits.menu;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.text.Text;
 import games.cultivate.mcmmocredits.user.User;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -33,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Represents a Bukkit Inventory with populated item slots.
@@ -44,7 +46,7 @@ public final class RedeemMenu implements InventoryHolder {
     private final boolean fill;
     private final boolean navigation;
     private Inventory inventory;
-    private int taskID = -1;
+    private ScheduledTask task;
 
     /**
      * Constructs the object.
@@ -62,6 +64,7 @@ public final class RedeemMenu implements InventoryHolder {
         this.fill = fill;
         this.navigation = navigation;
         this.inventory = null;
+        this.task = null;
     }
 
     /**
@@ -73,17 +76,18 @@ public final class RedeemMenu implements InventoryHolder {
     public void openInventory(final MCMMOCredits plugin, final User user) {
         this.inventory = Bukkit.getServer().createInventory(this, this.slots, Text.forOneUser(user, this.title).toComponent());
         this.setItems(user);
-        Bukkit.getScheduler().runTask(plugin, () -> user.player().openInventory(this.inventory));
-        this.taskID = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> this.setItems(user), 1L, 20L).getTaskId();
+        Bukkit.getGlobalRegionScheduler().run(plugin, x -> user.player().openInventory(this.inventory));
+        this.task = Bukkit.getAsyncScheduler().runAtFixedRate(plugin, x -> this.setItems(user), 50, 1000, TimeUnit.MILLISECONDS);
     }
 
     /**
      * Cancels the task which redraws items within the inventory.
      */
     public void cancelRefresh() {
-        if (this.taskID != -1) {
-            Bukkit.getScheduler().cancelTask(this.taskID);
+        if (this.task != null) {
+            this.task.cancel();
         }
+        this.task = null;
     }
 
     /**

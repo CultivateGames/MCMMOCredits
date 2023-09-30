@@ -1,12 +1,12 @@
 group = "games.cultivate"
-version = "0.4.4"
+version = "0.4.6"
 description = "MCMMOCredits"
 
 plugins {
     id("java-library")
     id("maven-publish")
     id("signing")
-    id("xyz.jpenilla.run-paper") version "2.1.0"
+    id("xyz.jpenilla.run-paper") version "2.2.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("net.minecrell.plugin-yml.bukkit") version "0.6.0"
     id("org.cadixdev.licenser") version "0.6.1"
@@ -21,25 +21,23 @@ repositories {
 
 dependencies {
     implementation("org.bstats:bstats-bukkit:3.0.2")
-    implementation("cloud.commandframework:cloud-annotations:1.8.3")
-    implementation("cloud.commandframework:cloud-paper:1.8.3")
+    implementation("cloud.commandframework:cloud-annotations:1.8.4")
+    implementation("cloud.commandframework:cloud-paper:1.8.4")
     implementation("org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT")
     implementation("com.h2database:h2:2.2.220")
     implementation("com.google.inject:guice:7.0.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("com.github.ben-manes.caffeine:caffeine:3.1.7")
-    implementation("org.jdbi:jdbi3-core:3.41.0")
-    implementation("org.jdbi:jdbi3-sqlite:3.41.0")
-    testImplementation("org.jdbi:jdbi3-testing:3.41.0")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+    implementation("org.jdbi:jdbi3-core:3.41.2")
+    implementation("org.jdbi:jdbi3-sqlite:3.41.2")
+    testImplementation("org.jdbi:jdbi3-testing:3.41.2")
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.mockito:mockito-core:5.4.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.4.0")
-    compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
-    compileOnly("me.clip:placeholderapi:2.11.3") {
-        exclude(group = "net.kyori")
-    }
-    compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.222") {
+    testImplementation("org.mockito:mockito-core:5.5.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.5.0")
+    compileOnly("io.papermc.paper:paper-api:1.20.2-R0.1-SNAPSHOT")
+    compileOnly("me.clip:placeholderapi:2.11.4")
+    compileOnly("com.gmail.nossr50.mcMMO:mcMMO:2.1.223") {
         exclude("com.sk89q.worldguard")
         exclude("com.sk89q.worldedit")
     }
@@ -113,6 +111,7 @@ bukkit {
     authors = listOf("CultivateGames")
     website = "https://cultivate.games/"
     softDepend = listOf("mcMMO", "PlaceholderAPI")
+    foliaSupported = true
 }
 
 license {

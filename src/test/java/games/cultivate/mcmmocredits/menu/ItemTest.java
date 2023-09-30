@@ -48,7 +48,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-//TODO: expand item tests
 @ExtendWith(MockitoExtension.class)
 class ItemTest {
     @Mock

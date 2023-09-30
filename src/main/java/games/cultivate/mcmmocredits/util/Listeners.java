@@ -244,7 +244,7 @@ public class Listeners implements Listener {
     private void doCommand(final InventoryClickEvent event, final String key) {
         event.getClickedInventory().close();
         String command = this.configs.menuConfig().getString("items", key, "command");
-        Bukkit.getScheduler().runTaskLater(this.plugin, () -> Bukkit.dispatchCommand(event.getWhoClicked(), command), 1L);
+        Bukkit.dispatchCommand(event.getWhoClicked(), command);
     }
 
     /**
@@ -259,7 +259,7 @@ public class Listeners implements Listener {
             User user = opt.orElseThrow();
             PrimarySkillType skill = PrimarySkillType.valueOf(key.toUpperCase());
             user.sendText(this.configs.getMessage("credits-redeem-prompt"), r -> r.addSkill(skill));
-            this.queue.act(user.uuid(), i -> Bukkit.getScheduler().runTaskLater(this.plugin, () -> {
+            this.queue.act(user.uuid(), i -> Bukkit.getGlobalRegionScheduler().runDelayed(this.plugin, t -> {
                 if (i != null) {
                     Transaction transaction = Transaction.builder(user, TransactionType.REDEEM, Integer.parseInt(i)).skill(skill).build();
                     Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(transaction, true, false));
