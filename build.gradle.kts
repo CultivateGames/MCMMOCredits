@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.4.6"
+version = "0.4.7-SNAPSHOT"
 description = "MCMMOCredits"
 
 plugins {
@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.shadow)
     alias(libs.plugins.pluginYml)
     alias(libs.plugins.licenser)
+    alias(libs.plugins.versions)
 }
 
 repositories {
@@ -149,8 +150,7 @@ tasks {
     }
 
     runServer {
-        minecraftVersion("1.20.1")
-        //MCMMO spams legacy text and run-task adds this flag by default.
+        minecraftVersion("1.20.4")
         systemProperty("net.kyori.adventure.text.warnWhenLegacyFormattingDetected", false)
     }
 
