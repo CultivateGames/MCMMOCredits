@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2023 Cultivate Games
+// Copyright (c) 2024 Cultivate Games
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -69,7 +69,7 @@ public final class CreditsExpansion extends PlaceholderExpansion {
      */
     @Override
     public @NotNull String getVersion() {
-        return "0.4.6";
+        return "0.4.7-SNAPSHOT";
     }
 
     /**
