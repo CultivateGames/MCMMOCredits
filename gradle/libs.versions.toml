@@ -17,6 +17,7 @@ mockito = "5.11.0"
 placeholderApi = "2.11.5"
 mcmmo = "2.1.231"
 h2 = "2.2.224"
+indra = "3.1.3"
 
 [libraries]
 bstats = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
@@ -48,5 +49,7 @@ cloud = ["cloud-annotations", "cloud-paper"]
 runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }
 shadow = { id = "io.github.goooler.shadow", version.ref = "shadow" }
 versions = { id = "com.github.ben-manes.versions", version.ref = "versions" }
-pluginYml = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginYml"}
-licenser  = {id = "org.cadixdev.licenser", version.ref = "licenser" }
+pluginYml = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginYml" }
+licenser = { id = "org.cadixdev.licenser", version.ref = "licenser" }
+indra-core = { id = "net.kyori.indra", version.ref = "indra" }
+indra-publishing-sonatype = { id = "net.kyori.indra.publishing.sonatype", version.ref = "indra" }

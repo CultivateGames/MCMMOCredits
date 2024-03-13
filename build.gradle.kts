@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.4.7"
+version = "1.0.0-SNAPSHOT"
 description = "MCMMOCredits"
 
 plugins {
@@ -11,8 +11,8 @@ plugins {
     alias(libs.plugins.pluginYml)
     alias(libs.plugins.licenser)
     alias(libs.plugins.versions)
-    id("net.kyori.indra") version "3.1.3"
-    id("net.kyori.indra.publishing.sonatype") version "3.1.3"
+    alias(libs.plugins.indra.core)
+    alias(libs.plugins.indra.publishing.sonatype)
 }
 
 repositories {
