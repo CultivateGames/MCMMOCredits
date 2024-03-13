@@ -1,5 +1,5 @@
 group = "games.cultivate"
-version = "0.4.7-SNAPSHOT"
+version = "0.4.7"
 description = "MCMMOCredits"
 
 plugins {
@@ -11,6 +11,8 @@ plugins {
     alias(libs.plugins.pluginYml)
     alias(libs.plugins.licenser)
     alias(libs.plugins.versions)
+    id("net.kyori.indra") version "3.1.3"
+    id("net.kyori.indra.publishing.sonatype") version "3.1.3"
 }
 
 repositories {
@@ -47,54 +49,81 @@ dependencies {
 java {
     withSourcesJar()
     withJavadocJar()
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("MCMMOCredits") {
-            from(components["java"])
-            repositories {
-                maven {
-                    name = "OSSRH"
-                    url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-                    credentials {
-                        val sonatypeUsername: String? by project
-                        val sonatypePassword: String? by project
-                        username = sonatypeUsername
-                        password = sonatypePassword
-                    }
-                }
-            }
-            pom {
-                name.set("MCMMOCredits")
-                description.set("MCMMOCredits")
-                url.set("https://github.com/CultivateGames/MCMMOCredits")
-                licenses {
-                    license {
-                        name.set("The MIT License")
-                        url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
-                developers {
-                    developer {
-                        id.set("CultivateGames")
-                        email.set("admin@cultivate.games")
-                    }
-                }
-                scm {
-                    connection.set("scm:git:https://github.com/CultivateGames/MCMMOCredits.git")
-                    developerConnection.set("scm:git:ssh://git@github.com/CultivateGames/MCMMOCredits.git")
-                    url.set("https://github.com/CultivateGames/MCMMOCredits")
-                    ciManagement {
-                        system.set("Github Actions")
-                        url.set("https://github.com/CultivateGames/MCMMOCredits/actions")
-                    }
+indraSonatype {
+    useAlternateSonatypeOSSHost("s01")
+}
+
+indra {
+    javaVersions {
+        minimumToolchain(21)
+        target(21)
+    }
+    mitLicense()
+    github("CultivateGames", "MCMMOCredits") {
+        ci(true)
+        scm(true)
+        issues(true)
+    }
+
+    configurePublications {
+        pom {
+            developers {
+                developer {
+                    id.set("CultivateGames")
+                    email.set("admin@cultivate.games")
                 }
             }
         }
     }
 }
+
+//publishing {
+//    publications {
+//        create<MavenPublication>("MCMMOCredits") {
+//            from(components["java"])
+//            repositories {
+//                maven {
+//                    name = "OSSRH"
+//                    url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+//                    credentials {
+//                        val sonatypeUsername: String? by project
+//                        val sonatypePassword: String? by project
+//                        username = sonatypeUsername
+//                        password = sonatypePassword
+//                    }
+//                }
+//            }
+//            pom {
+//                name.set("MCMMOCredits")
+//                description.set("MCMMOCredits")
+//                url.set("https://github.com/CultivateGames/MCMMOCredits")
+//                licenses {
+//                    license {
+//                        name.set("The MIT License")
+//                        url.set("https://opensource.org/licenses/MIT")
+//                    }
+//                }
+//                developers {
+//                    developer {
+//                        id.set("CultivateGames")
+//                        email.set("admin@cultivate.games")
+//                    }
+//                }
+//                scm {
+//                    connection.set("scm:git:https://github.com/CultivateGames/MCMMOCredits.git")
+//                    developerConnection.set("scm:git:ssh://git@github.com/CultivateGames/MCMMOCredits.git")
+//                    url.set("https://github.com/CultivateGames/MCMMOCredits")
+//                    ciManagement {
+//                        system.set("Github Actions")
+//                        url.set("https://github.com/CultivateGames/MCMMOCredits/actions")
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
 
 signing {
     val signingKey: String? by project
