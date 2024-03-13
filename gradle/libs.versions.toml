@@ -1,0 +1,52 @@
+[versions]
+runPaper = "2.2.3"
+shadow = "8.1.7"
+versions = "0.51.0"
+pluginYml = "0.6.0"
+licenser = "0.6.1"
+bstats = "3.0.2"
+paper = "1.20.4-R0.1-SNAPSHOT"
+cloud = "1.8.4"
+configurate = "4.2.0-SNAPSHOT"
+guice = "7.0.0"
+hikari = "5.0.1"
+caffeine = "3.1.8"
+jdbi = "3.41.2"
+junit = "5.10.2"
+mockito = "5.5.0"
+placeholderApi = "2.11.4"
+mcmmo = "2.1.223"
+h2 = "2.2.224"
+
+[libraries]
+bstats = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
+paper = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
+cloud-annotations = { module = "cloud.commandframework:cloud-annotations", version.ref = "cloud" }
+cloud-paper = { module = "cloud.commandframework:cloud-paper", version.ref = "cloud" }
+configurate = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate" }
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
+guice = { module = "com.google.inject:guice", version.ref = "guice" }
+hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
+jdbi-core = { module = "org.jdbi:jdbi3-core", version.ref = "jdbi" }
+jdbi-sqlite = { module = "org.jdbi:jdbi3-sqlite", version.ref = "jdbi" }
+jdbi-testing = { module = "org.jdbi:jdbi3-testing", version.ref = "jdbi" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
+placeholderApi = { module = "me.clip:placeholderapi", version.ref = "placeholderApi" }
+mcmmo = { module = "com.gmail.nossr50.mcMMO:mcMMO", version.ref = "mcmmo" }
+
+[bundles]
+jdbi = ["jdbi-core", "jdbi-sqlite", "jdbi-testing"]
+junit = ["junit-bom", "junit-jupiter"]
+mockito = ["mockito-core", "mockito-jupiter"]
+cloud = ["cloud-annotations", "cloud-paper"]
+
+[plugins]
+runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }
+shadow = { id = "io.github.goooler.shadow", version.ref = "shadow" }
+versions = { id = "com.github.ben-manes.versions", version.ref = "versions" }
+pluginYml = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginYml"}
+licenser  = {id = "org.cadixdev.licenser", version.ref = "licenser" }
