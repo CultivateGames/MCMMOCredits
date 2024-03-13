@@ -79,52 +79,6 @@ indra {
     }
 }
 
-//publishing {
-//    publications {
-//        create<MavenPublication>("MCMMOCredits") {
-//            from(components["java"])
-//            repositories {
-//                maven {
-//                    name = "OSSRH"
-//                    url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-//                    credentials {
-//                        val sonatypeUsername: String? by project
-//                        val sonatypePassword: String? by project
-//                        username = sonatypeUsername
-//                        password = sonatypePassword
-//                    }
-//                }
-//            }
-//            pom {
-//                name.set("MCMMOCredits")
-//                description.set("MCMMOCredits")
-//                url.set("https://github.com/CultivateGames/MCMMOCredits")
-//                licenses {
-//                    license {
-//                        name.set("The MIT License")
-//                        url.set("https://opensource.org/licenses/MIT")
-//                    }
-//                }
-//                developers {
-//                    developer {
-//                        id.set("CultivateGames")
-//                        email.set("admin@cultivate.games")
-//                    }
-//                }
-//                scm {
-//                    connection.set("scm:git:https://github.com/CultivateGames/MCMMOCredits.git")
-//                    developerConnection.set("scm:git:ssh://git@github.com/CultivateGames/MCMMOCredits.git")
-//                    url.set("https://github.com/CultivateGames/MCMMOCredits")
-//                    ciManagement {
-//                        system.set("Github Actions")
-//                        url.set("https://github.com/CultivateGames/MCMMOCredits/actions")
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-
 signing {
     val signingKey: String? by project
     val signingPassword: String? by project
