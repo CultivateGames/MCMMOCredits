@@ -1,0 +1,20 @@
+api-version: "1.20"
+name: MCMMOCredits
+version: 1.0.0-SNAPSHOT
+main: games.cultivate.mcmmocredits.MCMMOCredits
+loader: games.cultivate.mcmmocredits.deps.xyz.jpenilla.gremlin.runtime.platformsupport.DefaultsPaperPluginLoader
+description: A modern MCMMO Credits plugin.
+authors:
+  - CultivateGames
+website: https://cultivate.games/
+folia-supported: true
+dependencies:
+  server:
+    PlaceholderAPI:
+      load: OMIT
+      required: false
+      join-classpath: true
+    mcMMO:
+      load: BEFORE
+      required: true
+      join-classpath: true

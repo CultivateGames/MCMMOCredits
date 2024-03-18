@@ -2,7 +2,6 @@
 runPaper = "2.2.3"
 shadow = "8.1.7"
 versions = "0.51.0"
-pluginYml = "0.6.0"
 licenser = "0.6.1"
 bstats = "3.0.2"
 paper = "1.20.4-R0.1-SNAPSHOT"
@@ -11,13 +10,14 @@ configurate = "4.2.0-SNAPSHOT"
 guice = "7.0.0"
 hikari = "5.1.0"
 caffeine = "3.1.8"
-jdbi = "3.45.0"
+jdbi = "3.45.1"
 junit = "5.10.2"
 mockito = "5.11.0"
 placeholderApi = "2.11.5"
 mcmmo = "2.1.231"
 h2 = "2.2.224"
 indra = "3.1.3"
+gremlin = "0.0.6"
 
 [libraries]
 bstats = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
@@ -38,6 +38,7 @@ mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 placeholderApi = { module = "me.clip:placeholderapi", version.ref = "placeholderApi" }
 mcmmo = { module = "com.gmail.nossr50.mcMMO:mcMMO", version.ref = "mcmmo" }
+gremlin-runtime = { module = "xyz.jpenilla:gremlin-runtime", version.ref = "gremlin" }
 
 [bundles]
 jdbi = ["jdbi-core", "jdbi-sqlite", "jdbi-testing"]
@@ -49,7 +50,7 @@ cloud = ["cloud-annotations", "cloud-paper"]
 runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }
 shadow = { id = "io.github.goooler.shadow", version.ref = "shadow" }
 versions = { id = "com.github.ben-manes.versions", version.ref = "versions" }
-pluginYml = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginYml" }
 licenser = { id = "org.cadixdev.licenser", version.ref = "licenser" }
 indra-core = { id = "net.kyori.indra", version.ref = "indra" }
 indra-publishing-sonatype = { id = "net.kyori.indra.publishing.sonatype", version.ref = "indra" }
+gremlin-gradle = { id = "xyz.jpenilla.gremlin-gradle", version.ref = "gremlin" }

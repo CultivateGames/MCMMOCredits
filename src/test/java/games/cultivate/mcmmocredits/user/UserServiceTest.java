@@ -213,7 +213,7 @@ class UserServiceTest {
     }
 
     @Test
-    @Disabled
+    //@Disabled("Fails on CI, passes locally.")
     void getOnlineUsers_ValidPlayers_GetsAll() {
         this.service.addUser(this.user);
         this.mockBukkit.when(() -> Bukkit.getPlayer(this.user.uuid())).thenReturn(this.mockPlayer);

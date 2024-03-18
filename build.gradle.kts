@@ -1,18 +1,17 @@
 group = "games.cultivate"
 version = "1.0.0-SNAPSHOT"
-description = "MCMMOCredits"
 
 plugins {
-    `java-library`
-    `maven-publish`
-    signing
+    id("java-library")
+    id("maven-publish")
+    id("signing")
     alias(libs.plugins.runPaper)
     alias(libs.plugins.shadow)
-    alias(libs.plugins.pluginYml)
     alias(libs.plugins.licenser)
     alias(libs.plugins.versions)
     alias(libs.plugins.indra.core)
     alias(libs.plugins.indra.publishing.sonatype)
+    alias(libs.plugins.gremlin.gradle)
 }
 
 repositories {
@@ -23,32 +22,40 @@ repositories {
 }
 
 dependencies {
+    api(libs.cloud.annotations)
+    api(libs.cloud.paper)
+    api(libs.configurate)
+    api(libs.h2)
+    api(libs.jdbi.core)
+    api(libs.jdbi.sqlite)
+    api(libs.guice)
+    api(libs.hikari)
+    api(libs.caffeine)
+    runtimeDownload(libs.cloud.annotations)
+    runtimeDownload(libs.cloud.paper)
+    runtimeDownload(libs.configurate)
+    runtimeDownload(libs.h2)
+    runtimeDownload(libs.jdbi.core)
+    runtimeDownload(libs.jdbi.sqlite)
+    runtimeDownload(libs.guice)
+    runtimeDownload(libs.hikari)
+    runtimeDownload(libs.caffeine)
     implementation(libs.bstats)
-    implementation(libs.cloud.annotations)
-    implementation(libs.cloud.paper)
-    implementation(libs.configurate)
-    implementation(libs.h2)
-    implementation(libs.jdbi.core)
-    implementation(libs.jdbi.sqlite)
-    implementation(libs.guice)
-    implementation(libs.hikari)
-    implementation(libs.caffeine)
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.jupiter)
     testImplementation(libs.jdbi.testing)
+    testImplementation(libs.paper)
+    testImplementation(libs.placeholderApi)
+    testImplementation(libs.mcmmo) {
+        isTransitive = false
+    }
     compileOnly(libs.paper)
     compileOnly(libs.placeholderApi)
     compileOnly(libs.mcmmo) {
-        exclude("com.sk89q.worldguard")
-        exclude("com.sk89q.worldedit")
+        isTransitive = false
     }
-}
-
-java {
-    withSourcesJar()
-    withJavadocJar()
 }
 
 indraSonatype {
@@ -66,7 +73,6 @@ indra {
         scm(true)
         issues(true)
     }
-
     configurePublications {
         pom {
             developers {
@@ -86,18 +92,6 @@ signing {
     sign(publishing.publications)
 }
 
-bukkit {
-    name = project.name
-    version = project.version.toString()
-    main = "games.cultivate.mcmmocredits.MCMMOCredits"
-    apiVersion = "1.19"
-    description = "A modern MCMMO Credits plugin."
-    authors = listOf("CultivateGames")
-    website = "https://cultivate.games/"
-    softDepend = listOf("mcMMO", "PlaceholderAPI")
-    foliaSupported = true
-}
-
 license {
     style.put("java", "DOUBLE_SLASH")
     newLine(false)
@@ -105,60 +99,43 @@ license {
 }
 
 configurations {
-    testImplementation {
-        extendsFrom(compileOnly.get())
+    runtimeDownload {
+        exclude("io.papermc.paper")
+        exclude("net.kyori")
+        exclude("org.slf4j")
+        exclude("org.ow2.asm")
     }
 }
 
 tasks {
-    assemble {
+    build {
         dependsOn(shadowJar)
     }
-
-    test {
-        useJUnitPlatform()
-    }
-
     compileJava {
         options.encoding = Charsets.UTF_8.name()
-        options.compilerArgs.add("-parameters")
     }
-
     javadoc {
         options.encoding = Charsets.UTF_8.name()
     }
-
     processResources {
         filteringCharset = Charsets.UTF_8.name()
     }
-
     runServer {
         minecraftVersion("1.20.4")
         systemProperty("net.kyori.adventure.text.warnWhenLegacyFormattingDetected", false)
     }
-
+    writeDependencies {
+        repos.set(repositories.filterIsInstance<MavenArtifactRepository>().map { it.url.toString() })
+    }
     shadowJar {
         archiveClassifier.set("")
-        minimize {
-            exclude(dependency("com.h2database:h2"))
+        dependencies {
+            include(dependency(libs.gremlin.runtime.get()))
+            include(dependency(libs.bstats.get()))
         }
-        fun reloc(pkg: String) = relocate(pkg, "games.cultivate.mcmmocredits.relocate.$pkg")
-        reloc("cloud.commandframework")
-        reloc("com.github")
-        reloc("com.google.common")
-        reloc("com.google.inject")
-        reloc("com.google.errorprone")
-        reloc("com.google.j2objc")
-        reloc("com.zaxxer")
-        reloc("io.leangen")
-        reloc("javax.annotation")
-        reloc("javax.inject")
-        reloc("org.aopalliance")
-        reloc("org.bstats")
-        reloc("org.checkerframework")
-        reloc("org.jdbi")
-        reloc("org.incendo")
-        reloc("org.spongepowered")
+        listOf("xyz.jpenilla.gremlin", "org.bstats").forEach { x ->
+            relocate(x, "games.cultivate.mcmmocredits.deps.$x")
+        }
         manifest {
             attributes(Pair("Main-Class", "games.cultivate.mcmmocredits.MCMMOCredits"))
         }
