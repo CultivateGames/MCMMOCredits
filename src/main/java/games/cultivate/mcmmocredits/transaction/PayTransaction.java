@@ -37,19 +37,12 @@ import java.util.Optional;
  * @param amount   The amount of credits to add to targets.
  */
 public record PayTransaction(User executor, List<User> targets, int amount) implements Transaction {
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public TransactionResult execute() {
         List<User> mapped = List.of(this.targets.get(0).addCredits(this.amount));
         return new TransactionResult(this, this.executor.takeCredits(this.amount), mapped);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Optional<String> validate(final User user) {
         if (this.isSelfTransaction()) {
@@ -61,25 +54,16 @@ public record PayTransaction(User executor, List<User> targets, int amount) impl
         return Optional.empty();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public TransactionType type() {
         return TransactionType.PAY;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isSelfTransaction() {
         return this.executor.equals(this.targets.get(0));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Map<User, Optional<String>> validateTransaction() {
         User user = this.targets.get(0);

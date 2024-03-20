@@ -48,41 +48,26 @@ public final class CreditsExpansion extends PlaceholderExpansion {
         this.service = service;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @NotNull String getAuthor() {
         return "Cultivate Games";
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @NotNull String getIdentifier() {
         return "mcmmocredits";
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @NotNull String getVersion() {
         return "1.0.0-SNAPSHOT";
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean persist() {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String onRequest(final OfflinePlayer player, final @NotNull String id) {
         if (player == null) {

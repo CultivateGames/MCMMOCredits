@@ -52,9 +52,6 @@ public final class CSVConverter implements Converter {
         this.users = Files.readAllLines(path).stream().map(User::fromCSV).toList();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CompletableFuture<Boolean> run() {
         return this.database.addUsers(this.users)

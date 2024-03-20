@@ -50,9 +50,6 @@ import java.util.UUID;
 public final class ItemSerializer implements TypeSerializer<Item> {
     public static final ItemSerializer INSTANCE = new ItemSerializer();
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Item deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
         Material material = node.node("material").get(Material.class, Material.STONE);
@@ -80,9 +77,6 @@ public final class ItemSerializer implements TypeSerializer<Item> {
         return new Item(stack, name, lore, slot, action);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void serialize(final Type type, final Item item, final ConfigurationNode node) throws SerializationException {
         ItemStack stack = item.stack();

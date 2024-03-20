@@ -43,9 +43,6 @@ import java.util.Queue;
  * Argument Parser for MCMMO skill types.
  */
 public final class SkillParser implements ArgumentParser<CommandExecutor, PrimarySkillType> {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @NotNull ArgumentParseResult<PrimarySkillType> parse(@NotNull final CommandContext<CommandExecutor> commandContext, final Queue<String> inputQueue) {
         String input = inputQueue.peek();
@@ -59,9 +56,6 @@ public final class SkillParser implements ArgumentParser<CommandExecutor, Primar
         return ArgumentParseResult.failure(new SkillParseException(input, commandContext));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @NotNull List<String> suggestions(@NotNull final CommandContext<CommandExecutor> commandContext, @NotNull final String input) {
         return Util.getSkillNames();

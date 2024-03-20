@@ -41,17 +41,11 @@ public class H2Database extends AbstractDatabase {
         super(source);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     Jdbi createJdbi() {
         return Jdbi.create(this.source).registerRowMapper(new UserMapper()).installPlugin(new H2DatabasePlugin());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isH2() {
         return true;

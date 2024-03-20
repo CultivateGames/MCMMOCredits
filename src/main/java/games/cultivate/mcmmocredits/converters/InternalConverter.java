@@ -50,9 +50,6 @@ public final class InternalConverter implements Converter {
         old.disable();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CompletableFuture<Boolean> run() {
         return this.database.addUsers(this.users)

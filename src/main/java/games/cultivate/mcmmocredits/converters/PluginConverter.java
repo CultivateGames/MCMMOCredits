@@ -73,9 +73,6 @@ public final class PluginConverter implements Converter {
         this.loadUsers();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CompletableFuture<Boolean> run() {
         return this.database.addUsers(this.users)

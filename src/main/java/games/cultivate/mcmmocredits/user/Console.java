@@ -40,49 +40,31 @@ public final class Console implements CommandExecutor {
     private Console() {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isPlayer() {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Player player() {
         throw new UnsupportedOperationException("Console is not a player!");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public UUID uuid() {
         return UUID;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String username() {
         return USERNAME;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int credits() {
         return CREDITS;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int redeemed() {
         return REDEEMED;

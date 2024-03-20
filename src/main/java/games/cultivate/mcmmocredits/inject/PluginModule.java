@@ -59,9 +59,6 @@ public final class PluginModule extends AbstractModule {
         this.plugin = plugin;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void configure() {
         this.bind(MCMMOCredits.class).toInstance(this.plugin);

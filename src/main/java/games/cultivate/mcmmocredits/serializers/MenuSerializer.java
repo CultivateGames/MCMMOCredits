@@ -42,9 +42,6 @@ import java.util.stream.IntStream;
 public final class MenuSerializer implements TypeSerializer<RedeemMenu> {
     public static final MenuSerializer INSTANCE = new MenuSerializer();
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public RedeemMenu deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
         String title = node.node("title").getString();
@@ -67,9 +64,6 @@ public final class MenuSerializer implements TypeSerializer<RedeemMenu> {
         return new RedeemMenu(items, title, slots, fill, navigation);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void serialize(final Type type, final RedeemMenu menu, final ConfigurationNode node) throws SerializationException {
         node.node("title").set(menu.title());

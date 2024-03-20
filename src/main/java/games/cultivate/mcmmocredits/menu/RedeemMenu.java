@@ -109,9 +109,6 @@ public final class RedeemMenu implements InventoryHolder {
         this.items.forEach((k, v) -> this.inventory.setItem(v.slot(), v.parseUser(user)));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @NotNull Inventory getInventory() {
         if (this.inventory == null) {

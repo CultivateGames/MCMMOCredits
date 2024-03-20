@@ -37,26 +37,17 @@ import java.util.Optional;
  * @param amount   The amount of credits to remove from targets.
  */
 public record TakeTransaction(CommandExecutor executor, List<User> targets, int amount) implements Transaction {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public TransactionResult execute() {
         List<User> mapped = this.targets.stream().map(x -> x.takeCredits(this.amount)).toList();
         return new TransactionResult(this, this.executor, mapped);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Optional<String> validate(final User user) {
         return user.credits() - this.amount >= 0 ? Optional.empty() : Optional.of(this.type().notEnoughCredits());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public TransactionType type() {
         return this.targets.size() > 1 ? TransactionType.TAKEALL : TransactionType.TAKE;

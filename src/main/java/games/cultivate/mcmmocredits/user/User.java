@@ -49,17 +49,11 @@ public record User(UUID uuid, String username, int credits, int redeemed) implem
         return new User(UUID.fromString(arr[0]), arr[1], Integer.parseInt(arr[2]), Integer.parseInt(arr[3]));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isPlayer() {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Player player() {
         return Bukkit.getPlayer(this.uuid);

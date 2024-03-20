@@ -61,9 +61,6 @@ public final class UserParser implements ArgumentParser<CommandExecutor, User> {
         this.tabCompletion = tabCompletion;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @NotNull ArgumentParseResult<User> parse(@NotNull final CommandContext<CommandExecutor> commandContext, final Queue<String> inputQueue) {
         String input = inputQueue.peek();
@@ -79,9 +76,6 @@ public final class UserParser implements ArgumentParser<CommandExecutor, User> {
         return ArgumentParseResult.failure(new UserNotFoundException(input, commandContext));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public @NotNull List<String> suggestions(@NotNull final CommandContext<CommandExecutor> commandContext, @NotNull final String input) {
         //Method is frequently accessed, so we attempt to return fast.

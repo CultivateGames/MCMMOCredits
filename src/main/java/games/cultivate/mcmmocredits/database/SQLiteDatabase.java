@@ -41,17 +41,11 @@ public class SQLiteDatabase extends AbstractDatabase {
         super(source);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     Jdbi createJdbi() {
         return Jdbi.create(this.source).registerRowMapper(new UserMapper()).installPlugin(new SQLitePlugin());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void createTable() {
         this.jdbi.useHandle(handle -> handle.execute("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTOINCREMENT,UUID VARCHAR NOT NULL,username VARCHAR NOT NULL,credits INT CHECK(credits >= 0),redeemed INT);"));

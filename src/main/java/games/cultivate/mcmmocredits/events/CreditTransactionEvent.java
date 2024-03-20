@@ -64,9 +64,6 @@ public class CreditTransactionEvent extends Event implements Cancellable {
         return HANDLERS;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @SuppressWarnings("java:S4144")
     public @NotNull HandlerList getHandlers() {
@@ -100,17 +97,11 @@ public class CreditTransactionEvent extends Event implements Cancellable {
         return this.senderFeedback;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isCancelled() {
         return this.cancelled;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setCancelled(final boolean cancel) {
         this.cancelled = cancel;

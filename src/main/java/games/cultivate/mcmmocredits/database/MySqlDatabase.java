@@ -45,9 +45,6 @@ public class MySqlDatabase extends AbstractDatabase {
         super(source);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     Jdbi createJdbi() {
         return Jdbi.create(this.source).registerArgument(new UUIDFactory()).registerRowMapper(new UserMapper());

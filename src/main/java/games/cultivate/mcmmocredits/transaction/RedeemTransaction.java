@@ -44,9 +44,6 @@ import java.util.Optional;
  * @param amount   The amount of credits to remove from the user.
  */
 public record RedeemTransaction(CommandExecutor executor, List<User> targets, PrimarySkillType skill, int amount) implements Transaction {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public TransactionResult execute() {
         List<User> mapped = this.targets.stream().map(x -> {
@@ -61,9 +58,6 @@ public record RedeemTransaction(CommandExecutor executor, List<User> targets, Pr
         return new TransactionResult(this, this.executor, mapped);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Optional<String> validate(final User user) {
         if (user.credits() < this.amount) {
@@ -79,9 +73,6 @@ public record RedeemTransaction(CommandExecutor executor, List<User> targets, Pr
         return Optional.empty();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public TransactionType type() {
         return this.targets.size() > 1 ? TransactionType.REDEEMALL : TransactionType.REDEEM;
