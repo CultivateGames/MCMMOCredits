@@ -23,40 +23,40 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
+import games.cultivate.mcmmocredits.converters.loaders.UserLoader;
 import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.user.User;
+import jakarta.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
-/**
- * Data converter which uses database.csv in the plugin's folder.
- */
-public final class CSVConverter implements Converter {
+public final class DefaultConverter implements Converter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultConverter.class);
     private final AbstractDatabase database;
-    private final List<User> users;
+    private final UserLoader loader;
 
-    /**
-     * Constructs the object.
-     *
-     * @param database The database.
-     * @param path     The plugin's data folder.
-     * @throws IOException If reading the csv file errors.
-     */
-    public CSVConverter(final AbstractDatabase database, final Path path) throws IOException {
+    @Inject
+    public DefaultConverter(final AbstractDatabase database, final UserLoader loader) {
         this.database = database;
-        this.users = Files.readAllLines(path).stream().map(User::fromCSV).toList();
+        this.loader = loader;
     }
 
     @Override
-    public CompletableFuture<Boolean> run() {
-        return this.database.addUsers(this.users)
-                .thenAccept(x -> { if (this.database.isH2()) this.database.jdbi().useHandle(y -> y.execute("CHECKPOINT SYNC")); })
-                .thenCompose(y -> this.database.getAllUsers())
-                .thenApply(z -> new HashSet<>(this.users).containsAll(z));
+    public boolean run() {
+        long start = System.nanoTime();
+        List<User> users = this.loader.getUsers().stream().toList();
+        //TODO: part of upcoming db refactor... fix.
+        this.database.addUsers(users).join();
+        boolean status = new HashSet<>(this.database.getAllUsers().join()).containsAll(users);
+        long end = System.nanoTime();
+        if (status) {
+            LOGGER.info("Conversion completed! Duration: {}s", ((double) end - start) / 1000000000.0);
+        } else {
+            LOGGER.warn("There was an issue causing conversion to fail! Check user data!");
+        }
+        return status;
     }
 }

@@ -24,16 +24,19 @@
 package games.cultivate.mcmmocredits.inject;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.commands.Commands;
 import games.cultivate.mcmmocredits.config.ConfigService;
-import games.cultivate.mcmmocredits.converters.CSVConverter;
 import games.cultivate.mcmmocredits.converters.Converter;
 import games.cultivate.mcmmocredits.converters.ConverterProperties;
 import games.cultivate.mcmmocredits.converters.ConverterType;
-import games.cultivate.mcmmocredits.converters.InternalConverter;
-import games.cultivate.mcmmocredits.converters.PluginConverter;
+import games.cultivate.mcmmocredits.converters.DefaultConverter;
+import games.cultivate.mcmmocredits.converters.loaders.UserLoader;
+import games.cultivate.mcmmocredits.converters.loaders.CSVLoader;
+import games.cultivate.mcmmocredits.converters.loaders.DatabaseLoader;
+import games.cultivate.mcmmocredits.converters.loaders.PluginLoader;
 import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
@@ -41,13 +44,15 @@ import games.cultivate.mcmmocredits.util.Dir;
 import jakarta.inject.Singleton;
 import org.bukkit.Bukkit;
 
-import java.io.IOException;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Handles Guice Dependency Injection.
  */
 public final class PluginModule extends AbstractModule {
+    private static final Path MR_PATH = Path.of("MorphRedeem", "PlayerData");
+    private static final Path GRM_PATH = Path.of("GuiRedeemMCMMO", "playerdata");
     private final MCMMOCredits plugin;
 
     /**
@@ -67,6 +72,21 @@ public final class PluginModule extends AbstractModule {
         this.bind(ChatQueue.class).asEagerSingleton();
         this.bind(Commands.class).asEagerSingleton();
         this.bind(ConfigService.class).asEagerSingleton();
+        this.bind(Converter.class).to(DefaultConverter.class).in(Singleton.class);
+    }
+
+    @Provides
+    @Singleton
+    public UserLoader getUserLoader(final ConfigService configService, final ExecutorService executorService, final Injector injector) {
+        ConverterProperties properties = configService.mainConfig().get(ConverterProperties.class, null, "converter");
+        ConverterType type = properties.type();
+        Path pluginPath = Bukkit.getPluginsFolder().toPath();
+        return switch (type) {
+            case CSV -> injector.getInstance(CSVLoader.class);
+            case INTERNAL -> injector.getInstance(DatabaseLoader.class);
+            case PLUGIN_MR -> new PluginLoader(pluginPath.resolve(MR_PATH), executorService, properties);
+            case PLUGIN_GRM -> new PluginLoader(pluginPath.resolve(GRM_PATH), executorService, properties);
+        };
     }
 
     /**
@@ -80,29 +100,5 @@ public final class PluginModule extends AbstractModule {
     @Singleton
     public AbstractDatabase provideDatabase(final ConfigService configService, final @Dir Path path) {
         return configService.getProperties("settings", "database").create(path);
-    }
-
-    /**
-     * Provides the Converter from the Config.
-     *
-     * @param configService The ConfigService to read the database.
-     * @param database      The current database.
-     * @param path          The current plugin's data path.
-     * @return The Converter
-     * @throws IOException Thrown if the file cannot be read.
-     */
-    @Provides
-    @Singleton
-    public Converter provideConverter(final ConfigService configService, final AbstractDatabase database, final @Dir Path path) throws IOException {
-        ConverterProperties properties = configService.mainConfig().get(ConverterProperties.class, null, "converter");
-        ConverterType type = properties.type();
-        return switch (type) {
-            case CSV -> new CSVConverter(database, path.resolve(type.path()));
-            case INTERNAL -> new InternalConverter(database, properties.previous().create(path));
-            case GUI_REDEEM_MCMMO, MORPH_REDEEM -> {
-                Path bpath = Bukkit.getPluginsFolder().toPath().resolve(type.path());
-                yield new PluginConverter(database, bpath, properties.requestDelay(), properties.failureDelay());
-            }
-        };
     }
 }

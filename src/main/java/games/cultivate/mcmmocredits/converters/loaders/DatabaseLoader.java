@@ -21,14 +21,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.converters;
+package games.cultivate.mcmmocredits.converters.loaders;
 
-/**
- * Namespace for Data Converters.
- * CSV: Data is sourced from a file named database.csv in the plugin's directory.
- * GUI_REDEEM_MCMMO: Data is sourced from GuiRedeemMCMMO user data.
- * INTERNAL: Data is sourced from another plugin database type (ex. SQLITE to H2)
- */
-public enum ConverterType {
-    CSV, INTERNAL, PLUGIN_GRM, PLUGIN_MR
+import games.cultivate.mcmmocredits.database.AbstractDatabase;
+import games.cultivate.mcmmocredits.user.User;
+
+import java.util.List;
+
+public final class DatabaseLoader implements UserLoader {
+    private final AbstractDatabase database;
+
+    public DatabaseLoader(final AbstractDatabase database) {
+        this.database = database;
+    }
+
+    @Override
+    public List<User> getUsers() {
+        //TODO: db refactor.. fix later.
+        List<User> users = this.database.getAllUsers().join();
+        this.database.disable();
+        return users;
+    }
 }

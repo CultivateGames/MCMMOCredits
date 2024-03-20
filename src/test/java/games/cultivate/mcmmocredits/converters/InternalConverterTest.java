@@ -23,6 +23,8 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
+import games.cultivate.mcmmocredits.converters.loaders.DatabaseLoader;
+import games.cultivate.mcmmocredits.converters.loaders.UserLoader;
 import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.database.DatabaseUtil;
 import games.cultivate.mcmmocredits.user.User;
@@ -44,8 +46,9 @@ class InternalConverterTest {
         this.oldDatabase.addUser(new User(new UUID(1, 1), "tester1", 10, 10)).join();
         this.oldDatabase.addUser(new User(new UUID(2, 2), "tester2", 20, 20)).join();
         List<User> users = this.oldDatabase.getAllUsers().join();
-        Converter converter = new InternalConverter(this.currentDatabase, this.oldDatabase);
-        assertTrue(converter.run().join());
+        UserLoader loader = new DatabaseLoader(this.oldDatabase);
+        Converter converter = new DefaultConverter(this.currentDatabase, loader);
+        assertTrue(converter.run());
         List<User> currentUsers = this.currentDatabase.getAllUsers().join();
         assertEquals(users.size(), currentUsers.size());
         assertTrue(currentUsers.containsAll(users));

@@ -26,23 +26,68 @@ package games.cultivate.mcmmocredits.converters;
 import games.cultivate.mcmmocredits.database.DatabaseProperties;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
-/**
- * Represents properties of a Data Converter.
- *
- * @param type         Type of the Converter.
- * @param previous  Properties of the old Database.
- * @param failureDelay Delay used when a Mojang request fails.
- * @param requestDelay Delay used between Mojang requests.
- * @param enabled      If conversion is enabled.
- */
+@SuppressWarnings({"FieldMayBeFinal", "unused", "FieldCanBeLocal"})
 @ConfigSerializable
-public record ConverterProperties(ConverterType type, DatabaseProperties previous, long failureDelay, long requestDelay, boolean enabled) {
+public final class ConverterProperties {
+    private ConverterType type = ConverterType.CSV;
+    private boolean enabled = false;
+    private int requestsPerSecond = 15;
+    private int retryDelay = 30;
+    private int retries = 3;
+    //TODO: db refactor... use constructor.
+    private DatabaseProperties internal = DatabaseProperties.defaults();
+
     /**
-     * Constructs the object with sane defaults.
+     * Gets the type of the converter.
      *
-     * @return The object.
+     * @return type of the converter.
      */
-    public static ConverterProperties defaults() {
-        return new ConverterProperties(ConverterType.INTERNAL, DatabaseProperties.defaults(), 60000L, 300L, false);
+    public ConverterType type() {
+        return this.type;
+    }
+
+    /**
+     * Gets if the converter is enabled.
+     *
+     * @return if the converter is enabled.
+     */
+    public boolean enabled() {
+        return this.enabled;
+    }
+
+    /**
+     * Gets amount of requests per second to Mojang. Default is suggested.
+     *
+     * @return amount of requests per second to Mojang. Default is suggested.
+     */
+    public int requestsPerSecond() {
+        return this.requestsPerSecond;
+    }
+
+    /**
+     * Delay between retries.
+     *
+     * @return delay between retries.
+     */
+    public int retryDelay() {
+        return this.retryDelay;
+    }
+
+    /**
+     * Amount of retries per entry.
+     *
+     * @return amount of retries per entry.
+     */
+    public int retries() {
+        return this.retries;
+    }
+
+    /**
+     * Properties of database used for internal transfers.
+     *
+     * @return Properties of database used for internal transfers.
+     */
+    public DatabaseProperties internal() {
+        return this.internal;
     }
 }

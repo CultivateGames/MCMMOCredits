@@ -23,6 +23,8 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
+import games.cultivate.mcmmocredits.converters.loaders.CSVLoader;
+import games.cultivate.mcmmocredits.converters.loaders.UserLoader;
 import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.database.DatabaseUtil;
 import games.cultivate.mcmmocredits.user.User;
@@ -63,8 +65,9 @@ class CSVConverterTest {
                 writer.newLine();
             }
         }
-        Converter converter = new CSVConverter(this.currentDatabase, csvPath);
-        assertTrue(converter.run().join());
+        UserLoader loader = new CSVLoader(csvPath);
+        Converter converter = new DefaultConverter(this.currentDatabase, loader);
+        assertTrue(converter.run());
         List<User> currentUsers = this.currentDatabase.getAllUsers().join();
         assertEquals(newUsers.size(), currentUsers.size());
         assertTrue(currentUsers.containsAll(newUsers));

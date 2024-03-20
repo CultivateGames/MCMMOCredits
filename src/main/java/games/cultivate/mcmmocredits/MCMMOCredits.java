@@ -139,12 +139,11 @@ public final class MCMMOCredits extends JavaPlugin {
     /**
      * Runs a Data Converter if it is enabled in configuration.
      */
+    @SuppressWarnings("UnstableApiUsage")
     private void runConversionProcess() {
-        if (this.configs.mainConfig().getBoolean("converter", "enabled")) {
-            long start = System.nanoTime();
-            this.injector.getInstance(Converter.class).run().join();
-            long end = System.nanoTime();
-            this.logger.info("Conversion completed! Process took: {}s.", (double) (end - start) / 1000000000);
+        boolean enabled = this.configs.mainConfig().getBoolean("converter", "enabled");
+        if (enabled && !this.injector.getInstance(Converter.class).run()) {
+            this.setEnabled(false);
         }
     }
 

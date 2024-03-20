@@ -21,40 +21,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.converters;
+package games.cultivate.mcmmocredits.converters.loaders;
 
-import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.user.User;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
-/**
- * Data Converter which uses an older database to convert.
- */
-public final class InternalConverter implements Converter {
-    private final List<User> users;
-    private final AbstractDatabase database;
-
+public interface UserLoader {
     /**
-     * Constructs the object.
+     * Loads the users to write to database during a conversion.
      *
-     * @param database The current database.
-     * @param old      The old database.
+     * @return The users to write to database during a conversion.
      */
-    public InternalConverter(final AbstractDatabase database, final AbstractDatabase old) {
-        this.database = database;
-        //All users must be loaded before proceeding.
-        this.users = old.getAllUsers().join();
-        old.disable();
-    }
-
-    @Override
-    public CompletableFuture<Boolean> run() {
-        return this.database.addUsers(this.users)
-                .thenAccept(x -> { if (this.database.isH2()) this.database.jdbi().useHandle(y -> y.execute("CHECKPOINT SYNC")); })
-                .thenCompose(y -> this.database.getAllUsers())
-                .thenApply(z -> new HashSet<>(this.users).containsAll(z));
-    }
+    List<User> getUsers();
 }

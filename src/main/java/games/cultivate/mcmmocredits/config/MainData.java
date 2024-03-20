@@ -80,7 +80,7 @@ public final class MainData implements Data {
     private String notEnoughCreditsOther = "<red><target> does not have enough credits for: <transaction>!";
     private String reload = "<green>The configuration file has been reloaded.";
     private Settings settings = new Settings();
-    private ConverterProperties converter = ConverterProperties.defaults();
+    private ConverterProperties converter = new ConverterProperties();
 
     @ConfigSerializable
     static class Settings {
