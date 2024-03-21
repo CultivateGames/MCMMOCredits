@@ -143,9 +143,8 @@ public final class UserService {
      * @return List of online users.
      */
     public CompletableFuture<List<User>> getOnlineUsers() {
-        List<CompletableFuture<Optional<User>>> futures = Bukkit.getOnlinePlayers().stream().map(this::getUser).toList();
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenApply(v -> futures.stream().map(CompletableFuture::join).filter(Optional::isPresent).map(Optional::get).toList());
+        List<CompletableFuture<Optional<User>>> users = Bukkit.getOnlinePlayers().stream().map(this::getUser).toList();
+        return CompletableFuture.allOf(users.toArray(new CompletableFuture<?>[0])).thenApply(v -> users.stream().flatMap(u -> u.join().stream()).toList());
     }
 
     /**
