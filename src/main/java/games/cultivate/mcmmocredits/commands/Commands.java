@@ -34,7 +34,7 @@ import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
-import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.messages.Resolver;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionType;
 import games.cultivate.mcmmocredits.user.CommandExecutor;

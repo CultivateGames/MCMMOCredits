@@ -21,9 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.text;
+package games.cultivate.mcmmocredits.messages;
 
-import games.cultivate.mcmmocredits.placeholders.Resolver;
 import games.cultivate.mcmmocredits.user.CommandExecutor;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.audience.Audience;

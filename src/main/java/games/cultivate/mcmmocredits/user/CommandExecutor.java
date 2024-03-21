@@ -23,8 +23,8 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import games.cultivate.mcmmocredits.placeholders.Resolver;
-import games.cultivate.mcmmocredits.text.Text;
+import games.cultivate.mcmmocredits.messages.Resolver;
+import games.cultivate.mcmmocredits.messages.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

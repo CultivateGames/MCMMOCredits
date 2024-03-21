@@ -24,7 +24,7 @@
 package games.cultivate.mcmmocredits.menu;
 
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.text.Text;
+import games.cultivate.mcmmocredits.messages.Text;
 import games.cultivate.mcmmocredits.user.User;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;

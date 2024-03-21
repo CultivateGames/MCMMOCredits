@@ -28,7 +28,7 @@ import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
 import games.cultivate.mcmmocredits.menu.RedeemMenu;
-import games.cultivate.mcmmocredits.placeholders.Resolver;
+import games.cultivate.mcmmocredits.messages.Resolver;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
 import games.cultivate.mcmmocredits.transaction.TransactionType;

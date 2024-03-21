@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.placeholders;
+package games.cultivate.mcmmocredits.messages;
 
 import com.gmail.nossr50.config.GeneralConfig;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;

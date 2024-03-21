@@ -31,7 +31,7 @@ import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.converters.Converter;
 import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.inject.PluginModule;
-import games.cultivate.mcmmocredits.placeholders.CreditsExpansion;
+import games.cultivate.mcmmocredits.messages.CreditsExpansion;
 import games.cultivate.mcmmocredits.util.Listeners;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;

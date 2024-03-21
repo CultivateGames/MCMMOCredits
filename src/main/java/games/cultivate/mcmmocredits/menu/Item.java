@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.text.Text;
+import games.cultivate.mcmmocredits.messages.Text;
 import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;

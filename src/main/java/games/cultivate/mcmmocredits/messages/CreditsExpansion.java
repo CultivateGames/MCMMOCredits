@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.placeholders;
+package games.cultivate.mcmmocredits.messages;
 
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
@@ -30,22 +30,20 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Optional;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Handles PlaceholderAPI expansion registration.
  */
 public final class CreditsExpansion extends PlaceholderExpansion {
     private final UserService service;
+    private final Map<String, Function<User, String>> tags;
 
-    /**
-     * Constructs the object.
-     *
-     * @param service UserService to obtain User information.
-     */
     @Inject
     public CreditsExpansion(final UserService service) {
         this.service = service;
+        this.tags = Map.of("credits", u -> String.valueOf(u.credits()), "redeemed", u -> String.valueOf(u.redeemed()), "username", User::username, "uuid", u -> u.uuid().toString());
     }
 
     @Override
@@ -73,19 +71,6 @@ public final class CreditsExpansion extends PlaceholderExpansion {
         if (player == null) {
             return "0";
         }
-        //No control over PAPI methods here, have to join() for user.
-        Optional<User> optionalUser = this.service.getUser(player.getName()).join();
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            return switch (id.toLowerCase()) {
-                case "credits" -> String.valueOf(user.credits());
-                case "redeemed" -> String.valueOf(user.redeemed());
-                case "username" -> user.username();
-                case "uuid" -> user.uuid().toString();
-                case "cached" -> String.valueOf(this.service.isUserCached(user));
-                default -> "0";
-            };
-        }
-        return "0";
+        return this.service.getUser(player.getName()).join().map(this.tags.get(id.toLowerCase())).orElse("0");
     }
 }

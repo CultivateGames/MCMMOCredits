@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.placeholders;
+package games.cultivate.mcmmocredits.messages;
 
 import games.cultivate.mcmmocredits.database.AbstractDatabase;
 import games.cultivate.mcmmocredits.database.DatabaseUtil;
@@ -66,8 +66,8 @@ class CreditExpansionTest {
     @Test
     void onRequest_ValidUser_ValidPlaceholders() {
         this.service.addUser(this.user).join();
-        String content = "%mcmmocredits_credits%, %mcmmocredits_redeemed%, %mcmmocredits_username%, %mcmmocredits_uuid%, %mcmmocredits_cached%";
-        String expected = String.format("%s, %s, %s, %s, %s", this.user.credits(), this.user.redeemed(), this.user.username(), this.user.uuid().toString(), this.service.isUserCached(this.user));
+        String content = "%mcmmocredits_credits%, %mcmmocredits_redeemed%, %mcmmocredits_username%, %mcmmocredits_uuid%";
+        String expected = String.format("%s, %s, %s, %s", this.user.credits(), this.user.redeemed(), this.user.username(), this.user.uuid().toString());
         OfflinePlayer player = mock(OfflinePlayer.class);
         doReturn("testUser").when(player).getName();
         assertEquals(expected, this.replace.apply(content, player, this.map::get));
@@ -75,7 +75,7 @@ class CreditExpansionTest {
 
     @Test
     void onRequest_InvalidUser_NoPlaceholders() {
-        String content = "%mcmmocredits_credits%, %mcmmocredits_redeemed%, %mcmmocredits_username%, %mcmmocredits_uuid%, %mcmmocredits_cached%";
+        String content = "%mcmmocredits_credits%, %mcmmocredits_redeemed%, %mcmmocredits_username%, %mcmmocredits_uuid%, %mcmmocredits_invalid%";
         assertEquals("0, 0, 0, 0, 0", this.replace.apply(content, null, this.map::get));
     }
 }
