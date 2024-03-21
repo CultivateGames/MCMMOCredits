@@ -44,7 +44,7 @@ class AbstractDatabaseTest {
     private final UUID uuid = UUID.randomUUID();
     private final int credits = 60;
     private final int redeemed = 500;
-    private final AbstractDatabase database = DatabaseUtil.create("test");
+    private final TestDatabase database = TestDatabase.create("test");
     private User user;
 
     @BeforeEach
@@ -55,7 +55,7 @@ class AbstractDatabaseTest {
 
     @AfterEach
     void tearDown() {
-        this.database.jdbi().useHandle(x -> x.execute("DELETE FROM MCMMOCredits"));
+        this.database.delete();
     }
 
     @Test

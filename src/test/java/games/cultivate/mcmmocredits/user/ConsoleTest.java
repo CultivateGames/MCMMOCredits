@@ -33,9 +33,9 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class ConsoleTest {
@@ -55,7 +55,7 @@ class ConsoleTest {
         this.mockBukkit.when(Bukkit::getConsoleSender).thenReturn(this.mockSender);
         CommandSender test = this.console.sender();
         assertNotNull(test);
-        assertTrue(test instanceof ConsoleCommandSender);
+        assertInstanceOf(ConsoleCommandSender.class, test);
     }
 
     @Test

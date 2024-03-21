@@ -23,8 +23,7 @@
 //
 package games.cultivate.mcmmocredits;
 
-import games.cultivate.mcmmocredits.database.AbstractDatabase;
-import games.cultivate.mcmmocredits.database.DatabaseUtil;
+import games.cultivate.mcmmocredits.database.TestDatabase;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import org.junit.jupiter.api.AfterEach;
@@ -42,7 +41,7 @@ class MCMMOCreditsAPITest {
     private final int credits = 100;
     private MCMMOCreditsAPI api;
     private User user;
-    private final AbstractDatabase database = DatabaseUtil.create("api");
+    private final TestDatabase database = TestDatabase.create("api");
     private UserService service;
 
     @BeforeEach
@@ -54,7 +53,7 @@ class MCMMOCreditsAPITest {
 
     @AfterEach
     void tearDown() {
-        this.database.jdbi().useHandle(x -> x.execute("DELETE FROM MCMMOCredits"));
+        this.database.delete();
     }
 
     @Test

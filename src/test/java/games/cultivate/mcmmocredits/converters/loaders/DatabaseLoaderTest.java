@@ -21,18 +21,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.database;
+package games.cultivate.mcmmocredits.converters.loaders;
 
-import org.h2.jdbcx.JdbcDataSource;
+import games.cultivate.mcmmocredits.database.TestDatabase;
+import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.user.UserCreator;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-public class DatabaseUtil {
+import java.util.List;
+import java.util.concurrent.CompletionException;
 
-    private DatabaseUtil() {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+class DatabaseLoaderTest {
+    private static final TestDatabase OLD_DB = TestDatabase.create("oldic");
+
+    @AfterEach
+    void tearDown() {
+        OLD_DB.delete();
     }
 
-    public static AbstractDatabase create(final String name) {
-        JdbcDataSource ds = new JdbcDataSource();
-        ds.setURL("jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1;MODE=MYSQL;IGNORECASE=TRUE".formatted(name));
-        return new H2Database(ds);
+    @Test
+    void getUsers_ValidData_ReturnsAllAndDisablesConnection() {
+        List<User> users = UserCreator.createUsers(10);
+        OLD_DB.addUsers(users).join();
+        UserLoader loader = new DatabaseLoader(OLD_DB);
+        assertEquals(users, loader.getUsers());
+        assertThrows(CompletionException.class, loader::getUsers);
     }
 }

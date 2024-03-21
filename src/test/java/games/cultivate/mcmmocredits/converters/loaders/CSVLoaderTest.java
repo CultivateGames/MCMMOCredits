@@ -21,28 +21,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.database;
+package games.cultivate.mcmmocredits.converters.loaders;
 
-import org.jdbi.v3.core.Jdbi;
-import org.jdbi.v3.core.h2.H2DatabasePlugin;
+import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.user.UserCreator;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import javax.sql.DataSource;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
-/**
- * Represents a H2 Database.
- */
-public class H2Database extends AbstractDatabase {
-    /**
-     * Constructs the object.
-     *
-     * @param source The DataSource.
-     */
-    public H2Database(final DataSource source) {
-        super(source);
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class CSVLoaderTest {
+    private static final Path FILE_PATH = Path.of("src", "test", "resources", "database.csv");
+
+    @AfterEach
+    void tearDown() throws IOException {
+        Files.delete(FILE_PATH);
     }
 
-    @Override
-    Jdbi createJdbi() {
-        return Jdbi.create(this.source).registerRowMapper(new UserMapper()).installPlugin(new H2DatabasePlugin());
+    @Test
+    void getUsers_returnsAllUsers() throws IOException {
+        List<User> users = UserCreator.createUsers(500);
+        List<String> lines = users.stream().map(u -> u.uuid() + "," + u.username() + "," + u.credits() + "," + u.redeemed()).toList();
+        Files.write(FILE_PATH, lines);
+        UserLoader loader = new CSVLoader(FILE_PATH);
+        assertEquals(users, loader.getUsers());
     }
 }

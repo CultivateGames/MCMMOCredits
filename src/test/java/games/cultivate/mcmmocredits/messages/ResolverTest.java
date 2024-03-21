@@ -26,6 +26,9 @@ package games.cultivate.mcmmocredits.messages;
 import com.gmail.nossr50.config.GeneralConfig;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.mcMMO;
+import games.cultivate.mcmmocredits.transaction.Transaction;
+import games.cultivate.mcmmocredits.transaction.TransactionResult;
+import games.cultivate.mcmmocredits.transaction.TransactionType;
 import games.cultivate.mcmmocredits.user.User;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -36,6 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -118,21 +122,21 @@ class ResolverTest {
         assertEquals(tagResolver, resolver.toTagResolver());
     }
 
-//    @Test
-//    void ofResult_ValidTransactionResult_BuildsCorrectResolver() {
-//        Transaction transaction = Transaction.builder(this.sender, TransactionType.SET, 25).targets(this.target).build();
-//        TransactionResult result = TransactionResult.of(transaction, this.sender, List.of(this.target));
-//        Resolver resolver = Resolver.ofResult(result, this.target);
-//        assertEquals(this.sender.username(), this.convert("<sender>", resolver));
-//        assertEquals(this.sender.uuid().toString(), this.convert("<sender_uuid>", resolver));
-//        assertEquals(this.sender.credits(), Integer.parseInt(this.convert("<sender_credits>", resolver)));
-//        assertEquals(this.sender.redeemed(), Integer.parseInt(this.convert("<sender_redeemed>", resolver)));
-//        assertEquals(this.target.username(), this.convert("<target>", resolver));
-//        assertEquals(this.target.uuid().toString(), this.convert("<target_uuid>", resolver));
-//        assertEquals(this.target.credits(), Integer.parseInt(this.convert("<target_credits>", resolver)));
-//        assertEquals(this.target.redeemed(), Integer.parseInt(this.convert("<target_redeemed>", resolver)));
-//        assertEquals(25, Integer.parseInt(this.convert("<amount>", resolver)));
-//    }
+    @Test
+    void ofResult_ValidTransactionResult_BuildsCorrectResolver() {
+        Transaction transaction = Transaction.builder(this.sender, TransactionType.SET, 25).targets(this.target).build();
+        TransactionResult result = new TransactionResult(transaction, this.sender, List.of(this.target));
+        Resolver resolver = Resolver.ofResult(result, this.target);
+        assertEquals(this.sender.username(), this.convert("<sender>", resolver));
+        assertEquals(this.sender.uuid().toString(), this.convert("<sender_uuid>", resolver));
+        assertEquals(this.sender.credits(), Integer.parseInt(this.convert("<sender_credits>", resolver)));
+        assertEquals(this.sender.redeemed(), Integer.parseInt(this.convert("<sender_redeemed>", resolver)));
+        assertEquals(this.target.username(), this.convert("<target>", resolver));
+        assertEquals(this.target.uuid().toString(), this.convert("<target_uuid>", resolver));
+        assertEquals(this.target.credits(), Integer.parseInt(this.convert("<target_credits>", resolver)));
+        assertEquals(this.target.redeemed(), Integer.parseInt(this.convert("<target_redeemed>", resolver)));
+        assertEquals(25, Integer.parseInt(this.convert("<amount>", resolver)));
+    }
 
     private String convert(final String input, final Resolver resolver) {
         return PlainTextComponentSerializer.plainText().serialize(MiniMessage.miniMessage().deserialize(input, resolver.toTagResolver()));

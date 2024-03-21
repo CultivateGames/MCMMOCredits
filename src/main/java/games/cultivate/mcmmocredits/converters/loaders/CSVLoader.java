@@ -42,7 +42,6 @@ public final class CSVLoader implements UserLoader {
     private final Path path;
 
     public CSVLoader(final Path path) {
-        //TODO: database.csv or custom file name?
         this.path = path;
     }
 

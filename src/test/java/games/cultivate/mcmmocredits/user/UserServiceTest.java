@@ -23,8 +23,7 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import games.cultivate.mcmmocredits.database.AbstractDatabase;
-import games.cultivate.mcmmocredits.database.DatabaseUtil;
+import games.cultivate.mcmmocredits.database.TestDatabase;
 import games.cultivate.mcmmocredits.transaction.AddTransaction;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
@@ -34,7 +33,6 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -53,7 +51,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
-    private final AbstractDatabase database = DatabaseUtil.create("us");
+    private final TestDatabase database = TestDatabase.create("us");
     private User user;
     private UserService service;
     @Mock
@@ -69,7 +67,7 @@ class UserServiceTest {
 
     @AfterEach
     void tearDown() {
-        this.database.jdbi().useHandle(x -> x.execute("DELETE FROM MCMMOCredits"));
+        this.database.delete();
     }
 
     @Test

@@ -204,24 +204,6 @@ public abstract class AbstractDatabase {
     }
 
     /**
-     * Gets the current Jdbi instance.
-     *
-     * @return The Jdbi instance.
-     */
-    public Jdbi jdbi() {
-        return this.jdbi == null ? this.createJdbi() : this.jdbi;
-    }
-
-    /**
-     * Returns if the database is H2.
-     *
-     * @return If the database is H2.
-     */
-    public boolean isH2() {
-        return false;
-    }
-
-    /**
      * Builds a User from a ResultSet.
      */
     static class UserMapper implements RowMapper<User> {

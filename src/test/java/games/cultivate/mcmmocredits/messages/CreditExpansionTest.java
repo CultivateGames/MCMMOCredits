@@ -23,8 +23,7 @@
 //
 package games.cultivate.mcmmocredits.messages;
 
-import games.cultivate.mcmmocredits.database.AbstractDatabase;
-import games.cultivate.mcmmocredits.database.DatabaseUtil;
+import games.cultivate.mcmmocredits.database.TestDatabase;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -48,7 +47,7 @@ class CreditExpansionTest {
     private User user;
     private UserService service;
     private Map<String, PlaceholderExpansion> map;
-    private final AbstractDatabase database = DatabaseUtil.create("cs");
+    private final TestDatabase database = TestDatabase.create("cs");
 
     @BeforeEach
     void setUp() {
@@ -60,7 +59,7 @@ class CreditExpansionTest {
 
     @AfterEach
     void tearDown() {
-        this.database.jdbi().useHandle(x -> x.execute("DELETE FROM MCMMOCredits"));
+        this.database.delete();
     }
 
     @Test
