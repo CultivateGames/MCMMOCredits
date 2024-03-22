@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
+import games.cultivate.mcmmocredits.storage.StorageProperties;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 @SuppressWarnings({"FieldMayBeFinal", "unused", "FieldCanBeLocal"})
@@ -35,7 +35,7 @@ public final class ConverterProperties {
     private int retryDelay = 30;
     private int retries = 3;
     //TODO: db refactor... use constructor.
-    private DatabaseProperties internal = DatabaseProperties.defaults();
+    private StorageProperties internal = StorageProperties.defaults();
 
     /**
      * Gets the type of the converter.
@@ -87,7 +87,7 @@ public final class ConverterProperties {
      *
      * @return Properties of database used for internal transfers.
      */
-    public DatabaseProperties internal() {
+    public StorageProperties internal() {
         return this.internal;
     }
 }

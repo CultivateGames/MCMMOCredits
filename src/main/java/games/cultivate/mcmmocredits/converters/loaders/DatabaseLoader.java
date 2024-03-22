@@ -23,15 +23,15 @@
 //
 package games.cultivate.mcmmocredits.converters.loaders;
 
-import games.cultivate.mcmmocredits.database.AbstractDatabase;
+import games.cultivate.mcmmocredits.storage.AbstractStorage;
 import games.cultivate.mcmmocredits.user.User;
 
 import java.util.List;
 
 public final class DatabaseLoader implements UserLoader {
-    private final AbstractDatabase database;
+    private final AbstractStorage database;
 
-    public DatabaseLoader(final AbstractDatabase database) {
+    public DatabaseLoader(final AbstractStorage database) {
         this.database = database;
     }
 

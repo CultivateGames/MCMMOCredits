@@ -24,7 +24,7 @@
 package games.cultivate.mcmmocredits.converters;
 
 import games.cultivate.mcmmocredits.converters.loaders.UserLoader;
-import games.cultivate.mcmmocredits.database.AbstractDatabase;
+import games.cultivate.mcmmocredits.storage.AbstractStorage;
 import games.cultivate.mcmmocredits.user.User;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
@@ -35,11 +35,11 @@ import java.util.List;
 
 public final class DefaultConverter implements Converter {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultConverter.class);
-    private final AbstractDatabase database;
+    private final AbstractStorage database;
     private final UserLoader loader;
 
     @Inject
-    public DefaultConverter(final AbstractDatabase database, final UserLoader loader) {
+    public DefaultConverter(final AbstractStorage database, final UserLoader loader) {
         this.database = database;
         this.loader = loader;
     }

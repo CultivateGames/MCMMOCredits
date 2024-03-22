@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.database;
+package games.cultivate.mcmmocredits.storage;
 
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
@@ -37,14 +37,14 @@ import java.nio.file.Path;
  * @param password Password for the Database user.
  */
 @ConfigSerializable
-public record DatabaseProperties(DatabaseType type, String url, String user, String password) {
+public record StorageProperties(StorageType type, String url, String user, String password) {
     /**
      * Constructs the object with sane defaults.
      *
      * @return The object.
      */
-    public static DatabaseProperties defaults() {
-        return new DatabaseProperties(DatabaseType.H2, "jdbc:mysql://127.0.0.1:3306/DATABASE_NAME", "root", "passw0rd+");
+    public static StorageProperties defaults() {
+        return new StorageProperties(StorageType.H2, "jdbc:mysql://127.0.0.1:3306/DATABASE_NAME", "root", "passw0rd+");
     }
 
     /**
@@ -53,7 +53,7 @@ public record DatabaseProperties(DatabaseType type, String url, String user, Str
      * @param source The DataSource
      * @return The database.
      */
-    public AbstractDatabase create(final DataSource source) {
+    public AbstractStorage create(final DataSource source) {
         return this.type.create(source);
     }
 
@@ -63,7 +63,7 @@ public record DatabaseProperties(DatabaseType type, String url, String user, Str
      * @param path The path.
      * @return The database.
      */
-    public AbstractDatabase create(final Path path) {
+    public AbstractStorage create(final Path path) {
         return this.type.create(DataSourceFactory.createSource(this, path));
     }
 }

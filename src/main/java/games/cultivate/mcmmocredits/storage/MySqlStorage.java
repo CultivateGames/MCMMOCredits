@@ -21,33 +21,50 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.database;
+package games.cultivate.mcmmocredits.storage;
 
 import org.jdbi.v3.core.Jdbi;
-import org.jdbi.v3.sqlite3.SQLitePlugin;
+import org.jdbi.v3.core.argument.AbstractArgumentFactory;
+import org.jdbi.v3.core.argument.Argument;
+import org.jdbi.v3.core.config.ConfigRegistry;
 
 import javax.sql.DataSource;
+import java.sql.Types;
+import java.util.UUID;
 
 /**
- * Represents a SQLite Database.
+ * Represents a MySql Database.
  */
-public class SQLiteDatabase extends AbstractDatabase {
+public class MySqlStorage extends AbstractStorage {
     /**
      * Constructs the object.
      *
      * @param source The DataSource.
      */
-    public SQLiteDatabase(final DataSource source) {
+    public MySqlStorage(final DataSource source) {
         super(source);
     }
 
     @Override
     Jdbi createJdbi() {
-        return Jdbi.create(this.source).registerRowMapper(new UserMapper()).installPlugin(new SQLitePlugin());
+        return Jdbi.create(this.source).registerArgument(new UUIDFactory()).registerRowMapper(new UserMapper());
     }
 
-    @Override
-    public void createTable() {
-        this.jdbi.useHandle(handle -> handle.execute("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTOINCREMENT,UUID VARCHAR NOT NULL,username VARCHAR NOT NULL,credits INT CHECK(credits >= 0),redeemed INT);"));
+    /**
+     * Argument Factory required for better MySQL compatibility with UUID data type.
+     */
+    static class UUIDFactory extends AbstractArgumentFactory<UUID> {
+        protected UUIDFactory() {
+            super(Types.VARCHAR);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected Argument build(final UUID value, final ConfigRegistry config) {
+            return (p, s, c) -> s.setString(p, value.toString());
+        }
     }
+
 }

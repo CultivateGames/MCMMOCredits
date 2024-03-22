@@ -37,7 +37,7 @@ import games.cultivate.mcmmocredits.converters.loaders.UserLoader;
 import games.cultivate.mcmmocredits.converters.loaders.CSVLoader;
 import games.cultivate.mcmmocredits.converters.loaders.DatabaseLoader;
 import games.cultivate.mcmmocredits.converters.loaders.PluginLoader;
-import games.cultivate.mcmmocredits.database.AbstractDatabase;
+import games.cultivate.mcmmocredits.storage.AbstractStorage;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
 import games.cultivate.mcmmocredits.util.Dir;
@@ -98,7 +98,7 @@ public final class PluginModule extends AbstractModule {
      */
     @Provides
     @Singleton
-    public AbstractDatabase provideDatabase(final ConfigService configService, final @Dir Path path) {
+    public AbstractStorage provideDatabase(final ConfigService configService, final @Dir Path path) {
         return configService.getProperties("settings", "database").create(path);
     }
 }

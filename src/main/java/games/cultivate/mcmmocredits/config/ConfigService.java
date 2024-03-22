@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
+import games.cultivate.mcmmocredits.storage.StorageProperties;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.RedeemMenu;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
@@ -151,12 +151,12 @@ public final class ConfigService {
     }
 
     /**
-     * Convenience method to get DatabaseProperties.
+     * Convenience method to get StorageProperties.
      *
      * @param path The path.
      * @return The properties.
      */
-    public DatabaseProperties getProperties(final Object... path) {
-        return this.mainConfig().get(DatabaseProperties.class, DatabaseProperties.defaults(), path);
+    public StorageProperties getProperties(final Object... path) {
+        return this.mainConfig().get(StorageProperties.class, StorageProperties.defaults(), path);
     }
 }

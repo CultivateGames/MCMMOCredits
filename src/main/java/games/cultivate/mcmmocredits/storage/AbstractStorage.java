@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.database;
+package games.cultivate.mcmmocredits.storage;
 
 import games.cultivate.mcmmocredits.user.User;
 import org.jdbi.v3.core.Jdbi;
@@ -46,7 +46,7 @@ import java.util.concurrent.Executors;
 /**
  * Represents a database.
  */
-public abstract class AbstractDatabase {
+public abstract class AbstractStorage {
     final Jdbi jdbi;
     final DataSource source;
     final JdbiExecutor executor;
@@ -56,7 +56,7 @@ public abstract class AbstractDatabase {
      *
      * @param source The DataSource to wrap.
      */
-    AbstractDatabase(final DataSource source) {
+    AbstractStorage(final DataSource source) {
         this.source = source;
         this.jdbi = this.createJdbi();
         this.executor = JdbiExecutor.create(this.jdbi, Executors.newFixedThreadPool(2));

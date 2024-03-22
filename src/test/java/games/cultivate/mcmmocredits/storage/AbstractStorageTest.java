@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.database;
+package games.cultivate.mcmmocredits.storage;
 
 import games.cultivate.mcmmocredits.user.User;
 import org.junit.jupiter.api.AfterEach;
@@ -39,12 +39,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class AbstractDatabaseTest {
+class AbstractStorageTest {
     private final String username = "testUsername";
     private final UUID uuid = UUID.randomUUID();
     private final int credits = 60;
     private final int redeemed = 500;
-    private final TestDatabase database = TestDatabase.create("test");
+    private final TestStorage database = TestStorage.create("test");
     private User user;
 
     @BeforeEach

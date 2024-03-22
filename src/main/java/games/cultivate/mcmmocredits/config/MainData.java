@@ -24,7 +24,7 @@
 package games.cultivate.mcmmocredits.config;
 
 import games.cultivate.mcmmocredits.converters.ConverterProperties;
-import games.cultivate.mcmmocredits.database.DatabaseProperties;
+import games.cultivate.mcmmocredits.storage.StorageProperties;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
@@ -90,6 +90,6 @@ public final class MainData implements Data {
         private int leaderboardPageSize = 10;
         private boolean sendLoginMessage = true;
         private boolean userTabComplete = true;
-        private DatabaseProperties database = DatabaseProperties.defaults();
+        private StorageProperties database = StorageProperties.defaults();
     }
 }

@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.database;
+package games.cultivate.mcmmocredits.storage;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -49,11 +49,11 @@ public final class DataSourceFactory {
     /**
      * Creates a DataSource from the provided properties.
      *
-     * @param properties The DatabaseProperties.
+     * @param properties The StorageProperties.
      * @param path       The plugin's data path.
      * @return The data source.
      */
-    public static DataSource createSource(final DatabaseProperties properties, final Path path) {
+    public static DataSource createSource(final StorageProperties properties, final Path path) {
         HikariConfig config = new HikariConfig();
         config.setPoolName("MCMMOCredits %s".formatted(properties.type().name()));
         config.setMaximumPoolSize(20);

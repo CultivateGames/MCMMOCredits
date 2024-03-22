@@ -21,24 +21,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.database;
+package games.cultivate.mcmmocredits.storage;
 
-import com.zaxxer.hikari.HikariDataSource;
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.h2.H2DatabasePlugin;
 
 import javax.sql.DataSource;
 
-public final class TestDatabase extends H2Database {
-    private TestDatabase(final DataSource source) {
+/**
+ * Represents a H2 Database.
+ */
+public class H2Storage extends AbstractStorage {
+    /**
+     * Constructs the object.
+     *
+     * @param source The DataSource.
+     */
+    public H2Storage(final DataSource source) {
         super(source);
     }
 
-    public static TestDatabase create(final String name) {
-        HikariDataSource ds = new HikariDataSource();
-        ds.setJdbcUrl("jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1;MODE=MYSQL;IGNORECASE=TRUE".formatted(name));
-        return new TestDatabase(ds);
-    }
-
-    public void delete() {
-        this.executor.useHandle(handle -> handle.execute("DELETE FROM MCMMOCredits"));
+    @Override
+    Jdbi createJdbi() {
+        return Jdbi.create(this.source).registerRowMapper(new UserMapper()).installPlugin(new H2DatabasePlugin());
     }
 }

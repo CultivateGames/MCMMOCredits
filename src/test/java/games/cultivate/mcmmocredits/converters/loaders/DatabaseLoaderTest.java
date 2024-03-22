@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.converters.loaders;
 
-import games.cultivate.mcmmocredits.database.TestDatabase;
+import games.cultivate.mcmmocredits.storage.TestStorage;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserCreator;
 import org.junit.jupiter.api.AfterEach;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class DatabaseLoaderTest {
-    private static final TestDatabase OLD_DB = TestDatabase.create("oldic");
+    private static final TestStorage OLD_DB = TestStorage.create("oldic");
 
     @AfterEach
     void tearDown() {
