@@ -21,18 +21,47 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.util;
+package games.cultivate.mcmmocredits.menu;
 
-import org.junit.jupiter.api.Test;
+import games.cultivate.mcmmocredits.user.User;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.UUID;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+/**
+ * A fixed size collection of items.
+ */
+public interface Menu extends InventoryHolder {
+    /**
+     * Returns a map of items and their keys.
+     *
+     * @return A map of items and their keys.
+     */
+    Map<String, Item> items();
 
-class MojangUtilTest {
-    @Test
-    void getNameAsync_ValidInfo_ReturnsCorrectName() {
-        UUID uuid = UUID.fromString("069a79f4-44e9-4726-a5be-fca90e38aaf5");
-        assertEquals("Notch", MojangUtil.getNameAsync(uuid).join());
+    /**
+     * Opens the inventory for the provided User.
+     *
+     * @param plugin plugin used to open the inventory.
+     * @param user   The user.
+     */
+    void open(JavaPlugin plugin, User user);
+
+    /**
+     * The size of the inventory. Will never exceed 54.
+     *
+     * @return The size of the inventory.
+     */
+    int size();
+
+    /**
+     * Performs actions required when the inventory is closed.
+     */
+    void close();
+
+    default @Nullable Map.Entry<String, Item> getItemEntry(final int slot) {
+        return this.items().entrySet().stream().filter(entry -> entry.getValue().slot() == slot).findFirst().orElse(null);
     }
 }

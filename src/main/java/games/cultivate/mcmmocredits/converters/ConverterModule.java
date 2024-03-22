@@ -26,7 +26,7 @@ package games.cultivate.mcmmocredits.converters;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
-import games.cultivate.mcmmocredits.config.ConfigService;
+import games.cultivate.mcmmocredits.config.Settings;
 import games.cultivate.mcmmocredits.config.Settings.ConverterProperties;
 import games.cultivate.mcmmocredits.converters.loaders.CSVLoader;
 import games.cultivate.mcmmocredits.converters.loaders.ExternalLoader;
@@ -49,8 +49,8 @@ public final class ConverterModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public UserLoader getUserLoader(final ConfigService configService, final ExecutorService executorService, final Injector injector) {
-        ConverterProperties properties = configService.mainConfig().get(ConverterProperties.class, null, "converter");
+    public UserLoader getUserLoader(final Settings settings, final ExecutorService executorService, final Injector injector) {
+        ConverterProperties properties = settings.converter();
         ConverterType type = properties.type();
         Path pluginPath = Bukkit.getPluginsFolder().toPath();
         return switch (type) {

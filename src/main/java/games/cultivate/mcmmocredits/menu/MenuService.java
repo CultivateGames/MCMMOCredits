@@ -21,25 +21,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.storage;
+package games.cultivate.mcmmocredits.menu;
 
-import org.jdbi.v3.core.argument.AbstractArgumentFactory;
-import org.jdbi.v3.core.argument.Argument;
-import org.jdbi.v3.core.config.ConfigRegistry;
+import games.cultivate.mcmmocredits.user.User;
+import net.kyori.adventure.text.Component;
 
-import java.sql.Types;
 import java.util.UUID;
 
-/**
- * Argument Factory required for better MySQL compatibility with UUID data type.
- */
-final class UUIDFactory extends AbstractArgumentFactory<UUID> {
-    UUIDFactory() {
-        super(Types.VARCHAR);
-    }
+public interface MenuService {
+    void open(User user);
 
-    @Override
-    protected Argument build(final UUID value, final ConfigRegistry config) {
-        return (p, s, c) -> s.setString(p, value.toString());
-    }
+    void close(UUID uuid);
+
+    void closeAll();
+
+    void handleClick(User user, int slot);
+
+    void registerUser(UUID uuid);
+
+    void unregisterUser(UUID uuid);
+
+    void completeChat(User user, Component chat);
+
+    boolean isRegistered(UUID uuid);
 }

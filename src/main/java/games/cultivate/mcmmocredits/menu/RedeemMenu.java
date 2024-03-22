@@ -23,143 +23,88 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.MCMMOCredits;
+import games.cultivate.mcmmocredits.config.MenuSettings;
 import games.cultivate.mcmmocredits.messages.Text;
 import games.cultivate.mcmmocredits.user.User;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Represents a Bukkit Inventory with populated item slots.
  */
-public final class RedeemMenu implements InventoryHolder {
-    private final Map<String, Item> items;
+@ConfigSerializable
+public final class RedeemMenu implements Menu {
     private final String title;
-    private final int slots;
-    private final boolean fill;
-    private final boolean navigation;
-    private Inventory inventory;
-    private ScheduledTask task;
+    private final int size;
+    private final Map<String, Item> items;
+    private transient Inventory inventory;
+    private transient ScheduledTask task;
 
-    /**
-     * Constructs the object.
-     *
-     * @param items      Map of items and their internal names.
-     * @param title      Unparsed title of the inventory.
-     * @param slots      Size of the inventory.
-     * @param fill       If the menu will be filled.
-     * @param navigation If the menu will have a navigation item.
-     */
-    public RedeemMenu(final Map<String, Item> items, final String title, final int slots, final boolean fill, final boolean navigation) {
+    private RedeemMenu(final Map<String, Item> items, final String title, final int size, final boolean fillEnabled, final boolean navigationEnabled) {
         this.items = items;
         this.title = title;
-        this.slots = slots;
-        this.fill = fill;
-        this.navigation = navigation;
-        this.inventory = null;
+        this.size = size;
         this.task = null;
-    }
-
-    /**
-     * Opens the inventory for the provided User. Executed on the following tick.
-     *
-     * @param plugin Plugin to execute the opening later.
-     * @param user   The user to open the inventory on.
-     */
-    public void openInventory(final MCMMOCredits plugin, final User user) {
-        this.inventory = Bukkit.getServer().createInventory(this, this.slots, Text.forOneUser(user, this.title).toComponent());
-        this.setItems(user);
-        Bukkit.getGlobalRegionScheduler().run(plugin, x -> ((Player) user.sender()).openInventory(this.inventory));
-        this.task = Bukkit.getAsyncScheduler().runAtFixedRate(plugin, x -> this.setItems(user), 50, 1000, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * Cancels the task which redraws items within the inventory.
-     */
-    public void cancelRefresh() {
-        if (this.task != null) {
-            this.task.cancel();
+        this.inventory = Bukkit.createInventory(this, this.size);
+        //TODO: check
+        if (!navigationEnabled) {
+            items.remove("navigation");
         }
-        this.task = null;
+        Item filler = items.remove("fill");
+        Set<Integer> slots = items.values().stream().map(Item::slot).collect(Collectors.toSet());
+        if (fillEnabled) {
+            IntStream.range(0, size).filter(i -> !slots.contains(i)).forEach(i -> items.put("fill" + i, filler.withSlot(i)));
+        }
     }
 
-    /**
-     * Gets an item map entry at the provided slot if it exists.
-     *
-     * @param slot The slot.
-     * @return The item map entry.
-     */
-    public Optional<Map.Entry<String, Item>> getItem(final int slot) {
-        return this.items.entrySet().stream().filter(x -> x.getValue().slot() == slot).findAny();
-    }
-
-    /**
-     * Redraws items to the inventory. Parses placeholders against provided user.
-     *
-     * @param user The user.
-     */
-    public void setItems(final User user) {
-        this.items.forEach((k, v) -> this.inventory.setItem(v.slot(), v.parseUser(user)));
+    public static RedeemMenu of(final MenuSettings settings) {
+        return new RedeemMenu(settings.items(), settings.title(), settings.size(), settings.fill(), settings.navigation());
     }
 
     @Override
     public @NotNull Inventory getInventory() {
-        if (this.inventory == null) {
-            this.inventory = Bukkit.createInventory(this, this.slots);
-        }
         return this.inventory;
     }
 
-    /**
-     * Returns the item map.
-     *
-     * @return The item map.
-     */
+    @Override
     public Map<String, Item> items() {
         return this.items;
     }
 
-    /**
-     * Returns the unparsed title.
-     *
-     * @return The unparsed title.
-     */
-    public String title() {
-        return this.title;
+    @Override
+    public void open(final JavaPlugin plugin, final User user) {
+        this.inventory = Bukkit.createInventory(this, this.size, Text.forOneUser(user, this.title).toComponent());
+        this.draw(user);
+        Bukkit.getGlobalRegionScheduler().run(plugin, x -> ((Player) user.sender()).openInventory(this.inventory));
+        //TODO: might need to use global region scheduler.
+        this.task = Bukkit.getAsyncScheduler().runAtFixedRate(plugin, x -> this.draw(user), 50, 1000, TimeUnit.MILLISECONDS);
     }
 
-    /**
-     * Returns the size of the inventory.
-     *
-     * @return The size of the inventory.
-     */
-    public int slots() {
-        return this.slots;
+    @Override
+    public int size() {
+        return this.size;
     }
 
-    /**
-     * Returns if the inventory is filled.
-     *
-     * @return If the inventory is filled.
-     */
-    public boolean fill() {
-        return this.fill;
+    @Override
+    public void close() {
+        if (this.task != null) {
+            this.task.cancel();
+            this.task = null;
+        }
     }
 
-    /**
-     * Returns if the inventory has a navigation button.
-     *
-     * @return If there is a navigation button.
-     */
-    public boolean navigation() {
-        return this.navigation;
+    private void draw(final User user) {
+        this.items.values().forEach(x -> this.inventory.setItem(x.slot(), x.getItemFor(user)));
     }
 }

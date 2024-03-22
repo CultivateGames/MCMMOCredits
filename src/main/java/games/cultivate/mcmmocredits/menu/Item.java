@@ -23,66 +23,176 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.messages.Text;
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
+import com.google.common.base.Suppliers;
 import games.cultivate.mcmmocredits.user.User;
-import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.function.Supplier;
 
-/**
- * Representation of a Bukkit ItemStack.
- *
- * @param stack  The Bukkit ItemStack.
- * @param name   Unparsed item name.
- * @param lore   Unparsed item lore.
- * @param slot   Slot of the item in the Menu.
- * @param action Action to execute when the item is clicked in a menu.
- */
 @ConfigSerializable
-public record Item(ItemStack stack, String name, List<String> lore, int slot, ItemAction action) {
-    /**
-     * Constructs the object with sane defaults.
-     *
-     * @param material The type of the Item.
-     * @return The item.
-     */
-    public static Item of(final Material material) {
-        return new Item(new ItemStack(material), "", new ArrayList<>(), 0, ItemAction.CANCEL);
+public final class Item {
+    private final Material material;
+    private final int amount;
+    private final String name;
+    private final List<String> lore;
+    private final int customModelData;
+    private final boolean glowing;
+    private final String texture;
+    private final int slot;
+    private final transient Supplier<ItemStack> itemSupplier;
+
+    private Item(final Builder builder) {
+        this.material = builder.material;
+        this.amount = builder.amount;
+        this.name = builder.name;
+        this.lore = builder.lore;
+        this.customModelData = builder.customModelData;
+        this.glowing = builder.glowing;
+        this.texture = builder.texture;
+        this.slot = builder.slot;
+        this.itemSupplier = Suppliers.memoize(this::getItem);
     }
 
-    /**
-     * Returns a copy of the item with a new slot.
-     *
-     * @param slot The slot.
-     * @return The new item.
-     */
-    public Item slot(final int slot) {
-        return new Item(this.stack, this.name, this.lore, slot, this.action);
+    private Item() {
+        this(Item.builder());
     }
 
-    /**
-     * Updates the name and lore based on the User.
-     *
-     * @param user The user to parse against.
-     * @return A Bukkit ItemStack with updated properties.
-     */
-    public ItemStack parseUser(final User user) {
-        ItemMeta meta = this.stack.getItemMeta();
-        if (!this.name.isEmpty()) {
-            Component itemName = Text.forOneUser(user, this.name).toComponent();
-            meta.displayName(itemName);
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public Builder toBuilder() {
+        return new Builder(this);
+    }
+
+    public Item withSlot(final int slot) {
+        return this.toBuilder().slot(slot).build();
+    }
+
+    public int slot() {
+        return this.slot;
+    }
+
+    public ItemStack getItemFor(final User user) {
+        ItemStack item = this.itemSupplier.get();
+        item.editMeta(meta -> {
+            //TODO: re-impl with Text refactor.
+//            TextFormatter<User> formatter = new TextFormatter<>();
+//            if (!this.name.isEmpty()) {
+//                meta.displayName(formatter.format(user, this.name));
+//            }
+//            if (!this.lore.stream().allMatch(String::isEmpty)) {
+//                meta.lore(this.lore.stream().map(x -> formatter.format(user, x)).toList());
+//            }
+        });
+        return item;
+    }
+
+    private ItemStack getItem() {
+        ItemStack stack = new ItemStack(this.material, this.amount);
+        ItemMeta meta = stack.getItemMeta();
+        if (this.glowing) {
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
         }
-        if (!this.lore.stream().allMatch(String::isEmpty)) {
-            List<Component> itemLore = this.lore.stream().map(x -> Text.forOneUser(user, x).toComponent()).toList();
-            meta.lore(itemLore);
+        meta.setCustomModelData(this.customModelData);
+        if (!this.texture.isEmpty()) {
+            SkullMeta skullMeta = (SkullMeta) meta;
+            PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+            profile.setProperty(new ProfileProperty("textures", this.texture));
+            skullMeta.setPlayerProfile(profile);
+            stack.setItemMeta(skullMeta);
+        } else {
+            stack.setItemMeta(meta);
         }
-        ItemStack copy = this.stack.clone();
-        copy.setItemMeta(meta);
-        return copy;
+        return stack;
+    }
+
+    public static final class Builder {
+        private Material material;
+        private int amount;
+        private String name;
+        private List<String> lore;
+        private int customModelData;
+        private boolean glowing;
+        private String texture;
+        private int slot;
+
+        private Builder() {
+            this.material = Material.STONE;
+            this.amount = 1;
+            this.name = "";
+            this.lore = List.of();
+            this.customModelData = 0;
+            this.glowing = false;
+            this.texture = "";
+            this.slot = -1;
+        }
+
+        private Builder(final Item item) {
+            this.material = item.material;
+            this.amount = item.amount;
+            this.name = item.name;
+            this.lore = item.lore;
+            this.customModelData = item.customModelData;
+            this.glowing = item.glowing;
+            this.texture = item.texture;
+            this.slot = item.slot;
+        }
+
+        public Builder material(final Material material) {
+            this.material = material;
+            return this;
+        }
+
+        public Builder amount(final int amount) {
+            this.amount = amount;
+            return this;
+        }
+
+        public Builder name(final String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder lore(final List<String> lore) {
+            this.lore = lore;
+            return this;
+        }
+
+        public Builder customModelData(final int customModelData) {
+            this.customModelData = customModelData;
+            return this;
+        }
+
+        public Builder glowing(final boolean glowing) {
+            this.glowing = glowing;
+            return this;
+        }
+
+        public Builder texture(final String texture) {
+            this.texture = texture;
+            return this;
+        }
+
+        public Builder slot(final int slot) {
+            this.slot = slot;
+            return this;
+        }
+
+        public Item build() {
+            return new Item(this);
+        }
     }
 }

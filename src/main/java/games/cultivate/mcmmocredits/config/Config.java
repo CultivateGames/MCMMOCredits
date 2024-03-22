@@ -23,16 +23,17 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.menu.RedeemMenu;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import cloud.commandframework.captions.Caption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
-import org.spongepowered.configurate.NodePath;
 import org.spongepowered.configurate.objectmapping.ObjectMapper;
-import org.spongepowered.configurate.serialize.SerializationException;
-import org.spongepowered.configurate.util.NamingSchemes;
+import org.spongepowered.configurate.serialize.TypeSerializer;
+import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
+
+import java.nio.file.Path;
 
 /**
  * A Configuration File.
@@ -40,32 +41,33 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
  * @param <D> Type of the data to parse for config.
  */
 public final class Config<D extends Data> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Config.class);
+    private static final TypeSerializer<Caption> CAPTION_SERIALIZER = TypeSerializer.of(Caption.class, (x, y) -> x.getKey(), c -> Caption.of(c.toString()));
     private final YamlConfigurationLoader loader;
-    private final ObjectMapper.Factory factory;
+    private final Class<? extends D> type;
+    private D data;
     private ConfigurationNode root;
 
-    /**
-     * Constructs the object.
-     *
-     * @param loader The YAMLConfigurationLoader used to load the config. Stored to load/save the configuration.
-     */
-    public Config(final YamlConfigurationLoader loader) {
-        this.loader = loader;
-        this.factory = ObjectMapper.factoryBuilder().defaultNamingScheme(NamingSchemes.LOWER_CASE_DASHED).build();
+    public Config(final Class<? extends D> type, final Path path) {
+        this.type = type;
+        this.loader = YamlConfigurationLoader.builder()
+                .path(path)
+                .nodeStyle(NodeStyle.BLOCK)
+                .indent(2)
+                .defaultOptions(o -> o.serializers(b -> b.register(Caption.class, CAPTION_SERIALIZER)))
+                .build();
     }
 
     /**
-     * Loads the configuration using the provided type.
-     *
-     * @param type Type of the data.
+     * Loads the configuration.
      */
-    public void load(final Class<D> type) {
+    public void load() {
         try {
             this.root = this.loader.load();
-            this.factory.get(type).load(this.root);
+            this.data = ObjectMapper.factory().get(this.type).load(this.root);
             this.save();
-        } catch (ConfigurateException e) {
-            e.printStackTrace();
+        } catch (final ConfigurateException e) {
+            LOGGER.error("There was an issue loading the configuration", e);
         }
     }
 
@@ -75,107 +77,12 @@ public final class Config<D extends Data> {
     public void save() {
         try {
             this.loader.save(this.root);
-        } catch (ConfigurateException e) {
-            e.printStackTrace();
+        } catch (final ConfigurateException e) {
+            LOGGER.error("There was an issue saving the configuration", e);
         }
     }
 
-    /**
-     * Modifies the configuration.
-     *
-     * @param value The value to apply.
-     * @param path  Node path used to locate the value.
-     * @param <T>   Type of the value.
-     * @return If the operation was successful.
-     */
-    public <T> boolean set(@NotNull final T value, final Object... path) {
-        try {
-            this.root.node(path).set(value);
-            this.save();
-            return true;
-        } catch (SerializationException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    /**
-     * Gets a value from the configuration at the provided path.
-     *
-     * @param type Class of the value.
-     * @param def  Default value used if value is missing.
-     * @param path Node path where the value is found.
-     * @param <T>  Type of the value.
-     * @return The value.
-     */
-    public <T> T get(final Class<T> type, final T def, final Object... path) {
-        try {
-            return this.root.node(path).get(type, def);
-        } catch (SerializationException e) {
-            e.printStackTrace();
-        }
-        return def;
-    }
-
-    /**
-     * Sets a value to the configuration at the provided NodePath.
-     *
-     * @param value The value to set.
-     * @param path  The path to set the value.
-     * @param <T>   The type of the value.
-     * @return If it was successful.
-     */
-    public <T> boolean set(@NotNull final T value, final NodePath path) {
-        return this.set(value, path.array());
-    }
-
-    /**
-     * Gets a boolean from the configuration.
-     *
-     * @param path location where the value is found.
-     * @return The value, or the public if the value is null.
-     */
-    public boolean getBoolean(final Object... path) {
-        return this.get(boolean.class, false, path);
-    }
-
-    /**
-     * Gets a String from the configuration, with the prefix prepended.
-     *
-     * @param path Node path where the value is found.
-     * @return The value, or the public if the value is null.
-     */
-    public String getMessage(final Object... path) {
-        return this.getString("prefix") + this.getString(path);
-    }
-
-    /**
-     * Gets a String from the configuration.
-     *
-     * @param path Node path where the value is found.
-     * @return The value, or the public if the value is null.
-     */
-    public String getString(final Object... path) {
-        return this.get(String.class, "", path);
-    }
-
-    /**
-     * Gets an int from the configuration.
-     *
-     * @param path Node path where the value is found.
-     * @return The value, or the public if the value is null.
-     */
-    public int getInteger(final Object... path) {
-        return this.get(int.class, 0, path);
-    }
-
-    /**
-     * Gets a Menu from the configuration.
-     *
-     * @param path Node path where the value is found.
-     * @return The value, or the public if the value is null.
-     */
-    public @Nullable RedeemMenu getMenu(final Object... path) {
-        return this.get(RedeemMenu.class, null, path);
+    public D data() {
+        return this.data;
     }
 }

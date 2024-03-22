@@ -24,41 +24,60 @@
 package games.cultivate.mcmmocredits.inject;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.commands.Commands;
-import games.cultivate.mcmmocredits.config.ConfigService;
-import games.cultivate.mcmmocredits.user.UserService;
-import games.cultivate.mcmmocredits.util.ChatQueue;
+import games.cultivate.mcmmocredits.config.Config;
+import games.cultivate.mcmmocredits.config.Data;
+import games.cultivate.mcmmocredits.config.MenuSettings;
+import games.cultivate.mcmmocredits.config.Settings;
+import jakarta.inject.Singleton;
 
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Handles Guice Dependency Injection.
  */
 public final class PluginModule extends AbstractModule {
-    private static final Path MR_PATH = Path.of("MorphRedeem", "PlayerData");
-    private static final Path GRM_PATH = Path.of("GuiRedeemMCMMO", "playerdata");
     private final MCMMOCredits plugin;
+    private final ExecutorService executorService;
 
     /**
      * Constructs the Guice Module.
      *
      * @param plugin Instance of the plugin, obtained from initialization logic.
      */
-    public PluginModule(final MCMMOCredits plugin) {
+    public PluginModule(final MCMMOCredits plugin, final ExecutorService executorService) {
         this.plugin = plugin;
+        this.executorService = executorService;
     }
 
     @Override
     protected void configure() {
         this.bind(MCMMOCredits.class).toInstance(this.plugin);
-        this.bind(ExecutorService.class).toInstance(Executors.newVirtualThreadPerTaskExecutor());
+        this.bind(ExecutorService.class).toInstance(this.executorService);
         this.bind(Path.class).annotatedWith(Dir.class).toInstance(this.plugin.getDataFolder().toPath());
-        this.bind(UserService.class).asEagerSingleton();
-        this.bind(ChatQueue.class).asEagerSingleton();
         this.bind(Commands.class).asEagerSingleton();
-        this.bind(ConfigService.class).asEagerSingleton();
+    }
+
+    @Provides
+    @Singleton
+    public Settings provideSettings(final @Dir Path path) {
+        //TODO: singleton config = no reload capability. determine if necessary.
+        return this.createConfig(Settings.class, path.resolve("config.yml")).data();
+    }
+
+    @Provides
+    @Singleton
+    public MenuSettings provideMenuSettings(final @Dir Path path) {
+        return this.createConfig(MenuSettings.class, path.resolve("menu.yml")).data();
+    }
+
+    private <D extends Data> Config<D> createConfig(final Class<? extends D> type, final Path path) {
+        MCMMOCredits.createFile(path);
+        Config<D> config = new Config<>(type, path);
+        config.load();
+        return config;
     }
 }

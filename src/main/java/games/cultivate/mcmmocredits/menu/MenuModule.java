@@ -23,10 +23,16 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
+import com.google.inject.AbstractModule;
+import jakarta.inject.Singleton;
+
 /**
- * Defines what happens when an item is clicked in a Bukkit Inventory.
- * CANCEL is the default.
+ * Handles Guice Dependency Injection.
  */
-public enum ItemAction {
-    COMMAND, REDEEM, CANCEL
+public final class MenuModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        this.bind(MenuService.class).to(DefaultMenuService.class).in(Singleton.class);
+    }
 }
+
