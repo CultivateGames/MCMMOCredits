@@ -30,11 +30,11 @@ import jakarta.inject.Inject;
 
 import java.util.List;
 
-public final class DatabaseLoader implements UserLoader {
+public final class StorageLoader implements UserLoader {
     private final StorageService database;
 
     @Inject
-    public DatabaseLoader(@ForConversion final StorageService database) {
+    public StorageLoader(@ForConversion final StorageService database) {
         this.database = database;
     }
 

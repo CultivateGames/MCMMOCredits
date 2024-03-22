@@ -49,8 +49,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("UnstableApiUsage")
-public final class PluginLoader implements UserLoader {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PluginLoader.class);
+public final class ExternalLoader implements UserLoader {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExternalLoader.class);
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
     private final ExecutorService service;
     private final Path path;
@@ -58,7 +58,7 @@ public final class PluginLoader implements UserLoader {
     private final int delay;
     private final int retries;
 
-    public PluginLoader(final Path path, final ExecutorService service, final ConverterProperties properties) {
+    public ExternalLoader(final Path path, final ExecutorService service, final ConverterProperties properties) {
         this.path = path;
         this.service = service;
         this.delay = properties.retryDelay();

@@ -21,44 +21,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.inject;
+package games.cultivate.mcmmocredits.converters;
 
 import com.google.inject.AbstractModule;
-import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.commands.Commands;
+import com.google.inject.Injector;
+import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.config.ConfigService;
-import games.cultivate.mcmmocredits.user.UserService;
-import games.cultivate.mcmmocredits.util.ChatQueue;
+import games.cultivate.mcmmocredits.config.Settings.ConverterProperties;
+import games.cultivate.mcmmocredits.converters.loaders.CSVLoader;
+import games.cultivate.mcmmocredits.converters.loaders.ExternalLoader;
+import games.cultivate.mcmmocredits.converters.loaders.StorageLoader;
+import games.cultivate.mcmmocredits.converters.loaders.UserLoader;
+import jakarta.inject.Singleton;
+import org.bukkit.Bukkit;
 
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-/**
- * Handles Guice Dependency Injection.
- */
-public final class PluginModule extends AbstractModule {
+public final class ConverterModule extends AbstractModule {
     private static final Path MR_PATH = Path.of("MorphRedeem", "PlayerData");
     private static final Path GRM_PATH = Path.of("GuiRedeemMCMMO", "playerdata");
-    private final MCMMOCredits plugin;
-
-    /**
-     * Constructs the Guice Module.
-     *
-     * @param plugin Instance of the plugin, obtained from initialization logic.
-     */
-    public PluginModule(final MCMMOCredits plugin) {
-        this.plugin = plugin;
-    }
 
     @Override
     protected void configure() {
-        this.bind(MCMMOCredits.class).toInstance(this.plugin);
-        this.bind(ExecutorService.class).toInstance(Executors.newVirtualThreadPerTaskExecutor());
-        this.bind(Path.class).annotatedWith(Dir.class).toInstance(this.plugin.getDataFolder().toPath());
-        this.bind(UserService.class).asEagerSingleton();
-        this.bind(ChatQueue.class).asEagerSingleton();
-        this.bind(Commands.class).asEagerSingleton();
-        this.bind(ConfigService.class).asEagerSingleton();
+        this.bind(Converter.class).to(DefaultConverter.class).in(Singleton.class);
+    }
+
+    @Provides
+    @Singleton
+    public UserLoader getUserLoader(final ConfigService configService, final ExecutorService executorService, final Injector injector) {
+        ConverterProperties properties = configService.mainConfig().get(ConverterProperties.class, null, "converter");
+        ConverterType type = properties.type();
+        Path pluginPath = Bukkit.getPluginsFolder().toPath();
+        return switch (type) {
+            case CSV -> injector.getInstance(CSVLoader.class);
+            case INTERNAL -> injector.getInstance(StorageLoader.class);
+            case PLUGIN_MR -> new ExternalLoader(pluginPath.resolve(MR_PATH), executorService, properties);
+            case PLUGIN_GRM -> new ExternalLoader(pluginPath.resolve(GRM_PATH), executorService, properties);
+        };
     }
 }

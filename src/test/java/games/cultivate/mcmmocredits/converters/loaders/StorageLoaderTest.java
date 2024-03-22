@@ -35,7 +35,7 @@ import java.util.concurrent.CompletionException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class DatabaseLoaderTest {
+class StorageLoaderTest {
     private static final TestStorageService OLD_DB = TestStorageService.create("oldic");
 
     @AfterEach
@@ -47,7 +47,7 @@ class DatabaseLoaderTest {
     void getUsers_ValidData_ReturnsAllAndDisablesConnection() {
         List<User> users = UserCreator.createUsers(10);
         OLD_DB.addUsers(users);
-        UserLoader loader = new DatabaseLoader(OLD_DB);
+        UserLoader loader = new StorageLoader(OLD_DB);
         assertEquals(users, loader.getUsers());
         assertThrows(CompletionException.class, loader::getUsers);
     }

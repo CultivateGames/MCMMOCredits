@@ -29,6 +29,7 @@ import com.google.inject.Injector;
 import games.cultivate.mcmmocredits.commands.CommandHandler;
 import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.converters.Converter;
+import games.cultivate.mcmmocredits.converters.ConverterModule;
 import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.messages.CreditsExpansion;
 import games.cultivate.mcmmocredits.storage.StorageModule;
@@ -89,7 +90,7 @@ public final class MCMMOCredits extends JavaPlugin {
     public void onEnable() {
         long start = System.nanoTime();
         this.logger = this.getSLF4JLogger();
-        this.injector = Guice.createInjector(new PluginModule(this), new StorageModule(), new UserModule());
+        this.injector = Guice.createInjector(new PluginModule(this), new StorageModule(), new UserModule(), new ConverterModule());
         this.checkForDependencies();
         this.configs = this.injector.getInstance(ConfigService.class);
         this.configs.reloadConfigs();
