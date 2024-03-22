@@ -38,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-//TODO: complete tests for rest of transaction types.
 class AddTransactionTest {
     private final CommandExecutor executor = Console.INSTANCE;
     private User target;

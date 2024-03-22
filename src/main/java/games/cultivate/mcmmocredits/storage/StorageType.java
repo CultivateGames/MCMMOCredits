@@ -23,30 +23,9 @@
 //
 package games.cultivate.mcmmocredits.storage;
 
-import javax.sql.DataSource;
-import java.util.function.Function;
-
 /**
- * Database connection strategies.
+ * StorageService connection strategies.
  */
 public enum StorageType {
-    MYSQL(MySqlStorage::new),
-    SQLITE(SQLiteStorage::new),
-    H2(H2Storage::new);
-
-    private final Function<DataSource, AbstractStorage> function;
-
-    StorageType(final Function<DataSource, AbstractStorage> function) {
-        this.function = function;
-    }
-
-    /**
-     * Creates a Database using the assigned function.
-     *
-     * @param source The DataSource.
-     * @return A database.
-     */
-    public AbstractStorage create(final DataSource source) {
-        return this.function.apply(source);
-    }
+    MYSQL, H2;
 }

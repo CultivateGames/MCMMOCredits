@@ -23,22 +23,24 @@
 //
 package games.cultivate.mcmmocredits.converters.loaders;
 
-import games.cultivate.mcmmocredits.storage.AbstractStorage;
+import games.cultivate.mcmmocredits.inject.ForConversion;
+import games.cultivate.mcmmocredits.storage.StorageService;
 import games.cultivate.mcmmocredits.user.User;
+import jakarta.inject.Inject;
 
 import java.util.List;
 
 public final class DatabaseLoader implements UserLoader {
-    private final AbstractStorage database;
+    private final StorageService database;
 
-    public DatabaseLoader(final AbstractStorage database) {
+    @Inject
+    public DatabaseLoader(@ForConversion final StorageService database) {
         this.database = database;
     }
 
     @Override
     public List<User> getUsers() {
-        //TODO: db refactor.. fix later.
-        List<User> users = this.database.getAllUsers().join();
+        List<User> users = this.database.getAllUsers();
         this.database.disable();
         return users;
     }

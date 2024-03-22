@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import games.cultivate.mcmmocredits.storage.TestStorage;
+import games.cultivate.mcmmocredits.storage.TestStorageService;
 import games.cultivate.mcmmocredits.transaction.AddTransaction;
 import games.cultivate.mcmmocredits.transaction.Transaction;
 import games.cultivate.mcmmocredits.transaction.TransactionResult;
@@ -51,7 +51,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
-    private final TestStorage database = TestStorage.create("us");
+    private final TestStorageService database = TestStorageService.create("us");
     private User user;
     private UserService service;
     @Mock

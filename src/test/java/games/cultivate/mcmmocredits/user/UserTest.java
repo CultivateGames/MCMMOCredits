@@ -103,7 +103,7 @@ class UserTest {
     @Test
     void withCredits_ReturnsSameUserWithUpdatedCredits() {
         int newCredits = 200;
-        User updatedUser = this.user.setCredits(newCredits);
+        User updatedUser = this.user.withCredits(newCredits);
         assertNotEquals(this.user, updatedUser);
         assertEquals(newCredits, updatedUser.credits());
         assertEquals(this.uuid, updatedUser.uuid());

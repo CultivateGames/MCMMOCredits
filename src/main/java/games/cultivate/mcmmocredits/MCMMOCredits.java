@@ -29,24 +29,47 @@ import com.google.inject.Injector;
 import games.cultivate.mcmmocredits.commands.CommandHandler;
 import games.cultivate.mcmmocredits.config.ConfigService;
 import games.cultivate.mcmmocredits.converters.Converter;
-import games.cultivate.mcmmocredits.storage.AbstractStorage;
 import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.messages.CreditsExpansion;
+import games.cultivate.mcmmocredits.storage.StorageModule;
+import games.cultivate.mcmmocredits.storage.StorageService;
 import games.cultivate.mcmmocredits.util.Listeners;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Main class of the application. Handles startup and shutdown logic.
  */
 public final class MCMMOCredits extends JavaPlugin {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MCMMOCredits.class);
     private static MCMMOCreditsAPI api;
     private Injector injector;
     private ConfigService configs;
     private Logger logger;
+
+    /**
+     * Creates a file in the provided path if it doesn't exist.
+     *
+     * @param dir Path of the file to be created.
+     */
+    public static void createFile(final Path dir) {
+        try {
+            if (Files.notExists(dir)) {
+                Files.createDirectories(dir.getParent());
+                Files.createFile(dir);
+            }
+        } catch (IOException e) {
+            LOGGER.error("There was an issue creating a file!", e);
+        }
+    }
 
     /**
      * Gets an instance of the API. Allows basic user modification.
@@ -65,7 +88,7 @@ public final class MCMMOCredits extends JavaPlugin {
     public void onEnable() {
         long start = System.nanoTime();
         this.logger = this.getSLF4JLogger();
-        this.injector = Guice.createInjector(new PluginModule(this));
+        this.injector = Guice.createInjector(new PluginModule(this), new StorageModule());
         this.checkForDependencies();
         this.configs = this.injector.getInstance(ConfigService.class);
         this.configs.reloadConfigs();
@@ -152,7 +175,7 @@ public final class MCMMOCredits extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        this.injector.getInstance(AbstractStorage.class).disable();
+        this.injector.getInstance(StorageService.class).disable();
         this.configs.saveConfigs();
     }
 }

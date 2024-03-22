@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.converters.loaders;
 
-import games.cultivate.mcmmocredits.storage.TestStorage;
+import games.cultivate.mcmmocredits.storage.TestStorageService;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserCreator;
 import org.junit.jupiter.api.AfterEach;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class DatabaseLoaderTest {
-    private static final TestStorage OLD_DB = TestStorage.create("oldic");
+    private static final TestStorageService OLD_DB = TestStorageService.create("oldic");
 
     @AfterEach
     void tearDown() {
@@ -46,7 +46,7 @@ class DatabaseLoaderTest {
     @Test
     void getUsers_ValidData_ReturnsAllAndDisablesConnection() {
         List<User> users = UserCreator.createUsers(10);
-        OLD_DB.addUsers(users).join();
+        OLD_DB.addUsers(users);
         UserLoader loader = new DatabaseLoader(OLD_DB);
         assertEquals(users, loader.getUsers());
         assertThrows(CompletionException.class, loader::getUsers);

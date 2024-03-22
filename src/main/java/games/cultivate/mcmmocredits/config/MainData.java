@@ -23,8 +23,6 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.converters.ConverterProperties;
-import games.cultivate.mcmmocredits.storage.StorageProperties;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
@@ -79,17 +77,4 @@ public final class MainData implements Data {
     private String notEnoughCredits = "<red>You do not have enough credits to do this!";
     private String notEnoughCreditsOther = "<red><target> does not have enough credits for: <transaction>!";
     private String reload = "<green>The configuration file has been reloaded.";
-    private Settings settings = new Settings();
-    private ConverterProperties converter = new ConverterProperties();
-
-    @ConfigSerializable
-    static class Settings {
-        private boolean addUserMessage = true;
-        private boolean metricsEnabled = true;
-        private boolean leaderboardEnabled = false;
-        private int leaderboardPageSize = 10;
-        private boolean sendLoginMessage = true;
-        private boolean userTabComplete = true;
-        private StorageProperties database = StorageProperties.defaults();
-    }
 }

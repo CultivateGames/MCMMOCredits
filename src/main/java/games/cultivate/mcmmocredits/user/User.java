@@ -23,30 +23,65 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
 /**
  * Represents a human.
- *
- * @param uuid     UUID of the user.
- * @param username Username of the user.
- * @param credits  Default credit balance of the user.
- * @param redeemed Default credit redeemed stat of the user.
  */
-public record User(UUID uuid, String username, int credits, int redeemed) implements CommandExecutor {
+public final class User implements CommandExecutor {
+    private final UUID uuid;
+    private final String username;
+    private final int credits;
+    private final int redeemed;
+    private final Player player;
 
-    /**
-     * Parses User from line of a CSV file.
-     *
-     * @param line The line of text from CSV file.
-     * @return The parsed User.
-     */
-    public static User fromCSV(final String line) {
-        String[] arr = line.split(",");
-        return new User(UUID.fromString(arr[0]), arr[1], Integer.parseInt(arr[2]), Integer.parseInt(arr[3]));
+    private User(final UUID uuid, final String username, final int credits, final int redeemed, final Player player) {
+        this.uuid = uuid;
+        this.username = username;
+        this.credits = credits;
+        this.redeemed = redeemed;
+        this.player = player;
+    }
+
+    public User(final UUID uuid, final String username, final int credits, final int redeemed) {
+        this(uuid, username, credits, redeemed, null);
+    }
+
+    public User(final Player player, final int credits, final int redeemed) {
+        this(player.getUniqueId(), player.getName(), credits, redeemed, player);
+    }
+
+    public User withPlayer(final Player player) {
+        return new User(this.uuid, this.username, this.credits, this.redeemed, player);
+    }
+
+    public User withCredits(final int amount) {
+        return new User(this.uuid, this.username, amount, this.redeemed, this.player);
+    }
+
+    public User addCredits(final int amount) {
+        return this.withCredits(this.credits + amount);
+    }
+
+    public User takeCredits(final int amount) {
+        return this.withCredits(this.credits - amount);
+    }
+
+    public User applyRedemption(final int amount) {
+        return new User(this.uuid, this.username, this.credits - amount, this.redeemed + amount, this.player);
+    }
+
+    public User withUsername(final String username) {
+        return new User(this.uuid, username, this.credits, this.redeemed, this.player);
+    }
+
+    @Override
+    public @Nullable CommandSender sender() {
+        return this.player;
     }
 
     @Override
@@ -56,46 +91,26 @@ public record User(UUID uuid, String username, int credits, int redeemed) implem
 
     @Override
     public Player player() {
-        return Bukkit.getPlayer(this.uuid);
+        return this.player;
     }
 
-    /**
-     * Provides a copy of the User with an updated credit amount.
-     *
-     * @param amount credit amount to set on the User.
-     * @return An updated User.
-     */
-    public User setCredits(final int amount) {
-        return new User(this.uuid, this.username, amount, this.redeemed);
+    @Override
+    public UUID uuid() {
+        return this.uuid;
     }
 
-    /**
-     * Provides a copy of the User with an updated credit amount.
-     *
-     * @param amount credit amount to add to the User.
-     * @return An updated User.
-     */
-    public User addCredits(final int amount) {
-        return this.setCredits(this.credits + amount);
+    @Override
+    public String username() {
+        return this.username;
     }
 
-    /**
-     * Provides a copy of the User with an updated credit amount.
-     *
-     * @param amount credit amount to take from the User.
-     * @return An updated User.
-     */
-    public User takeCredits(final int amount) {
-        return this.setCredits(this.credits - amount);
+    @Override
+    public int credits() {
+        return this.credits;
     }
 
-    /**
-     * Provides a copy of the User with a new username.
-     *
-     * @param username New username to set on the User.
-     * @return An updated User.
-     */
-    public User withUsername(final String username) {
-        return new User(this.uuid, username, this.credits, this.redeemed);
+    @Override
+    public int redeemed() {
+        return this.redeemed;
     }
 }

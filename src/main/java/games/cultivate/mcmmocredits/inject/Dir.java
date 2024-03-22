@@ -21,24 +21,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.storage;
+package games.cultivate.mcmmocredits.inject;
 
-import com.zaxxer.hikari.HikariDataSource;
+import jakarta.inject.Qualifier;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-import javax.sql.DataSource;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-public final class TestStorage extends H2Storage {
-    private TestStorage(final DataSource source) {
-        super(source);
-    }
-
-    public static TestStorage create(final String name) {
-        HikariDataSource ds = new HikariDataSource();
-        ds.setJdbcUrl("jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1;MODE=MYSQL;IGNORECASE=TRUE".formatted(name));
-        return new TestStorage(ds);
-    }
-
-    public void delete() {
-        this.executor.useHandle(handle -> handle.execute("DELETE FROM MCMMOCredits"));
-    }
-}
+/**
+ * Annotation to mark the plugin's data folder.
+ */
+@Qualifier
+@Target({ FIELD, PARAMETER, METHOD })
+@Retention(RUNTIME)
+public @interface Dir {}

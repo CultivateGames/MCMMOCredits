@@ -23,48 +23,32 @@
 //
 package games.cultivate.mcmmocredits.storage;
 
-import org.jdbi.v3.core.Jdbi;
-import org.jdbi.v3.core.argument.AbstractArgumentFactory;
-import org.jdbi.v3.core.argument.Argument;
-import org.jdbi.v3.core.config.ConfigRegistry;
+import games.cultivate.mcmmocredits.user.User;
+import org.bukkit.entity.Player;
 
-import javax.sql.DataSource;
-import java.sql.Types;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Represents a MySql Database.
- */
-public class MySqlStorage extends AbstractStorage {
-    /**
-     * Constructs the object.
-     *
-     * @param source The DataSource.
-     */
-    public MySqlStorage(final DataSource source) {
-        super(source);
+public interface StorageService {
+    boolean addUser(User user);
+
+    void disable();
+
+    void addUsers(Collection<User> users);
+
+    Optional<User> getUser(UUID uuid);
+
+    Optional<User> getUser(String username);
+
+    List<User> getUserGroup(int limit, int offset);
+
+    List<User> getAllUsers();
+
+    boolean updateUser(User user);
+
+    default Optional<User> getUser(final Player player) {
+        return this.getUser(player.getUniqueId()).map(u -> u.withPlayer(player));
     }
-
-    @Override
-    Jdbi createJdbi() {
-        return Jdbi.create(this.source).registerArgument(new UUIDFactory()).registerRowMapper(new UserMapper());
-    }
-
-    /**
-     * Argument Factory required for better MySQL compatibility with UUID data type.
-     */
-    static class UUIDFactory extends AbstractArgumentFactory<UUID> {
-        protected UUIDFactory() {
-            super(Types.VARCHAR);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected Argument build(final UUID value, final ConfigRegistry config) {
-            return (p, s, c) -> s.setString(p, value.toString());
-        }
-    }
-
 }

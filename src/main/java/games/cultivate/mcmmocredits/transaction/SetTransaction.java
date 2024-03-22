@@ -39,7 +39,7 @@ import java.util.Optional;
 public record SetTransaction(CommandExecutor executor, List<User> targets, int amount) implements Transaction {
     @Override
     public TransactionResult execute() {
-        List<User> mapped = this.targets.stream().map(x -> x.setCredits(this.amount)).toList();
+        List<User> mapped = this.targets.stream().map(x -> x.withCredits(this.amount)).toList();
         return new TransactionResult(this, this.executor, mapped);
     }
 

@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits;
 
-import games.cultivate.mcmmocredits.storage.TestStorage;
+import games.cultivate.mcmmocredits.storage.TestStorageService;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import org.junit.jupiter.api.AfterEach;
@@ -41,7 +41,7 @@ class MCMMOCreditsAPITest {
     private final int credits = 100;
     private MCMMOCreditsAPI api;
     private User user;
-    private final TestStorage database = TestStorage.create("api");
+    private final TestStorageService database = TestStorageService.create("api");
     private UserService service;
 
     @BeforeEach

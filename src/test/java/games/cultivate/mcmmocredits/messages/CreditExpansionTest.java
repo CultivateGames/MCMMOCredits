@@ -23,7 +23,7 @@
 //
 package games.cultivate.mcmmocredits.messages;
 
-import games.cultivate.mcmmocredits.storage.TestStorage;
+import games.cultivate.mcmmocredits.storage.TestStorageService;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -47,7 +47,7 @@ class CreditExpansionTest {
     private User user;
     private UserService service;
     private Map<String, PlaceholderExpansion> map;
-    private final TestStorage database = TestStorage.create("cs");
+    private final TestStorageService database = TestStorageService.create("cs");
 
     @BeforeEach
     void setUp() {

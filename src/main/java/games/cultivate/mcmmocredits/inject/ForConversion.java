@@ -21,33 +21,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package games.cultivate.mcmmocredits.storage;
+package games.cultivate.mcmmocredits.inject;
 
-import org.jdbi.v3.core.Jdbi;
-import org.jdbi.v3.sqlite3.SQLitePlugin;
+import jakarta.inject.Qualifier;
 
-import javax.sql.DataSource;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Represents a SQLite Database.
+ * Annotation to mark StorageService required for ForConversion.
  */
-public class SQLiteStorage extends AbstractStorage {
-    /**
-     * Constructs the object.
-     *
-     * @param source The DataSource.
-     */
-    public SQLiteStorage(final DataSource source) {
-        super(source);
-    }
-
-    @Override
-    Jdbi createJdbi() {
-        return Jdbi.create(this.source).registerRowMapper(new UserMapper()).installPlugin(new SQLitePlugin());
-    }
-
-    @Override
-    public void createTable() {
-        this.jdbi.useHandle(handle -> handle.execute("CREATE TABLE IF NOT EXISTS MCMMOCredits(id INTEGER PRIMARY KEY AUTOINCREMENT,UUID VARCHAR NOT NULL,username VARCHAR NOT NULL,credits INT CHECK(credits >= 0),redeemed INT);"));
-    }
+@Qualifier
+@Target({FIELD, PARAMETER, METHOD})
+@Retention(RUNTIME)
+public @interface ForConversion {
 }

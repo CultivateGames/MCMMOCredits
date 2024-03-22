@@ -23,12 +23,11 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.storage.StorageProperties;
+import games.cultivate.mcmmocredits.inject.Dir;
 import games.cultivate.mcmmocredits.menu.Item;
 import games.cultivate.mcmmocredits.menu.RedeemMenu;
 import games.cultivate.mcmmocredits.serializers.ItemSerializer;
 import games.cultivate.mcmmocredits.serializers.MenuSerializer;
-import games.cultivate.mcmmocredits.util.Dir;
 import jakarta.inject.Inject;
 import org.spongepowered.configurate.loader.HeaderMode;
 import org.spongepowered.configurate.yaml.NodeStyle;
@@ -47,6 +46,7 @@ public final class ConfigService {
     private final Path path;
     private Config<MainData> config;
     private Config<MenuData> menuConfig;
+    private Config<Settings> settings;
 
     /**
      * Constructs the object.
@@ -129,6 +129,20 @@ public final class ConfigService {
     }
 
     /**
+     * Returns the settings config file.
+     *
+     * @return The Settings config file.
+     */
+    public Config<Settings> settings() {
+        //TODO: refactor with config refactor.
+        if (this.settings == null) {
+            this.settings = this.loadConfig(Settings.class, "settings.yml");
+        }
+        return this.settings;
+    }
+
+
+    /**
      * Returns an instance of the Menu Config.
      *
      * @return The Menu Config.
@@ -148,15 +162,5 @@ public final class ConfigService {
      */
     public String getMessage(final Object... path) {
         return this.mainConfig().getMessage(path);
-    }
-
-    /**
-     * Convenience method to get StorageProperties.
-     *
-     * @param path The path.
-     * @return The properties.
-     */
-    public StorageProperties getProperties(final Object... path) {
-        return this.mainConfig().get(StorageProperties.class, StorageProperties.defaults(), path);
     }
 }

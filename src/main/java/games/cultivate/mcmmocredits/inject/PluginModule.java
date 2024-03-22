@@ -29,23 +29,22 @@ import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.commands.Commands;
 import games.cultivate.mcmmocredits.config.ConfigService;
+import games.cultivate.mcmmocredits.config.Settings.ConverterProperties;
 import games.cultivate.mcmmocredits.converters.Converter;
-import games.cultivate.mcmmocredits.converters.ConverterProperties;
 import games.cultivate.mcmmocredits.converters.ConverterType;
 import games.cultivate.mcmmocredits.converters.DefaultConverter;
 import games.cultivate.mcmmocredits.converters.loaders.UserLoader;
 import games.cultivate.mcmmocredits.converters.loaders.CSVLoader;
 import games.cultivate.mcmmocredits.converters.loaders.DatabaseLoader;
 import games.cultivate.mcmmocredits.converters.loaders.PluginLoader;
-import games.cultivate.mcmmocredits.storage.AbstractStorage;
 import games.cultivate.mcmmocredits.user.UserService;
 import games.cultivate.mcmmocredits.util.ChatQueue;
-import games.cultivate.mcmmocredits.util.Dir;
 import jakarta.inject.Singleton;
 import org.bukkit.Bukkit;
 
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Handles Guice Dependency Injection.
@@ -67,6 +66,7 @@ public final class PluginModule extends AbstractModule {
     @Override
     protected void configure() {
         this.bind(MCMMOCredits.class).toInstance(this.plugin);
+        this.bind(ExecutorService.class).toInstance(Executors.newVirtualThreadPerTaskExecutor());
         this.bind(Path.class).annotatedWith(Dir.class).toInstance(this.plugin.getDataFolder().toPath());
         this.bind(UserService.class).asEagerSingleton();
         this.bind(ChatQueue.class).asEagerSingleton();
@@ -87,18 +87,5 @@ public final class PluginModule extends AbstractModule {
             case PLUGIN_MR -> new PluginLoader(pluginPath.resolve(MR_PATH), executorService, properties);
             case PLUGIN_GRM -> new PluginLoader(pluginPath.resolve(GRM_PATH), executorService, properties);
         };
-    }
-
-    /**
-     * Provides the Database from the Config.
-     *
-     * @param configService The ConfigService to read the database.
-     * @param path          Path to create the database if needed.
-     * @return The Database.
-     */
-    @Provides
-    @Singleton
-    public AbstractStorage provideDatabase(final ConfigService configService, final @Dir Path path) {
-        return configService.getProperties("settings", "database").create(path);
     }
 }

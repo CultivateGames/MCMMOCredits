@@ -24,7 +24,7 @@
 package games.cultivate.mcmmocredits.converters;
 
 import games.cultivate.mcmmocredits.converters.loaders.UserLoader;
-import games.cultivate.mcmmocredits.storage.AbstractStorage;
+import games.cultivate.mcmmocredits.storage.StorageService;
 import games.cultivate.mcmmocredits.user.User;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
@@ -35,11 +35,11 @@ import java.util.List;
 
 public final class DefaultConverter implements Converter {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultConverter.class);
-    private final AbstractStorage database;
+    private final StorageService database;
     private final UserLoader loader;
 
     @Inject
-    public DefaultConverter(final AbstractStorage database, final UserLoader loader) {
+    public DefaultConverter(final StorageService database, final UserLoader loader) {
         this.database = database;
         this.loader = loader;
     }
@@ -48,9 +48,8 @@ public final class DefaultConverter implements Converter {
     public boolean run() {
         long start = System.nanoTime();
         List<User> users = this.loader.getUsers().stream().toList();
-        //TODO: part of upcoming db refactor... fix.
-        this.database.addUsers(users).join();
-        boolean status = new HashSet<>(this.database.getAllUsers().join()).containsAll(users);
+        this.database.addUsers(users);
+        boolean status = new HashSet<>(this.database.getAllUsers()).containsAll(users);
         long end = System.nanoTime();
         if (status) {
             LOGGER.info("Conversion completed! Duration: {}s", ((double) end - start) / 1000000000.0);

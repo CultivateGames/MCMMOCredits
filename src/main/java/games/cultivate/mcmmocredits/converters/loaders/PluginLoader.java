@@ -25,7 +25,7 @@ package games.cultivate.mcmmocredits.converters.loaders;
 
 import com.google.common.util.concurrent.RateLimiter;
 import com.google.gson.JsonParser;
-import games.cultivate.mcmmocredits.converters.ConverterProperties;
+import games.cultivate.mcmmocredits.config.Settings.ConverterProperties;
 import games.cultivate.mcmmocredits.user.User;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
