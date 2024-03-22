@@ -109,10 +109,10 @@ public interface Transaction {
      * @return True if the executor and target are the same entity, otherwise false.
      */
     default boolean isSelfTransaction() {
-        if (!this.executor().isPlayer()) {
-            return false;
+        if (this.executor() instanceof User sender) {
+            return this.targets().size() == 1 && this.targets().contains(sender);
         }
-        return this.targets().size() == 1 && this.targets().contains((User) this.executor());
+        return false;
     }
 
     /**

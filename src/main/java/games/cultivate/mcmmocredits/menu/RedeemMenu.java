@@ -28,6 +28,7 @@ import games.cultivate.mcmmocredits.messages.Text;
 import games.cultivate.mcmmocredits.user.User;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.jetbrains.annotations.NotNull;
@@ -76,7 +77,7 @@ public final class RedeemMenu implements InventoryHolder {
     public void openInventory(final MCMMOCredits plugin, final User user) {
         this.inventory = Bukkit.getServer().createInventory(this, this.slots, Text.forOneUser(user, this.title).toComponent());
         this.setItems(user);
-        Bukkit.getGlobalRegionScheduler().run(plugin, x -> user.player().openInventory(this.inventory));
+        Bukkit.getGlobalRegionScheduler().run(plugin, x -> ((Player) user.sender()).openInventory(this.inventory));
         this.task = Bukkit.getAsyncScheduler().runAtFixedRate(plugin, x -> this.setItems(user), 50, 1000, TimeUnit.MILLISECONDS);
     }
 

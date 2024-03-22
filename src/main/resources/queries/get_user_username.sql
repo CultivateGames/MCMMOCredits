@@ -1,0 +1,1 @@
+SELECT * FROM MCMMOCredits WHERE username LIKE :username LIMIT 1;

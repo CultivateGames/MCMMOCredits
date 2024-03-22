@@ -85,16 +85,6 @@ public final class User implements CommandExecutor {
     }
 
     @Override
-    public boolean isPlayer() {
-        return true;
-    }
-
-    @Override
-    public Player player() {
-        return this.player;
-    }
-
-    @Override
     public UUID uuid() {
         return this.uuid;
     }

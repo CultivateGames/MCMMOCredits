@@ -1,0 +1,1 @@
+SELECT * FROM MCMMOCredits INNER JOIN (SELECT id FROM MCMMOCredits ORDER BY credits DESC LIMIT :limit OFFSET :offset) AS tmp USING(id) ORDER BY credits DESC;

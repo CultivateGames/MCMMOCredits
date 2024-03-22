@@ -24,6 +24,7 @@
 package games.cultivate.mcmmocredits.messages;
 
 import games.cultivate.mcmmocredits.storage.TestStorageService;
+import games.cultivate.mcmmocredits.user.DefaultUserService;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -52,7 +53,7 @@ class CreditExpansionTest {
     @BeforeEach
     void setUp() {
         this.user = new User(new UUID(2, 2), "testUser", 1000, 500);
-        this.service = new UserService(this.database);
+        this.service = new DefaultUserService(this.database);
         this.map = new HashMap<>();
         this.map.put("mcmmocredits", new CreditsExpansion(this.service));
     }
@@ -64,7 +65,7 @@ class CreditExpansionTest {
 
     @Test
     void onRequest_ValidUser_ValidPlaceholders() {
-        this.service.addUser(this.user).join();
+        this.service.addUser(this.user);
         String content = "%mcmmocredits_credits%, %mcmmocredits_redeemed%, %mcmmocredits_username%, %mcmmocredits_uuid%";
         String expected = String.format("%s, %s, %s, %s", this.user.credits(), this.user.redeemed(), this.user.username(), this.user.uuid().toString());
         OfflinePlayer player = mock(OfflinePlayer.class);

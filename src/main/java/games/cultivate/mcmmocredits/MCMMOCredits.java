@@ -33,6 +33,7 @@ import games.cultivate.mcmmocredits.inject.PluginModule;
 import games.cultivate.mcmmocredits.messages.CreditsExpansion;
 import games.cultivate.mcmmocredits.storage.StorageModule;
 import games.cultivate.mcmmocredits.storage.StorageService;
+import games.cultivate.mcmmocredits.user.UserModule;
 import games.cultivate.mcmmocredits.util.Listeners;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
@@ -88,7 +89,7 @@ public final class MCMMOCredits extends JavaPlugin {
     public void onEnable() {
         long start = System.nanoTime();
         this.logger = this.getSLF4JLogger();
-        this.injector = Guice.createInjector(new PluginModule(this), new StorageModule());
+        this.injector = Guice.createInjector(new PluginModule(this), new StorageModule(), new UserModule());
         this.checkForDependencies();
         this.configs = this.injector.getInstance(ConfigService.class);
         this.configs.reloadConfigs();

@@ -23,55 +23,12 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import net.kyori.adventure.text.Component;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
 
-import java.util.UUID;
-
-/**
- * Represents a user of the application.
- */
-public interface CommandExecutor {
-    /**
-     * Gets the UUID of the executor.
-     *
-     * @return the UUID.
-     */
-    UUID uuid();
-
-    /**
-     * Gets the username of the executor.
-     *
-     * @return the username.
-     */
-    String username();
-
-    /**
-     * Gets the current credit balance of the executor.
-     *
-     * @return the credit balance.
-     */
-    int credits();
-
-    /**
-     * Gets the current redemption statistic of the executor.
-     *
-     * @return the redeemed statistic.
-     */
-    int redeemed();
-
-    /**
-     * Gets the Bukkit CommandSender from this CommandExecutor.
-     *
-     * @return the CommandSender.
-     */
-    CommandSender sender();
-
-    default void send(final Component component) {
-        if (this.sender() instanceof Player player && !player.isOnline()) {
-            return;
-        }
-        this.sender().sendMessage(component);
+public final class UserModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        this.bind(UserService.class).to(DefaultUserService.class).in(Singleton.class);
     }
 }

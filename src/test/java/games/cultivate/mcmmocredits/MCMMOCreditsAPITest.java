@@ -24,6 +24,7 @@
 package games.cultivate.mcmmocredits;
 
 import games.cultivate.mcmmocredits.storage.TestStorageService;
+import games.cultivate.mcmmocredits.user.DefaultUserService;
 import games.cultivate.mcmmocredits.user.User;
 import games.cultivate.mcmmocredits.user.UserService;
 import org.junit.jupiter.api.AfterEach;
@@ -46,7 +47,7 @@ class MCMMOCreditsAPITest {
 
     @BeforeEach
     void setUp() {
-        this.service = new UserService(this.database);
+        this.service = new DefaultUserService(this.database);
         this.api = new MCMMOCreditsAPI(this.service);
         this.user = new User(this.uuid, "TestUser", this.credits, 0);
     }
@@ -83,7 +84,7 @@ class MCMMOCreditsAPITest {
 
     @Test
     void setCredits_ValidUser_ReturnsUpdatedCredits() {
-        this.service.addUser(this.user).join();
+        this.service.addUser(this.user);
         assertTrue(this.api.setCredits(this.uuid, 250));
         assertEquals(250, this.api.getCredits(this.uuid));
     }

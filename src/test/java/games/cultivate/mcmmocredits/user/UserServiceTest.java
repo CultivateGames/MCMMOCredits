@@ -62,7 +62,7 @@ class UserServiceTest {
     @BeforeEach
     void setUp() {
         this.user = new User(UUID.randomUUID(), "Tester", 100, 50);
-        this.service = new UserService(this.database);
+        this.service = new DefaultUserService(this.database);
     }
 
     @AfterEach
@@ -71,19 +71,8 @@ class UserServiceTest {
     }
 
     @Test
-    void isUserCached_UserIsCached_ReturnsTrue() {
-        this.service.addUser(this.user).join();
-        assertTrue(this.service.isUserCached(this.user));
-    }
-
-    @Test
-    void isUserCached_UserIsNotCached_ReturnsFalse() {
-        assertFalse(this.service.isUserCached(this.user));
-    }
-
-    @Test
     void addUser_AddsUserToCacheAndDatabase() {
-        this.service.addUser(this.user).join();
+        this.service.addUser(this.user);
         assertTrue(this.service.isUserCached(this.user));
     }
 

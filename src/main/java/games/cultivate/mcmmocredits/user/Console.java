@@ -23,50 +23,53 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import org.bukkit.entity.Player;
+import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 
 import java.util.UUID;
 
 /**
  * CommandExecutor which represents the Bukkit ConsoleCommandSender.
  */
-public final class Console implements CommandExecutor {
-    public static final Console INSTANCE = new Console();
-    private static final UUID UUID = new UUID(0, 0);
-    private static final String USERNAME = "CONSOLE";
-    private static final int CREDITS = 0;
-    private static final int REDEEMED = 0;
+public enum Console implements CommandExecutor {
+    INSTANCE;
 
-    private Console() {
+    private final CommandSender sender;
+    private final UUID uuid;
+    private final String username;
+    private final int credits;
+    private final int redeemed;
+
+    Console() {
+        this.sender = Bukkit.getConsoleSender();
+        this.uuid = UUID.randomUUID();
+        this.username = "CONSOLE";
+        this.credits = -1;
+        this.redeemed = -1;
     }
 
     @Override
-    public boolean isPlayer() {
-        return false;
-    }
-
-    @Override
-    public Player player() {
-        throw new UnsupportedOperationException("Console is not a player!");
+    public CommandSender sender() {
+        return this.sender;
     }
 
     @Override
     public UUID uuid() {
-        return UUID;
+        return this.uuid;
     }
 
     @Override
     public String username() {
-        return USERNAME;
+        return this.username;
     }
 
     @Override
     public int credits() {
-        return CREDITS;
+        return this.credits;
     }
 
     @Override
     public int redeemed() {
-        return REDEEMED;
+        return this.redeemed;
     }
 }

@@ -68,7 +68,7 @@ public final class UserParser implements ArgumentParser<CommandExecutor, User> {
             return ArgumentParseResult.failure(new NoInputProvidedException(UserParser.class, commandContext));
         }
         //No choice but to block (parsing occurs in an async context, should be okay!).
-        Optional<User> user = this.service.getUser(input).join();
+        Optional<User> user = this.service.getUser(input);
         if (user.isPresent()) {
             inputQueue.remove();
             return ArgumentParseResult.success(user.get());
@@ -83,18 +83,18 @@ public final class UserParser implements ArgumentParser<CommandExecutor, User> {
             return List.of();
         }
         CommandExecutor executor = commandContext.getSender();
-        if (!executor.isPlayer()) {
-            return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
-        }
-        List<String> names = new ArrayList<>();
-        Player sender = executor.player();
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            if (!sender.canSee(p)) {
-                continue;
+        if (executor.sender() instanceof Player player) {
+            List<String> names = new ArrayList<>();
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (!player.canSee(p)) {
+                    continue;
+                }
+                names.add(p.getName());
             }
-            names.add(p.getName());
+            return names;
+
         }
-        return names;
+        return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
     }
 
     /**

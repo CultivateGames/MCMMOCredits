@@ -24,6 +24,7 @@
 package games.cultivate.mcmmocredits.messages;
 
 import games.cultivate.mcmmocredits.user.CommandExecutor;
+import games.cultivate.mcmmocredits.user.User;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
@@ -111,7 +112,7 @@ public final class Text {
      * @return modified or existing resolver, depending on if the user is a player.
      */
     private static Resolver addMessageViewer(final CommandExecutor executor, final Resolver resolver) {
-        return executor.isPlayer() ? resolver.addUser(executor.toUser(), "viewer") : resolver;
+        return executor instanceof User user ? resolver.addUser(user, "viewer") : resolver;
     }
 
     /**

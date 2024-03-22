@@ -71,6 +71,6 @@ public final class CreditsExpansion extends PlaceholderExpansion {
         if (player == null) {
             return "0";
         }
-        return this.service.getUser(player.getName()).join().map(this.tags.get(id.toLowerCase())).orElse("0");
+        return this.service.getUser(player.getName()).map(this.tags.get(id.toLowerCase())).orElse("0");
     }
 }

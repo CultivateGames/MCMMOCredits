@@ -36,6 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -79,25 +80,11 @@ class UserTest {
     }
 
     @Test
-    void isPlayer_ReturnsTrue() {
-        assertTrue(this.user.isPlayer());
-    }
-
-    @Test
     void sender_ReturnsPlayer() {
         this.mockBukkit.when(() -> Bukkit.getPlayer(this.uuid)).thenReturn(this.mockPlayer);
         CommandSender sender = this.user.sender();
         assertNotNull(sender);
-        assertTrue(sender instanceof Player);
-    }
-
-    @Test
-    void player_ReturnsPlayerWithSameUUID() {
-        this.mockBukkit.when(() -> Bukkit.getPlayer(this.uuid)).thenReturn(this.mockPlayer);
-        when(this.mockPlayer.getUniqueId()).thenReturn(this.uuid);
-        Player uplayer = this.user.player();
-        assertNotNull(uplayer);
-        assertEquals(this.uuid, uplayer.getUniqueId());
+        assertInstanceOf(Player.class, sender);
     }
 
     @Test
