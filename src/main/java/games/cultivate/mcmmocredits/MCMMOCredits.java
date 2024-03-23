@@ -56,6 +56,7 @@ public final class MCMMOCredits extends JavaPlugin {
     //TODO: may move skills set to main class.. investigate.
     //public static final Set<String> SKILLS = Set.of("acrobatics", "alchemy", "archery", "axes", "excavation", "fishing", "herbalism", "mining", "repair", "swords", "taming", "unarmed", "woodcutting");
     private static final Logger LOGGER = LoggerFactory.getLogger(MCMMOCredits.class);
+    private static MCMMOCreditsAPI api;
     private Injector injector;
 
     /**
@@ -74,6 +75,11 @@ public final class MCMMOCredits extends JavaPlugin {
         }
     }
 
+    @SuppressWarnings("unused")
+    public static MCMMOCreditsAPI getAPI() {
+        return api;
+    }
+
     @Override
     @SuppressWarnings("UnstableApiUsage")
     public void onEnable() {
@@ -86,6 +92,7 @@ public final class MCMMOCredits extends JavaPlugin {
         LOGGER.info("Paper and mcMMO found, continuing to load...");
         Module[] modules = new Module[]{new ConverterModule(), new MenuModule(), new StorageModule(), new UserModule(), new PluginModule(this, Executors.newVirtualThreadPerTaskExecutor())};
         this.injector = Guice.createInjector(modules);
+        api = this.injector.getInstance(MCMMOCreditsAPI.class);
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             this.injector.getInstance(CreditsExpansion.class).register();
         }

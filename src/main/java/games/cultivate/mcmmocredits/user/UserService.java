@@ -65,6 +65,12 @@ public interface UserService {
      */
     Optional<User> getUser(String username);
 
+    /**
+     * Gets a user based on the provided player, or creates the user if they do not exist.
+     *
+     * @param player The player to wrap around.
+     * @return The user.
+     */
     User getOrCreate(Player player);
 
     /**
@@ -79,7 +85,7 @@ public interface UserService {
      *
      * @param user The user to update with.
      */
-    void updateUser(User user);
+    boolean updateUser(User user);
 
     List<User> getUserGroup(int limit, int offset);
 
@@ -91,10 +97,21 @@ public interface UserService {
      */
     CommandExecutor fromBukkit(CommandSender sender);
 
+    /**
+     * Gets all online users by converting all online players.
+     *
+     * @return The online users.
+     */
     default Set<User> getOnlineUsers() {
         return Bukkit.getOnlinePlayers().stream().map(this::getOrCreate).collect(Collectors.toSet());
     }
 
+    /**
+     * Gets all online users by converting all online players, and removes the executor.
+     *
+     * @param executor The executor.
+     * @return The online users, with the executor removed.
+     */
     default Set<User> getOnlineUsers(final CommandExecutor executor) {
         Set<User> users = this.getOnlineUsers();
         if (executor instanceof User user) {

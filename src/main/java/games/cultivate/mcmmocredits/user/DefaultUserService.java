@@ -82,11 +82,13 @@ public final class DefaultUserService implements UserService {
     }
 
     @Override
-    public void updateUser(final User user) {
+    public boolean updateUser(final User user) {
         if (this.storageService.updateUser(user)) {
             this.uuidCache.put(user.uuid(), user);
             this.usernameCache.put(user.username(), user);
+            return true;
         }
+        return false;
     }
 
     @Override

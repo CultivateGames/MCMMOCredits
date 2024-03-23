@@ -56,7 +56,7 @@ public class MCMMOCreditsAPI {
      * @return The credit balance of the user.
      */
     public int getCredits(final UUID uuid) {
-        return this.service.getCredits(uuid).join();
+        return this.service.getUser(uuid).map(User::credits).orElse(-1);
     }
 
     /**
@@ -67,19 +67,12 @@ public class MCMMOCreditsAPI {
      * @return True if the transaction was successful, otherwise false.
      */
     public boolean addCredits(final UUID uuid, final int amount) {
-        int result = this.getCredits(uuid) + amount;
-        return result >= 0 && this.service.setCredits(uuid, result).join();
-    }
-
-    /**
-     * Sets the credit balance of a user with the specified UUID.
-     *
-     * @param uuid   The UUID of the user.
-     * @param amount The new amount of credits.
-     * @return True if the transaction was successful, otherwise false.
-     */
-    public boolean setCredits(final UUID uuid, final int amount) {
-        return amount >= 0 && this.service.setCredits(uuid, amount).join();
+        int credits = this.getCredits(uuid);
+        int result = credits + amount;
+        if (credits < 0 || result < 0) {
+            return false;
+        }
+        return this.setCredits(uuid, result);
     }
 
     /**
@@ -90,8 +83,23 @@ public class MCMMOCreditsAPI {
      * @return True if the transaction was successful, otherwise false.
      */
     public boolean takeCredits(final UUID uuid, final int amount) {
-        int result = this.getCredits(uuid) - amount;
-        return result >= 0 && this.service.setCredits(uuid, result).join();
+        int credits = this.getCredits(uuid);
+        int result = credits - amount;
+        if (credits < 0 || result < 0) {
+            return false;
+        }
+        return this.setCredits(uuid, result);
+    }
+
+    /**
+     * Sets the credit balance of a user with the specified UUID.
+     *
+     * @param uuid   The UUID of the user.
+     * @param amount The new amount of credits.
+     * @return True if the transaction was successful, otherwise false.
+     */
+    public boolean setCredits(final UUID uuid, final int amount) {
+        return this.getUser(uuid).map(user -> amount > 0 && this.service.updateUser(user.withCredits(amount))).orElse(false);
     }
 
     /**
@@ -102,71 +110,6 @@ public class MCMMOCreditsAPI {
      * @return The user.
      */
     public Optional<User> getUser(final UUID uuid) {
-        return this.service.getUser(uuid).join();
-    }
-
-    /**
-     * Gets a user from the UserService.
-     * Can be used in conjunction with the Transaction system to call an event.
-     *
-     * @param username Username of the user.
-     * @return The user.
-     */
-    public Optional<User> getUser(final String username) {
-        return this.service.getUser(username).join();
-    }
-
-    /**
-     * Gets the credit balance of a user with the specified UUID.
-     *
-     * @param uuid The UUID of the user.
-     * @return The credit balance of the user.
-     */
-    public CompletableFuture<Integer> getCreditsAsync(final UUID uuid) {
-        return this.service.getCredits(uuid);
-    }
-
-    /**
-     * Adds credits to the credit balance of a user with the specified UUID.
-     *
-     * @param uuid   The UUID of the user.
-     * @param amount The amount of credits to add.
-     * @return True if the transaction was successful, otherwise false.
-     */
-    public CompletableFuture<Boolean> addCreditsAsync(final UUID uuid, final int amount) {
-        return this.getCreditsAsync(uuid).thenCompose(c -> this.setCreditsAsync(uuid, c + amount));
-    }
-
-    /**
-     * Sets the credit balance of a user with the specified UUID.
-     *
-     * @param uuid   The UUID of the user.
-     * @param amount The new amount of credits.
-     * @return True if the transaction was successful, otherwise false.
-     */
-    public CompletableFuture<Boolean> setCreditsAsync(final UUID uuid, final int amount) {
-        return amount >= 0 ? this.service.setCredits(uuid, amount) : CompletableFuture.completedFuture(false);
-    }
-
-    /**
-     * Removes credits from the credit balance of a user with the specified UUID.
-     *
-     * @param uuid   The UUID of the user.
-     * @param amount The amount of credits to remove.
-     * @return True if the transaction was successful, otherwise false.
-     */
-    public CompletableFuture<Boolean> takeCreditsAsync(final UUID uuid, final int amount) {
-        return this.getCreditsAsync(uuid).thenCompose(c -> this.setCreditsAsync(uuid, c - amount));
-    }
-
-    /**
-     * Gets a user from the UserService.
-     * Can be used in conjunction with the Transaction system to call an event.
-     *
-     * @param uuid UUID of the user.
-     * @return The user.
-     */
-    public CompletableFuture<Optional<User>> getUserAsync(final UUID uuid) {
         return this.service.getUser(uuid);
     }
 
@@ -177,7 +120,78 @@ public class MCMMOCreditsAPI {
      * @param username Username of the user.
      * @return The user.
      */
-    public CompletableFuture<Optional<User>> getUserAsync(final String username) {
+    public Optional<User> getUser(final String username) {
         return this.service.getUser(username);
+    }
+
+    /**
+     * Gets a user from the UserService.
+     * Can be used in conjunction with the Transaction system to call an event.
+     *
+     * @param uuid UUID of the user.
+     * @return The user.
+     */
+    @Deprecated(since = "1.0.0", forRemoval = true)
+    public CompletableFuture<Optional<User>> getUserAsync(final UUID uuid) {
+        return CompletableFuture.supplyAsync(() -> this.getUser(uuid));
+    }
+
+    /**
+     * Gets a user from the UserService.
+     * Can be used in conjunction with the Transaction system to call an event.
+     *
+     * @param username Username of the user.
+     * @return The user.
+     */
+    @Deprecated(since = "1.0.0", forRemoval = true)
+    public CompletableFuture<Optional<User>> getUserAsync(final String username) {
+        return CompletableFuture.supplyAsync(() -> this.getUser(username));
+    }
+
+    /**
+     * Gets the credit balance of a user with the specified UUID.
+     *
+     * @param uuid The UUID of the user.
+     * @return The credit balance of the user.
+     */
+    @Deprecated(since = "1.0.0", forRemoval = true)
+    public CompletableFuture<Integer> getCreditsAsync(final UUID uuid) {
+        return CompletableFuture.supplyAsync(() -> this.getCredits(uuid));
+    }
+
+    /**
+     * Adds credits to the credit balance of a user with the specified UUID.
+     *
+     * @param uuid   The UUID of the user.
+     * @param amount The amount of credits to add.
+     * @return True if the transaction was successful, otherwise false.
+     */
+    @Deprecated(since = "1.0.0", forRemoval = true)
+    public CompletableFuture<Boolean> addCreditsAsync(final UUID uuid, final int amount) {
+        return CompletableFuture.supplyAsync(() -> this.addCredits(uuid, amount));
+    }
+
+    /**
+     * Sets the credit balance of a user with the specified UUID.
+     *
+     * @param uuid   The UUID of the user.
+     * @param amount The new amount of credits.
+     * @return True if the transaction was successful, otherwise false.
+     */
+    @Deprecated(since = "1.0.0", forRemoval = true)
+    public CompletableFuture<Boolean> setCreditsAsync(final UUID uuid, final int amount) {
+        return CompletableFuture.supplyAsync(() -> this.setCredits(uuid, amount));
+    }
+
+    /**
+     * Removes credits from the credit balance of a user with the specified UUID.
+     *
+     * @param uuid   The UUID of the user.
+     * @param amount The amount of credits to remove.
+     * @return True if the transaction was successful, otherwise false.
+     */
+    @Deprecated(since = "1.0.0", forRemoval = true)
+    public CompletableFuture<Boolean> takeCreditsAsync(final UUID uuid, final int amount) {
+        return CompletableFuture.supplyAsync(() -> this.takeCredits(uuid, amount));
     }
 }
