@@ -59,7 +59,7 @@ class MCMMOCreditsAPITest {
 
     @Test
     void getCredits_ValidUser_ReturnsCredits() {
-        this.service.addUser(this.user).join();
+        this.service.addUser(this.user);
         assertEquals(this.credits, this.api.getCredits(this.uuid));
     }
 
@@ -70,7 +70,7 @@ class MCMMOCreditsAPITest {
 
     @Test
     void addCredits_ValidUser_ReturnsUpdatedCredits() {
-        this.service.addUser(this.user).join();
+        this.service.addUser(this.user);
         assertTrue(this.api.addCredits(this.uuid, 200));
         assertEquals(this.credits + 200, this.api.getCredits(this.uuid));
     }
@@ -98,7 +98,7 @@ class MCMMOCreditsAPITest {
 
     @Test
     void takeCredits_ValidUser_ReturnsUpdatedCredits() {
-        this.service.addUser(this.user).join();
+        this.service.addUser(this.user);
         assertTrue(this.api.takeCredits(this.uuid, 20));
         assertEquals(this.credits - 20, this.api.getCredits(this.uuid));
     }
