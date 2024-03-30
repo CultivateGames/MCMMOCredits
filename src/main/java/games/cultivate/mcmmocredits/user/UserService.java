@@ -26,6 +26,7 @@ package games.cultivate.mcmmocredits.user;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.incendo.cloud.SenderMapper;
 
 import java.util.List;
 import java.util.Optional;
@@ -118,5 +119,14 @@ public interface UserService {
             users.remove(user);
         }
         return users;
+    }
+
+    /**
+     * Creates a {@link SenderMapper} out of the current UserService.
+     *
+     * @return A SenderMapper.
+     */
+    default SenderMapper<CommandSender, CommandExecutor> toSenderMapper() {
+        return SenderMapper.create(this::fromBukkit, CommandExecutor::sender);
     }
 }

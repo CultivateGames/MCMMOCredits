@@ -24,6 +24,7 @@ repositories {
 dependencies {
     api(libs.cloud.annotations)
     api(libs.cloud.paper)
+    api(libs.cloud.processors.cooldown)
     api(libs.configurate)
     api(libs.h2)
     api(libs.jdbi.core)

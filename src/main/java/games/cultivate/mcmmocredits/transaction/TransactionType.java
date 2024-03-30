@@ -23,8 +23,9 @@
 //
 package games.cultivate.mcmmocredits.transaction;
 
-import cloud.commandframework.context.CommandContext;
+
 import games.cultivate.mcmmocredits.user.CommandExecutor;
+import org.incendo.cloud.context.CommandContext;
 
 import java.util.function.Function;
 

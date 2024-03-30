@@ -26,12 +26,19 @@ package games.cultivate.mcmmocredits.inject;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import games.cultivate.mcmmocredits.MCMMOCredits;
-import games.cultivate.mcmmocredits.commands.Commands;
+import games.cultivate.mcmmocredits.command.Commands;
+import games.cultivate.mcmmocredits.command.UserParser;
 import games.cultivate.mcmmocredits.config.Config;
 import games.cultivate.mcmmocredits.config.Data;
 import games.cultivate.mcmmocredits.config.MenuSettings;
 import games.cultivate.mcmmocredits.config.Settings;
+import games.cultivate.mcmmocredits.user.CommandExecutor;
+import games.cultivate.mcmmocredits.user.UserService;
 import jakarta.inject.Singleton;
+import org.incendo.cloud.annotations.AnnotationParser;
+import org.incendo.cloud.execution.ExecutionCoordinator;
+import org.incendo.cloud.paper.PaperCommandManager;
+import org.incendo.cloud.processors.cooldown.annotation.CoooldownBuilderModifier;
 
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
@@ -72,6 +79,29 @@ public final class PluginModule extends AbstractModule {
     @Singleton
     public MenuSettings provideMenuSettings(final @Dir Path path) {
         return this.createConfig(MenuSettings.class, path.resolve("menu.yml")).data();
+    }
+
+    @Provides
+    @Singleton
+    public UserParser provideParser(final UserService userService, final Settings settings) {
+        return new UserParser(userService, settings.userTabComplete());
+    }
+
+    @Provides
+    @Singleton
+    public PaperCommandManager<CommandExecutor> createManager(final Commands commands, final UserService userService, final UserParser parser) {
+        PaperCommandManager<CommandExecutor> manager = new PaperCommandManager<>(this.plugin, ExecutionCoordinator.coordinatorFor(this.executorService), userService.toSenderMapper());
+        manager.registerBrigadier();
+        manager.brigadierManager().setNativeNumberSuggestions(false);
+        manager.registerAsynchronousCompletions();
+        manager.parserRegistry().registerParser(parser);
+//        ImmutableConstantCaptionProvider<CommandExecutor> captionProvider = CaptionProvider.<CommandExecutor>constantProvider().putAllCaptions(captions.messages()).build();
+//        manager.captionRegistry().registerProvider(captionProvider);
+//        manager.registerCommandPreProcessor(ppc -> ppc.commandContext().store(Keys.SENDER, ppc.commandContext().sender()));
+        AnnotationParser<CommandExecutor> annotationParser = new AnnotationParser<>(manager, CommandExecutor.class);
+        annotationParser.parse(commands);
+        CoooldownBuilderModifier.install(annotationParser);
+        return manager;
     }
 
     private <D extends Data> Config<D> createConfig(final Class<? extends D> type, final Path path) {

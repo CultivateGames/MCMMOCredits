@@ -5,7 +5,9 @@ versions = "0.51.0"
 licenser = "0.6.1"
 bstats = "3.0.2"
 paper = "1.20.4-R0.1-SNAPSHOT"
-cloud = "1.8.4"
+cloud = "2.0.0-beta.5"
+cloudAnnotations = "2.0.0-beta.4"
+cloudCooldown = "1.0.0-beta.2"
 configurate = "4.2.0-SNAPSHOT"
 guice = "7.0.0"
 hikari = "5.1.0"
@@ -21,8 +23,9 @@ gremlin = "0.0.6"
 [libraries]
 bstats = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
 paper = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
-cloud-annotations = { module = "cloud.commandframework:cloud-annotations", version.ref = "cloud" }
-cloud-paper = { module = "cloud.commandframework:cloud-paper", version.ref = "cloud" }
+cloud-annotations = { module = "org.incendo:cloud-annotations", version.ref = "cloudAnnotations" }
+cloud-paper = { module = "org.incendo:cloud-paper", version.ref = "cloud" }
+cloud-processors-cooldown = { module = "org.incendo:cloud-processors-cooldown", version.ref = "cloudCooldown"}
 configurate = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 guice = { module = "com.google.inject:guice", version.ref = "guice" }
@@ -39,7 +42,7 @@ gremlin-runtime = { module = "xyz.jpenilla:gremlin-runtime", version.ref = "grem
 [bundles]
 junit = ["junit-bom", "junit-jupiter"]
 mockito = ["mockito-core", "mockito-jupiter"]
-cloud = ["cloud-annotations", "cloud-paper"]
+cloud = ["cloud-annotations", "cloud-paper", "cloud-processors-cooldown"]
 
 [plugins]
 runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }
