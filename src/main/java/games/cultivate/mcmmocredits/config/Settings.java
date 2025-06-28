@@ -23,8 +23,8 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import games.cultivate.mcmmocredits.converters.ConverterType;
-import games.cultivate.mcmmocredits.storage.StorageType;
+import games.cultivate.mcmmocredits.converters.ConverterProperties;
+import games.cultivate.mcmmocredits.storage.StorageProperties;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
@@ -33,97 +33,19 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 @SuppressWarnings({"FieldMayBeFinal", "unused", "FieldCanBeLocal"})
 @ConfigSerializable
 public final class Settings implements Data {
-    private boolean leaderboardEnabled = true;
-    private boolean sendLoginMessage = true;
-    private boolean metricsEnabled = true;
-    private int leaderboardPageSize = 10;
-    private boolean userTabComplete = true;
-    private StorageProperties storage = new StorageProperties();
+    private PluginProperties plugin  = new PluginProperties();
+    private StorageProperties database = new StorageProperties();
     private ConverterProperties converter = new ConverterProperties();
 
-    public boolean leaderboardEnabled() {
-        return this.leaderboardEnabled;
-    }
-
-    public boolean sendLoginMessage() {
-        return this.sendLoginMessage;
-    }
-
-    public boolean metricsEnabled() {
-        return this.metricsEnabled;
-    }
-
-    public int leaderboardPageSize() {
-        return this.leaderboardPageSize;
-    }
-
-    public boolean userTabComplete() {
-        return this.userTabComplete;
+    public PluginProperties plugin() {
+        return this.plugin;
     }
 
     public StorageProperties database() {
-        return this.storage;
+        return this.database;
     }
 
     public ConverterProperties converter() {
         return this.converter;
-    }
-
-    @ConfigSerializable
-    public static final class ConverterProperties {
-        private ConverterType type = ConverterType.CSV;
-        private boolean enabled = false;
-        private int requestsPerSecond = 15;
-        private int retryDelay = 30;
-        private int retries = 3;
-        private StorageProperties internal = new StorageProperties();
-
-        public ConverterType type() {
-            return this.type;
-        }
-
-        public boolean enabled() {
-            return this.enabled;
-        }
-
-        public int requestsPerSecond() {
-            return this.requestsPerSecond;
-        }
-
-        public int retryDelay() {
-            return this.retryDelay;
-        }
-
-        public int retries() {
-            return this.retries;
-        }
-
-        public StorageProperties internal() {
-            return this.internal;
-        }
-    }
-
-    @ConfigSerializable
-    public static final class StorageProperties {
-        private StorageType type = StorageType.H2;
-        private String url = "jdbc:mysql://127.0.0.1:3306/DATABASE_NAME";
-        private String username = "rootroot";
-        private String password = "passw0rd+";
-
-        public StorageType type() {
-            return this.type;
-        }
-
-        public String url() {
-            return this.url;
-        }
-
-        public String username() {
-            return this.username;
-        }
-
-        public String password() {
-            return this.password;
-        }
     }
 }

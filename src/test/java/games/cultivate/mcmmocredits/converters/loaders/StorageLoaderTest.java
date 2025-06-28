@@ -23,9 +23,11 @@
 //
 package games.cultivate.mcmmocredits.converters.loaders;
 
-import games.cultivate.mcmmocredits.storage.TestStorageService;
-import games.cultivate.mcmmocredits.user.User;
-import games.cultivate.mcmmocredits.user.UserCreator;
+import games.cultivate.mcmmocredits.TestUtils;
+import games.cultivate.mcmmocredits.converters.StorageLoader;
+import games.cultivate.mcmmocredits.converters.UserLoader;
+import games.cultivate.mcmmocredits.storage.StorageService;
+import games.cultivate.mcmmocredits.user.CommandSourceData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,18 +38,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class StorageLoaderTest {
-    private static final TestStorageService OLD_DB = TestStorageService.create("oldic");
+    private final StorageService service = TestUtils.create();
 
     @AfterEach
     void tearDown() {
-        OLD_DB.delete();
+        TestUtils.deleteDatabase(this.service);
+        this.service.disable();
     }
 
     @Test
     void getUsers_ValidData_ReturnsAllAndDisablesConnection() {
-        List<User> users = UserCreator.createUsers(10);
-        OLD_DB.addUsers(users);
-        UserLoader loader = new StorageLoader(OLD_DB);
+        List<CommandSourceData> users = TestUtils.createUsers(10);
+        this.service.addUsers(users);
+        UserLoader loader = new StorageLoader(this.service);
         assertEquals(users, loader.getUsers());
         assertThrows(CompletionException.class, loader::getUsers);
     }

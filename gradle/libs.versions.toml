@@ -1,34 +1,35 @@
 [versions]
-runPaper = "2.2.3"
-shadow = "8.1.7"
+runPaper = "2.3.1"
+shadow = "8.3.0"
 versions = "0.51.0"
 licenser = "0.6.1"
-bstats = "3.0.2"
-paper = "1.20.4-R0.1-SNAPSHOT"
-cloud = "2.0.0-beta.5"
-cloudAnnotations = "2.0.0-beta.4"
-cloudCooldown = "1.0.0-beta.2"
-configurate = "4.2.0-SNAPSHOT"
+bstats = "3.1.0"
+paper = "1.21.4-R0.1-SNAPSHOT"
+cloud = "2.0.0"
+cloudPaper = "2.0.0-beta.10"
+cloudProcessors = "1.0.0-rc.1"
+configurate = "4.2.0-GeyserMC-SNAPSHOT"
 guice = "7.0.0"
-hikari = "5.1.0"
-jdbi = "3.45.1"
-junit = "5.10.2"
-mockito = "5.11.0"
-placeholderApi = "2.11.5"
-mcmmo = "2.1.231"
-h2 = "2.2.224"
+hikari = "6.2.1"
+jdbi = "3.47.0"
+junit = "5.13.0-M1"
+mockito = "5.14.2"
+placeholderApi = "2.11.6"
+mcmmo = "2.2.028"
+h2 = "2.3.232"
 indra = "3.1.3"
 gremlin = "0.0.6"
 
 [libraries]
 bstats = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
 paper = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
-cloud-annotations = { module = "org.incendo:cloud-annotations", version.ref = "cloudAnnotations" }
-cloud-paper = { module = "org.incendo:cloud-paper", version.ref = "cloud" }
-cloud-processors-cooldown = { module = "org.incendo:cloud-processors-cooldown", version.ref = "cloudCooldown"}
-configurate = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate" }
+cloud-annotations = { module = "org.incendo:cloud-annotations", version.ref = "cloud" }
+cloud-paper = { module = "org.incendo:cloud-paper", version.ref = "cloudPaper" }
+cloud-processors-cooldown = { module = "org.incendo:cloud-processors-cooldown", version.ref = "cloudProcessors"}
+configurate-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 guice = { module = "com.google.inject:guice", version.ref = "guice" }
+guice-assisted = { module = "com.google.inject.extensions:guice-assistedinject", version.ref = "guice" }
 hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
 jdbi-core = { module = "org.jdbi:jdbi3-core", version.ref = "jdbi" }
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
@@ -46,7 +47,7 @@ cloud = ["cloud-annotations", "cloud-paper", "cloud-processors-cooldown"]
 
 [plugins]
 runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }
-shadow = { id = "io.github.goooler.shadow", version.ref = "shadow" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 versions = { id = "com.github.ben-manes.versions", version.ref = "versions" }
 licenser = { id = "org.cadixdev.licenser", version.ref = "licenser" }
 indra-core = { id = "net.kyori.indra", version.ref = "indra" }

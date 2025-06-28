@@ -23,22 +23,26 @@
 //
 package games.cultivate.mcmmocredits.user;
 
-import games.cultivate.mcmmocredits.storage.TestStorageService;
-import games.cultivate.mcmmocredits.transaction.AddTransaction;
-import games.cultivate.mcmmocredits.transaction.Transaction;
-import games.cultivate.mcmmocredits.transaction.TransactionResult;
-import games.cultivate.mcmmocredits.util.MojangUtil;
+import com.google.gson.JsonParser;
+import games.cultivate.mcmmocredits.storage.StorageService;
+import games.cultivate.mcmmocredits.TestUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,13 +50,12 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
-    private final TestStorageService database = TestStorageService.create("us");
-    private User user;
+    private StorageService storageService;
+    private CommandSourceData user;
     private UserService service;
     @Mock
     private MockedStatic<Bukkit> mockBukkit;
@@ -61,142 +64,70 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        this.user = new User(UUID.randomUUID(), "Tester", 100, 50);
-        this.service = new DefaultUserService(this.database);
+        this.user = TestUtils.createUser();
+        this.storageService = TestUtils.create();
+        this.service = new UserService(this.storageService);
     }
 
     @AfterEach
     void tearDown() {
-        this.database.delete();
-    }
-
-    @Test
-    void addUser_AddsUserToCacheAndDatabase() {
-        this.service.addUser(this.user);
-        assertTrue(this.service.isUserCached(this.user));
+        TestUtils.deleteDatabase(this.storageService);
     }
 
     @Test
     void getUser_CachedUser_ReturnsUser() {
-        this.service.addUser(this.user).join();
-        Optional<User> result = this.service.getUser(this.user.uuid()).join();
-        assertEquals(this.user, result.get());
+        this.service.addUser(this.user);
+        Optional<CommandSourceData> result = this.service.getUser(this.user.uuid());
+        assertEquals(this.user, result.orElseThrow());
     }
 
     @Test
     void getUser_NotCachedUser_ReturnsUser() {
-        this.database.addUser(this.user).join();
-        Optional<User> result = this.service.getUser(this.user.uuid()).join();
-        assertEquals(this.user, result.get());
+        this.storageService.addUser(this.user);
+        Optional<CommandSourceData> result = this.service.getUser(this.user.uuid());
+        assertEquals(this.user, result.orElseThrow());
     }
 
     @Test
     void getUser_NonExistentUser_ReturnsEmptyOptional() {
-        Optional<User> result = this.service.getUser(this.user.uuid()).join();
+        Optional<CommandSourceData> result = this.service.getUser(UUID.randomUUID());
         assertFalse(result.isPresent());
     }
 
     @Test
-    void setUsername_UsernameUpdated_ReturnsUpdatedUser() {
-        this.database.addUser(this.user).join();
-        this.service.setUsername(this.user.uuid(), "newUsername").join();
-        assertEquals("newUsername", this.service.getUser(this.user.uuid()).join().get().username());
-    }
-
-    @Test
     void getCredits_UserIsCached_ReturnsCredits() {
-        this.service.addUser(this.user).join();
-        assertEquals(100, this.service.getCredits(this.user.uuid()).join());
+        this.service.addUser(this.user);
+        Optional<CommandSourceData> result = this.service.getUser(this.user.uuid());
+        assertTrue(result.isPresent());
+        assertEquals(this.user.credits(), result.orElseThrow().credits());
     }
 
     @Test
     void getCredits_UserIsNotCached_ReturnsCredits() {
-        this.service.addUser(this.user).join();
-        assertEquals(100, this.service.getCredits(this.user.uuid()).join());
+        this.storageService.addUser(this.user);
+        Optional<CommandSourceData> result = this.service.getUser(this.user.uuid());
+        assertTrue(result.isPresent());
+        assertEquals(this.user.credits(), result.orElseThrow().credits());
     }
 
     @Test
     void getCredits_UserDoesNotExist_ReturnsZero() {
-        int credits = this.service.getCredits(this.user.uuid()).join();
-        assertEquals(0, credits);
+        assertEquals(0, this.service.getUser(this.user.uuid()).map(CommandSourceData::credits).orElse(0));
     }
 
     @Test
     void setCredits_UserExists_ReturnsUpdatedUser() {
-        this.service.addUser(this.user).join();
-        this.service.setCredits(this.user.uuid(), 200).join();
-        assertEquals(200, this.service.getUser(this.user.uuid()).join().get().credits());
+        this.service.addUser(this.user);
+        this.service.updateUser(this.user.withCredits(200));
+        assertEquals(200, this.service.getUser(this.user.uuid()).orElseThrow().credits());
     }
 
     @Test
-    void processTransaction_UserExists_TransactionAppliedToService() {
-        this.service.addUser(this.user).join();
-        Transaction transaction = new AddTransaction(this.user, List.of(this.user), 1000);
-        TransactionResult result = transaction.execute();
-        this.service.processTransaction(result).join();
-        assertEquals(1100, this.service.getUser(this.user.uuid()).join().orElseThrow().credits());
-    }
-
-    @Test
-    void rangeOfUsers_ReturnsPageOfUsers() {
-        User tester = new User(UUID.randomUUID(), "TestUser2", 50, 10);
-        List<User> users = List.of(this.user, tester);
-        this.service.addUser(this.user).join();
-        this.service.addUser(tester).join();
-        List<User> result = this.service.rangeOfUsers(2, 0).join();
+    void getUserGroup_ReturnsPageOfUsers() {
+        List<CommandSourceData> users = TestUtils.createUsers(2);
+        users.forEach(user -> this.service.addUser(user));
+        List<CommandSourceData> result = this.service.getUserGroup(2, 0);
         assertEquals(users, result);
-    }
-
-    @Test
-    void fromSender_SenderIsPlayer_ReturnsUser() {
-        this.service.addUser(this.user).join();
-        this.mockBukkit.when(() -> Bukkit.getPlayer(this.user.uuid())).thenReturn(this.mockPlayer);
-        when(this.mockPlayer.getUniqueId()).thenReturn(this.user.uuid());
-        CommandExecutor test = this.service.fromSender(this.mockPlayer);
-        assertEquals(this.user, test);
-    }
-
-    @Test
-    void fromSender_SenderIsConsole_ReturnsConsole() {
-        ConsoleCommandSender sender = mock(ConsoleCommandSender.class);
-        CommandExecutor result = this.service.fromSender(sender);
-        assertEquals(Console.INSTANCE, result);
-    }
-
-    @Test
-    void removeFromCache_UserExists_RemovesFromCache() {
-        this.service.addUser(this.user).join();
-        this.service.removeFromCache(this.user.uuid());
-        assertFalse(this.service.isUserCached(this.user));
-    }
-
-    @Test
-    void setUsername_UsernameConflict_OlderUserReplaced() {
-        //jeb_: 853c80ef-3c37-49fd-aa49-938b674adae6
-        //Notch: 069a79f4-44e9-4726-a5be-fca90e38aaf5
-        User notch = new User(UUID.fromString("069a79f4-44e9-4726-a5be-fca90e38aaf5"), "jeb_", 100, 100);
-        User jeb = new User(UUID.fromString("853c80ef-3c37-49fd-aa49-938b674adae6"), "Notch", 500, 500);
-        this.database.addUser(notch).join();
-        this.database.addUser(jeb).join();
-        this.service.setUsername(jeb.uuid(), "jeb_").join();
-        this.service.setUsername(notch.uuid(), "Notch").join();
-        assertEquals("Notch", this.service.getUser(notch.uuid()).join().get().username());
-        assertEquals("jeb_", this.service.getUser(jeb.uuid()).join().get().username());
-    }
-
-    @Test
-    void setUsername_CaseSensitivityIssue_OlderUserUpdated() {
-        UUID fakeUUID = UUID.fromString("853c80ef-3c37-49fd-aa49-938b674adae6");
-        User fakeNotch = new User(fakeUUID, "nOtCh", 100, 100);
-        this.database.addUser(fakeNotch).join();
-        UUID originalUUID = UUID.fromString("069a79f4-44e9-4726-a5be-fca90e38aaf5");
-        this.database.addUser(new User(originalUUID, "notNotch", 100, 10)).join();
-        this.service.setUsername(originalUUID, "Notch").join();
-        Optional<User> updatedFakeUser = this.service.getUser(fakeUUID).join();
-        String username = MojangUtil.getName(fakeUUID);
-        assertEquals(username, updatedFakeUser.get().username());
-        Optional<User> originalUser = this.service.getUser(originalUUID).join();
-        assertEquals("Notch", originalUser.get().username());
     }
 
     @Test
@@ -205,6 +136,55 @@ class UserServiceTest {
         this.mockBukkit.when(() -> Bukkit.getPlayer(this.user.uuid())).thenReturn(this.mockPlayer);
         this.mockBukkit.when(Bukkit::getOnlinePlayers).thenReturn(List.of(this.mockPlayer));
         when(this.mockPlayer.getUniqueId()).thenReturn(this.user.uuid());
-        assertEquals(this.user.uuid(), this.service.getOnlineUsers().join().get(0).uuid());
+        List<CommandSourceData> users = new ArrayList<>(this.service.getOnlineUsers());
+        assertEquals(this.user.uuid(), users.getFirst().uuid());
+    }
+
+    @Test
+    void setUsername_UsernameConflict_OlderUserReplaced() {
+        //jeb_: 853c80ef-3c37-49fd-aa49-938b674adae6
+        //Notch: 069a79f4-44e9-4726-a5be-fca90e38aaf5
+        CommandSourceData notch = new CommandSourceData(UUID.fromString("069a79f4-44e9-4726-a5be-fca90e38aaf5"), "jeb_", 100, 100);
+        CommandSourceData jeb = new CommandSourceData(UUID.fromString("853c80ef-3c37-49fd-aa49-938b674adae6"), "Notch", 500, 500);
+        this.storageService.addUser(notch);
+        this.storageService.addUser(jeb);
+        this.service.updateUser(jeb.withName("jeb_"));
+        this.service.updateUser(notch.withName("Notch"));
+        assertEquals("Notch", this.service.getUser(notch.uuid()).map(CommandSourceData::username).orElse(""));
+        assertEquals("jeb_", this.service.getUser(jeb.uuid()).map(CommandSourceData::username).orElse(""));
+    }
+
+    @Test
+    void setUsername_UsernameUpdated_ReturnsUpdatedUser() {
+        this.storageService.addUser(this.user);
+        this.service.updateUser(this.user.withName("newUsername"));
+        assertEquals("newUsername", this.service.getUser(this.user.uuid()).orElseThrow().username());
+    }
+
+    @Test
+    void setUsername_CaseSensitivityIssue_OlderUserUpdated() throws IOException, InterruptedException {
+        UUID fakeUUID = UUID.fromString("853c80ef-3c37-49fd-aa49-938b674adae6");
+        UUID originalUUID = UUID.fromString("069a79f4-44e9-4726-a5be-fca90e38aaf5");
+        CommandSourceData fakeNotch = new CommandSourceData(fakeUUID, "nOtCh", 100, 100);
+        CommandSourceData notNotch =new CommandSourceData(originalUUID, "notNotch", 100, 10);
+        this.storageService.addUser(fakeNotch);
+        this.storageService.addUser(notNotch);
+        this.service.updateUser(notNotch.withName("Notch"));
+        Optional<CommandSourceData> updatedFakeUser = this.service.getUser(fakeUUID);
+        String username = this.getUsername(fakeUUID).orElseThrow();
+        assertEquals(username, updatedFakeUser.orElseThrow().username());
+        Optional<CommandSourceData> originalUser = this.service.getUser(originalUUID);
+        assertEquals("Notch", originalUser.orElseThrow().username());
+    }
+
+    private Optional<String> getUsername(final UUID uuid) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder(URI.create("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid)).build();
+        try (var client = HttpClient.newHttpClient()) {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                return Optional.of(JsonParser.parseString(response.body()).getAsJsonObject().get("name").getAsString());
+            }
+        }
+        return Optional.empty();
     }
 }

@@ -23,59 +23,57 @@
 //
 package games.cultivate.mcmmocredits.command;
 
-import games.cultivate.mcmmocredits.user.CommandExecutor;
-import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.user.CommandSource;
+import games.cultivate.mcmmocredits.user.CommandSourceData;
+import games.cultivate.mcmmocredits.user.UserCommandSource;
 import games.cultivate.mcmmocredits.user.UserService;
 import io.leangen.geantyref.TypeToken;
-import jakarta.inject.Inject;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.incendo.cloud.bukkit.parser.PlayerParser;
+import org.incendo.cloud.bukkit.parser.PlayerParser.PlayerParseException;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.context.CommandInput;
 import org.incendo.cloud.parser.ArgumentParseResult;
 import org.incendo.cloud.parser.ArgumentParser;
 import org.incendo.cloud.parser.ParserDescriptor;
-import org.incendo.cloud.suggestion.BlockingSuggestionProvider;
+import org.incendo.cloud.suggestion.BlockingSuggestionProvider.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public final class UserParser implements ParserDescriptor<CommandExecutor, User>, BlockingSuggestionProvider.Strings<CommandExecutor> {
+public final class UserParser implements ParserDescriptor<CommandSource, CommandSourceData>, Strings<CommandSource> {
     private final UserService userService;
     private final boolean tabCompletion;
 
-    @Inject
-    public UserParser(final UserService userService, boolean tabCompletion) {
+    public UserParser(final UserService userService, final boolean tabCompletion) {
         this.userService = userService;
         this.tabCompletion = tabCompletion;
     }
 
     @Override
-    public @NotNull ArgumentParser<CommandExecutor, User> parser() {
-        return (context, input) -> {
-            String part = input.readString();
-            if (context.sender() instanceof User contextUser && contextUser.username().equalsIgnoreCase(part)) {
-                return ArgumentParseResult.success(contextUser);
+    public @NotNull ArgumentParser<CommandSource, CommandSourceData> parser() {
+        return (ctx, i) -> {
+            String part = i.readString();
+            if (ctx.sender() instanceof UserCommandSource ucs && ucs.data().username().equalsIgnoreCase(part)) {
+                return ArgumentParseResult.success(ucs.data());
             }
             return this.userService.getUser(part)
                     .map(ArgumentParseResult::success)
-                    .orElseGet(() -> ArgumentParseResult.failure(new PlayerParser.PlayerParseException(part, context)));
+                    .orElseGet(() -> ArgumentParseResult.failure(new PlayerParseException(part, ctx)));
         };
     }
 
     @Override
-    public @NotNull TypeToken<User> valueType() {
-        return TypeToken.get(User.class);
+    public @NotNull TypeToken<CommandSourceData> valueType() {
+        return TypeToken.get(CommandSourceData.class);
     }
 
     @Override
-    public @NonNull Iterable<@NonNull String> stringSuggestions(@NotNull final CommandContext<CommandExecutor> context, @NonNull final CommandInput input) {
+    public @NotNull Iterable<String> stringSuggestions(final @NotNull CommandContext<CommandSource> context, final @NotNull CommandInput input) {
         if (!this.tabCompletion) {
             return List.of();
         }
-        if (context.sender().sender() instanceof Player p) {
+        if (context.sender().stack() instanceof Player p) {
             return Bukkit.getOnlinePlayers().stream().filter(p::canSee).map(Player::getName).toList();
         }
         return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();

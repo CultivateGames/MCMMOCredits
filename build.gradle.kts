@@ -5,6 +5,7 @@ plugins {
     id("java-library")
     id("maven-publish")
     id("signing")
+    id("idea")
     alias(libs.plugins.runPaper)
     alias(libs.plugins.shadow)
     alias(libs.plugins.licenser)
@@ -16,32 +17,33 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven("https://papermc.io/repo/repository/maven-public/")
+    maven("https://repo.opencollab.dev/maven-snapshots")
+    maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://nexus.neetgames.com/repository/maven-releases/")
 }
 
 dependencies {
-    api(libs.cloud.annotations)
-    api(libs.cloud.paper)
-    api(libs.cloud.processors.cooldown)
-    api(libs.configurate)
+    api(libs.bundles.cloud)
     api(libs.h2)
     api(libs.jdbi.core)
     api(libs.guice)
+    api(libs.guice.assisted)
     api(libs.hikari)
-    runtimeDownload(libs.cloud.annotations)
-    runtimeDownload(libs.cloud.paper)
-    runtimeDownload(libs.configurate)
+    api(libs.configurate.yaml)
+    runtimeDownload(libs.configurate.yaml)
+    runtimeDownload(libs.bundles.cloud)
     runtimeDownload(libs.h2)
     runtimeDownload(libs.jdbi.core)
     runtimeDownload(libs.guice)
+    runtimeDownload(libs.guice.assisted)
     runtimeDownload(libs.hikari)
     implementation(libs.bstats)
-    testImplementation(platform(libs.junit.bom))
-    testImplementation(libs.junit.jupiter)
-    testImplementation(libs.mockito.core)
-    testImplementation(libs.mockito.jupiter)
+    testImplementation(platform("org.junit:junit-bom:5.12.1"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.41.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(libs.bundles.mockito)
     testImplementation(libs.paper)
     testImplementation(libs.placeholderApi)
     testImplementation(libs.mcmmo) {
@@ -60,8 +62,8 @@ indraSonatype {
 
 indra {
     javaVersions {
-        minimumToolchain(21)
-        target(21)
+        minimumToolchain(22)
+        target(22)
     }
     mitLicense()
     github("CultivateGames", "MCMMOCredits") {
@@ -104,7 +106,11 @@ configurations {
 }
 
 tasks {
-    build {
+    test {
+        maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+        useJUnitPlatform()
+    }
+    assemble {
         dependsOn(shadowJar)
     }
     compileJava {
@@ -117,8 +123,11 @@ tasks {
         filteringCharset = Charsets.UTF_8.name()
     }
     runServer {
-        minecraftVersion("1.20.4")
+        minecraftVersion("1.21.4")
         systemProperty("net.kyori.adventure.text.warnWhenLegacyFormattingDetected", false)
+        downloadPlugins {
+            url("https://popicraft.net/jenkins/job/mcMMO/lastSuccessfulBuild/artifact/target/mcMMO.jar")
+        }
     }
     writeDependencies {
         repos.set(repositories.filterIsInstance<MavenArtifactRepository>().map { it.url.toString() })

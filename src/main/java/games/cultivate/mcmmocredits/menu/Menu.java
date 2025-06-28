@@ -23,45 +23,124 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.user.User;
+import io.papermc.paper.threadedregions.scheduler.EntityScheduler;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * A fixed size collection of items.
  */
-public interface Menu extends InventoryHolder {
+public final class Menu implements InventoryHolder {
+    private final MenuProperties properties;
+    private final Map<String, Item> items;
+    private final Map<Integer, Item> slotted;
+    private Inventory inventory;
+    private ScheduledTask task;
+
+    public Menu(final MenuProperties properties) {
+        this.properties = properties;
+        Map<String, Item> items = new HashMap<>(properties.items());
+        Item filler = items.remove("fill");
+        if (!properties.navigation()) {
+            items.remove("navigation");
+        }
+        this.slotted = items.values().stream().collect(Collectors.toMap(Item::slot, item -> item));
+        if (properties.fill() && filler != null) {
+            IntStream.range(0, properties.size()).forEach(i -> this.slotted.putIfAbsent(i, filler.withSlot(i)));
+        }
+        this.items = items;
+        this.inventory = null;
+        this.task = null;
+    }
+
     /**
      * Returns a map of items and their keys.
      *
      * @return A map of items and their keys.
      */
-    Map<String, Item> items();
+    public Map<Integer, Item> items() {
+        return this.slotted;
+    }
 
     /**
      * Opens the inventory for the provided User.
      *
      * @param plugin plugin used to open the inventory.
-     * @param user   The user.
+     * @param player The menu viewer.
      */
-    void open(JavaPlugin plugin, User user);
+    public void open(final JavaPlugin plugin, final Player player) {
+        this.inventory = Bukkit.createInventory(this, this.size(), this.properties.parseTitle(player));
+        this.draw(player);
+        EntityScheduler scheduler = player.getScheduler();
+        scheduler.run(plugin, x -> player.openInventory(this.inventory), player::closeInventory);
+        this.task = scheduler.runAtFixedRate(plugin, x -> this.draw(player), player::closeInventory, 1, 20);
+    }
 
     /**
      * The size of the inventory. Will never exceed 54.
      *
      * @return The size of the inventory.
      */
-    int size();
+    public int size() {
+        return this.properties.size();
+    }
 
     /**
      * Performs actions required when the inventory is closed.
      */
-    void close();
+    public void close() {
+        if (this.task != null) {
+            this.task.cancel();
+            this.task = null;
+        }
+    }
 
-    default @Nullable Map.Entry<String, Item> getItemEntry(final int slot) {
-        return this.items().entrySet().stream().filter(entry -> entry.getValue().slot() == slot).findFirst().orElse(null);
+    /**
+     * Returns the ScheduledTask associated with this inventory if it is open.
+     *
+     * @return The ScheduledTask.
+     */
+    public @Nullable ScheduledTask scheduledTask() {
+        return this.task;
+    }
+
+    public @Nullable Item item(final int slot) {
+        return this.slotted.get(slot);
+    }
+
+    public @Nullable String itemKey(final int slot) {
+        Item item = this.item(slot);
+        return this.items.entrySet().stream().filter(e -> e.getValue().equals(item)).findFirst().map(Map.Entry::getKey).orElse(null);
+    }
+
+    public boolean isOpen() {
+        return this.task != null;
+    }
+
+    public @NotNull Inventory getInventory() {
+        if (this.inventory == null) {
+            this.inventory = Bukkit.createInventory(this, this.size(), this.properties.parseTitle(null));
+        }
+        return this.inventory;
+    }
+
+    /**
+     * Refreshes the items displayed in the inventory for the provided player.
+     *
+     * @param player The player to re-draw items for.
+     */
+    private void draw(final Player player) {
+        this.items().values().forEach(x -> this.inventory.setItem(x.slot(), x.getItemFor(player)));
     }
 }

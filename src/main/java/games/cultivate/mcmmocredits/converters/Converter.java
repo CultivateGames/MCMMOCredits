@@ -23,14 +23,42 @@
 //
 package games.cultivate.mcmmocredits.converters;
 
-/**
- * Represents a Data Converter.
- */
-public interface Converter {
+import games.cultivate.mcmmocredits.storage.StorageService;
+import games.cultivate.mcmmocredits.user.CommandSourceData;
+import jakarta.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashSet;
+import java.util.List;
+
+public final class Converter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Converter.class);
+    private final StorageService database;
+    private final UserLoader loader;
+
+    @Inject
+    public Converter(final StorageService database, final UserLoader loader) {
+        this.database = database;
+        this.loader = loader;
+    }
+
     /**
      * Runs the data conversion process.
      *
      * @return If the process was successful.
      */
-    boolean run();
+    public boolean run() {
+        long start = System.nanoTime();
+        List<CommandSourceData> users = this.loader.getUsers().stream().toList();
+        this.database.addUsers(users);
+        boolean status = new HashSet<>(this.database.getAllUsers()).containsAll(users);
+        long end = System.nanoTime();
+        if (status) {
+            LOGGER.info("Conversion completed! Duration: {}s", ((double) end - start) / 1000000000.0);
+        } else {
+            LOGGER.warn("There was an issue causing conversion to fail! Check user data!");
+        }
+        return status;
+    }
 }

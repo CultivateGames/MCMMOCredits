@@ -23,10 +23,12 @@
 //
 package games.cultivate.mcmmocredits;
 
-import games.cultivate.mcmmocredits.config.Settings;
+import games.cultivate.mcmmocredits.config.Captions;
+import games.cultivate.mcmmocredits.config.ConfigManager;
 import games.cultivate.mcmmocredits.menu.Menu;
 import games.cultivate.mcmmocredits.menu.MenuService;
-import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.messages.MessageService;
+import games.cultivate.mcmmocredits.user.CommandSourceData;
 import games.cultivate.mcmmocredits.user.UserService;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import jakarta.inject.Inject;
@@ -46,23 +48,26 @@ import org.bukkit.inventory.PlayerInventory;
  * Event Handlers for required plugin functionality.
  */
 @SuppressWarnings("unused")
-//TODO: finalize with further refactoring.
 public final class Listeners implements Listener {
     private final UserService userService;
     private final MenuService menuService;
-    private final Settings settings;
+    private final ConfigManager configs;
+    private final MessageService messageService;
 
     @Inject
-    public Listeners(final UserService userService, final MenuService menuService, final Settings settings) {
+    public Listeners(final UserService userService, final MenuService menuService, final ConfigManager configs, final MessageService messageService) {
         this.userService = userService;
         this.menuService = menuService;
-        this.settings = settings;
+        this.configs = configs;
+        this.messageService = messageService;
     }
 
     @EventHandler
     public void onPlayerJoin(final PlayerJoinEvent e) {
-        if (this.settings.sendLoginMessage()) {
-            //this.userService.getOrCreate(e.getPlayer()).sendText(this.captions.caption(Captions.LOGIN_MESSAGE));
+        if (this.configs.settings().sendLoginMessage()) {
+            Player player = e.getPlayer();
+            CommandSourceData data = this.userService.getOrCreate(player);
+            this.messageService.send(Captions.LOGIN_MESSAGE, player);
         }
     }
 
@@ -78,8 +83,7 @@ public final class Listeners implements Listener {
         Player player = e.getPlayer();
         if (this.menuService.isRegistered(player.getUniqueId())) {
             e.setCancelled(true);
-            User user = this.userService.getOrCreate(e.getPlayer());
-            this.menuService.completeChat(user, e.message());
+            this.menuService.completeChat(player, e.message());
         }
     }
 
@@ -117,7 +121,7 @@ public final class Listeners implements Listener {
         }
         if (view.getTopInventory().getHolder(true) instanceof Menu menu && view.getPlayer() instanceof Player player) {
             e.setCancelled(true);
-            this.menuService.handleClick(this.userService.getOrCreate(player), e.getSlot());
+            this.menuService.handleClick(player, e.getSlot());
         }
     }
 }

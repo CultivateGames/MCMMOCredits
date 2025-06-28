@@ -23,122 +23,78 @@
 //
 package games.cultivate.mcmmocredits.transaction;
 
-import games.cultivate.mcmmocredits.user.CommandExecutor;
-import games.cultivate.mcmmocredits.user.User;
+import com.google.inject.assistedinject.Assisted;
+import games.cultivate.mcmmocredits.config.Captions;
+import games.cultivate.mcmmocredits.messages.MessageService;
+import games.cultivate.mcmmocredits.user.CommandSource;
+import games.cultivate.mcmmocredits.user.CommandSourceData;
+import games.cultivate.mcmmocredits.user.MalformedUserException;
+import games.cultivate.mcmmocredits.user.UserService;
+import jakarta.inject.Inject;
+import org.incendo.cloud.caption.Caption;
+import org.incendo.cloud.type.Either;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.function.BiFunction;
 
-/**
- * Represents an interaction in which a user's credit balance is modified.
- */
-public interface Transaction {
-    /**
-     * Returns a new instance of the Transaction builder.
-     *
-     * @param executor The executor of the transaction.
-     * @param type     The type of the transaction.
-     * @param amount   The amount of the transaction.
-     * @return The builder.
-     */
-    static TransactionBuilder builder(final CommandExecutor executor, final TransactionType type, final int amount) {
-        return new TransactionBuilder(executor, type, amount);
+public final class Transaction {
+    private final CommandSource sender;
+    private final CommandSourceData target;
+    private final int amount;
+    private final BiFunction<CommandSourceData, Integer, CommandSourceData> strategy;
+    private final Caption senderCaption;
+    private final Caption targetCaption;
+    private final MessageService messageService;
+    private final UserService userService;
+
+    @Inject
+    public Transaction(final MessageService messageService, final UserService userService, @Assisted("context") final TransactionContext context) {
+        this.sender = context.sender();
+        this.target = context.target();
+        this.amount = context.amount();
+        this.strategy = context.strategy();
+        this.senderCaption = context.senderCaption();
+        this.targetCaption = context.targetCaption();
+        this.messageService = messageService;
+        this.userService = userService;
     }
 
-    /**
-     * Returns a basic, built transaction (self add|set|take).
-     *
-     * @param executor The executor of the transaction.
-     * @param type     The type of the transaction.
-     * @param amount   The amount of the transaction.
-     * @return The transaction.
-     */
-    static Transaction of(final CommandExecutor executor, final TransactionType type, final int amount) {
-        return new TransactionBuilder(executor, type, amount).build();
+    public void runForSender() {
+        this.validate().mapEither(this::forSender, this::forFail);
     }
 
-    /**
-     * Executes the transaction.
-     *
-     * @return An updated User from execution of the transaction.
-     */
-    TransactionResult execute();
+    public void runForTarget(final boolean silent) {
+        this.validate().mapEither(d -> this.forTarget(d, silent), this::forFail);
+    }
 
-    /**
-     * Gets if the transaction is valid. The optional is empty if the transaction can be executed.
-     *
-     * @param user The user to validate against.
-     * @return An optional indicating execution status of the transaction.
-     */
-    Optional<String> validate(User user);
-
-    /**
-     * Gets the executor of the transaction.
-     *
-     * @return The CommandExecutor.
-     */
-    CommandExecutor executor();
-
-    /**
-     * Gets the targets of the transaction.
-     *
-     * @return The targets.
-     */
-    List<User> targets();
-
-    /**
-     * Gets the amount of credits applied in transaction.
-     *
-     * @return The amount
-     */
-    int amount();
-
-    /**
-     * Gets the type of the transaction.
-     *
-     * @return Type of the transaction.
-     */
-    TransactionType type();
-
-    /**
-     * Returns if the executor and target are the same entity.
-     *
-     * @return True if the executor and target are the same entity, otherwise false.
-     */
-    default boolean isSelfTransaction() {
-        if (this.executor() instanceof User sender) {
-            return this.targets().size() == 1 && this.targets().contains(sender);
+    private Either<CommandSourceData, Caption> validate() {
+        try {
+            CommandSourceData updated = this.strategy.apply(this.target, this.amount);
+            return Either.ofPrimary(updated);
+        } catch (MalformedUserException e) {
+            return Either.ofFallback(Captions.NOT_ENOUGH_CREDITS);
         }
-        return false;
     }
 
-    /**
-     * Returns a map of users and failure messages, if they fail validation.
-     *
-     * @return Map of users and failure messages, if they fail validation.
-     */
-    default Map<User, Optional<String>> validateTransaction() {
-        return this.targets().stream().collect(Collectors.toMap(Function.identity(), this::validate));
+    private Void forSender(final CommandSourceData updated) {
+        if (this.userService.updateUser(updated)) {
+            this.messageService.forTransaction(this.senderCaption, updated, this.amount).send(this.sender);
+        }
+        return null;
     }
 
-    /**
-     * Gets the config key for feedback sent to the user during this transaction.
-     *
-     * @return The config key.
-     */
-    default String userMessageKey() {
-        return this.type().userMessageKey();
+    private Void forTarget(final CommandSourceData updated, final boolean silent) {
+        if (this.userService.updateUser(updated)) {
+            this.messageService.forTransaction(this.senderCaption, this.sender.data(), updated, this.amount).send(this.sender);
+            if (!silent) {
+                var m = this.messageService.forTransaction(this.targetCaption, this.sender.data(), updated, this.amount);
+                this.userService.asPlayer(updated).ifPresent(m::send);
+            }
+        }
+        return null;
     }
 
-    /**
-     * Gets the config key for feedback sent to the executor during this transaction.
-     *
-     * @return The config key.
-     */
-    default String messageKey() {
-        return this.type().messageKey(this);
+    private Void forFail(final Caption caption) {
+        this.messageService.forTransaction(caption, this.sender.data(), this.target, this.amount).send(this.sender);
+        return null;
     }
 }

@@ -24,233 +24,367 @@
 package games.cultivate.mcmmocredits.command;
 
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
-import games.cultivate.mcmmocredits.events.CreditTransactionEvent;
+import games.cultivate.mcmmocredits.config.Captions;
+import games.cultivate.mcmmocredits.config.ConfigManager;
+import games.cultivate.mcmmocredits.inject.CustomPerm;
 import games.cultivate.mcmmocredits.menu.MenuService;
-import games.cultivate.mcmmocredits.messages.Resolver;
+import games.cultivate.mcmmocredits.messages.Message;
+import games.cultivate.mcmmocredits.messages.MessageService;
+import games.cultivate.mcmmocredits.transaction.RedeemTransaction;
 import games.cultivate.mcmmocredits.transaction.Transaction;
+import games.cultivate.mcmmocredits.transaction.TransactionContext;
+import games.cultivate.mcmmocredits.transaction.TransactionFactory;
 import games.cultivate.mcmmocredits.transaction.TransactionType;
-import games.cultivate.mcmmocredits.user.CommandExecutor;
-import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.user.CommandSource;
+import games.cultivate.mcmmocredits.user.CommandSourceData;
+import games.cultivate.mcmmocredits.user.UserCommandSource;
 import games.cultivate.mcmmocredits.user.UserService;
 import jakarta.inject.Inject;
-import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.incendo.cloud.annotation.specifier.Range;
 import org.incendo.cloud.annotations.Command;
 import org.incendo.cloud.annotations.CommandDescription;
+import org.incendo.cloud.annotations.Default;
 import org.incendo.cloud.annotations.Flag;
 import org.incendo.cloud.annotations.Permission;
-import org.incendo.cloud.context.CommandContext;
+import org.incendo.cloud.caption.Caption;
+import org.incendo.cloud.caption.StandardCaptionKeys;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * Handles all commands.
  */
-@SuppressWarnings("checkstyle:linelength")
-@Command("${command.prefix}")
+@SuppressWarnings({"checkstyle:linelength", "unused"})
+@Command("credits")
 public final class Commands {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Commands.class);
+    private final UserService userService;
     private final MenuService menuService;
-    private final UserService service;
+    private final ConfigManager configs;
+    private final MessageService messageService;
+    private final TransactionFactory factory;
 
-    /**
-     * Constructs the object.
-     *
-     * @param service     The UserService to obtain users.
-     * @param menuService The MenuService to open menus for users.
-     */
     @Inject
-    public Commands(final UserService service, final MenuService menuService) {
-        this.service = service;
+    public Commands(final UserService userService, final MenuService menuService, final ConfigManager configs, final MessageService messageService, final TransactionFactory factory) {
+        this.userService = userService;
         this.menuService = menuService;
+        this.configs = configs;
+        this.messageService = messageService;
+        this.factory = factory;
+    }
+
+    @Command("<type> <amount> [target] [skill]")
+    @CustomPerm
+    private void command(CommandSource source, final TransactionType type, @Range(min= "1") final int amount, final @Nullable CommandSourceData target, final @Nullable PrimarySkillType skill, @Flag("s") final boolean silent, @Flag("all") final boolean all) {
+        // /credits all type amount [skill]
+        // /credits
+
+
+
+        //throw for no skill being available.
+        //throw because pay cannot be from console.
+        //throw because pay cannot be to same user.
+        //all transaction takes priority. Ignore if target is also supplied.
+        //If user, process transaction for user first to pass updated user to batch process.
+        //throw for invalid command source. at this point we know that target is null and source is console.
+        if (type == TransactionType.REDEEM && skill == null) {
+            this.messageService.get(StandardCaptionKeys.EXCEPTION_INVALID_SYNTAX).addUser(source).send(source);
+            return;
+        }
+        if (type == TransactionType.PAY && source.isConsole()) {
+            this.messageService.get(StandardCaptionKeys.EXCEPTION_INVALID_SENDER).addUser(source).send(source);
+            return;
+        }
+        if (type == TransactionType.PAY && source.data() == target) {
+            this.messageService.get(Captions.PAY_SAME_USER).addUser(source).send(source);
+            return;
+        }
+        boolean console = source.isConsole();
+        TransactionContext template = TransactionContext.create(source, source.data(), amount, type);
+        if (all) {
+            if (!console) {
+                this.factory.create(template).runForTarget(silent);
+                CommandSourceData result = this.userService.getUser(source).orElseThrow();
+                source = new UserCommandSource(source.stack(), result);
+            }
+            Set<CommandSourceData> users = this.userService.getOnlineUsers();
+            users.remove(source.data());
+            for (CommandSourceData u : users) {
+                this.factory.create(template.replacePair(source, u)).runForTarget(silent);
+            }
+            this.messageService.get(template.allCaption()).addUser(source).send(source);
+            return;
+        }
+        if (target != null) {
+            template = template.withData(target);
+            this.factory.create(template).runForTarget(silent);
+            return;
+        }
+        if (!console) {
+            this.factory.create(template).runForSender();
+            return;
+        }
+        this.messageService.get(StandardCaptionKeys.EXCEPTION_INVALID_SENDER).addUser(source).send(source);
     }
 
     /**
-     * Processes the {@literal /credits balance} command.
+     * Command to modify credits based on the command syntax.
+     * Examples could be:
+     * /credits add 10: Add 10 credits to self.
+     * /credits add 10 username [--s]: Add 10 credits to username. If --s is present, target will not receive a message.
+     * /credits add 10 --all: Add 10 credits to all online players if eligible.
      *
-     * @param user CommandExecutor. Must be an online player.
+     * @param sender The sender
+     * @param amount The amount
      */
+    @Command("add <amount>")
+    @Permission("mcmmocredits.add.self")
+    @CommandDescription("Add credits to your own balance.")
+    public void addCreditsSolo(final UserCommandSource sender, final @Range(min = "1") int amount) {
+        TransactionContext ctx = TransactionContext.create(sender, amount, TransactionType.ADD);
+        Transaction transaction = this.factory.create(ctx);
+        transaction.runForSender();
+    }
+
+    @Command("add <amount> <target>")
+    @Permission("mcmmocredits.add.other")
+    @CommandDescription("Add credits to someone else's balance.")
+    public void addCreditsPair(final CommandSource sender, final CommandSourceData target, final @Range(min = "1") int amount, final @Flag("s") boolean silent) {
+        TransactionContext ctx = TransactionContext.create(sender, target, amount, TransactionType.ADD);
+        Transaction transaction = this.factory.create(ctx);
+        transaction.runForTarget(silent);
+    }
+
+    @Command("addall <amount>")
+    @Permission("mcmmocredits.add.all")
+    @CommandDescription("Add credits to all online players, if they are eligible.")
+    public void addCreditsAll(final CommandSource sender, final @Range(min = "1") int amount, final boolean silent) {
+        TransactionContext ctx = TransactionContext.create(sender, sender.data(), amount, TransactionType.ADD);
+        this.applyAll(sender, ctx, Captions.ADD_ALL, silent);
+    }
+
+    @Command("set <amount>")
+    @Permission("mcmmocredits.set.self")
+    @CommandDescription("Set your own credit balance.")
+    public void setCreditsSolo(final UserCommandSource sender, final @Range(min = "0") int amount) {
+        TransactionContext ctx = TransactionContext.create(sender, amount, TransactionType.SET);
+        Transaction transaction = this.factory.create(ctx);
+        transaction.runForSender();
+    }
+
+    @Command("set <amount> <target>")
+    @Permission("mcmmocredits.set.other")
+    @CommandDescription("Set someone else's credit balance to a new amount.")
+    public void setCreditsPair(final CommandSource sender, final CommandSourceData target, final @Range(min = "1") int amount, final @Flag("s") boolean silent) {
+        TransactionContext ctx = TransactionContext.create(sender, target, amount, TransactionType.SET);
+        Transaction transaction = this.factory.create(ctx);
+        transaction.runForTarget(silent);
+    }
+
+    @Command("setall <amount>")
+    @Permission("mcmmocredits.set.all")
+    @CommandDescription("Set a specific credit balance for all online players, if they are eligible.")
+    public void setCreditsAll(final CommandSource sender, final @Range(min = "0") int amount, final @Flag("s") boolean silent) {
+        TransactionContext ctx = TransactionContext.create(sender, sender.data(), amount, TransactionType.SET);
+        this.applyAll(sender, ctx, Captions.SET_ALL, silent);
+    }
+
+    @Command("take <amount>")
+    @Permission("mcmmocredits.take.self")
+    @CommandDescription("Take credits from your own balance.")
+    public void takeCreditsSolo(final UserCommandSource sender, final @Range(min = "1") int amount) {
+        TransactionContext ctx = TransactionContext.create(sender, amount, TransactionType.TAKE);
+        Transaction transaction = this.factory.create(ctx);
+        transaction.runForSender();
+    }
+
+    @Command("take <amount> <target>")
+    @Permission("mcmmocredits.add.other")
+    @CommandDescription("Add credits to someone else's balance.")
+    public void takeCreditsPair(final CommandSource sender, final CommandSourceData target, final @Range(min = "1") int amount, final @Flag("s") boolean silent) {
+        TransactionContext ctx = TransactionContext.create(sender, target, amount, TransactionType.TAKE);
+        Transaction transaction = this.factory.create(ctx);
+        transaction.runForTarget(silent);
+    }
+
+    @Command("takeall <amount>")
+    @Permission("mcmmocredits.take.all")
+    @CommandDescription("Take credits from all online players, if they are eligible.")
+    public void takeCreditsAll(final CommandSource sender, final @Range(min = "1") int amount, final @Flag("s") boolean silent) {
+        TransactionContext ctx = TransactionContext.create(sender, sender.data(), amount, TransactionType.TAKE);
+        this.applyAll(sender, ctx, Captions.TAKE_ALL, silent);
+    }
+
+    @Command("redeem <amount> <skill>")
+    @Permission("mcmmocredits.redeem.self")
+    @CommandDescription("Redeem credits for MCMMO Skill levels.")
+    public void redeemCreditsSolo(final UserCommandSource sender, final @Range(min = "1") int amount, final PrimarySkillType skill) {
+        TransactionContext ctx = TransactionContext.create(sender, amount, TransactionType.REDEEM);
+        RedeemTransaction transaction = this.factory.createRedeem(ctx);
+        transaction.runForSender(skill);
+    }
+
+    @Command("redeem <amount> <skill> <target>")
+    @Permission("mcmmocredits.redeem.other")
+    @CommandDescription("Redeem credits for MCMMO Skill levels for another user.")
+    public void redeemCreditsPair(final CommandSource sender, final @Range(min = "1") int amount, final PrimarySkillType skill, final CommandSourceData target, final @Flag("s") boolean silent) {
+        TransactionContext ctx = TransactionContext.create(sender, target, amount, TransactionType.REDEEM);
+        RedeemTransaction transaction = this.factory.createRedeem(ctx);
+        transaction.runForTarget(skill, silent);
+    }
+
+    @Command("redeemall <amount> <skill>")
+    @Permission("mcmmocredits.redeem.all")
+    @CommandDescription("Redeem credits for MCMMO Skill levels for all online users.")
+    public void redeemCreditsAll(final CommandSource sender, final @Range(min = "0") int amount, final PrimarySkillType skill, @Flag("s") boolean silent) {
+        TransactionContext ctx = TransactionContext.create(sender, sender.data(), amount, TransactionType.REDEEM);
+        if (!sender.isConsole()) {
+            this.factory.createRedeem(ctx.withData(sender.data())).runForSender(skill);
+            CommandSourceData result = this.userService.getUser(sender.data().uuid()).orElseThrow();
+            UserCommandSource ucs = new UserCommandSource(sender).withData(result);
+            this.userService.getOnlineUsers(ucs)
+                    .forEach(u -> this.factory.createRedeem(ctx.replacePair(ucs, u)).runForTarget(skill, silent));
+            this.messageService.get(Captions.REDEEM_ALL).addUser(ucs).send(ucs);
+            return;
+        }
+        this.userService.getOnlineUsers()
+                .forEach(user -> this.factory.createRedeem(ctx.withData(user)).runForTarget(skill, silent));
+        this.messageService.get(Captions.REDEEM_ALL).addUser(sender).send(sender);
+    }
+
     @Command("balance")
     @Permission("mcmmocredits.balance.self")
     @CommandDescription("Allows user to check credit statistics.")
-    public void balance(final User user) {
-        //user.sendText(this.configs.getMessage("balance"));
+    public void seeStats(final UserCommandSource sender) {
+        this.messageService.get(Captions.BALANCE_SELF).addUser(sender).send(sender);
     }
 
-    /**
-     * Processes the {@literal /credits balance <user>} command.
-     *
-     * @param executor CommandExecutor. Can be Console.
-     * @param user     The user to check. Must be a player, but can be offline/online.
-     */
-    @Command("balance <user>")
+    @Command("balance <target>")
     @Permission("mcmmocredits.balance.other")
     @CommandDescription("Allows user to check someone else's credit statistics.")
-    public void balanceOther(final CommandExecutor executor, final User user) {
-        //executor.sendText(this.configs.getMessage("balance-other"), r -> r.addUser(user, "target"));
+    public void seeStatsTargeted(final CommandSource sender, final CommandSourceData target) {
+        this.messageService.get(Captions.BALANCE_OTHER).addPair(sender.data(), target).send(sender);
     }
 
-    /**
-     * Processes the {@literal /credits <add|set|take> <amount>} command.
-     *
-     * @param executor CommandExecutor. Must be an online player.
-     * @param type     Operation applied to credit balance (add, set, take).
-     * @param amount   Amount of credits to apply to balance.
-     */
-    @Command("<type> <amount>")
-    @Permission("mcmmocredits.modify.self")
-    @CommandDescription("Allows user to modify their own credit balance.")
-    public void modify(final User executor, final TransactionType type, final @Range(min = "0") int amount) {
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(Transaction.of(executor, type, amount), true, false));
-    }
-
-    /**
-     * Processes the {@literal /credits <add|set|take> <amount> <user> [--s]} command.
-     *
-     * @param executor CommandExecutor. Can be Console.
-     * @param type     Operation applied to credit balance (add, set, take).
-     * @param amount   Amount of credits to apply to balance.
-     * @param user     The user to modify.
-     * @param silent   If the process should send feedback to the user based on presence.
-     */
-    @Command("<type> <amount> <user>")
-    @Permission("mcmmocredits.modify.other")
-    @CommandDescription("Allows user to modify someone else's credit balance.")
-    public void modifyOther(final CommandExecutor executor, final TransactionType type, final @Range(min = "0") int amount, final User user, final @Flag("s") boolean silent) {
-        Transaction tr = Transaction.builder(executor, type, amount).targets(user).build();
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(tr, silent, false));
-    }
-
-    /**
-     * Processes the {@literal /credits <addall|setall|takeall> <amount> [--s]} command.
-     *
-     * @param executor CommandExecutor. Must be an online player.
-     * @param args     Command args to derive the transaction type.
-     * @param amount   Amount of credits to apply to balance.
-     * @param silent   If the process should send feedback to the user based on presence.
-     */
-    @Command("addall|setall|takeall <amount>")
-    @Permission("mcmmocredits.modify.all")
-    @CommandDescription("Allows user to modify balance of all online players.")
-    public void modifyAll(final CommandExecutor executor, final CommandContext<CommandExecutor> args, final @Range(min = "0") int amount, final @Flag("s") boolean silent) {
-        this.service.getOnlineUsers()
-                .thenApply(x -> Transaction.builder(executor, TransactionType.fromArgs(args, 1), amount).targets(x).build())
-                .thenAccept(t -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(t, silent, false)));
-    }
-
-    /**
-     * Processes the {@literal /credits redeem <amount> <skill>} command.
-     *
-     * @param executor CommandExecutor. Must be an online player.
-     * @param skill    The affected skill.
-     * @param amount   Amount of credits to apply to skill.
-     */
-    @Command("redeem <amount> <skill>")
-    @Permission("mcmmocredits.redeem.self")
-    @CommandDescription("Allows user to redeem credits for MCMMO Skill levels.")
-    public void redeem(final User executor, final PrimarySkillType skill, final @Range(min = "1") int amount) {
-        Transaction tr = Transaction.builder(executor, TransactionType.REDEEM, amount).skill(skill).build();
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(tr, true, false));
-    }
-
-    /**
-     * Processes the {@literal /credits redeem <amount> <skill> <user> [--s]} command.
-     *
-     * @param executor CommandExecutor. Can be Console.
-     * @param skill    The affected skill.
-     * @param amount   Amount of credits to apply to skill.
-     * @param user     The user being modified.
-     * @param silent   If the process should send feedback to the user based on presence.
-     */
-    @Command("redeem <amount> <skill> <user>")
-    @Permission("mcmmocredits.redeem.other")
-    @CommandDescription("Allows a user to redeem credits for someone else.")
-    public void redeemOther(final CommandExecutor executor, final PrimarySkillType skill, final @Range(min = "1") int amount, final User user, final @Flag("s") boolean silent) {
-        Transaction tr = Transaction.builder(executor, TransactionType.REDEEM, amount).targets(user).skill(skill).build();
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(tr, silent, false));
-    }
-
-    /**
-     * Processes the {@literal /credits <redeemall> <amount> <skill> [--s]} command.
-     *
-     * @param executor CommandExecutor. Must be an online player.
-     * @param amount   Amount of credits to apply to balance.
-     * @param skill    The affected skill.
-     * @param silent   If the process should send feedback to the user based on presence.
-     */
-    @Command("redeemall <amount> <skill>")
-    @Permission("mcmmocredits.redeem.all")
-    @CommandDescription("Allows user to redeem credits for all online players.")
-    public void redeemAll(final CommandExecutor executor, final @Range(min = "1") int amount, final PrimarySkillType skill, final @Flag("s") boolean silent) {
-        this.service.getOnlineUsers()
-                .thenApply(x -> Transaction.builder(executor, TransactionType.REDEEMALL, amount).targets(x).skill(skill).build())
-                .thenAccept(t -> Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(t, silent, false)));
-    }
-
-    /**
-     * Processes the {@literal /credits pay <amount> <user>} command.
-     *
-     * @param executor CommandExecutor. Must be an online player.
-     * @param amount   Amount of credits to pay.
-     * @param user     The user being paid.
-     */
-    @Command("pay <amount> <user>")
-    @Permission("mcmmocredits.pay")
-    @CommandDescription("Allows user to give their credits to another user.")
-    public void pay(final User executor, final @Range(min = "1") int amount, final User user) {
-        Transaction tr = Transaction.builder(executor, TransactionType.PAY, amount).targets(user).build();
-        Bukkit.getPluginManager().callEvent(new CreditTransactionEvent(tr, false, false));
-    }
-
-    /**
-     * Processes the {@literal /credits top <page>} command.
-     *
-     * @param executor CommandExecutor. Can be Console.
-     * @param page     Page number of the leaderboard.
-     */
-    @Command("top [page]")
-    @Permission("mcmmocredits.leaderboard")
-    @CommandDescription("Shows the specified page of the leaderboard.")
-    public void top(final CommandExecutor executor, @Range(min = "1") Integer page) {
-        if (!this.configs.mainConfig().getBoolean("settings", "leaderboard-enabled")) {
-            executor.sendText(this.configs.getMessage("invalid-leaderboard"));
-            return;
-        }
-        int limit = this.configs.mainConfig().getInteger("settings", "leaderboard-page-size");
-        int offset = Math.max(0, (page == null ? 0 : page - 1) * limit);
-        this.service.rangeOfUsers(limit, offset).thenAccept(users -> {
-            if (users.isEmpty()) {
-                executor.sendText(this.configs.getMessage("invalid-leaderboard"));
-                return;
-            }
-            executor.sendText(this.configs.mainConfig().getString("leaderboard-title"));
-            Resolver resolver = Resolver.ofUser(executor);
-            String entry = this.configs.mainConfig().getString("leaderboard-entry");
-            for (int i = 1; i <= users.size(); i++) {
-                executor.sendText(entry, resolver.addUser(users.get(i - 1), "target").addTag("rank", i + offset));
-            }
-        });
-    }
-
-    /**
-     * Processes the {@literal /credits menu} command.
-     *
-     * @param user A User who must be an online player.
-     */
     @Command("menu")
     @Permission("mcmmocredits.redeem.menu")
     @CommandDescription("Allows user to open the Redeem Menu.")
-    public void openRedeemMenu(final User user) {
-        this.menuService.open(user);
+    public void openRedeemMenu(final UserCommandSource sender) {
+        this.menuService.open((Player) sender.stack().getSender());
     }
 
-    /**
-     * Processes the {@literal /credits reload} command.
-     *
-     * @param executor CommandExecutor. Can be Console.
-     */
     @Command("reload")
-    @Permission("mcmmocredits.admin")
-    @CommandDescription("Reloads the configuration files with most changes applied.")
-    public void reload(final CommandExecutor executor) {
-        this.configs.reloadConfigs();
-        executor.sendText(this.configs.getMessage("reload"));
+    @Permission("mcmmocredits.reload")
+    @CommandDescription("Reloads configurations belonging to the plugin.")
+    public void reload(final CommandSource sender) {
+        Caption caption = this.configs.reloadConfigs() ? Captions.RELOAD_SUCCESS : Captions.RELOAD_FAILURE;
+        this.messageService.get(caption).addUser(sender).send(sender);
     }
+
+    @Command("top [page]")
+    @Permission("mcmmocredits.top")
+    @CommandDescription("Shows the specified page of the leaderboard.")
+    public void top(final CommandSource sender, final @Range(min = "1") @Default(value = "1") int page) {
+        Message invalid = this.messageService.get(Captions.TOP_INVALID).addPage(page).addUser(sender);
+        if (!this.configs.settings().leaderboardEnabled()) {
+            invalid.send(sender);
+            return;
+        }
+        int limit = this.configs.settings().leaderboardPageSize();
+        int offset = Math.max(0, (page - 1) * limit);
+        List<CommandSourceData> users = this.userService.getUserGroup(limit, offset);
+        if (users.isEmpty()) {
+            invalid.send(sender);
+            return;
+        }
+        this.messageService.get(Captions.TOP_TITLE).addPage(page).addUser(sender).send(sender);
+        int bound = users.size();
+        for (int i = 0; i <= bound; i++) {
+            this.messageService.get(Captions.TOP_ENTRY_FORMAT)
+                    .addPair(sender.data(), users.get(i))
+                    .addPage(page)
+                    .addRank(i + offset + 1)
+                    .send(sender);
+        }
+    }
+
+    private void applyAll(final CommandSource sender, final TransactionContext ctx, final Caption allCaption, final boolean silent) {
+        //If user, process transaction for user first to pass to then pass updated user to batch process.
+        if (!sender.isConsole()) {
+            this.factory.create(ctx.withData(sender.data())).runForSender();
+            UserCommandSource ucs = new UserCommandSource(sender.stack(), this.userService.getUser(sender.data().uuid())
+                    .orElseThrow());
+            this.userService.getOnlineUsers(ucs)
+                    .forEach(u -> this.factory.create(ctx.replacePair(ucs, u)).runForTarget(silent));
+            this.messageService.get(allCaption).addUser(ucs).send(ucs);
+            return;
+        }
+        this.userService.getOnlineUsers().forEach(user -> this.factory.create(ctx.withData(user)).runForTarget(silent));
+        this.messageService.get(allCaption).addUser(sender).send(sender);
+    }
+
+//    @Command("pay <amount> <user>")
+//    @Permission("mcmmocredits.pay.other")
+//    @CommandDescription("Pay credits to another user.")
+//    @Cooldown(duration = 30, timeUnit = ChronoUnit.SECONDS, group = "mcmmocredits-pay")
+//    public void payCredits(final UserCommandSource payer, final @Range(min = "1") int amount, final CommandSourceData payee) {
+//        //TODO: this should be a transaction, and also if the user does not exist the API returns -1!!
+//        if (payer.data().equals(payee)) {
+//            this.messageService.sendToSender(context, Captions.PAY_SAME_USER);
+//            return;
+//        }
+//        if (payer.data().credits() < amount || payee.credits() + amount < 0) {
+//            this.messageService.sendToSender(context, Captions.NOT_ENOUGH_CREDITS);
+//            return;
+//        }
+//        CommandSourceData updatedPayer = payer.takeCredits(amount);
+//        CommandSourceData updatedPayee = payee.addCredits(amount);
+//        if (this.userService.updateUser(updatedPayer) && this.userService.updateUser(updatedPayee)) {
+//            this.messageService.sendToSender(context, Captions.PAY_SENDER);
+//        }
+//        if (!context.flags().isPresent("silent")) {
+//            this.messageService.sendToTarget(context, Captions.PAY_TARGET);
+//        }
+//    }
+//
+//    @Command("payall <amount>")
+//    @Permission("mcmmocredits.pay.all")
+//    @CommandDescription("Pay credits to all online users.")
+//    @Cooldown(duration = 30, timeUnit = ChronoUnit.SECONDS, group = "mcmmocredits-pay-all")
+//    public void payCreditsAll(final CommandSourceData executor, final @Range(min = "1") int amount, final @Flag("s") boolean silent) {
+//        CommandSourceData payer = (User) context.get(Keys.SENDER);
+//        Set<CommandSourceData> users = this.userService.getOnlineUsers(payer);
+//        users.removeIf(user -> user.credits() + amount < 0);
+//        int payerAmount = amount * users.size();
+//        if (payer.credits() < payerAmount) {
+//            this.messageService.sendToSender(context, Captions.NOT_ENOUGH_CREDITS);
+//            return;
+//        }
+//        CommandSourceData updatedPayer = payer.takeCredits(payerAmount);
+//        boolean atLeastOne = false;
+//        if (this.userService.updateUser(updatedPayer)) {
+//            for (CommandSourceData data : users) {
+//                CommandSourceData updatedPayee = user.addCredits(amount);
+//                if (this.userService.updateUser(updatedPayee)) {
+//                    atLeastOne = true;
+//                    if (!silent) {
+//                        this.messageService.sendToTarget(context, Captions.PAY_TARGET);
+//                    }
+//                }
+//            }
+//            if (atLeastOne) {
+//                this.messageService.sendToSender(context, Captions.PAY_ALL);
+//            }
+//        }
+//    }
+//
+//    @ExceptionHandler(ArgumentParseException.class)
+//    public void handleError(final ExceptionContext<? extends CommandSource, ArgumentParseException> ex) {
+//        this.messageService.sendToSender(ex.context(), StandardCaptionKeys.EXCEPTION_INVALID_ARGUMENT);
+//    }
 }

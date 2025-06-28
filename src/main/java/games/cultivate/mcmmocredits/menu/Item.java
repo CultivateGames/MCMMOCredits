@@ -26,10 +26,11 @@ package games.cultivate.mcmmocredits.menu;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import com.google.common.base.Suppliers;
-import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.messages.Message;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -61,7 +62,7 @@ public final class Item {
         this.glowing = builder.glowing;
         this.texture = builder.texture;
         this.slot = builder.slot;
-        this.itemSupplier = Suppliers.memoize(this::getItem);
+        this.itemSupplier = Suppliers.memoize(this::createStack);
     }
 
     private Item() {
@@ -84,29 +85,31 @@ public final class Item {
         return this.slot;
     }
 
-    public ItemStack getItemFor(final User user) {
+    public ItemStack getItemFor(final Player player) {
         ItemStack item = this.itemSupplier.get();
         item.editMeta(meta -> {
-            //TODO: re-impl with Text refactor.
-//            TextFormatter<User> formatter = new TextFormatter<>();
-//            if (!this.name.isEmpty()) {
-//                meta.displayName(formatter.format(user, this.name));
-//            }
-//            if (!this.lore.stream().allMatch(String::isEmpty)) {
-//                meta.lore(this.lore.stream().map(x -> formatter.format(user, x)).toList());
-//            }
+            if (!this.name.isEmpty()) {
+                meta.displayName(Message.of(this.name).parseFor(player));
+            }
+            if (!this.lore.stream().allMatch(String::isEmpty)) {
+                meta.lore(this.lore.stream().map(m -> Message.of(m).parseFor(player)).toList());
+            }
         });
         return item;
     }
 
-    private ItemStack getItem() {
-        ItemStack stack = new ItemStack(this.material, this.amount);
+    public ItemStack raw() {
+        return this.itemSupplier.get();
+    }
+
+    private ItemStack createStack() {
+        ItemStack stack = ItemStack.of(this.material, this.amount);
         ItemMeta meta = stack.getItemMeta();
+        meta.setCustomModelData(this.customModelData);
         if (this.glowing) {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-            meta.addEnchant(Enchantment.ARROW_INFINITE, 10, true);
+            meta.addEnchant(Enchantment.INFINITY, 10, true);
         }
-        meta.setCustomModelData(this.customModelData);
         if (!this.texture.isEmpty()) {
             SkullMeta skullMeta = (SkullMeta) meta;
             PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());

@@ -23,87 +23,59 @@
 //
 package games.cultivate.mcmmocredits.transaction;
 
+import games.cultivate.mcmmocredits.config.Captions;
+import games.cultivate.mcmmocredits.user.CommandSourceData;
+import org.incendo.cloud.caption.Caption;
 
-import games.cultivate.mcmmocredits.user.CommandExecutor;
-import org.incendo.cloud.context.CommandContext;
+import java.util.function.BiFunction;
 
-import java.util.function.Function;
+public enum TransactionType implements TransactionStrategy {
+    TAKE(CommandSourceData::takeCredits, Captions.TAKE_SENDER, Captions.TAKE_TARGET, Captions.TAKE_ALL),
+    ADD(CommandSourceData::addCredits, Captions.ADD_SENDER, Captions.ADD_TARGET, Captions.ADD_ALL),
+    SET(CommandSourceData::withCredits, Captions.SET_SENDER, Captions.SET_TARGET, Captions.SET_ALL),
+    REDEEM(CommandSourceData::redeemCredits, Captions.REDEEM_SENDER, Captions.REDEEM_TARGET, Captions.REDEEM_ALL),
+    PAY(CommandSourceData::takeCredits, CommandSourceData::addCredits, Captions.PAY_SENDER, Captions.PAY_TARGET, Captions.PAY_ALL);
 
-/**
- * Represents different types of transactions.
- */
-public enum TransactionType {
-    ADD("credits-add", "credits-add-user"),
-    SET("credits-set", "credits-set-user"),
-    TAKE("credits-take", "credits-take-user"),
-    PAY("credits-pay", "credits-pay-user"),
-    REDEEM(t -> t.isSelfTransaction() ? "credits-redeem" : "credits-redeem-sudo", "credits-redeem-user"),
-    ADDALL("credits-add-all", "credits-add-user"),
-    TAKEALL("credits-take-all", "credits-take-user"),
-    SETALL("credits-set-all", "credits-set-user"),
-    REDEEMALL("credits-redeem-all", "credits-redeem-user");
+    private final BiFunction<CommandSourceData, Integer, CommandSourceData> senderStrategy;
+    private final BiFunction<CommandSourceData, Integer, CommandSourceData> strategy;
+    private final Caption senderCaption;
+    private final Caption targetCaption;
+    private final Caption allCaption;
 
-    private final Function<Transaction, String> function;
-    private final String key;
-
-    /**
-     * Constructs the object when the transaction is required to derive message key.
-     *
-     * @param function The function used to derive a message key.
-     * @param key      The user message key.
-     */
-    TransactionType(final Function<Transaction, String> function, final String key) {
-        this.function = function;
-        this.key = key;
+    TransactionType(final BiFunction<CommandSourceData, Integer, CommandSourceData> senderStrategy, final BiFunction<CommandSourceData, Integer, CommandSourceData> strategy, final Caption senderCaption, final Caption targetCaption, final Caption allCaption) {
+        this.senderStrategy = senderStrategy;
+        this.strategy = strategy;
+        this.senderCaption = senderCaption;
+        this.targetCaption = targetCaption;
+        this.allCaption = allCaption;
     }
 
-    /**
-     * Constructs the object when the transaction is not required to derive message key.
-     *
-     * @param messageKey The message key.
-     * @param key        The user message key.
-     */
-    TransactionType(final String messageKey, final String key) {
-        this.function = t -> messageKey;
-        this.key = key;
+    TransactionType(final BiFunction<CommandSourceData, Integer, CommandSourceData> strategy, final Caption senderCaption, final Caption targetCaption, final Caption allCaption) {
+        this(null, strategy, senderCaption, targetCaption, allCaption);
     }
 
-    /**
-     * Derives the transaction type from command context.
-     *
-     * @param args The command context.
-     * @param i    The location of the transaction type.
-     * @return The type.
-     */
-    public static TransactionType fromArgs(final CommandContext<CommandExecutor> args, final int i) {
-        return TransactionType.valueOf(args.getRawInput().get(i).toUpperCase());
+    @Override
+    public BiFunction<CommandSourceData, Integer, CommandSourceData> senderStrategy() {
+        return this.senderStrategy;
     }
 
-    /**
-     * Gets the config key for feedback sent to the executor during the transaction.
-     *
-     * @param transaction The transaction.
-     * @return The config key.
-     */
-    public String messageKey(final Transaction transaction) {
-        return this.function.apply(transaction);
+    @Override
+    public BiFunction<CommandSourceData, Integer, CommandSourceData> strategy() {
+        return this.strategy;
     }
 
-    /**
-     * Gets the config key for feedback sent to the user during this transaction.
-     *
-     * @return The config key.
-     */
-    public String userMessageKey() {
-        return this.key;
+    @Override
+    public Caption senderCaption() {
+        return this.senderCaption;
     }
 
-    /**
-     * Determines message key when transaction fails due to not having enough credits.
-     *
-     * @return The message key.
-     */
-    public String notEnoughCredits() {
-        return this.name().contains("ALL") ? "not-enough-credits-other" : "not-enough-credits";
+    @Override
+    public Caption targetCaption() {
+        return this.targetCaption;
+    }
+
+    @Override
+    public Caption allCaption() {
+        return this.allCaption;
     }
 }

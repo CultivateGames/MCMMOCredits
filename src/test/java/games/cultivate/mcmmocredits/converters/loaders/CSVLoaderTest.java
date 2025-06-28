@@ -23,10 +23,15 @@
 //
 package games.cultivate.mcmmocredits.converters.loaders;
 
-import games.cultivate.mcmmocredits.user.User;
-import games.cultivate.mcmmocredits.user.UserCreator;
+import games.cultivate.mcmmocredits.TestUtils;
+import games.cultivate.mcmmocredits.converters.CSVLoader;
+import games.cultivate.mcmmocredits.converters.UserLoader;
+import games.cultivate.mcmmocredits.user.CommandSourceData;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.CleanupMode;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,19 +41,26 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CSVLoaderTest {
-    private static final Path FILE_PATH = Path.of("src", "test", "resources", "database.csv");
+    @TempDir(cleanup = CleanupMode.ALWAYS)
+    private Path temporaryPath;
+    private Path filePath;
+    private List<CommandSourceData> users;
+
+    @BeforeEach
+    public void setUp() throws IOException {
+        this.filePath = this.temporaryPath.resolve("database.csv");
+        this.users = TestUtils.createUsers(500);
+        Files.write(this.filePath, this.users.stream().map(CommandSourceData::toString).toList());
+    }
 
     @AfterEach
     void tearDown() throws IOException {
-        Files.delete(FILE_PATH);
+        Files.delete(this.filePath);
     }
 
     @Test
-    void getUsers_returnsAllUsers() throws IOException {
-        List<User> users = UserCreator.createUsers(500);
-        List<String> lines = users.stream().map(u -> u.uuid() + "," + u.username() + "," + u.credits() + "," + u.redeemed()).toList();
-        Files.write(FILE_PATH, lines);
-        UserLoader loader = new CSVLoader(FILE_PATH);
+    void getUsers_returnsAllUsers() {
+        UserLoader loader = new CSVLoader(this.filePath);
         assertEquals(users, loader.getUsers());
     }
 }

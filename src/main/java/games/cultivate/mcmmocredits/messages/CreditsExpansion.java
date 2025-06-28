@@ -23,13 +23,14 @@
 //
 package games.cultivate.mcmmocredits.messages;
 
-import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.user.CommandSourceData;
 import games.cultivate.mcmmocredits.user.UserService;
 import jakarta.inject.Inject;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -38,12 +39,16 @@ import java.util.function.Function;
  */
 public final class CreditsExpansion extends PlaceholderExpansion {
     private final UserService service;
-    private final Map<String, Function<User, String>> tags;
+    private final Map<String, Function<CommandSourceData, String>> tags;
 
     @Inject
     public CreditsExpansion(final UserService service) {
         this.service = service;
-        this.tags = Map.of("credits", u -> String.valueOf(u.credits()), "redeemed", u -> String.valueOf(u.redeemed()), "username", User::username, "uuid", u -> u.uuid().toString());
+        this.tags = new HashMap<>();
+        this.tags.put("credits", u -> String.valueOf(u.credits()));
+        this.tags.put("redeemed", u -> String.valueOf(u.redeemed()));
+        this.tags.put("username", CommandSourceData::username);
+        this.tags.put("uuid", u -> u.uuid().toString());
     }
 
     @Override

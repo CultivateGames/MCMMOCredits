@@ -23,14 +23,16 @@
 //
 package games.cultivate.mcmmocredits;
 
-import games.cultivate.mcmmocredits.storage.TestStorageService;
-import games.cultivate.mcmmocredits.user.DefaultUserService;
-import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.storage.StorageService;
+import games.cultivate.mcmmocredits.user.CommandSourceData;
 import games.cultivate.mcmmocredits.user.UserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.CleanupMode;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Path;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,29 +40,30 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MCMMOCreditsAPITest {
-    private final UUID uuid = new UUID(2, 2);
-    private final int credits = 100;
     private MCMMOCreditsAPI api;
-    private User user;
-    private final TestStorageService database = TestStorageService.create("api");
+    private CommandSourceData user;
+    private StorageService storageService;
     private UserService service;
+    @TempDir(cleanup = CleanupMode.ALWAYS)
+    private Path temporaryPath;
 
     @BeforeEach
     void setUp() {
-        this.service = new DefaultUserService(this.database);
+        this.storageService = TestUtils.create();
+        this.service = new UserService(this.storageService);
         this.api = new MCMMOCreditsAPI(this.service);
-        this.user = new User(this.uuid, "TestUser", this.credits, 0);
+        this.user = TestUtils.createUser();
     }
 
     @AfterEach
     void tearDown() {
-        this.database.delete();
+        TestUtils.deleteDatabase(this.storageService);
     }
 
     @Test
     void getCredits_ValidUser_ReturnsCredits() {
         this.service.addUser(this.user);
-        assertEquals(this.credits, this.api.getCredits(this.uuid));
+        assertEquals(this.user.credits(), this.api.getCredits(this.user.uuid()));
     }
 
     @Test
@@ -71,8 +74,8 @@ class MCMMOCreditsAPITest {
     @Test
     void addCredits_ValidUser_ReturnsUpdatedCredits() {
         this.service.addUser(this.user);
-        assertTrue(this.api.addCredits(this.uuid, 200));
-        assertEquals(this.credits + 200, this.api.getCredits(this.uuid));
+        assertTrue(this.api.addCredits(this.user.uuid(), 200));
+        assertEquals(this.user.credits() + 200, this.api.getCredits(this.user.uuid()));
     }
 
     @Test
@@ -85,8 +88,8 @@ class MCMMOCreditsAPITest {
     @Test
     void setCredits_ValidUser_ReturnsUpdatedCredits() {
         this.service.addUser(this.user);
-        assertTrue(this.api.setCredits(this.uuid, 250));
-        assertEquals(250, this.api.getCredits(this.uuid));
+        assertTrue(this.api.setCredits(this.user.uuid(), 250));
+        assertEquals(250, this.api.getCredits(this.user.uuid()));
     }
 
     @Test
@@ -99,8 +102,8 @@ class MCMMOCreditsAPITest {
     @Test
     void takeCredits_ValidUser_ReturnsUpdatedCredits() {
         this.service.addUser(this.user);
-        assertTrue(this.api.takeCredits(this.uuid, 20));
-        assertEquals(this.credits - 20, this.api.getCredits(this.uuid));
+        assertTrue(this.api.takeCredits(this.user.uuid(), 20));
+        assertEquals(this.user.credits() - 20, this.api.getCredits(this.user.uuid()));
     }
 
     @Test

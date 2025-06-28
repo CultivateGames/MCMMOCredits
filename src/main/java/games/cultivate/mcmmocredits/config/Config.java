@@ -23,13 +23,12 @@
 //
 package games.cultivate.mcmmocredits.config;
 
-import cloud.commandframework.captions.Caption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.objectmapping.ObjectMapper;
-import org.spongepowered.configurate.serialize.TypeSerializer;
+import org.spongepowered.configurate.util.NamingSchemes;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
@@ -42,20 +41,24 @@ import java.nio.file.Path;
  */
 public final class Config<D extends Data> {
     private static final Logger LOGGER = LoggerFactory.getLogger(Config.class);
-    private static final TypeSerializer<Caption> CAPTION_SERIALIZER = TypeSerializer.of(Caption.class, (x, y) -> x.getKey(), c -> Caption.of(c.toString()));
     private final YamlConfigurationLoader loader;
-    private final Class<? extends D> type;
+    private final ObjectMapper.Factory factory;
+    private final Class<D> type;
     private D data;
     private ConfigurationNode root;
 
-    public Config(final Class<? extends D> type, final Path path) {
+    public Config(final Class<D> type, final YamlConfigurationLoader loader) {
         this.type = type;
-        this.loader = YamlConfigurationLoader.builder()
-                .path(path)
+        this.loader = loader;
+        this.factory = ObjectMapper.factoryBuilder().defaultNamingScheme(NamingSchemes.LOWER_CASE_DASHED).build();
+    }
+
+    public Config(final Class<D> type, final Path path) {
+        this(type, YamlConfigurationLoader.builder()
                 .nodeStyle(NodeStyle.BLOCK)
                 .indent(2)
-                .defaultOptions(o -> o.serializers(b -> b.register(Caption.class, CAPTION_SERIALIZER)))
-                .build();
+                .path(path)
+                .build());
     }
 
     /**
@@ -64,7 +67,7 @@ public final class Config<D extends Data> {
     public void load() {
         try {
             this.root = this.loader.load();
-            this.data = ObjectMapper.factory().get(this.type).load(this.root);
+            this.data = this.factory.get(this.type).load(this.root);
             this.save();
         } catch (final ConfigurateException e) {
             LOGGER.error("There was an issue loading the configuration", e);

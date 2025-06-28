@@ -23,9 +23,9 @@
 //
 package games.cultivate.mcmmocredits.messages;
 
-import games.cultivate.mcmmocredits.storage.TestStorageService;
-import games.cultivate.mcmmocredits.user.DefaultUserService;
-import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.TestUtils;
+import games.cultivate.mcmmocredits.storage.StorageService;
+import games.cultivate.mcmmocredits.user.CommandSourceData;
 import games.cultivate.mcmmocredits.user.UserService;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.clip.placeholderapi.replacer.CharsReplacer;
@@ -34,10 +34,12 @@ import org.bukkit.OfflinePlayer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.CleanupMode;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
@@ -45,22 +47,26 @@ import static org.mockito.Mockito.mock;
 
 class CreditExpansionTest {
     private final Replacer replace = new CharsReplacer(Replacer.Closure.PERCENT);
-    private User user;
+    private CommandSourceData user;
     private UserService service;
     private Map<String, PlaceholderExpansion> map;
-    private final TestStorageService database = TestStorageService.create("cs");
+    private StorageService storageService;
+    @TempDir(cleanup = CleanupMode.ALWAYS)
+    private Path temporaryPath;
 
     @BeforeEach
     void setUp() {
-        this.user = new User(new UUID(2, 2), "testUser", 1000, 500);
-        this.service = new DefaultUserService(this.database);
+        this.user = TestUtils.createUser();
+        this.storageService = TestUtils.create();
+        //this.storageService = new StorageService(this.temporaryPath, new StorageProperties(), Executors.newVirtualThreadPerTaskExecutor());
+        this.service = new UserService(this.storageService);
         this.map = new HashMap<>();
         this.map.put("mcmmocredits", new CreditsExpansion(this.service));
     }
 
     @AfterEach
     void tearDown() {
-        this.database.delete();
+        TestUtils.deleteDatabase(this.storageService);
     }
 
     @Test
@@ -69,7 +75,7 @@ class CreditExpansionTest {
         String content = "%mcmmocredits_credits%, %mcmmocredits_redeemed%, %mcmmocredits_username%, %mcmmocredits_uuid%";
         String expected = String.format("%s, %s, %s, %s", this.user.credits(), this.user.redeemed(), this.user.username(), this.user.uuid().toString());
         OfflinePlayer player = mock(OfflinePlayer.class);
-        doReturn("testUser").when(player).getName();
+        doReturn(this.user.username()).when(player).getName();
         assertEquals(expected, this.replace.apply(content, player, this.map::get));
     }
 

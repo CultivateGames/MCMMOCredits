@@ -23,121 +23,85 @@
 //
 package games.cultivate.mcmmocredits.storage;
 
-import games.cultivate.mcmmocredits.user.User;
+import games.cultivate.mcmmocredits.TestUtils;
+import games.cultivate.mcmmocredits.user.CommandSourceData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.sql.SQLException;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StorageServiceTest {
-    private final String username = "testUsername";
-    private final UUID uuid = UUID.randomUUID();
-    private final int credits = 60;
-    private final int redeemed = 500;
-    private final TestStorageService database = TestStorageService.create("test");
-    private User user;
+    private CommandSourceData user;
+    private final StorageService service = TestUtils.create();
 
     @BeforeEach
     void setUp() {
-        this.user = new User(this.uuid, this.username, this.credits, this.redeemed);
-        this.database.addUser(this.user);
+        this.user = TestUtils.createUser();
     }
 
     @AfterEach
     void tearDown() {
-        this.database.delete();
+        TestUtils.deleteDatabase(this.service);
     }
 
     @Test
     void addUser_NewUser_UserAdded() {
-        Optional<User> ouser = this.database.getUser(this.uuid);
-        assertEquals(this.user, ouser.orElseThrow());
+        this.service.addUser(this.user);
+        assertEquals(this.user, this.service.getUser(this.user.uuid()).orElseThrow());
     }
 
     @Test
     void addUsers_NewUsers_UsersAdded() {
-        User first = new User(UUID.randomUUID(), "tester1", 1000, 10);
-        User second = new User(UUID.randomUUID(), "tester2", 2000, 20);
-        this.database.addUsers(List.of(first, second));
-        assertEquals(first, this.database.getUser(first.uuid()).orElseThrow());
-        assertEquals(second, this.database.getUser(second.uuid()).orElseThrow());
+        List<CommandSourceData> users = TestUtils.createUsers(2);
+        var first = users.getFirst();
+        var second = users.getLast();
+        this.service.addUsers(users);
+        assertEquals(first, this.service.getUser(first.uuid()).orElseThrow());
+        assertEquals(second, this.service.getUser(second.uuid()).orElseThrow());
     }
 
     @Test
     void getAllUsers_ReturnAllUsers() {
-        User first = new User(UUID.randomUUID(), "tester1", 1000, 10);
-        User second = new User(UUID.randomUUID(), "tester2", 2000, 20);
-        this.database.addUsers(List.of(first, second));
-        assertTrue(this.database.getAllUsers().containsAll(List.of(first, second, this.user)));
+        List<CommandSourceData> list = TestUtils.createUsers(2);
+        this.service.addUsers(list);
+        List<CommandSourceData> users = this.service.getAllUsers();
+        assertTrue(users.containsAll(list));
     }
 
     @Test
     void getUser_ByUsername_UserFound() {
-        Optional<User> ouser = this.database.getUser(this.username);
+        this.service.addUser(this.user);
+        Optional<CommandSourceData> ouser = this.service.getUser(this.user.username());
         assertEquals(this.user, ouser.orElseThrow());
     }
 
     @Test
     void getUser_MissingUser_ReturnsEmpty() {
-        assertEquals(Optional.empty(), this.database.getUser(UUID.randomUUID()));
+        assertTrue(this.service.getUser(UUID.randomUUID()).isEmpty());
     }
 
     @Test
     void getUserGroup_ThreeUsers_UsersRetrieved() {
-        User first = new User(UUID.randomUUID(), "firstPlace", 1000, 10);
-        User second = new User(UUID.randomUUID(), "secondPlace", 100, 10);
-        this.database.addUsers(List.of(first, second));
-        List<User> users = this.database.getUserGroup(3, 0);
+        CommandSourceData first = new CommandSourceData(UUID.randomUUID(), "firstPlace", 1000, 10);
+        CommandSourceData second = new CommandSourceData(UUID.randomUUID(), "secondPlace", 100, 10);
+        this.service.addUsers(List.of(first, second, this.user));
+        List<CommandSourceData> users = this.service.getUserGroup(3, 0);
         assertTrue(users.containsAll(List.of(first, second, this.user)));
-    }
-
-//TODO: bring back when methods are implemented.
-//    @Test
-//    void setUsername_ExistingUser_UsernameUpdated() {
-//        String newUsername = "updatedUsername";
-//        this.database.setUsername(this.uuid, newUsername);
-//        Optional<User> ouser = this.database.getUser(newUsername);
-//        User updatedUser = new User(this.uuid, newUsername, this.credits, this.redeemed);
-//        assertEquals(updatedUser, ouser.orElseThrow());
-//    }
-//
-//    @Test
-//    void setUsername_MissingUser_ReturnsFalse() {
-//        assertFalse(this.database.setUsername(UUID.randomUUID(), "missingUser"));
-//    }
-//
-//    @Test
-//    void setCredits_ExistingUser_CreditsUpdated() {
-//        int newCredits = 200;
-//        this.database.setCredits(this.uuid, newCredits);
-//        Optional<User> ouser = this.database.getUser(this.uuid);
-//        User updatedUser = new User(this.uuid, this.username, newCredits, this.redeemed);
-//        assertEquals(updatedUser, ouser.orElseThrow());
-//    }
-
-    @Test
-    void updateUser_InvalidAmount_ThrowsException() {
-        User error = this.user.withCredits(-1);
-        assertThrows(SQLException.class, () -> this.database.updateUser(error));
-        assertEquals(this.user, this.database.getUser(this.uuid).orElseThrow());
     }
 
     @Test
     void updateUser_ExistingUser_ReturnsUpdatedUser() {
-        this.database.updateUser(new User(this.uuid, this.username, 10000, this.redeemed));
-        User fromDAO = this.database.getUser(this.uuid).orElseThrow();
-        assertEquals(10000, fromDAO.credits());
+        this.service.addUser(this.user);
+        var updated = this.user.withCredits(10000);
+        this.service.updateUser(updated);
+        var fromStorage = this.service.getUser(this.user.uuid()).orElseThrow();
+        assertEquals(10000, fromStorage.credits());
     }
 }

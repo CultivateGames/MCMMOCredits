@@ -27,5 +27,5 @@ package games.cultivate.mcmmocredits.storage;
  * StorageService connection strategies.
  */
 public enum StorageType {
-    MYSQL, H2;
+    MYSQL, H2
 }

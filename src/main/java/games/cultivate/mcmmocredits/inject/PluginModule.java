@@ -24,21 +24,31 @@
 package games.cultivate.mcmmocredits.inject;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import games.cultivate.mcmmocredits.MCMMOCredits;
 import games.cultivate.mcmmocredits.command.Commands;
 import games.cultivate.mcmmocredits.command.UserParser;
-import games.cultivate.mcmmocredits.config.Config;
-import games.cultivate.mcmmocredits.config.Data;
-import games.cultivate.mcmmocredits.config.MenuSettings;
+import games.cultivate.mcmmocredits.config.ConfigManager;
 import games.cultivate.mcmmocredits.config.Settings;
-import games.cultivate.mcmmocredits.user.CommandExecutor;
+import games.cultivate.mcmmocredits.converters.ConverterProperties;
+import games.cultivate.mcmmocredits.converters.CSVLoader;
+import games.cultivate.mcmmocredits.converters.ExternalLoader;
+import games.cultivate.mcmmocredits.converters.StorageLoader;
+import games.cultivate.mcmmocredits.converters.UserLoader;
+import games.cultivate.mcmmocredits.menu.MenuService;
+import games.cultivate.mcmmocredits.messages.MessageService;
+import games.cultivate.mcmmocredits.storage.StorageService;
+import games.cultivate.mcmmocredits.transaction.TransactionFactory;
+import games.cultivate.mcmmocredits.user.CommandSource;
 import games.cultivate.mcmmocredits.user.UserService;
 import jakarta.inject.Singleton;
+import org.bukkit.Bukkit;
 import org.incendo.cloud.annotations.AnnotationParser;
 import org.incendo.cloud.execution.ExecutionCoordinator;
 import org.incendo.cloud.paper.PaperCommandManager;
-import org.incendo.cloud.processors.cooldown.annotation.CoooldownBuilderModifier;
+import org.incendo.cloud.processors.cooldown.annotation.CooldownBuilderModifier;
 
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
@@ -46,7 +56,10 @@ import java.util.concurrent.ExecutorService;
 /**
  * Handles Guice Dependency Injection.
  */
+@SuppressWarnings("UnstableApiUsage")
 public final class PluginModule extends AbstractModule {
+    private static final Path MR_PATH = Path.of("MorphRedeem", "PlayerData");
+    private static final Path GRM_PATH = Path.of("GuiRedeemMCMMO", "playerdata");
     private final MCMMOCredits plugin;
     private final ExecutorService executorService;
 
@@ -66,48 +79,50 @@ public final class PluginModule extends AbstractModule {
         this.bind(ExecutorService.class).toInstance(this.executorService);
         this.bind(Path.class).annotatedWith(Dir.class).toInstance(this.plugin.getDataFolder().toPath());
         this.bind(Commands.class).asEagerSingleton();
+        this.bind(ConfigManager.class).asEagerSingleton();
+        this.bind(MessageService.class).asEagerSingleton();
+        this.bind(MenuService.class).asEagerSingleton();
+        this.bind(UserService.class).asEagerSingleton();
+        this.install(new FactoryModuleBuilder().build(TransactionFactory.class));
     }
 
     @Provides
     @Singleton
-    public Settings provideSettings(final @Dir Path path) {
-        //TODO: singleton config = no reload capability. determine if necessary.
-        return this.createConfig(Settings.class, path.resolve("config.yml")).data();
+    public UserLoader getUserLoader(final Settings settings, final ExecutorService executorService, final Injector injector) {
+        ConverterProperties properties = settings.converter();
+        Path pluginPath = Bukkit.getPluginsFolder().toPath();
+        return switch (properties.type()) {
+            case CSV -> injector.getInstance(CSVLoader.class);
+            case INTERNAL -> injector.getInstance(StorageLoader.class);
+            case PLUGIN_MR -> new ExternalLoader(pluginPath.resolve(MR_PATH), executorService, properties);
+            case PLUGIN_GRM -> new ExternalLoader(pluginPath.resolve(GRM_PATH), executorService, properties);
+        };
     }
 
     @Provides
     @Singleton
-    public MenuSettings provideMenuSettings(final @Dir Path path) {
-        return this.createConfig(MenuSettings.class, path.resolve("menu.yml")).data();
+    public StorageService provideStorage(final @Dir Path path, final ConfigManager configs, final ExecutorService executorService) {
+        return new StorageService(path, configs.database(), executorService);
     }
 
     @Provides
     @Singleton
-    public UserParser provideParser(final UserService userService, final Settings settings) {
-        return new UserParser(userService, settings.userTabComplete());
+    @ForConversion
+    public StorageService provideConversionStorage(final @Dir Path path, final ConfigManager configs, final ExecutorService executorService) {
+        return new StorageService(path, configs.converter().internal(), executorService);
     }
 
     @Provides
     @Singleton
-    public PaperCommandManager<CommandExecutor> createManager(final Commands commands, final UserService userService, final UserParser parser) {
-        PaperCommandManager<CommandExecutor> manager = new PaperCommandManager<>(this.plugin, ExecutionCoordinator.coordinatorFor(this.executorService), userService.toSenderMapper());
-        manager.registerBrigadier();
+    public PaperCommandManager<CommandSource> createManager(final Commands commands, final UserService service, final ConfigManager configs) {
+        ExecutionCoordinator<CommandSource> coordinator = ExecutionCoordinator.coordinatorFor(this.executorService);
+        UserParser parser = new UserParser(service, configs.settings().userTabComplete());
+        PaperCommandManager<CommandSource> manager = PaperCommandManager.builder(service.asMapper()).executionCoordinator(coordinator).buildOnEnable(this.plugin);
         manager.brigadierManager().setNativeNumberSuggestions(false);
-        manager.registerAsynchronousCompletions();
         manager.parserRegistry().registerParser(parser);
-//        ImmutableConstantCaptionProvider<CommandExecutor> captionProvider = CaptionProvider.<CommandExecutor>constantProvider().putAllCaptions(captions.messages()).build();
-//        manager.captionRegistry().registerProvider(captionProvider);
-//        manager.registerCommandPreProcessor(ppc -> ppc.commandContext().store(Keys.SENDER, ppc.commandContext().sender()));
-        AnnotationParser<CommandExecutor> annotationParser = new AnnotationParser<>(manager, CommandExecutor.class);
+        AnnotationParser<CommandSource> annotationParser = new AnnotationParser<>(manager, CommandSource.class);
         annotationParser.parse(commands);
-        CoooldownBuilderModifier.install(annotationParser);
+        CooldownBuilderModifier.install(annotationParser);
         return manager;
-    }
-
-    private <D extends Data> Config<D> createConfig(final Class<? extends D> type, final Path path) {
-        MCMMOCredits.createFile(path);
-        Config<D> config = new Config<>(type, path);
-        config.load();
-        return config;
     }
 }

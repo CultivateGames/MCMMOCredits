@@ -23,73 +23,58 @@
 //
 package games.cultivate.mcmmocredits.menu;
 
-import games.cultivate.mcmmocredits.user.User;
-import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
+import games.cultivate.mcmmocredits.TestUtils;
+import games.cultivate.mcmmocredits.user.CommandSourceData;
 import org.bukkit.Material;
-import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockbukkit.mockbukkit.MockBukkit;
+import org.mockbukkit.mockbukkit.ServerMock;
+import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
 import java.util.List;
-import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class ItemTest {
-    @Mock
-    private MockedStatic<Bukkit> mockBukkit;
-    @Mock
-    private ItemFactory mockFactory;
+    ServerMock server = null;
 
     @BeforeEach
     void setUp() {
-        this.mockBukkit.when(Bukkit::getItemFactory).thenReturn(this.mockFactory);
+        this.server = MockBukkit.mock();
     }
 
     @Test
-    void of_ValidProperties_ReturnsValidItem() {
-        ItemStack stack = new ItemStack(Material.ACACIA_BOAT, 20);
-        Item item = new Item(stack, "The item!", List.of("the lore!"), 10, ItemAction.CANCEL);
-        assertEquals(Material.ACACIA_BOAT, item.stack().getType());
-        assertEquals(20, item.stack().getAmount());
-        assertEquals("The item!", item.name());
-        assertEquals(List.of("the lore!"), item.lore());
-        assertEquals(10, item.slot());
+    void build_ValidProperties_ReturnsValidItem() {
+        var expected = ItemStack.of(Material.STONE, 1);
+        var actual = Item.builder().build().raw();
+        expected.editMeta(m -> m.setCustomModelData(0));
+        byte[] expectedBytes = expected.serializeAsBytes();
+        byte[] actualBytes = actual.serializeAsBytes();
+        assertArrayEquals(expectedBytes, actualBytes);
     }
 
     @Test
-    void materialOf_ValidProperties_ReturnsValidItem() {
-        Item item = Item.of(Material.ACACIA_BOAT);
-        assertEquals(Material.ACACIA_BOAT, item.stack().getType());
-        assertEquals(1, item.stack().getAmount());
-        assertEquals("", item.name());
-        assertEquals(List.of(), item.lore());
-        assertEquals(0, item.slot());
-    }
-
-    @Test
-    void parseUser_ValidItemUser_ReturnsParsedItem() {
-        ItemStack stack = new ItemStack(Material.ACACIA_BOAT, 20);
-        Item item = new Item(stack, "<sender_credits> credits!", List.of("<sender_redeemed> credits redeemed"), 10, ItemAction.CANCEL);
-        User user = new User(UUID.randomUUID(), "testUser", 1500, 10);
-        ItemMeta meta = mock(ItemMeta.class);
-        when(this.mockFactory.getItemMeta(Material.ACACIA_BOAT)).thenReturn(meta);
-        item.parseUser(user);
-        verify(meta, atLeastOnce()).displayName(any(Component.class));
-        verify(meta, atLeastOnce()).lore(anyList());
+    void getItemFor_ValidItemUser_ReturnsParsedItem() {
+        Item item = Item.builder()
+                .material(Material.ACACIA_BOAT)
+                .lore(List.of("<sender_redeemed> credits redeemed"))
+                .name("<sender_credits> credits!")
+                .slot(10)
+                .build();
+        CommandSourceData user = TestUtils.createUser();
+        int credits = user.credits();
+        int redeemed = user.redeemed();
+        var playerMock = new PlayerMock(this.server, user.username(), user.uuid());
+        this.server.addPlayer(playerMock);
+        var itemStack = item.getItemFor(playerMock);
+        var expectedLore = List.of(redeemed + " credits redeemed");
+        var actualLore = itemStack.getLore();
+        assertEquals(expectedLore, actualLore);
+        var expectedName = credits + "credits!";
+        var actualName = itemStack.displayName().toString();
+        assertEquals(expectedName, actualName);
     }
 }
