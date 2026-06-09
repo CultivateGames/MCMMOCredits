@@ -9,10 +9,10 @@ plugins {
     alias(libs.plugins.runPaper)
     alias(libs.plugins.shadow)
     alias(libs.plugins.pluginYml)
-    alias(libs.plugins.licenser)
     alias(libs.plugins.versions)
     alias(libs.plugins.indra)
     alias(libs.plugins.indra.publishing)
+    alias(libs.plugins.indra.licenser.spotless)
     id("com.gradleup.nmcp").version("1.4.4")
     id("com.gradleup.nmcp.aggregation").version("1.4.4")
 }
@@ -115,10 +115,11 @@ bukkit {
     foliaSupported = true
 }
 
-license {
-    style.put("java", "DOUBLE_SLASH")
-    newLine(false)
-    exclude("**/*.yml")
+indraSpotlessLicenser {
+    licenseHeaderFile(rootProject.file("LICENSE"))
+    headerFormat { doubleSlash() }
+    property("YEAR", "2026")
+    property("name", "Cultivate Games")
 }
 
 configurations {

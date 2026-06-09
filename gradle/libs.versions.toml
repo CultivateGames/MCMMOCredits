@@ -3,7 +3,6 @@ runPaper = "2.2.3"
 shadow = "9.4.2"
 versions = "0.51.0"
 pluginYml = "0.6.0"
-licenser = "0.7.5"
 bstats = "3.0.2"
 paper = "1.20.4-R0.1-SNAPSHOT"
 cloud = "1.8.4"
@@ -53,6 +52,6 @@ runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 versions = { id = "com.github.ben-manes.versions", version.ref = "versions" }
 pluginYml = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginYml"}
-licenser  = {id = "net.neoforged.licenser", version.ref = "licenser" }
 indra = {id = "net.kyori.indra", version.ref = "indra"}
+indra-licenser-spotless = {id = "net.kyori.indra.licenser.spotless", version.ref = "indra"}
 indra-publishing = {id = "net.kyori.indra.publishing", version.ref = "indra"}

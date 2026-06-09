@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2024 Cultivate Games
+// Copyright (c) 2026 Cultivate Games
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,6 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-//
 package games.cultivate.mcmmocredits.database;
 
 import org.h2.jdbcx.JdbcDataSource;
