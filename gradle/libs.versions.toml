@@ -1,9 +1,9 @@
 [versions]
 runPaper = "2.2.3"
-shadow = "8.1.7"
+shadow = "9.4.2"
 versions = "0.51.0"
 pluginYml = "0.6.0"
-licenser = "0.6.1"
+licenser = "0.7.5"
 bstats = "3.0.2"
 paper = "1.20.4-R0.1-SNAPSHOT"
 cloud = "1.8.4"
@@ -12,11 +12,13 @@ guice = "7.0.0"
 hikari = "5.1.0"
 caffeine = "3.1.8"
 jdbi = "3.45.0"
-junit = "5.10.2"
-mockito = "5.11.0"
+junit = "6.1.0"
+mockito = "5.23.0"
 placeholderApi = "2.11.5"
 mcmmo = "2.1.231"
 h2 = "2.2.224"
+indra = "4.0.0"
+brigadier = "1.0.18"
 
 [libraries]
 bstats = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
@@ -33,10 +35,12 @@ jdbi-sqlite = { module = "org.jdbi:jdbi3-sqlite", version.ref = "jdbi" }
 jdbi-testing = { module = "org.jdbi:jdbi3-testing", version.ref = "jdbi" }
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 placeholderApi = { module = "me.clip:placeholderapi", version.ref = "placeholderApi" }
 mcmmo = { module = "com.gmail.nossr50.mcMMO:mcMMO", version.ref = "mcmmo" }
+brigadier = { module = "com.mojang:brigadier", version.ref = "brigadier"}
 
 [bundles]
 jdbi = ["jdbi-core", "jdbi-sqlite", "jdbi-testing"]
@@ -46,7 +50,9 @@ cloud = ["cloud-annotations", "cloud-paper"]
 
 [plugins]
 runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }
-shadow = { id = "io.github.goooler.shadow", version.ref = "shadow" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 versions = { id = "com.github.ben-manes.versions", version.ref = "versions" }
 pluginYml = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginYml"}
-licenser  = {id = "org.cadixdev.licenser", version.ref = "licenser" }
+licenser  = {id = "net.neoforged.licenser", version.ref = "licenser" }
+indra = {id = "net.kyori.indra", version.ref = "indra"}
+indra-publishing = {id = "net.kyori.indra.publishing", version.ref = "indra"}

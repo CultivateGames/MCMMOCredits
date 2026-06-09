@@ -1,25 +1,28 @@
 group = "games.cultivate"
-version = "0.4.7"
+version = "0.4.8"
 description = "MCMMOCredits"
 
 plugins {
-    `java-library`
-    `maven-publish`
-    signing
+    id("java-library")
+    id("maven-publish")
+    id("signing")
     alias(libs.plugins.runPaper)
     alias(libs.plugins.shadow)
     alias(libs.plugins.pluginYml)
     alias(libs.plugins.licenser)
     alias(libs.plugins.versions)
-    id("net.kyori.indra") version "3.1.3"
-    id("net.kyori.indra.publishing.sonatype") version "3.1.3"
+    alias(libs.plugins.indra)
+    alias(libs.plugins.indra.publishing)
+    id("com.gradleup.nmcp").version("1.4.4")
+    id("com.gradleup.nmcp.aggregation").version("1.4.4")
 }
 
 repositories {
     mavenCentral()
-    maven("https://papermc.io/repo/repository/maven-public/")
+    maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://nexus.neetgames.com/repository/maven-releases/")
+    maven("https://libraries.minecraft.net")
 }
 
 dependencies {
@@ -38,21 +41,23 @@ dependencies {
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.jupiter)
     testImplementation(libs.jdbi.testing)
+    testRuntimeOnly(libs.junit.platform.launcher)
     compileOnly(libs.paper)
     compileOnly(libs.placeholderApi)
     compileOnly(libs.mcmmo) {
         exclude("com.sk89q.worldguard")
         exclude("com.sk89q.worldedit")
     }
+    compileOnly(libs.brigadier)
+    nmcpAggregation(rootProject)
 }
 
 java {
     withSourcesJar()
     withJavadocJar()
-}
-
-indraSonatype {
-    useAlternateSonatypeOSSHost("s01")
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 indra {
@@ -78,6 +83,18 @@ indra {
         }
     }
 }
+
+nmcpAggregation {
+    centralPortal {
+        val sonatypeUsername: String? by project
+        val sonatypePassword: String? by project
+        username = sonatypeUsername ?: ""
+        password = sonatypePassword ?: ""
+        // optional: publish manually from the portal
+        publishingType = "USER_MANAGED"
+    }
+}
+
 
 signing {
     val signingKey: String? by project
