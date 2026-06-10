@@ -1,23 +1,24 @@
 [versions]
-runPaper = "2.2.3"
+runPaper = "3.0.2"
 shadow = "9.4.2"
-versions = "0.51.0"
+versions = "0.54.0"
 pluginYml = "0.6.0"
-bstats = "3.0.2"
+bstats = "3.2.1"
 paper = "1.20.4-R0.1-SNAPSHOT"
 cloud = "1.8.4"
-configurate = "4.2.0"
+configurate = "4.3.0-20250803.195621-25"
 guice = "7.0.0"
-hikari = "5.1.0"
-caffeine = "3.1.8"
-jdbi = "3.45.0"
+hikari = "7.0.2"
+caffeine = "3.2.4"
+jdbi = "3.53.0"
 junit = "6.1.0"
 mockito = "5.23.0"
-placeholderApi = "2.11.5"
-mcmmo = "2.1.231"
+placeholderApi = "2.12.2"
+mcmmo = "2.2.053"
 h2 = "2.2.224"
 indra = "4.0.0"
-brigadier = "1.0.18"
+brigadier = "1.0.500"
+nmcp = "1.5.0"
 
 [libraries]
 bstats = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
@@ -42,8 +43,6 @@ mcmmo = { module = "com.gmail.nossr50.mcMMO:mcMMO", version.ref = "mcmmo" }
 brigadier = { module = "com.mojang:brigadier", version.ref = "brigadier"}
 
 [bundles]
-jdbi = ["jdbi-core", "jdbi-sqlite", "jdbi-testing"]
-junit = ["junit-bom", "junit-jupiter"]
 mockito = ["mockito-core", "mockito-jupiter"]
 cloud = ["cloud-annotations", "cloud-paper"]
 
@@ -51,7 +50,9 @@ cloud = ["cloud-annotations", "cloud-paper"]
 runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 versions = { id = "com.github.ben-manes.versions", version.ref = "versions" }
-pluginYml = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginYml"}
+plugin-yml-bukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginYml"}
 indra = {id = "net.kyori.indra", version.ref = "indra"}
 indra-licenser-spotless = {id = "net.kyori.indra.licenser.spotless", version.ref = "indra"}
 indra-publishing = {id = "net.kyori.indra.publishing", version.ref = "indra"}
+nmcp = {id = "com.gradleup.nmcp", version.ref = "nmcp"}
+nmcp-aggregation = {id = "com.gradleup.nmcp.aggregation", version.ref = "nmcp"}

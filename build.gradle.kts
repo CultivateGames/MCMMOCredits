@@ -8,13 +8,13 @@ plugins {
     id("signing")
     alias(libs.plugins.runPaper)
     alias(libs.plugins.shadow)
-    alias(libs.plugins.pluginYml)
+    alias(libs.plugins.plugin.yml.bukkit)
     alias(libs.plugins.versions)
     alias(libs.plugins.indra)
     alias(libs.plugins.indra.publishing)
     alias(libs.plugins.indra.licenser.spotless)
-    id("com.gradleup.nmcp").version("1.4.4")
-    id("com.gradleup.nmcp.aggregation").version("1.4.4")
+    alias(libs.plugins.nmcp)
+    alias(libs.plugins.nmcp.aggregation)
 }
 
 repositories {
@@ -27,8 +27,7 @@ repositories {
 
 dependencies {
     implementation(libs.bstats)
-    implementation(libs.cloud.annotations)
-    implementation(libs.cloud.paper)
+    implementation(libs.bundles.cloud)
     implementation(libs.configurate)
     implementation(libs.h2)
     implementation(libs.jdbi.core)
@@ -38,8 +37,7 @@ dependencies {
     implementation(libs.caffeine)
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
-    testImplementation(libs.mockito.core)
-    testImplementation(libs.mockito.jupiter)
+    testImplementation(libs.bundles.mockito)
     testImplementation(libs.jdbi.testing)
     testRuntimeOnly(libs.junit.platform.launcher)
     compileOnly(libs.paper)
